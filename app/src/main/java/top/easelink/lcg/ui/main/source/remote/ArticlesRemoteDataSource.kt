@@ -539,6 +539,17 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             if (!TextUtils.isEmpty(attr)) {
                 imgElement.attr("src", attr)
             }
+
+        // ======== 降重修复：移除正文中所有粗体和过大的标题 ========
+        // 1. 将 <b> 和 <strong> 标签解开（unwrap），保留里面的文字，但去掉粗体样式
+        for (bold in element.select("b, strong")) {
+            bold.unwrap()
+        }
+        // 2. 将 <h1> 到 <h6> 标题标签降级为普通的 <p> 标签，防止字太大太粗
+        for (heading in element.select("h1, h2, h3, h4, h5, h6")) {
+            heading.tagName("p")
+        }
+        // ========================================================
         }
         return element
     }
