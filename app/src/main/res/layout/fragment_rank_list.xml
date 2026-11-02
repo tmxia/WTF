@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout android:layout_marginTop="@dimen/dp_20"
     android:layout_width="match_parent"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:clipToPadding="false"
     android:layout_height="wrap_content"
     android:background="@drawable/rectangle_bg_white_4dp"
     android:padding="@dimen/dp_2"
