@@ -12,8 +12,8 @@
     <top.easelink.framework.customview.ScrollChildSwipeRefreshLayout
         android:id="@+id/refresh_layout"
         android:layout_width="match_parent"
-        android:paddingStart="3dp"
-        android:paddingEnd="3dp"
+        
+        
         android:clipToPadding="false"
         android:layout_height="match_parent"
         android:background="#F5F5F5"
@@ -24,7 +24,10 @@
         <androidx.recyclerview.widget.RecyclerView
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             android:id="@+id/forum_rv"
-            android:padding="@dimen/dp_4"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
     </top.easelink.framework.customview.ScrollChildSwipeRefreshLayout>

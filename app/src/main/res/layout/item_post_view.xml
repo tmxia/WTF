@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/rectangle_bg_white_4dp"
+    android:background="@drawable/rectangle_bg_white_12dp"
     android:paddingBottom="@dimen/dp_5">
 
     <ImageView

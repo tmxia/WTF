@@ -59,6 +59,11 @@
 
         <TextView
             android:id="@+id/origin"
+            android:background="@drawable/bg_tag"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
