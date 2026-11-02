@@ -42,7 +42,6 @@ jobs:
     needs: cleanup
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # 发布 Release 需要写入权限
     permissions:
       contents: write
 
@@ -83,37 +82,47 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Assemble Release
-        run: ./gradlew assembleRelease --no-daemon
-
-      # 提取版本号，用于打 Tag
+      # 1. 精准提取变量并拼装版本号
       - name: Extract Version
         id: get_version
         run: |
-          VERSION_NAME=$(grep -m1 'versionName' app/build.gradle.kts | cut -d'"' -f2)
-          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-          echo "Found version: $VERSION_NAME"
+          MAJOR=$(grep "val versionMajor" app/build.gradle.kts | awk -F'= ' '{print $2}' | tr -d ' ')
+          MINOR=$(grep "val versionMinor" app/build.gradle.kts | awk -F'= ' '{print $2}' | tr -d ' ')
+          PATCH=$(grep "val versionPatch" app/build.gradle.kts | awk -F'= ' '{print $2}' | tr -d ' ')
+          VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "VERSION_NAME=$VERSION" >> $GITHUB_ENV
+          echo "✅ 成功提取版本号: $VERSION"
 
-      # 上传到 Artifacts (临时产物)
+      - name: Assemble Release
+        run: ./gradlew assembleRelease --no-daemon
+
+      # 2. 重命名 APK，复制到独立目录
+      - name: Prepare Release Asset
+        run: |
+          mkdir -p output
+          cp app/build/outputs/apk/release/app-release.apk output/WTF-v${{ env.VERSION_NAME }}.apk
+          echo "✅ 产物已重命名为 WTF-v${{ env.VERSION_NAME }}.apk"
+
+      # 3. 上传 Artifacts
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: app/build/outputs/apk/release/*.apk
+          name: WTF-v${{ env.VERSION_NAME }}
+          path: output/*.apk
           if-no-files-found: error
 
-      # 发布到 GitHub Releases
+      # 4. 发布清爽的 Release
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.VERSION_NAME }}-b${{ github.run_number }}
-          name: Release v${{ env.VERSION_NAME }} (Build ${{ github.run_number }})
+          tag_name: v${{ env.VERSION_NAME }}
+          name: Release v${{ env.VERSION_NAME }}
           body: |
-            🚀 自动构建发布
+            🚀 吾爱破解定制版 自动构建发布
             - **版本号**: v${{ env.VERSION_NAME }}
             - **构建号**: ${{ github.run_number }}
             - **提交**: ${{ github.sha }}
-          files: app/build/outputs/apk/release/*.apk
+          files: output/WTF-v${{ env.VERSION_NAME }}.apk
           draft: false
           prerelease: false
           make_latest: true
