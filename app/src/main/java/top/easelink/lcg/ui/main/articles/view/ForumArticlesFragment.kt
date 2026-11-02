@@ -152,17 +152,17 @@ class ForumArticlesFragment : BaseFragment<FragmentForumArticlesBinding, ForumAr
                         it.setFragmentManager(childFragmentManager)
                     }
 
-                    // ======== 注入左右滑动切换 Tab 手势 ========
+                    
                     val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
                         override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
-                            // 判断横向滑动速度大于纵向，且阈值 500
+                            
                             if (Math.abs(velocityX) > Math.abs(velocityY) && Math.abs(velocityX) > 500) {
                                 val currentTab = binding.forumTab.selectedTabPosition
                                 if (velocityX > 0) {
-                                    // 向右滑，上一个
+                                    
                                     if (currentTab > 0) binding.forumTab.getTabAt(currentTab - 1)?.select()
                                 } else {
-                                    // 向左滑，下一个
+                                    
                                     if (currentTab < binding.forumTab.tabCount - 1) binding.forumTab.getTabAt(currentTab + 1)?.select()
                                 }
                                 return true
@@ -173,9 +173,9 @@ class ForumArticlesFragment : BaseFragment<FragmentForumArticlesBinding, ForumAr
 
                     setOnTouchListener { _, event ->
                         gestureDetector.onTouchEvent(event)
-                        false // 返回 false 确保不影响列表的上下滑动和点击
+                        false 
                     }
-                    // ==========================================
+                    
                 }
             )
             setOnRefreshListener {
