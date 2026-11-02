@@ -43,7 +43,7 @@ class RankListVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseNavigati
     }
 
     private fun setUp(rankModel: RankListModel) {
-        // 为整个热榜视图加上类似首页的白底圆角卡片效果
+        
                 binding.apply {
             rankTips.text = rankModel.notice
             rankRecyclerView.apply {

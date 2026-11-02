@@ -19,7 +19,7 @@
         android:fontFamily="sans-serif-medium"
         android:layout_marginBottom="@dimen/dp_8"
         android:layout_marginTop="@dimen/dp_4"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="10dp"
         android:textColor="@color/red_dark2" />
 
     <TextView
@@ -29,14 +29,14 @@
         tools:text="update time"
         android:textSize="@dimen/sp_10"
         android:layout_marginTop="@dimen/dp_2"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="10dp"
         android:layout_below="@id/rank_recycler_view"
         android:layout_alignParentStart="true"
         android:textColor="@color/gray" />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rank_recycler_view"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp"
         
         android:layout_below="@id/rank_title"
         android:layout_width="match_parent"

@@ -13,6 +13,8 @@
     app:cardBackgroundColor="@color/white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/article_container"
@@ -37,7 +39,6 @@
         android:fontFamily="sans-serif-medium"
         android:layout_width="@dimen/dp_0"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/dp_9"
         android:layout_marginTop="@dimen/dp_7"
         android:layout_marginEnd="@dimen/dp_8"
         android:maxLines="2"
@@ -51,8 +52,7 @@
         android:id="@+id/num"
         style="@style/TextStyle.Title.Sub"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/dp_8"
+        android:layout_height="wrap_content" android:layout_marginStart="0dp"
         android:minEms="4"
         android:gravity="start"
         app:layout_constraintTop_toTopOf="@id/forum"
@@ -76,8 +76,7 @@
     <TextView
         android:id="@+id/index"
         android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginStart="@dimen/dp_8"
+        android:layout_height="24dp" android:layout_marginStart="0dp"
         android:gravity="center"
         android:textStyle="normal"
         android:fontFamily="sans-serif-medium"

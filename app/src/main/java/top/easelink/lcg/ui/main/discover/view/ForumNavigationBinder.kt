@@ -42,7 +42,7 @@ class ForumNavigationVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseN
     }
 
     private fun setUp(listModel: List<ForumNavigationModel>) {
-        // 为整个板块导航加上类似首页的白底圆角卡片效果
+        
                 binding.apply {
             forumTips.setOnClickListener {
                 navigationGrid.smoothScrollToPosition(
