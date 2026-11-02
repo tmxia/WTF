@@ -48,13 +48,17 @@ class RankListAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                     EventBus.getDefault().post(OpenArticleEvent(model.url))
                 }
                 val resource = getImageResourceByIndex(model.index)
+                val params = titleTextView.layoutParams as ConstraintLayout.LayoutParams
                 if (resource != -1) {
                     index.setImageResource(resource)
                     index.visibility = View.VISIBLE
+                    params.marginStart = num.context.resources.getDimensionPixelSize(R.dimen.dp_28)
                 } else {
                     index.setImageDrawable(null)
                     index.visibility = View.GONE
+                    params.marginStart = num.context.resources.getDimensionPixelSize(R.dimen.dp_8)
                 }
+                titleTextView.layoutParams = params
                 titleTextView.text = model.title
                 num.text = getMappingStringByType(num.context, model.type, model.num)
                 forum.text = model.forum
