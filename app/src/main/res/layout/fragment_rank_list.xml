@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout android:layout_marginTop="@dimen/dp_20"
+<RelativeLayout android:layout_marginTop="@dimen/dp_12"
     android:layout_width="match_parent"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:clipToPadding="false"
     android:layout_height="wrap_content"
-    android:background="@drawable/rectangle_bg_white_4dp"
+    
     android:padding="@dimen/dp_2"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
@@ -36,7 +36,7 @@
         android:textColor="@color/gray" />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rank_recycler_view"
-        android:background="@color/slight_light_gray"
+        
         android:layout_below="@id/rank_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
