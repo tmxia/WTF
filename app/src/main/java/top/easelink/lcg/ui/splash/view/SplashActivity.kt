@@ -9,13 +9,13 @@ import top.easelink.lcg.ui.main.MainActivity
 
 class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        window.setBackgroundDrawable(null)
-        setTheme(R.style.AppTheme)
+        
+        
         super.onCreate(savedInstanceState)
         Handler().postDelayed({
             startActivity(Intent(baseContext, MainActivity::class.java))
             finish()
-            overridePendingTransition(0, 0)
-        }, 200)
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        }, 600)
     }
 }
