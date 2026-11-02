@@ -1,7 +1,9 @@
+@file:Suppress("DEPRECATION")
+
 import java.util.Properties
 import java.io.FileInputStream
 
-@file:Suppress("DEPRECATION")
+
 
 plugins {
     alias(libs.plugins.android.application)
