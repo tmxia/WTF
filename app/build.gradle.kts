@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 @file:Suppress("DEPRECATION")
 
 plugins {
@@ -10,6 +13,13 @@ plugins {
 val versionMajor = 2
 val versionMinor = 3
 val versionPatch = 0
+
+
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
 
 android {
     namespace = "top.easelink.lcg"
@@ -34,10 +44,10 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = System.getenv("RELEASE_KEY_ALIAS")
-            keyPassword = System.getenv("RELEASE_KEY_PWD")
-            storeFile = file("../keystore.jks")
-            storePassword = System.getenv("RELEASE_KEY_STORE_PWD")
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = file(keystoreProperties["storeFile"] as String? ?: "../keystore.jks")
+            storePassword = keystoreProperties["storePassword"] as String?
             enableV1Signing = false
             enableV2Signing = true
             enableV3Signing = true

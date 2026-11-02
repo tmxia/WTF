@@ -2,7 +2,7 @@ name: Android CI
 
 on:
   push:
-    branches: [claude/review-project-AT38c]
+    branches: [ main, master ]
   workflow_dispatch:
 
 # 同一个 PR 上的连续 push 只跑最新的，节省 Actions 分钟数
@@ -34,14 +34,23 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Make gradlew executable
+      
+      - name: Decode Keystore & Setup Signature
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
+          echo "storeFile=../keystore.jks" > key.properties
+          echo "storePassword=${{ secrets.RELEASE_STORE_PASSWORD }}" >> key.properties
+          echo "keyAlias=${{ secrets.RELEASE_KEY_ALIAS }}" >> key.properties
+          echo "keyPassword=${{ secrets.RELEASE_KEY_PASSWORD }}" >> key.properties
+
+- name: Make gradlew executable
         run: chmod +x ./gradlew
 
       # 关键 build/lint/test 一并跑。Release build 需要 keystore，CI 不跑。
       # SHIPLY_APP_ID / SHIPLY_APP_KEY 是 runtime 配置，构建时只是字符串塞进 BuildConfig，
       # 缺失也能编过，会得到 "null" 字符串 —— 测试环境可接受。
-      - name: Assemble debug
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Assemble Release
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Lint debug
         run: ./gradlew lintDebug --stacktrace
@@ -49,12 +58,12 @@ jobs:
       - name: Unit tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
-      - name: Upload debug APK
+      - name: Upload Release APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: app-release-apk
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: warn
           retention-days: 14
 
