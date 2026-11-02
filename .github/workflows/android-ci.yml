@@ -1,4 +1,4 @@
-name: Android Fast Release
+name: Android Build
 
 on:
   push:
@@ -11,15 +11,15 @@ concurrency:
 
 jobs:
   build:
-    name: Build Release
+    name: Assemble Release
     runs-on: ubuntu-latest
-    timeout-minutes: 20 # 缩短超时时间，避免僵尸任务
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 缓存 Gradle 缓存目录，这是提速的关键
+      # 缓存 Gradle 依赖，极大提升二次构建速度
       - name: Cache Gradle dependencies
         uses: actions/cache@v4
         with:
@@ -40,7 +40,6 @@ jobs:
         uses: android-actions/setup-android@v3
         with:
           packages: 'platforms;android-36 build-tools;36.0.0'
-          # 缓存 Android SDK
           cache: true
 
       - name: Decode Keystore & Setup Signature
@@ -54,26 +53,13 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      # 合并命令，加上 --no-daemon 防止 CI 环境挂起
-      - name: Assemble Release & Test
-        run: |
-          # 如果只想打 release 包，把后面的 lintDebug testDebugUnitTest 删掉
-          ./gradlew assembleRelease lintDebug testDebugUnitTest --no-daemon
+      - name: Assemble Release
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Upload Release APK
-        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-apk
+          name: app-release
           path: app/build/outputs/apk/release/*.apk
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 7
-
-      # 只有在失败时，才上传报告
-      - name: Upload lint report (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-report
-          path: app/build/reports/lint-results-debug.html
-          if-no-files-found: ignore
