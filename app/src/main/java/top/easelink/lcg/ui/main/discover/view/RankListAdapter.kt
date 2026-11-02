@@ -47,16 +47,15 @@ class RankListAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                 articleContainer.setOnClickListener {
                     EventBus.getDefault().post(OpenArticleEvent(model.url))
                 }
-                val resource = getImageResourceByIndex(model.index)
                 val params = titleTextView.layoutParams as ConstraintLayout.LayoutParams
-                if (resource != -1) {
-                    index.setImageResource(resource)
+                if (model.index in 1..3) {
                     index.visibility = View.VISIBLE
-                    params.marginStart = num.context.resources.getDimensionPixelSize(R.dimen.dp_28)
+                    index.text = model.index.toString()
+                    // 宽度 24 + 左边距 8 + 间隙 8 = 40dp，拉开呼吸感
+                    params.marginStart = (40 * num.context.resources.displayMetrics.density).toInt()
                 } else {
-                    index.setImageDrawable(null)
                     index.visibility = View.GONE
-                    params.marginStart = num.context.resources.getDimensionPixelSize(R.dimen.dp_8)
+                    params.marginStart = (8 * num.context.resources.displayMetrics.density).toInt()
                 }
                 titleTextView.layoutParams = params
                 titleTextView.text = model.title
@@ -76,15 +75,7 @@ class RankListAdapter : RecyclerView.Adapter<BaseViewHolder>() {
             return context.getString(resource, num)
         }
 
-        private fun getImageResourceByIndex(index: Int): Int {
-            return when (index) {
-                1 -> R.drawable.ic_first
-                2 -> R.drawable.ic_second
-                3 -> R.drawable.ic_third
-                else -> -1
             }
-        }
-    }
 
     companion object {
         const val VIEW_TYPE_NORMAL = 1

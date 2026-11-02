@@ -59,12 +59,15 @@
         app:layout_constraintStart_toStartOf="@id/title_text_view"
         tools:text="『原创发布区』"/>
 
-    <ImageView
+    <TextView
         android:id="@+id/index"
-        android:layout_width="@dimen/dp_16"
-        android:layout_height="@dimen/dp_16"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginStart="@dimen/dp_8"
-        android:scaleType="fitCenter"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="#FF5722"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/title_text_view"
         app:layout_constraintBottom_toBottomOf="@id/title_text_view"
