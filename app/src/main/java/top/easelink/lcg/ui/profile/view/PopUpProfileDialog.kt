@@ -102,10 +102,10 @@ class PopUpProfileDialog : DialogFragment() {
 
         dialog?.apply {
             window?.apply {
-                // 修复方案1：使用传统方式（推荐）
-             //   setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                
+             
 
-                // 或者修复方案2：确保已添加core-ktx依赖后使用
+                
                  setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
 
                 setGravity(Gravity.START or Gravity.TOP)

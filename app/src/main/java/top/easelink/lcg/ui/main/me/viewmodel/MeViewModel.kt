@@ -34,19 +34,19 @@ class MeViewModel : ViewModel() {
         viewModelScope.launch(IOPool) {
             try {
                 val userInfo = UserInfoRepo.requestUserInfo()
-                // login failed
+                
                 if (userInfo == null || userInfo == UserInfo.getDefaultUserInfo()) {
                     UserDataRepo.clearAll()
                 } else {
-                    // login successfully or userInfo changed
+                    
                     UserDataRepo.isLoggedIn = true
                     UserDataRepo.updateUserInfo(userInfo)
                 }
             } catch (e: Exception) {
                 Timber.e(e)
                 when (e) {
-                    is SocketTimeoutException -> R.string.network_error // 网络错误，不认为是登陆异常
-                    is AntiScrapingException -> R.string.anti_scraping_error // 针对触发反爬虫机制的处理
+                    is SocketTimeoutException -> R.string.network_error 
+                    is AntiScrapingException -> R.string.anti_scraping_error 
                     else -> R.string.general_error
                 }.let {
                     showMessage(it)

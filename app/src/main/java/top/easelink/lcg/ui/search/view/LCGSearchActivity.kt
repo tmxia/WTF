@@ -89,7 +89,7 @@ class LCGSearchActivity : TopActivity() {
     }
 
     private fun setUp() {
-        // edge-to-edge insets：toolbar 顶部加状态栏 padding；RecyclerView 底部加导航栏 padding。
+        
         binding.toolbar.setStatusBarPadding()
         ViewCompat.setOnApplyWindowInsetsListener(binding.recyclerView) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())

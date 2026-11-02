@@ -40,13 +40,13 @@ fun getScreenHeightDp(context: Context): Int {
     return (displayMetrics.heightPixels / displayMetrics.density).toInt()
 }
 
-/**
- * Get the device's real User-Agent
- *
- */
+
+
+
+
 fun getDeviceUserAgent(context: Context): String {
-    // 显示UA信息
-    // showMessage(WebSettings.getDefaultUserAgent(context))
+    
+    
     return WebSettings.getDefaultUserAgent(context)
 }
 

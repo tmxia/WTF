@@ -14,9 +14,9 @@ object HotTopicCacheManager: ICacheManager {
     private const val TIME_INTERVAL = 6 * 60 * 60 * 1000
     private val HOT_TOPIC_CACHE_FOLDER = "${LCGApp.context.cacheDir}/hot_topic_articles"
 
-    /**
-     * 将Url对应的内容存入磁盘缓存
-     */
+    
+
+
     suspend fun saveToDisk(rankType: String, dateType: String, timeStamp: Long, content: String) = withContext(IOPool) {
         checkDirs()
         val file = File(HOT_TOPIC_CACHE_FOLDER, toFileName(rankType, dateType, timeStamp))
@@ -28,9 +28,9 @@ object HotTopicCacheManager: ICacheManager {
         }
     }
 
-    /**
-     * 从磁盘中找到对应的数据内容
-     */
+    
+
+
     fun findTodayHotTopic(rankType: String, dateType: String): Document? {
         File(HOT_TOPIC_CACHE_FOLDER)
             .list { _, name ->
@@ -49,22 +49,22 @@ object HotTopicCacheManager: ICacheManager {
         return null
     }
 
-    /**
-     * 清楚磁盘缓存
-     */
+    
+
+
     override suspend fun clearAllCaches() = withContext(IOPool) {
         checkDirs()
     }
 
-    /**
-     * 检查文件夹是否存在，已经是否有多余文件
-     */
+    
+
+
     private fun checkDirs() {
         val parent = File(HOT_TOPIC_CACHE_FOLDER)
         if (!parent.exists()) {
             parent.mkdirs()
         } else {
-            // remove unused files
+            
             parent.list()
                 ?.asSequence()
                 ?.filter {

@@ -98,12 +98,12 @@ fun syncSystemGallery(context: Context, path: String, fileName: String) {
 }
 
 
-/**
- * 读取assets本地json
- * @param fileName
- * @param context
- * @return json String
- */
+
+
+
+
+
+
 fun getJsonStringFromAssets(fileName: String, context: Context): String {
     val stringBuilder = StringBuilder()
     try {

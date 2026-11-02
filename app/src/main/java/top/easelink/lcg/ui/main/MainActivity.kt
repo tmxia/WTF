@@ -123,10 +123,10 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             val backStackCount = supportFragmentManager.backStackEntryCount
             if (backStackCount == 0) {
                 showBottomNavigation()
-                // 直接恢复当前tab对应的Fragment，而不是依赖查找第一个可见Fragment
+                
                 restoreCurrentTabFragment()
             } else {
-                // Check if current top fragment is ArticleFragment or not
+                
                 val fragments = supportFragmentManager.fragments
                 for (fragment in fragments) {
                     if (fragment.isVisible) {
@@ -153,12 +153,12 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     }
 
     private fun restoreCurrentTabFragment() {
-        // 确保清除所有可能的回退栈状态
+        
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         }
         
-        // 根据当前tabId重新创建并显示正确的Fragment
+        
         when (currentTabId) {
             R.id.action_home -> showFragment(RecommendFragment::class.java)
             R.id.action_message -> showFragment(MessageFragment::class.java)
@@ -295,7 +295,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             else -> View.GONE
         }
         
-        // MessageFragment doesn't need auto-hide bottom navigation
+        
         if (fragment is MessageFragment) {
             toggleBottomNavScrollBehavior(false)
         } else {
@@ -314,7 +314,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         } else {
             if (layoutParams?.behavior != null) {
                 layoutParams?.behavior = null
-                // Ensure it is visible when behavior is removed
+                
                 binding.bottomNavigation.translationY = 0f
             }
         }
@@ -383,7 +383,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
 
     private fun showArticleFragment(fragment: Fragment) {
         supportFragmentManager.commit {
-            // 隐藏所有Fragment，确保只有目标Fragment可见
+            
             supportFragmentManager.fragments.forEach {
                 hide(it)
             }
@@ -447,7 +447,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             return false
         }
 
-        // 清除回退栈，确保从新的tab开始
+        
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         }

@@ -55,14 +55,14 @@ class ArticleAdapter(
 
     private val mPostList: MutableList<Post> = ArrayList()
 
-    /**
-     * 还有下一页就显示 LoadMore item。
-     * 原实现按 `size > 10` 硬阈值判断 → 短回复贴永远没"加载更多"，长贴第二页拉不到。
-     */
+    
+
+
+
     private var hasMoreItem: Boolean = false
 
     override fun getItemCount() = when {
-        mPostList.isEmpty() -> 1 // show empty view
+        mPostList.isEmpty() -> 1 
         hasMoreItem -> mPostList.size + 1
         else -> mPostList.size
     }
@@ -103,7 +103,7 @@ class ArticleAdapter(
         }
     }
 
-    /** 整列表替换。仅用于"首次加载 / 切换文章"。 */
+    
     @SuppressLint("NotifyDataSetChanged")
     fun setItems(postList: List<Post>) {
         mPostList.clear()
@@ -111,7 +111,7 @@ class ArticleAdapter(
         notifyDataSetChanged()
     }
 
-    /** 翻页 append：按区间通知，保持滚动位置 + 不重绑已显示项。 */
+    
     fun appendItems(newPosts: List<Post>) {
         if (newPosts.isEmpty()) return
         val start = mPostList.size
@@ -119,19 +119,19 @@ class ArticleAdapter(
         notifyItemRangeInserted(start, newPosts.size)
     }
 
-    /** 单条插入（回复成功后插到指定行）。 */
+    
     fun insertItem(position: Int, post: Post) {
         val safePos = position.coerceIn(0, mPostList.size)
         mPostList.add(safePos, post)
         notifyItemInserted(safePos)
     }
 
-    /** 设置/更新 LoadMore item 的显示状态。 */
+    
     fun setHasMore(hasMore: Boolean) {
         if (hasMoreItem == hasMore) return
         val wasShowing = hasMoreItem
         hasMoreItem = hasMore
-        // 用 mPostList.size 作为 LoadMore 的位置 —— 即末尾的下一个 item。
+        
         when {
             hasMore && !wasShowing && mPostList.isNotEmpty() -> notifyItemInserted(mPostList.size)
             !hasMore && wasShowing && mPostList.isNotEmpty() -> notifyItemRemoved(mPostList.size)
@@ -234,7 +234,7 @@ class ArticleAdapter(
                     } else {
                         postBtnGroup.visibility = View.GONE
                     }
-                    // fix issue occurs on some manufactures os, like MIUI
+                    
                     contentTextView.setOnLongClickListener { true }
                 } catch (e: Exception) {
                     Timber.e(e)
@@ -263,7 +263,7 @@ class ArticleAdapter(
                         } ?: showMessage(R.string.general_error)
                     }
                     else -> {
-                        // do nothing
+                        
                     }
                 }
             }
@@ -285,8 +285,8 @@ class ArticleAdapter(
             post?.let { p ->
                 with(binding) {
                     try {
-                        // 只有真的登录、且作者名与当前用户匹配才高亮。
-                        // 原实现忘了 isLoggedIn 兜底，未登录时 username=""，会把所有 author="" 的匿名回复全染色。
+                        
+                        
                         if (isLoggedIn && username.isNotEmpty() && p.author == username) {
                             replyCard.strokeColor = ContextCompat.getColor(root.context, R.color.orange)
                             replyCard.strokeWidth = dp2px(root.context, 1f).toInt()
@@ -370,7 +370,7 @@ class ArticleAdapter(
                         } else {
                             replyBtnGroup.visibility = View.GONE
                         }
-                        // fix issue occurs on some manufactures os, like MIUI
+                        
                         replyContentTextView.setOnLongClickListener { true }
                     } catch (e: Exception) {
                         Timber.e(e)
@@ -394,7 +394,7 @@ class ArticleAdapter(
                         mListener.replyAdd(it)
                     }
                     else -> {
-                        // do nothing
+                        
                     }
                 }
             }
@@ -432,8 +432,8 @@ class ArticleAdapter(
         BaseViewHolder(binding.root) {
 
         override fun onBind(position: Int) {
-            // 这里只触发拉取；显示/隐藏由 Adapter.setHasMore 根据 ViewModel.hasMorePages 控制，
-            // 不再依赖回调里的 fetchResult（异步未返回前永远是 false，会让 LoadMore 永远 VISIBLE）。
+            
+            
             binding.root.visibility = View.VISIBLE
             mListener.fetchArticlePost(ArticleAdapterListener.FETCH_POST_MORE, null)
         }

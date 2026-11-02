@@ -133,8 +133,8 @@ class ArticleFragment : TopFragment(), ControllableFragment {
             val articleAdapter = ArticleAdapter(viewModel, this@ArticleFragment)
             adapter = articleAdapter
 
-            // posts LiveData 只在"首次加载/切换文章"时整体替换。翻页/插入回复都走对应的增量事件，
-            // 避免每次更新都重绑全列表（旧实现是 clearItems()+addItems() → 所有 setHtml 重跑、图片重下）。
+            
+            
             viewModel.posts.observe(viewLifecycleOwner) { posts ->
                 if (posts.isNotEmpty() && posts[0].replyUrl != null) {
                     binding.comment.visibility = View.VISIBLE
@@ -218,7 +218,7 @@ class ArticleFragment : TopFragment(), ControllableFragment {
                     R.id.action_add_to_my_favorite -> {
                         viewModel.toggleFavorite()
                     }
-                    else -> { /* Do nothing */ }
+                    else -> {  }
                 }
                 true
             }

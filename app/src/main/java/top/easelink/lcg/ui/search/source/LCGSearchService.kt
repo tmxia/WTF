@@ -11,11 +11,11 @@ import top.easelink.lcg.utils.WebsiteConstant
 import top.easelink.lcg.utils.showMessage
 import java.net.SocketTimeoutException
 
-/**
- * author : junzhang
- * date   : 2020-02-09 16:22
- * desc   : Class for sending request and parse response
- */
+
+
+
+
+
 
 object LCGSearchService {
     private const val MIN_REQUEST_INTERVAL = 5000L
@@ -47,7 +47,7 @@ object LCGSearchService {
                 val doc = response.parse()
                 val result = parseSearchResults(doc)
                 try {
-                    // Use safe call for selectFirst and text
+                    
                     mTotalResults = doc.selectFirst("h2")?.text()
                     result.totalResult = mTotalResults
                 } catch (e: Exception) {
@@ -66,7 +66,7 @@ object LCGSearchService {
             return emptyResult()
         }
         try {
-            // Use non-null asserted call for mNextPageUrl as it's checked for nullability above
+            
             return parseSearchResults(JsoupClient.sendGetRequestWithQuery(mNextPageUrl!!))
         } catch (e: SocketTimeoutException) {
             showMessage(R.string.network_error)
@@ -85,13 +85,13 @@ object LCGSearchService {
                     val aNode = it.selectFirst("a")
                     val pNode = it.selectFirst("p.xg1")
 
-                    // Check if aNode and pNode are not null before proceeding
+                    
                     if (aNode != null && pNode != null && spans.isNotEmpty() && spans.size == 3) {
                         return@mapNotNull LCGSearchResultItem(
                             title = aNode.html(),
                             url = aNode.attr("href"),
                             replyView = pNode.text(),
-                            // Use safe call for nextElementSibling and provide empty string if null
+                            
                             content = pNode.nextElementSibling()?.html().orEmpty(),
                             author = spans[1].text(),
                             date = spans[0].text(),
@@ -105,7 +105,7 @@ object LCGSearchService {
             }
         return LCGSearchResults(results).also {
             mNextPageUrl = try {
-                // Use safe call for selectFirst and attr
+                
                 doc.selectFirst("a.nxt")?.attr("href")
             } catch (e: Exception) {
                 Timber.w(e)

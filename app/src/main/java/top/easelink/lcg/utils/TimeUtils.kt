@@ -4,11 +4,11 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
-/**
- * String to Timestamp
- * @param date String
- * @return Timestamp
- */
+
+
+
+
+
 
 fun toTimeStamp(date: String): Long {
     return try {

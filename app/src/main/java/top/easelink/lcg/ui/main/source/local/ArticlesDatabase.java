@@ -9,11 +9,11 @@ import top.easelink.lcg.appinit.LCGApp;
 import top.easelink.lcg.ui.main.source.model.ArticleEntity;
 import top.easelink.lcg.ui.main.source.model.HistoryEntity;
 
-/**
- * author : junzhang
- * date   : 2019-07-26 13:53
- * desc   :
- */
+
+
+
+
+
 @Database(entities = {ArticleEntity.class, HistoryEntity.class}, version = 3, exportSchema = false)
 public abstract class ArticlesDatabase extends RoomDatabase {
     private static final Object sLock = new Object();

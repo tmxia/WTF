@@ -102,7 +102,7 @@ class HistoryArticlesAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                 authorTextView.text = item.author
                 dateTextView.text = formatRelativeTime(item.timeStamp)
 
-                // 整张卡片可点击进入文章；长按预览。
+                
                 layout.setOnClickListener {
                     EventBus.getDefault().post(OpenArticleEvent(item.url))
                 }

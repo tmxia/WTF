@@ -38,15 +38,15 @@ object JsoupClient : ApiRequest {
     private var lastTime = 0L
     private val CHECK_INTERVAL = if (BuildConfig.DEBUG) 60 * 1000 else 30 * 1000
 
-    // 5 秒以上的页面在国内很常见，把整体调度上限提到 30s，配合 OkApiClient 一致。
+    
     private const val TIME_OUT_LIMIT = 30 * 1000
     private const val BASE_URL = SERVER_BASE_URL
     private val USER_AGENT = getDeviceUserAgent(LCGApp.context)
 
-    /**
-     * 避免短时间内重复抛出 SessionExpiredEvent，让 UI 只弹一次"登录失效"。
-     * 在 clearAll 时复位。
-     */
+    
+
+
+
     private val sessionExpiredFiredOnce = AtomicBoolean(false)
 
     @Throws(SocketTimeoutException::class, IOException::class)
@@ -107,7 +107,7 @@ object JsoupClient : ApiRequest {
             }
     }
 
-    /** 登出后由外部调用，让下次再次检测到 401 时仍能弹一次提示。 */
+    
     fun resetSessionExpiredFlag() {
         sessionExpiredFiredOnce.set(false)
     }
@@ -150,24 +150,24 @@ object JsoupClient : ApiRequest {
         }
     }
 
-    /**
-     * 探测响应里是否携带 Discuz 的"会话失效"特征。
-     * 命中且本地仍持有"已登录"状态 -> 视为会话失效，清账号并通知 UI。
-     *
-     * 检测策略基于实地抓取 52pojie 真实响应（已登录帖子页 vs 未登录访问签到页）：
-     *
-     * 强信号 #1：<div id="messagelogin"> 元素存在
-     *   这个元素只在 Discuz 的"需要登录才能继续此操作"提示页里出现，正常浏览页绝不会有。
-     *   是最干净的判定依据。
-     *
-     * 强信号 #2：<div id="messagetext"> 文本含 "您需要先登录才能继续"
-     *   Discuz 标准未登录提示文案，已在 52pojie 实际响应里验证过。
-     *
-     * 命中任一即清登录态。曾用过的"form[name=login] 存在"信号被舍弃 ——
-     * 论坛侧边栏经常自带快速登录框，已登录用户也可能看到，会误报。
-     *
-     * 触发时打 Timber.w 记录上下文，方便用户在 logcat 里排查"莫名掉登录"。
-     */
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private fun checkLoginState(doc: Document) {
         if (!UserDataRepo.isLoggedIn) return
 
@@ -176,7 +176,7 @@ object JsoupClient : ApiRequest {
         val explicitExpired = messageText.contains(SESSION_EXPIRED_MARKER)
 
         if (!hasMessageLogin && !explicitExpired) {
-            // 与会话无关 / 健康响应 → 重置 one-shot，下次再失效仍能弹一次。
+            
             sessionExpiredFiredOnce.compareAndSet(true, false)
             return
         }

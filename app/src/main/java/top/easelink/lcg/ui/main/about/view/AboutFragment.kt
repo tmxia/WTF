@@ -43,7 +43,7 @@ class AboutFragment : TopFragment(), ControllableFragment {
         binding.authorEmail.setOnClickListener {
             val intent = Intent(Intent.ACTION_SEND)
             intent.type = "text/plain"
-            intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(getString(R.string.author_email))) // EXTRA_EMAIL 期望 String 数组
+            intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(getString(R.string.author_email))) 
             intent.putExtra(Intent.EXTRA_SUBJECT, "问题反馈")
             startActivity(Intent.createChooser(intent, "发送反馈邮件"))
         }

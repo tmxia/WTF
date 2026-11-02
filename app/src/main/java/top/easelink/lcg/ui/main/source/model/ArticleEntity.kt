@@ -4,11 +4,11 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-/**
- * author : junzhang
- * date   : 2019-07-26 11:38
- * desc   :
- */
+
+
+
+
+
 @Entity(tableName = "articles")
 class ArticleEntity(
     @field:ColumnInfo(name = "title") var title: String,

@@ -45,7 +45,7 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // toolbar 顶部 + recyclerview 底部分别处理状态栏 / 导航栏 inset，避免 edge-to-edge 下被吃。
+        
         binding.toolbar.setStatusBarPadding()
         ViewCompat.setOnApplyWindowInsetsListener(binding.recyclerView) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())

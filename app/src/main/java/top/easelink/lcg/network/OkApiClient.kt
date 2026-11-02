@@ -15,8 +15,8 @@ object OkApiClient : ApiRequest {
 
     private const val FOLLOW_REDIRECTS = true
 
-    // 旧实现是 5s 全超时，国内访问 52pojie 经常 >5s -> 大量假性 SocketTimeoutException。
-    // 调整到经验值：连接 10s，读写 15s，整体调用 30s。
+    
+    
     private const val CONNECT_TIMEOUT = 10L
     private const val READ_WRITE_TIMEOUT = 15L
     private const val CALL_TIMEOUT = 30L

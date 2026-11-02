@@ -26,7 +26,7 @@ class ReplyPostViewModel : ViewModel() {
         }
     }
 
-    /** 走统一的 JsoupClient：共享 cookie jar、带会话失效检测、统一超时。 */
+    
     private fun sendReplyAsync(query: String?, content: String): Boolean {
         Timber.d(content)
         if (query.isNullOrEmpty() || content.isBlank()) return false
@@ -48,7 +48,7 @@ class ReplyPostViewModel : ViewModel() {
         val reppost = formDoc.selectFirst("input[name=reppost]")?.attr("value").orEmpty()
         val formHash = formDoc.selectFirst("input[name=formhash]")?.attr("value").orEmpty()
 
-        // 触发 checkpostrule，主要为了让站点维护 token；返回不是关键，沿用旧逻辑用 GET。
+        
         JsoupClient.sendGetRequestWithUrl(CHECK_RULE_URL)
 
         val replyUrl = "${SERVER_BASE_URL}forum.php?mod=post&infloat=yes&action=reply" +

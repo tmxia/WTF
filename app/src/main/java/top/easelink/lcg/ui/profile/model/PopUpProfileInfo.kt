@@ -17,7 +17,7 @@ data class PopUpProfileInfo(
     @SerializedName("extra_user_info")
     val extraUserInfo: String?,
     @SerializedName("follow_info")
-    val followInfo: Pair<String, String>?, // title -> url
+    val followInfo: Pair<String, String>?, 
     @SerializedName("profile_url")
     val profileUrl: String?
 ): Parcelable

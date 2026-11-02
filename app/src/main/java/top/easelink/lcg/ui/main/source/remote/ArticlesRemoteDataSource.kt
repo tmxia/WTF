@@ -29,11 +29,11 @@ import top.easelink.lcg.utils.WebsiteConstant.REMOVE_FAVORITE_QUERY
 import java.net.SocketTimeoutException
 import java.util.*
 
-/**
- * author : junzhang
- * date   : 2019-07-04 16:22
- * desc   :
- */
+
+
+
+
+
 object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource {
     private const val USER_NAME = "name"
     private const val USER_AVATAR = "avatar"
@@ -119,7 +119,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             val replyAddUrls = getReplyAddUrl(doc)
             val userInfos = getUserInfo(doc)
             val contents = getContents(doc)
-            // save current article to history
+            
             if (isFirstFetch) {
                 GlobalScope.launch(BackGroundPool) {
                     addToHistory(
@@ -149,7 +149,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                         replyUrls[i]
                     }
                     val post = Post(
-                        // 用 orEmpty() 兜底；原实现 .toString() 在 key 缺失时会写出字面值 "null"。
+                        
                         author = userInfos[i][USER_NAME].orEmpty(),
                         avatar = userInfos[i][USER_AVATAR].orEmpty(),
                         date = dateTimes[i],
@@ -169,7 +169,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             return ArticleDetail(title, postList, nextPageUrl, fromHash, articleAbstract)
         } catch (e: Exception) {
             when (e) {
-                // map to NetWorkException
+                
                 is SocketTimeoutException -> throw NetworkException()
                 is BlockException -> throw e
                 else -> throw e
@@ -330,7 +330,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                 article
             }
 
-            // for thread part
+            
             var threadList: List<ForumThread>? = null
             if (processThreadList) {
                 doc.getElementById("thread_types")?.let { threadTypes ->
@@ -406,9 +406,9 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         return list
     }
 
-    /**
-     * get uid/avatar/name
-     */
+    
+
+
     private fun getUserInfo(document: Document): List<Map<String, String>> {
         val list: MutableList<Map<String, String>> = ArrayList(12)
         val elements = document.select("td[rowspan]")
@@ -498,11 +498,11 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
 
     private fun processContentElement(element: Element): Element {
         element.select("div.tip").remove()
-        // remove user level info etc
+        
         element.select("script").remove()
 
-        // 给 Discuz 的引用块加上视觉样式。Html.fromHtml 不识别 div.quote，
-        // 不加这层包装的话引用文字会和正文混在一起。
+        
+        
         for (quote in element.select("div.quote")) {
             val inner = quote.selectFirst("blockquote")?.html().orEmpty()
             if (inner.isNotEmpty()) {
@@ -513,7 +513,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             }
         }
 
-        // convert all code
+        
         for (e in element.getElementsByTag("pre")) {
             val s = e.html()
                 .replace("\r\n", "<br/>")
@@ -522,13 +522,13 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                 .replace(" ", "&nbsp;")
             e.html(s)
         }
-        // move gif from file to src (Discuz 附件 / ignore_js_op 包装)
+        
         val imgElements = element.getElementsByTag("img")
         for (i in imgElements.indices) {
             val imgElement = imgElements[i]
             val src = imgElement.attr("src")
-            // 原实现一刀切删 static.52pojie.cn/static/ 下所有图，连 image/smiley/（表情）也秒了。
-            // 这里只过滤掉论坛 UI 元素（用户等级图标、common 资源），明确放行 smiley 与其它内容图。
+            
+            
             if (src.contains("static.52pojie.cn/static/image/") &&
                 !src.contains("smiley") &&
                 !src.contains("none")
@@ -540,16 +540,16 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                 imgElement.attr("src", attr)
             }
 
-        // ======== 降重修复：移除正文中所有粗体和过大的标题 ========
-        // 1. 将 <b> 和 <strong> 标签解开（unwrap），保留里面的文字，但去掉粗体样式
+        
+        
         for (bold in element.select("b, strong")) {
             bold.unwrap()
         }
-        // 2. 将 <h1> 到 <h6> 标题标签降级为普通的 <p> 标签，防止字太大太粗
+        
         for (heading in element.select("h1, h2, h3, h4, h5, h6")) {
             heading.tagName("p")
         }
-        // ========================================================
+        
         }
         return element
     }
@@ -577,8 +577,8 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             val doc = JsoupClient.sendGetRequestWithQuery(
                 String.format(REMOVE_FAVORITE_QUERY, threadId, formHash)
             )
-            // Discuz 删除成功通常返回带 "成功" / "删除" 字样的 messagetext，
-            // 失败会返回 alert_error；用文案兜底判断，避免把失败当成功。
+            
+            
             val msg = doc.getElementById("messagetext")?.text().orEmpty()
             val hasError = doc.select(".alert_error").isNotEmpty()
             !hasError && (msg.isEmpty() || msg.contains("成功") || msg.contains("删除"))
@@ -588,11 +588,11 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         }
     }
 
-    /**
-     * Support user's post
-     * @param query post url without base_server_url
-     * @return status message
-     */
+    
+
+
+
+
     @WorkerThread
     fun replyAdd(query: String): String {
         return try {

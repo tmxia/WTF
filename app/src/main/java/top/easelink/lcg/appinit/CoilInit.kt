@@ -23,7 +23,7 @@ object LCGImageLoaderFactory : ImageLoaderFactory {
     }
 
     private fun buildClient(): OkHttpClient {
-        // 论坛附件域 attach.52pojie.cn 需要带原站 Referer 和会话 cookie 才能访问。
+        
         val headerInterceptor = Interceptor { chain ->
             val original = chain.request()
             if (original.url.host.contains("attach")) {
@@ -41,7 +41,7 @@ object LCGImageLoaderFactory : ImageLoaderFactory {
                         "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
                     )
                     .header("Accept-Encoding", "gzip, deflate")
-                    // 论坛附件 CDN 历史上对移动端 UA 偶有限制，沿用旧实现的桌面 UA 作为兼容。
+                    
                     .header(
                         "User-Agent",
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +

@@ -29,7 +29,7 @@ class LCGApp : Application() {
         initCoil()
         AppGuardStarter.init(this)
         ShiplyInitialization.init(this@LCGApp)
-        // 让 WebView 与原生网络栈共用同一份 cookie，避免重启后 WebView "看着已登出"。
+        
         applicationScope.launch { LCGCookieJar.syncToWebView() }
         trySignIn()
         CacheCleanerTask.clearCachesIfNeeded()
@@ -38,7 +38,7 @@ class LCGApp : Application() {
     private fun trySignIn() {
         applicationScope.launch {
             if (!AppConfig.autoSignEnable || !UserDataRepo.isLoggedIn) return@launch
-            // 与 SignInWorker 去重：如 7 小时内已成功签过，不再触发，避免冷启动 + Worker 双跑。
+            
             if (SignInWorker.isRecentlyExecuted()) {
                 Timber.d("trySignIn skipped: recently executed")
                 return@launch

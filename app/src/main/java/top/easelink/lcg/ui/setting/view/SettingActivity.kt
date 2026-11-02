@@ -32,7 +32,7 @@ class SettingActivity : TopActivity() {
         setContentView(binding.root)
         mViewModel = ViewModelProvider(this)[SettingViewModel::class.java]
 
-        // 处理返回按钮的新方式
+        
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 finish()
@@ -54,8 +54,8 @@ class SettingActivity : TopActivity() {
     }
 
     private fun setupToolBar() {
-        // targetSdk 36 强制 edge-to-edge：toolbar 顶部加状态栏 padding，
-        // 根 ScrollView 底部加导航栏 padding，否则会被系统栏遮挡。
+        
+        
         binding.toolbar.setStatusBarPadding()
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -80,7 +80,7 @@ class SettingActivity : TopActivity() {
     }
 
     private fun setupComponents() {
-        // 账户状态相关UI设置
+        
         updateAccountButton(UserDataRepo.isLoggedIn)
 
         binding.apply {
@@ -123,12 +123,12 @@ class SettingActivity : TopActivity() {
     }
 
     private fun setupObserver() {
-        // 观察登录状态变化
+        
         top.easelink.lcg.account.AccountManager.isLoggedIn.observe(this) { isLoggedIn ->
             updateAccountButton(isLoggedIn)
         }
         
-        // 使用lambda简化LiveData观察者
+        
         mViewModel.apply {
             syncFavoriteEnable.observe(this@SettingActivity) { isEnabled ->
                 binding.syncFavoritesSwitch.isChecked = (UserDataRepo.isLoggedIn && isEnabled)

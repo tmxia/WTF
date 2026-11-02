@@ -61,7 +61,7 @@ object BaiduSearchService {
                         ?.getElementsByClass("support-text-top")
                         ?.first()
                         ?.text()
-                } catch (e: Exception) { // mute
+                } catch (e: Exception) { 
                     it.nextPageUrl = null
                 }
             }

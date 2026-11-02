@@ -119,6 +119,6 @@ internal class ForumsSecondaryAdapterConfig :
         holder: LinkageSecondaryFooterViewHolder,
         item: BaseGroupedItem<ForumGroupedItem.ItemInfo>
     ) {
-        // Footer 视图没有具体的视图操作，所以保持不变
+        
     }
 }

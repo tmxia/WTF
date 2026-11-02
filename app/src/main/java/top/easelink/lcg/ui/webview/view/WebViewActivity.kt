@@ -146,7 +146,7 @@ class WebViewActivity : AppCompatActivity() {
                 val doc = Jsoup.parse(html)
                 val currentUrl = withContext(Main) { mWebView.url } ?: return@launch
                 if (!isLoginSuccess(doc, currentUrl)) return@launch
-                // 把刚登录拿到的 cookie 灌入统一 jar，OkHttp/Jsoup/Coil 立刻共享同一个会话。
+                
                 LCGCookieJar.syncFromWebView(currentUrl)
                 UserDataRepo.isLoggedIn = true
                 isLoggedIn.postValue(true)
@@ -165,15 +165,15 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Discuz 论坛登录成功的标志：
-     * 1) 页面里出现用户头像 div.avt（Discuz 通用，已登录用户右上角必定渲染）；
-     * 2) 页面 NOT 含 #messagelogin / "您需要先登录" 这类失效标志。
-     *
-     * 旧实现还要求 cookie 含 *_auth，但 52pojie 实际命名是 *_st_p（uid|ts|md5 格式），
-     * 没有 *_auth cookie。强制要求 *_auth 会让 isLoginSuccess 永远 false，登录成功后
-     * UI 不会标记成已登录 —— 这是另一处隐藏 bug。这里改成只看 HTML 信号。
-     */
+    
+
+
+
+
+
+
+
+
     private fun isLoginSuccess(doc: org.jsoup.nodes.Document, url: String): Boolean {
         val hasAvatar = doc.selectFirst("div.avt") != null
         val isLoginRequiredPage = doc.getElementById("messagelogin") != null ||
@@ -250,7 +250,7 @@ class WebViewActivity : AppCompatActivity() {
                 insetsController.show(WindowInsetsCompat.Type.systemBars())
             }
             else -> {
-                // 处理其他方向情况
+                
             }
         }
     }
@@ -337,7 +337,7 @@ class WebViewActivity : AppCompatActivity() {
     private inner class InnerWebViewClient : WebViewClient() {
         override fun onPageCommitVisible(view: WebView, url: String) {
             setLoading(false)
-            // 直接按 URL 的实际 host 把 cookie 同步进统一 jar，避免 WebView 与原生网络栈失去会话同步。
+            
             LCGCookieJar.syncFromWebView(url)
             if (isOpenLoginEvent) {
                 view.loadUrl("javascript:$HOOK_NAME.processHtml(document.documentElement.outerHTML);")
@@ -351,8 +351,8 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
-            // 考虑显示警告对话框后再决定是否继续
-            handler.cancel() // 改为 cancel() 提高安全性
+            
+            handler.cancel() 
         }
 
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {

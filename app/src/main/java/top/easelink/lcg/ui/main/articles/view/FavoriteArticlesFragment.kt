@@ -85,7 +85,7 @@ class FavoriteArticlesFragment :
                         SERVER_BASE_URL + GET_FAVORITE_QUERY,
                         context
                     )
-                    else -> { /* no-op */ }
+                    else -> {  }
                 }
                 true
             }

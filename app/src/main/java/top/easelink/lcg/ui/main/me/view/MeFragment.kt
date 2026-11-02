@@ -44,10 +44,10 @@ class MeFragment : TopFragment(), ControllableFragment {
 
     companion object {
         private var lastFetchInfoTime = 0L
-        private const val MINIMUM_REQUEST_INTERVAL = 30_000 // 30s
+        private const val MINIMUM_REQUEST_INTERVAL = 30_000 
 
         private var lastShowLoginHintTime = 0L
-        private const val MINIMUM_HINT_SHOW_INTERVAL = 120_000 // 120s
+        private const val MINIMUM_HINT_SHOW_INTERVAL = 120_000 
     }
 
     override fun isControllable(): Boolean {
@@ -210,9 +210,9 @@ class MeFragment : TopFragment(), ControllableFragment {
         binding.swipeRefreshLayout.apply {
             setColorSchemeColors(ContextCompat.getColor(context, R.color.pojie_logo))
             setOnRefreshListener {
-                // 刷新用户信息
+                
                 viewModel.fetchUserInfoDirect()
-                // 延迟关闭刷新动画，确保用户可以看到刷新效果
+                
                 viewLifecycleOwner.lifecycleScope.launch {
                     delay(1000)
                     isRefreshing = false

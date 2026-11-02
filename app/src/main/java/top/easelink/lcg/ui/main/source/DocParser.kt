@@ -109,7 +109,7 @@ fun parseNotificationInfo(doc: Document): NotificationInfo {
                                 url.contains("pm") -> message++
                                 url.contains("system") -> systemNotifs++
                                 else -> {
-                                    // do nothing
+                                    
                                 }
                             }
                         }

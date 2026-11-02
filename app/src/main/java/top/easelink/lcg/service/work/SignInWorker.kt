@@ -62,7 +62,7 @@ class SignInWorker(context: Context, workerParams: WorkerParameters) :
         private const val TASK_APPLIED = "已申请"
         const val TAG = "SignInWorker"
 
-        // 与 LCGApp.trySignIn 共用的去重时间戳；7 小时窗口，避免与 8 小时周期重复触发。
+        
         private const val SP_KEY_LAST_SIGN_IN_AT = "sp_key_last_sign_in_at"
         private const val DEDUP_WINDOW_MS = 7L * 60 * 60 * 1000
 
@@ -102,10 +102,10 @@ class SignInWorker(context: Context, workerParams: WorkerParameters) :
             }
         }
 
-        /**
-         * Discuz 把未登录用户重定向到登录页（或显示带 messagetext 的提示）。
-         * 这两个特征足以让我们识别"签到时被踢"的状态。
-         */
+        
+
+
+
         private fun looksLikeLoginPage(doc: Document): Boolean {
             val hasLoginForm = doc.selectFirst("form[name=login], div#loginform, table#loginform") != null
             val noFormHash = doc.selectFirst("input[name=formhash]") == null
@@ -115,7 +115,7 @@ class SignInWorker(context: Context, workerParams: WorkerParameters) :
                     msg.contains("请先登录")
         }
 
-        /** 是否在去重窗口内已经成功签过 —— 供 LCGApp 冷启动判断要不要再跑一次。 */
+        
         fun isRecentlyExecuted(): Boolean {
             val sp = SharedPreferencesHelper.getUserSp()
             val last = sp.getLong(SP_KEY_LAST_SIGN_IN_AT, 0L)

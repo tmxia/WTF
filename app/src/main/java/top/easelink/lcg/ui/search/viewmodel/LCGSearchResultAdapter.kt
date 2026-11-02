@@ -45,15 +45,15 @@ class LCGSearchResultAdapter(
         return when (viewType) {
             VIEW_TYPE_NORMAL -> SearchResultViewHolder(
                 ItemLcgSearchResultViewBinding.inflate(
-                    LayoutInflater.from(parent.context), parent, false // 使用 View Binding inflate 布局
+                    LayoutInflater.from(parent.context), parent, false 
                 )
             )
             VIEW_TYPE_LOAD_MORE -> LoadMoreViewHolder(
                 ItemLoadMoreViewBinding.inflate(
-                    LayoutInflater.from(parent.context), parent, false // 使用 View Binding inflate 布局
+                    LayoutInflater.from(parent.context), parent, false 
                 )
             )
-            //VIEW_TYPE_EMPTY
+            
             else -> EmptyViewHolder(
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_empty_view, parent, false)

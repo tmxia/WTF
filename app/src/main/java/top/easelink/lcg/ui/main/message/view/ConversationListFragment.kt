@@ -19,7 +19,7 @@ class ConversationListFragment : TopFragment() {
 
     private lateinit var mConversationVM: ConversationListViewModel
     private var _binding: FragmentConversationListBinding? = null
-    // This property is only valid between onCreateView and onDestroyView.
+    
     private val binding get() = _binding!!
 
     override fun onAttach(context: Context) {
@@ -46,10 +46,10 @@ class ConversationListFragment : TopFragment() {
 
     private fun setUpSwipeRefresh() {
         binding.conversationSwipeRefresh.setOnRefreshListener {
-            // 清除现有数据并重新加载
+            
             (binding.conversationList.adapter as ConversationListAdapter).clearItems()
             mConversationVM.fetchConversations()
-            // 监听数据加载完成后停止刷新
+            
             mConversationVM.conversations.observe(viewLifecycleOwner, Observer {
                 binding.conversationSwipeRefresh.isRefreshing = false
             })

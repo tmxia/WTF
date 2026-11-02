@@ -35,16 +35,16 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
     val isLoading = MutableLiveData<Boolean>()
     val isFavorited = MutableLiveData<Boolean>(false)
 
-    /**
-     * 是否还有下一页。Adapter 据此显示 LoadMore item，并据此判断"加载更多"是否
-     * 应当成功消失（原实现用一次性回调，异步未返回值前默认 false，导致 LoadMore 永不消失）。
-     */
+    
+
+
+
     val hasMorePages = MutableLiveData(false)
 
-    /** 翻页 append 事件：把新增加的页内容直接交给 Adapter，UI 用 notifyItemRangeInserted。 */
+    
     val newPostsAppended = MutableLiveData<List<Post>>()
 
-    /** 单条插入事件：position + post，UI 用 notifyItemInserted。 */
+    
     val postInsertedAt = MutableLiveData<Pair<Int, Post>>()
 
     private var mUrl: String? = null
@@ -52,7 +52,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
     private var mFormHash: String? = null
     private var articleAbstract: ArticleAbstractResponse? = null
 
-    /** 防止 LoadMore 在 onBind 频繁触发时重复拉取，导致同一页被 append 多次。 */
+    
     private var fetching = false
 
     fun setUrl(url: String) {
@@ -97,11 +97,11 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                 if (response.postList.isNotEmpty()) {
                     when (type) {
                         FETCH_POST_INIT -> {
-                            // 首次/重新加载：全列表替换。posts 仍是真源（用于 extractDownloadUrl / addPostToTop 等）。
+                            
                             safeUpdate(posts, response.postList.toMutableList())
                         }
                         else -> {
-                            // 翻页 append：把增量交给 Adapter 自己 add+notify，避免 setItems 全量重绑。
+                            
                             posts.value?.addAll(response.postList)
                             safeUpdate(newPostsAppended, response.postList)
                         }
@@ -236,7 +236,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         val url = mUrl ?: return
         viewModelScope.launch(IOPool) {
             try {
-                // 远端取消收藏：尽力同步，失败也不挡本地删除，避免 UI 进入 "本地已删/远端仍在" 死锁。
+                
                 if (AppConfig.syncFavorites && UserDataRepo.isLoggedIn) {
                     val threadId = extractThreadId(mUrl)
                     val formHash = mFormHash
@@ -260,7 +260,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
 
     fun addPostToTop(post: Post) {
         posts.value?.let { currentList ->
-            // 改原 list 并发单条增量事件，避免整列重绑。
+            
             val insertPos = if (currentList.isEmpty()) 0 else 1
             currentList.add(insertPos, post)
             safeUpdate(postInsertedAt, insertPos to post)

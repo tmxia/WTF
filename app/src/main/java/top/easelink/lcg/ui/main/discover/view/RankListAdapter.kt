@@ -51,7 +51,7 @@ class RankListAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                 if (model.index in 1..3) {
                     index.visibility = View.VISIBLE
                     index.text = model.index.toString()
-                    // 宽度 24 + 左边距 8 + 间隙 8 = 40dp，拉开呼吸感
+                    
                     params.marginStart = (34 * num.context.resources.displayMetrics.density).toInt()
                 } else {
                     index.visibility = View.GONE

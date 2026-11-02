@@ -44,7 +44,7 @@ class ProfileActivity : TopActivity() {
     }
 
     private fun setupToolBar() {
-        // targetSdk 36 edge-to-edge：toolbar 顶部、Fragment 容器底部分别加 inset padding。
+        
         binding.toolbar.setStatusBarPadding()
         ViewCompat.setOnApplyWindowInsetsListener(binding.profileRoot) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())

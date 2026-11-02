@@ -11,5 +11,5 @@ data class RankModel(
     val authorUrl: String,
     val date: String,
     val type: RankType,
-    val num: Int // view/reply/favorite/hot
+    val num: Int 
 )

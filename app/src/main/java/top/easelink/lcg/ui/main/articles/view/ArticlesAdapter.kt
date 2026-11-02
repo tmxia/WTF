@@ -168,13 +168,13 @@ class ArticlesAdapter(
     }
 
     inner class LoadMoreViewHolder internal constructor(
-        private val binding: ItemLoadMoreViewBinding // 接受 ItemLoadMoreViewBinding 对象
-    ) : BaseViewHolder(binding.root) { // 将绑定对象的根视图传递给 BaseViewHolder
+        private val binding: ItemLoadMoreViewBinding 
+    ) : BaseViewHolder(binding.root) { 
         override fun onBind(position: Int) {
-            binding.loading.visibility = View.VISIBLE // loading -> loading
+            binding.loading.visibility = View.VISIBLE 
             articleFetcher.fetchArticles(ArticleFetcher.FetchType.FETCH_MORE) {
-                binding.root.post { // view.post -> binding.root.post
-                    binding.loading.visibility = View.GONE // loading -> loading
+                binding.root.post { 
+                    binding.loading.visibility = View.GONE 
                 }
             }
         }

@@ -59,7 +59,7 @@ class FollowListAdapter(
                 val binding = ItemLoadMoreViewBinding.inflate(inflater, parent, false)
                 LoadMoreViewHolder(binding, lifecycleOwner, followListViewModel)
             }
-            else -> { // VIEW_TYPE_EMPTY
+            else -> { 
                 val binding = ItemEmptyViewBinding.inflate(inflater, parent, false)
                 EmptyViewHolder(binding)
             }
@@ -107,7 +107,7 @@ class FollowListAdapter(
                 followingNum.text =
                     root.context.getString(R.string.following_num_template, follow.followingNum)
                 followListContainer.setOnClickListener {
-                    //open article
+                    
                 }
             }
         }

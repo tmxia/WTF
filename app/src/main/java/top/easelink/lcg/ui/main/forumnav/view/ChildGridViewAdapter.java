@@ -39,7 +39,7 @@ public class ChildGridViewAdapter extends ArrayAdapter<ChildForumItemInfo> {
         }
         ChildForumItemInfo item = getItem(position);
         if (item == null) {
-            // suppress the npe warning
+            
             item = new ChildForumItemInfo(
                 "",
                 null,

@@ -1,10 +1,10 @@
 package top.easelink.lcg.ui.main.source.model
 
-/**
- * author : junzhang
- * date   : 2019-07-04 11:38
- * desc   :
- */
+
+
+
+
+
 class Article(
     val title: String,
     val author: String,

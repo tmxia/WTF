@@ -27,7 +27,7 @@ class ConversationListAdapter(
         return if (mConversations.isEmpty()) {
             1
         } else {
-            // todo add load more in the future
+            
             mConversations.size
         }
     }
@@ -97,7 +97,7 @@ class ConversationListAdapter(
                         SERVER_BASE_URL + conversation.replyUrl,
                         root.context
                     )
-//                    context.startActivity(Intent(context, ConversationDetailActivity::class.java))
+
                 }
             }
         }

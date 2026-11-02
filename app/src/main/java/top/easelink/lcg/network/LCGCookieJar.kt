@@ -14,17 +14,17 @@ import top.easelink.lcg.utils.SharedPreferencesHelper
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 import androidx.core.content.edit
 
-/**
- * 单例的 cookie 容器，作为整个 App 唯一的 cookie 真源（single source of truth）。
- *
- * 原项目里有四套互不同步的 cookie 实现（OkApiClient 用 PersistentCookieJar；JsoupClient/
- * Coil/ReplyPost 用一份扁平 key=value 的 SharedPreferences；WebView 用系统 CookieManager），
- * 导致登录态在不同模块之间不一致，README 里"偶尔需要重新登录"的根因之一。
- *
- * 这里把所有写入收口到 PersistentCookieJar，并提供与 WebView 的双向桥接：
- * - WebView 登录后，调用 syncFromWebView 把系统 cookie 同步到 jar；
- * - 应用启动时调用 syncToWebView 把 jar 的 cookie 推回 WebView，避免再次打开登录页时"看着已登出"。
- */
+
+
+
+
+
+
+
+
+
+
+
 object LCGCookieJar {
 
     private const val LEGACY_MIGRATED_KEY = "lcg_cookie_migrated_v1"
@@ -36,16 +36,16 @@ object LCGCookieJar {
         }
     }
 
-    /** 取出一个 url 应该携带的 cookie 列表（key=value 形式，方便 Jsoup/Coil 拼请求头）。 */
+    
     fun cookiesForUrl(url: String): Map<String, String> {
         val httpUrl = url.toHttpUrlOrNull() ?: return emptyMap()
         return jar.loadForRequest(httpUrl).associate { it.name to it.value }
     }
 
-    /**
-     * Jsoup 拿到响应后回写 cookie。Jsoup 的 cookies 没有 domain/path/expires 信息，
-     * 这里按请求 URL 的 host 构造，并给一个 30 天过期，避免无限期残留。
-     */
+    
+
+
+
     fun saveCookiesFromJsoup(url: String, cookies: Map<String, String>) {
         if (cookies.isEmpty()) return
         val httpUrl = url.toHttpUrlOrNull() ?: return
@@ -55,10 +55,10 @@ object LCGCookieJar {
         if (list.isNotEmpty()) jar.saveFromResponse(httpUrl, list)
     }
 
-    /**
-     * 把 WebView 的 CookieManager 中关于 url 的 cookie 同步进 jar。
-     * 在 onPageCommitVisible / onPageFinished 等时机调用。
-     */
+    
+
+
+
     fun syncFromWebView(url: String) {
         val httpUrl = url.toHttpUrlOrNull() ?: return
         val raw = CookieManager.getInstance().getCookie(url) ?: return
@@ -72,10 +72,10 @@ object LCGCookieJar {
         if (list.isNotEmpty()) jar.saveFromResponse(httpUrl, list)
     }
 
-    /**
-     * 反方向：把 jar 中所有 cookie 推回 WebView 的 CookieManager。
-     * 用于 App 启动时确保 WebView 不会"忘记"登录态。
-     */
+    
+
+
+
     fun syncToWebView() {
         val httpUrl = SERVER_BASE_URL.toHttpUrlOrNull() ?: return
         val cm = CookieManager.getInstance()
@@ -85,7 +85,7 @@ object LCGCookieJar {
         cm.flush()
     }
 
-    /** 登出时调用：清空 jar 与 WebView CookieManager。 */
+    
     fun clearAll() {
         jar.clear()
         runCatching { CookieManager.getInstance().removeAllCookies(null) }
@@ -102,10 +102,10 @@ object LCGCookieJar {
             .build()
     }.onFailure { Timber.w(it, "build cookie failed: %s=%s", name, value) }.getOrNull()
 
-    /**
-     * 一次性把老版本扁平 SP（sp_cookie）里残留的 cookie 拷到 jar，让现存用户升级后不被踢下线。
-     * 完成后写一个标志位，下次启动不再重复。老 SP 留着不删，避免破坏其它可能的读取者。
-     */
+    
+
+
+
     private fun migrateLegacyCookiesIfNeeded(target: ClearableCookieJar) {
         val userSp = SharedPreferencesHelper.getUserSp()
         if (userSp.getBoolean(LEGACY_MIGRATED_KEY, false)) return

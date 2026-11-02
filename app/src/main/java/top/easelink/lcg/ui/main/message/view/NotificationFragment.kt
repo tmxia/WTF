@@ -18,7 +18,7 @@ class NotificationFragment : TopFragment() {
 
     private lateinit var notificationViewModel: NotificationViewModel
     private var _binding: FragmentNotificationBinding? = null
-    // This property is only valid between onCreateView and onDestroyView.
+    
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -40,7 +40,7 @@ class NotificationFragment : TopFragment() {
 
     private fun setUpSwipeRefresh() {
         binding.notificationSwipeRefresh.setOnRefreshListener {
-            // 清除现有数据并重新加载
+            
             (binding.notificationRecyclerView.adapter as NotificationsAdapter).clearItems()
             notificationViewModel.fetchNotifications()
         }

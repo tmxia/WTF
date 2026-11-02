@@ -58,7 +58,7 @@ class BaiduSearchActivity : TopActivity() {
     }
 
     private fun setUp() {
-        // edge-to-edge：顶部信息条加状态栏 padding；RefreshLayout 底部加导航栏 padding。
+        
         binding.totalInfo.setStatusBarPadding()
         ViewCompat.setOnApplyWindowInsetsListener(binding.refreshLayout) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -95,7 +95,7 @@ class BaiduSearchActivity : TopActivity() {
                 ContextCompat.getColor(this@BaiduSearchActivity, R.color.colorPrimaryDark)
             )
             setScrollUpChild(binding.recyclerView)
-            // Set the scrolling view in the custom SwipeRefreshLayout.
+            
             setOnRefreshListener {
                 mViewModelBaidu.doSearchQuery(SearchAdapterListener.FETCH_INIT)
             }
