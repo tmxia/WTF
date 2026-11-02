@@ -1,4 +1,4 @@
-name: Android Build
+name: Android Build & Release
 
 on:
   push:
@@ -10,9 +10,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ==========================================
-  # 清理任务：删除历史运行记录
-  # ==========================================
   cleanup:
     name: Cleanup old runs
     runs-on: ubuntu-latest
@@ -26,34 +23,28 @@ jobs:
             const runs = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'android-ci.yml', // 确保和你的文件名一致
+              workflow_id: 'android-ci.yml',
               per_page: 100
             });
-            
             for (const run of runs.data.workflow_runs) {
-              // 跳过当前正在运行的这一次
               if (run.id === context.runId) continue;
-              
               try {
                 await github.rest.actions.deleteWorkflowRun({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   run_id: run.id
                 });
-                console.log(`Deleted run ${run.id}`);
-              } catch (error) {
-                console.log(`Failed to delete run ${run.id}: ${error.message}`);
-              }
+              } catch (error) { console.log(error.message); }
             }
 
-  # ==========================================
-  # 构建任务
-  # ==========================================
   build:
-    name: Assemble Release
-    needs: cleanup # 等清理完再构建
+    name: Assemble & Release
+    needs: cleanup
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # 发布 Release 需要写入权限
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -95,10 +86,34 @@ jobs:
       - name: Assemble Release
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: Upload Release APK
+      # 提取版本号，用于打 Tag
+      - name: Extract Version
+        id: get_version
+        run: |
+          VERSION_NAME=$(grep -m1 'versionName' app/build.gradle.kts | cut -d'"' -f2)
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          echo "Found version: $VERSION_NAME"
+
+      # 上传到 Artifacts (临时产物)
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
-          retention-days: 7
+
+      # 发布到 GitHub Releases
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION_NAME }}-b${{ github.run_number }}
+          name: Release v${{ env.VERSION_NAME }} (Build ${{ github.run_number }})
+          body: |
+            🚀 自动构建发布
+            - **版本号**: v${{ env.VERSION_NAME }}
+            - **构建号**: ${{ github.run_number }}
+            - **提交**: ${{ github.sha }}
+          files: app/build/outputs/apk/release/*.apk
+          draft: false
+          prerelease: false
+          make_latest: true
