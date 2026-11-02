@@ -42,6 +42,8 @@ class RankListVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseNavigati
     }
 
     private fun setUp(rankModel: RankListModel) {
+        // 为整个热榜视图加上类似首页的白底圆角卡片效果
+        binding.root.setCardBackground()
         binding.apply {
             rankTips.text = rankModel.notice
             rankRecyclerView.apply {
@@ -55,4 +57,23 @@ class RankListVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseNavigati
             }
         }
     }
+}
+
+// 动态设置卡片背景和边距（不改变 XML 布局层级）
+fun View.setCardBackground() {
+    val drawable = android.graphics.drawable.GradientDrawable().apply {
+        setColor(android.graphics.Color.WHITE)
+        cornerRadius = 8 * resources.displayMetrics.density // 8dp 圆角
+    }
+    this.background = drawable
+    // 模拟外边距
+    val params = this.layoutParams as? android.view.ViewGroup.MarginLayoutParams
+    params?.setMargins(
+        (12 * resources.displayMetrics.density).toInt(),
+        (2 * resources.displayMetrics.density).toInt(),
+        (12 * resources.displayMetrics.density).toInt(),
+        (6 * resources.displayMetrics.density).toInt()
+    )
+    this.layoutParams = params
+    this.elevation = 0f
 }
