@@ -62,6 +62,10 @@
                     android:id="@+id/recyclerView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:background="#F5F5F5"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:clipToPadding="false"
                     android:visibility="gone"
                     tools:visibility="visible"/>
             </top.easelink.framework.customview.ScrollChildSwipeRefreshLayout>

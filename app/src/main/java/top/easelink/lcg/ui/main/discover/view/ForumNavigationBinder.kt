@@ -43,8 +43,7 @@ class ForumNavigationVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseN
 
     private fun setUp(listModel: List<ForumNavigationModel>) {
         // 为整个板块导航加上类似首页的白底圆角卡片效果
-        binding.root.setNavCardBackground()
-        binding.apply {
+                binding.apply {
             forumTips.setOnClickListener {
                 navigationGrid.smoothScrollToPosition(
                     (navigationGrid.layoutManager as LinearLayoutManager).findLastVisibleItemPosition() + 1
@@ -62,21 +61,3 @@ class ForumNavigationVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseN
     }
 }
 
-// 动态设置卡片背景和边距（不改变 XML 布局层级）
-fun View.setNavCardBackground() {
-    val drawable = android.graphics.drawable.GradientDrawable().apply {
-        setColor(android.graphics.Color.WHITE)
-        cornerRadius = 8 * resources.displayMetrics.density // 8dp 圆角
-    }
-    this.background = drawable
-    // 模拟外边距
-    val params = this.layoutParams as? android.view.ViewGroup.MarginLayoutParams
-    params?.setMargins(
-        (12 * resources.displayMetrics.density).toInt(),
-        (8 * resources.displayMetrics.density).toInt(),
-        (12 * resources.displayMetrics.density).toInt(),
-        (6 * resources.displayMetrics.density).toInt()
-    )
-    this.layoutParams = params
-    this.elevation = 0f
-}
