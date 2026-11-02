@@ -11,8 +11,8 @@
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:paddingStart="3dp"
+        android:paddingEnd="3dp"
         android:clipToPadding="false"
         android:layout_height="match_parent">
 
@@ -47,6 +47,8 @@
                 app:tabTextColor="@color/gray"
                 app:tabSelectedTextColor="@color/colorAccent"
                 app:tabMode="scrollable"
+        app:tabPaddingStart="12dp"
+        app:tabPaddingEnd="12dp"
                 app:tabTextAppearance="@style/AppTab.TextAppearance"/>
 
             <top.easelink.framework.customview.ScrollChildSwipeRefreshLayout
