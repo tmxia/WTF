@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import androidx.constraintlayout.widget.ConstraintLayout
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.base.BaseViewHolder
 import top.easelink.lcg.R
