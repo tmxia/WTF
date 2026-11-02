@@ -18,7 +18,8 @@
             android:maxEms="10"
             android:singleLine="true"
             android:textSize="@dimen/sp_12"
-            android:textStyle="bold"
+            android:textStyle="normal"
+        android:fontFamily="sans-serif-medium"
             android:background="@drawable/rectangle_bg_slightly_light_gray_4dp"
             android:textColor="@color/blue_black_light"
             tools:text="@string/forum_mobile_security" />

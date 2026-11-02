@@ -160,7 +160,8 @@
             android:text="@string/logout_confirm_message"
             android:gravity="center"
             android:focusable="true"
-            android:textStyle="bold"
+            android:textStyle="normal"
+        android:fontFamily="sans-serif-medium"
             android:textColor="@color/black"
             app:backgroundTint="@color/white" />
 

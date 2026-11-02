@@ -29,7 +29,8 @@
             android:gravity="center_horizontal"
             android:layout_below="@id/doctors"
             android:textSize="@dimen/sp_14"
-            android:textStyle="bold"
+            android:textStyle="normal"
+        android:fontFamily="sans-serif-medium"
             android:text="@string/forum_doctors"
             android:singleLine="true" />
 </RelativeLayout>

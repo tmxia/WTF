@@ -15,7 +15,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/colorAccent"
-            android:textStyle="bold"
+            android:textStyle="normal"
+        android:fontFamily="sans-serif-medium"
             android:textSize="@dimen/sp_12"
             android:singleLine="true" />
 </LinearLayout>

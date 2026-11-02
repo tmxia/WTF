@@ -31,7 +31,8 @@
             android:maxLines="2"
             android:ellipsize="end"
             android:textSize="@dimen/sp_14"
-            android:textStyle="bold"
+            android:textStyle="normal"
+        android:fontFamily="sans-serif-medium"
             android:clickable="false"
             android:focusable="false"
             tools:text="Title"/>

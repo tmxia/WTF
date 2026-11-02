@@ -28,7 +28,8 @@
                 android:layout_alignParentStart="true"
                 android:layout_alignParentEnd="true"
                 android:textSize="@dimen/sp_14"
-                android:textStyle="bold"
+                android:textStyle="normal"
+        android:fontFamily="sans-serif-medium"
                 tools:text="『原创发布区』 " />
 
         <TextView
