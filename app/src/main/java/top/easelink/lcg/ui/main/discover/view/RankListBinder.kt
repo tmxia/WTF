@@ -2,6 +2,7 @@ package top.easelink.lcg.ui.main.discover.view
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import top.easelink.lcg.databinding.FragmentRankListBinding
@@ -43,7 +44,7 @@ class RankListVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseNavigati
 
     private fun setUp(rankModel: RankListModel) {
         // 为整个热榜视图加上类似首页的白底圆角卡片效果
-        binding.root.setCardBackground()
+        binding.root.setRankCardBackground()
         binding.apply {
             rankTips.text = rankModel.notice
             rankRecyclerView.apply {
@@ -60,7 +61,7 @@ class RankListVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseNavigati
 }
 
 // 动态设置卡片背景和边距（不改变 XML 布局层级）
-fun View.setCardBackground() {
+fun View.setRankCardBackground() {
     val drawable = android.graphics.drawable.GradientDrawable().apply {
         setColor(android.graphics.Color.WHITE)
         cornerRadius = 8 * resources.displayMetrics.density // 8dp 圆角

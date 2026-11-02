@@ -2,6 +2,7 @@ package top.easelink.lcg.ui.main.discover.view
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import top.easelink.lcg.databinding.FragmentForumsNavigationBinding
@@ -42,7 +43,7 @@ class ForumNavigationVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseN
 
     private fun setUp(listModel: List<ForumNavigationModel>) {
         // 为整个板块导航加上类似首页的白底圆角卡片效果
-        binding.root.setCardBackground()
+        binding.root.setNavCardBackground()
         binding.apply {
             forumTips.setOnClickListener {
                 navigationGrid.smoothScrollToPosition(
@@ -62,7 +63,7 @@ class ForumNavigationVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseN
 }
 
 // 动态设置卡片背景和边距（不改变 XML 布局层级）
-fun View.setCardBackground() {
+fun View.setNavCardBackground() {
     val drawable = android.graphics.drawable.GradientDrawable().apply {
         setColor(android.graphics.Color.WHITE)
         cornerRadius = 8 * resources.displayMetrics.density // 8dp 圆角
