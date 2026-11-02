@@ -29,7 +29,6 @@
         tools:text="update time"
         android:textSize="@dimen/sp_10"
         android:layout_marginTop="@dimen/dp_2"
-        android:layout_marginStart="@dimen/dp_6"
         android:layout_marginStart="16dp"
         android:layout_below="@id/rank_recycler_view"
         android:layout_alignParentStart="true"
