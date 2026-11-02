@@ -30,7 +30,7 @@
         android:layout_marginTop="@dimen/dp_4"
         android:ellipsize="end"
         android:lines="1"
-        android:textSize="@dimen/sp_13"
+        android:textSize="13sp"
         tools:text="@string/forum_mobile_security" />
 
 </RelativeLayout>
