@@ -18,12 +18,8 @@ fun ComposeRecyclerViewBridge(
     fragment: Fragment,
     isReverse: Boolean = false
 ) {
-    
     val posts by viewModel.posts.observeAsState(initial = emptyList())
     val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
-
-    
-    val newPosts by viewModel.newPostsAppended.observeAsState(initial = emptyList())
 
     AndroidView(
         modifier = modifier,
@@ -39,13 +35,10 @@ fun ComposeRecyclerViewBridge(
         update = { recyclerView ->
             val adapter = recyclerView.adapter as? ArticleAdapter
             if (adapter != null) {
-                
+                // 先更新倒序状态（Adapter 内部会触发刷新）
+                adapter.setReverse(isReverse)
+                // 再更新数据（DiffUtil 会平滑处理差异）
                 adapter.setData(posts, hasMore)
-                
-                
-                if (newPosts.isNotEmpty()) {
-                    recyclerView.scrollToPosition(adapter.itemCount - 1)
-                }
             }
         }
     )

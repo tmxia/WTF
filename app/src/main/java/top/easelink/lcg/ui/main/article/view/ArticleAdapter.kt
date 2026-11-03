@@ -96,18 +96,17 @@ class ArticleAdapter(
 
     
     private fun getRealPost(position: Int): Post {
-        if (mPostList.isEmpty()) {
-            // 如果列表为空，返回一个安全的占位对象（确保传入所需参数，这里依赖外部数据不会真的为空）
-            return mPostList.firstOrNull() ?: throw IllegalStateException("Empty list")
-        }
-        if (position == 0) return mPostList[0]
+        if (mPostList.isEmpty()) return mPostList.firstOrNull() ?: throw IllegalStateException()
+        if (position == 0) return mPostList[0] // 主楼永远在最前
         
-        val realIndex = if (isReverse) {
-            (mPostList.size - 1) - (position - 1) + 1 // 修正倒序索引：跳过主楼，倒序其他
-        } else {
-            position
+        // 只有纯回复区才反转
+        if (isReverse && position < mPostList.size) {
+            // 总数如果是 5 (主楼 + 4个回复)，position=1 (第一个回复)
+            // 反转后应该对应原来的 4 (最后一个回复)
+            // 索引为 size - position
+            return mPostList[mPostList.size - position]
         }
-        return mPostList.getOrNull(realIndex) ?: mPostList[0]
+        return mPostList.getOrNull(position) ?: mPostList[0]
     }
 
     override fun getItemCount() = when {

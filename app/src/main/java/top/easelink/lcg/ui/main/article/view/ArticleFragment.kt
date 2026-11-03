@@ -51,7 +51,11 @@ class ArticleFragment : Fragment(), ControllableFragment {
 
     override fun onResume() {
         super.onResume()
+        // 隐藏旧版的 Toolbar
         requireActivity().findViewById<AppBarLayout>(R.id.app_bar_layout)?.visibility = View.GONE
+        
+        // 终极方案：让 Fragment 的 ComposeView 突破父控件的边距限制，强制贴顶
+        (view?.parent as? View)?.fitsSystemWindows = false
     }
 
     override fun onPause() {
@@ -148,11 +152,10 @@ fun ArticleScreen(
     }
 
     Scaffold(
-        modifier = Modifier.statusBarsPadding(), // 避免状态栏双重留白
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0), // 贴顶
+                windowInsets = WindowInsets(0.dp),
                 title = { 
                     Text(
                         text = title, 
