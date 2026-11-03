@@ -52,4 +52,16 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         }
         return composeView
     }
+
+    companion object {
+        fun newInstance(title: String, url: String, showTab: Boolean = false): ForumArticlesFragment {
+            val fragment = ForumArticlesFragment()
+            val args = Bundle()
+            args.putString("title", title)
+            args.putString("url", url)
+            args.putBoolean("showTab", showTab)
+            fragment.arguments = args
+            return fragment
+        }
+    }
 }
