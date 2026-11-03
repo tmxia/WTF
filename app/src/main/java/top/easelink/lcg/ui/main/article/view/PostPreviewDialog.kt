@@ -11,11 +11,8 @@ import coil.load
 import timber.log.Timber
 import top.easelink.framework.customview.htmltextview.HtmlCoilImageGetter
 import top.easelink.framework.topbase.TopDialog
-import top.easelink.framework.utils.dpToPx
 import top.easelink.lcg.databinding.DialogPostPreviewBinding
 import top.easelink.lcg.ui.main.article.viewmodel.PostPreviewViewModel
-import top.easelink.lcg.utils.getScreenHeightDp
-import top.easelink.lcg.utils.getScreenWidthDp
 
 class PostPreviewDialog : TopDialog() {
 
@@ -54,13 +51,12 @@ class PostPreviewDialog : TopDialog() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 核心修复：在数据加载完成前保持透明，彻底杜绝“加载窗口”闪现
+        // 核心修复：在数据加载完成前，整个弹窗完全透明，彻底杜绝白块或加载窗口闪现
         binding.root.alpha = 0f
 
-                // 核心修复：让 Window 铺满全屏，且背景透明，由内部 Card 呈现内容
         dialog?.window?.apply {
             setBackgroundDrawableResource(android.R.color.transparent)
-            // 核心修复：去除弹窗所有过渡动画，瞬间弹出
+            // 去除弹窗所有过渡动画，瞬间弹出
             setWindowAnimations(0)
             val params = attributes
             params.width = ViewGroup.LayoutParams.MATCH_PARENT
@@ -68,13 +64,11 @@ class PostPreviewDialog : TopDialog() {
             params.gravity = Gravity.CENTER
             attributes = params
         }
-        
-        // 显式绑定关闭按钮
+
         binding.exit.setOnClickListener {
             dismissDialog()
         }
-        
-        // 支持点击遮罩层（即 Card 外的空白区域）关闭
+
         dialog?.setCanceledOnTouchOutside(true)
         initView()
     }
@@ -87,13 +81,15 @@ class PostPreviewDialog : TopDialog() {
                 ?.let { query ->
                     mViewModel.content.observe(viewLifecycleOwner, Observer { contentHtml ->
                         binding.contentTextView.setHtml(
-                            contentHtml, HtmlCoilImageGetter(
+                            contentHtml, 
+                            HtmlCoilImageGetter(
                                 binding.contentTextView.context,
                                 binding.contentTextView,
                                 this
                             )
-                    binding.root.alpha = 1f
                         )
+                        // 数据完全渲染完毕后，淡入显示弹窗
+                        binding.root.alpha = 1f
                     })
                     mViewModel.author.observe(viewLifecycleOwner, Observer {
                         binding.authorTextView.text = it
@@ -104,8 +100,15 @@ class PostPreviewDialog : TopDialog() {
                     mViewModel.date.observe(viewLifecycleOwner, Observer {
                         binding.dateTextView.text = it
                     })
-                    // 静默加载：不显示加载过程窗口
-                    binding.loadingStatus.visibility = View.GONE
+                    
+                    // 处理失败兜底，原本的 loading 窗口已彻底移除
+                    mViewModel.loadingResult.observe(viewLifecycleOwner, Observer { status ->
+                        if (status != -1) {
+                            binding.contentTextView.text = "加载失败，请稍后重试"
+                            binding.root.alpha = 1f
+                        }
+                    })
+                    
                     mViewModel.initUrl(query)
                 }
         } catch (e: Exception) {
