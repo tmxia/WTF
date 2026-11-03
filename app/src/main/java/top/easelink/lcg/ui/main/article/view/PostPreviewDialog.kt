@@ -11,6 +11,7 @@ import coil.load
 import timber.log.Timber
 import top.easelink.framework.customview.htmltextview.HtmlCoilImageGetter
 import top.easelink.framework.topbase.TopDialog
+import top.easelink.lcg.R
 import top.easelink.lcg.databinding.DialogPostPreviewBinding
 import top.easelink.lcg.ui.main.article.viewmodel.PostPreviewViewModel
 
@@ -51,11 +52,11 @@ class PostPreviewDialog : TopDialog() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 核心修复：在数据加载完成前，整个弹窗完全透明，彻底杜绝白块或加载窗口闪现
+        // 核心修复：初始状态完全不可见，彻底杜绝加载过程中的白块/小窗口闪现
+        binding.root.visibility = View.INVISIBLE
 
         dialog?.window?.apply {
             setBackgroundDrawableResource(android.R.color.transparent)
-            // 去除弹窗所有过渡动画，瞬间弹出
             setWindowAnimations(0)
             val params = attributes
             params.width = ViewGroup.LayoutParams.MATCH_PARENT
@@ -87,7 +88,8 @@ class PostPreviewDialog : TopDialog() {
                                 this
                             )
                         )
-                        // 数据完全渲染完毕后，淡入显示弹窗
+                        // 内容加载完毕，瞬间显示完整弹窗
+                        binding.root.visibility = View.VISIBLE
                     })
                     mViewModel.author.observe(viewLifecycleOwner, Observer {
                         binding.authorTextView.text = it
@@ -99,12 +101,21 @@ class PostPreviewDialog : TopDialog() {
                         binding.dateTextView.text = it
                     })
                     
-                    // 处理失败兜底，原本的 loading 窗口已彻底移除
-                                        
+                    // 监听加载状态，失败则直接静默关闭，绝不留下小窗口
+                    mViewModel.loadingResult.observe(viewLifecycleOwner, Observer { status ->
+                        if (status == -1) {
+                            binding.root.visibility = View.VISIBLE
+                        } else if (status != R.string.preview_loading) {
+                            // 网络失败或解析错误，直接消失
+                            dismissDialog()
+                        }
+                    })
+                    
                     mViewModel.initUrl(query)
                 }
         } catch (e: Exception) {
             Timber.e(e)
+            dismissDialog()
         }
     }
 
