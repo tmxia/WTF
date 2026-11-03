@@ -52,7 +52,7 @@ class RankListAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                     index.visibility = View.VISIBLE
                     index.text = model.index.toString()
                     
-                    params.marginStart = (34 * num.context.resources.displayMetrics.density).toInt()
+                    params.marginStart = (8 * num.context.resources.displayMetrics.density).toInt()
                 } else {
                     index.visibility = View.GONE
                     params.marginStart = (8 * num.context.resources.displayMetrics.density).toInt()
