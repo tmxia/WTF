@@ -16,6 +16,7 @@ import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher
 import top.easelink.lcg.ui.main.articles.viewmodel.ForumArticlesViewModel
 import top.easelink.lcg.ui.main.model.OpenArticleEvent
+import top.easelink.lcg.ui.main.article.view.PostPreviewDialog
 import top.easelink.lcg.ui.main.source.model.ForumThread
 
 class ForumArticlesFragment : Fragment(), ControllableFragment {
@@ -72,9 +73,9 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
                 onArticleClick = { url ->
                     EventBus.getDefault().post(OpenArticleEvent(url))
                 },
-                onLoadMore = {
-                    
-                    viewModel.fetchArticles(ArticleFetcher.FetchType.FETCH_MORE) { _ -> }
+                onLoadMore = { viewModel.fetchArticles(ArticleFetcher.FetchType.FETCH_MORE) { _ -> } },
+                onArticleLongClick = { url -> 
+                    PostPreviewDialog.newInstance(url).show(parentFragmentManager, PostPreviewDialog.TAG)
                 }
             )
         }

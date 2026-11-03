@@ -54,16 +54,22 @@ class PostPreviewDialog : TopDialog() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        dialog?.window?.attributes?.apply {
-            val context = requireContext()
-            width = (getScreenWidthDp(context).dpToPx(context) * 0.95).toInt()
-            height = (getScreenHeightDp(context).dpToPx(context) * 0.75).toInt()
-            gravity = Gravity.CENTER
+                // 核心修复：让 Window 铺满全屏，且背景透明，由内部 Card 呈现内容
+        dialog?.window?.apply {
+            setBackgroundDrawableResource(android.R.color.transparent)
+            val params = attributes
+            params.width = ViewGroup.LayoutParams.MATCH_PARENT
+            params.height = ViewGroup.LayoutParams.MATCH_PARENT
+            params.gravity = Gravity.CENTER
+            attributes = params
         }
-
+        
+        // 显式绑定关闭按钮
         binding.exit.setOnClickListener {
             dismissDialog()
         }
+        
+        // 支持点击遮罩层（即 Card 外的空白区域）关闭
         dialog?.setCanceledOnTouchOutside(true)
         initView()
     }

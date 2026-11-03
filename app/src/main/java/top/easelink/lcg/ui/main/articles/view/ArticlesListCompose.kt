@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -49,7 +50,8 @@ fun ForumArticlesScreen(
     onBackClick: () -> Unit,
     onTabSelected: (String) -> Unit,
     onArticleClick: (String) -> Unit,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
+    onArticleLongClick: (String) -> Unit
 ) {
     val displayTabs = remember(tabs) {
         val list = mutableListOf("全部")
@@ -160,7 +162,7 @@ fun ForumArticlesScreen(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                     ) {
                         items(articles) { article ->
-                            ArticleCard(article, onArticleClick)
+                            ArticleCard(article, onArticleClick, onArticleLongClick)
                         }
                         
                         item {
@@ -205,12 +207,21 @@ fun ForumArticlesScreen(
 }
 
 @Composable
-fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
+fun ArticleCard(
+    article: Article, 
+    onItemClick: (String) -> Unit, 
+    onLongClick: (String) -> Unit
+) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier.fillMaxWidth().clickable { onItemClick(article.url) }
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = { onItemClick(article.url) },
+                onLongClick = { onLongClick(article.url) }
+            )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
