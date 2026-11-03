@@ -158,7 +158,7 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
             Text(
                 text = article.title,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 color = Color.Black,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
