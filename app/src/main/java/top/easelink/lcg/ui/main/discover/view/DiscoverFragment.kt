@@ -4,95 +4,51 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.DefaultItemAnimator
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.drakeet.multitype.MultiTypeAdapter
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.ComposeView
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import top.easelink.framework.topbase.ControllableFragment
-import top.easelink.framework.topbase.TopFragment
-import top.easelink.lcg.R
-import top.easelink.lcg.databinding.FragmentDiscoverBinding
-import top.easelink.lcg.ui.main.discover.model.ForumListModel
-import top.easelink.lcg.ui.main.discover.model.RankListModel
 import top.easelink.lcg.ui.main.discover.viewmodel.DiscoverViewModel
+import top.easelink.lcg.ui.main.model.OpenForumEvent // 假设有跳转板块的事件
+import org.greenrobot.eventbus.EventBus
 
-class DiscoverFragment : TopFragment(), ControllableFragment {
+class DiscoverFragment : Fragment(), ControllableFragment {
 
-    private lateinit var mViewModel: DiscoverViewModel
-    private var _binding: FragmentDiscoverBinding? = null
-    private val binding get() = _binding!!
+    private val viewModel: DiscoverViewModel by viewModels()
 
-    override fun isControllable(): Boolean {
-        return true
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        mViewModel = ViewModelProvider(this)[DiscoverViewModel::class.java]
-    }
+    override fun isControllable(): Boolean = true
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentDiscoverBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    override fun onViewCreated(
-        view: View,
-        savedInstanceState: Bundle?
-    ) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.viewModel = mViewModel
-        binding.lifecycleOwner = viewLifecycleOwner
-        setUp()
-    }
-
-    private fun setUp() {
-        setUpRV()
-        setUpRefreshLayout()
-        mViewModel.initOptions(mContext)
-    }
-
-    private fun setUpRefreshLayout() {
-        binding.refreshLayout.run {
-            setColorSchemeColors(
-                ContextCompat.getColor(mContext, R.color.colorPrimary),
-                ContextCompat.getColor(mContext, R.color.colorAccent),
-                ContextCompat.getColor(mContext, R.color.colorPrimaryDark)
+        val composeView = ComposeView(requireContext())
+        
+        composeView.setContent {
+            val models by viewModel.aggregationModels.observeAsState(initial = emptyList())
+            
+            DiscoverScreenCompose(
+                models = models,
+                onForumClick = { title, url ->
+                    // 点击常用板块：跳转到板块帖子列表
+                    // 这里需要根据 WTF 原有的逻辑进行跳转，比如发送 EventBus
+                    // EventBus.getDefault().post(OpenForumEvent(title, url))
+                },
+                onRankClick = { url ->
+                    // 点击热榜帖子：跳转到详情页
+                    // EventBus.getDefault().post(OpenArticleEvent(url))
+                }
             )
-            setScrollUpChild(binding.forumRv)
-            setOnRefreshListener {
-                mViewModel.refreshOptions(mContext)
-            }
         }
+        return composeView
     }
 
-    private fun setUpRV() {
-        binding.forumRv.apply {
-            layoutManager = LinearLayoutManager(context).also {
-                it.orientation = RecyclerView.VERTICAL
-            }
-            itemAnimator = DefaultItemAnimator()
-            val multiTypeAdapter = MultiTypeAdapter().apply {
-                register(ForumListModel::class.java, ForumNavigationBinder())
-                register(RankListModel::class.java, RankListBinder())
-            }
-            mViewModel.aggregationModels.observe(viewLifecycleOwner, Observer {
-                multiTypeAdapter.items = it
-                multiTypeAdapter.notifyDataSetChanged()
-            })
-            adapter = multiTypeAdapter
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        if (viewModel.aggregationModels.value.isNullOrEmpty()) {
+            viewModel.initOptions(requireContext())
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }
