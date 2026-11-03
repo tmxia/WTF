@@ -6,21 +6,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="0dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="12dp"
     app:cardElevation="0dp"
     app:cardBackgroundColor="@color/white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingTop="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="12dp">
+        android:padding="16dp">
 
         <ImageView
             android:id="@+id/post_avatar"
-            style="@style/TextStyle.Heading"
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:contentDescription="@null"
@@ -30,7 +30,6 @@
 
         <TextView
             android:id="@+id/author_text_view"
-            style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
@@ -43,7 +42,6 @@
 
         <TextView
             android:id="@+id/date_text_view"
-            style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
@@ -55,7 +53,6 @@
 
         <top.easelink.framework.customview.htmltextview.HtmlTextView
             android:id="@+id/content_text_view"
-            style="@style/TextStyle.Title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"

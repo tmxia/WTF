@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,10 +38,7 @@ class ArticleFragment : Fragment(), ControllableFragment {
         url = arguments?.getString(ARG_URL) ?: ""
         title = arguments?.getString(ARG_TITLE) ?: ""
 
-        // 1. 告诉 ViewModel 当前要加载的 URL
         viewModel.setUrl(url)
-        
-        // 2. 触发网络请求拉取帖子数据 (FETCH_POST_INIT 是拉取第一页的常量)
         viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
     }
 
@@ -53,17 +51,10 @@ class ArticleFragment : Fragment(), ControllableFragment {
         composeView.setContent {
             ArticleScreen(
                 title = viewModel.articleTitle.observeAsState(title.ifEmpty { "帖子详情" }).value ?: "帖子详情",
+                viewModel = viewModel,
+                fragment = this@ArticleFragment,
                 onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }
-            ) {
-                // 这里原来是你写的 ComposeRecyclerViewBridge 等桥接逻辑，
-                // 如果你已经写好了，直接替换掉下面这个 Box 即可。
-                // 这里放一个占位，确保编译通过。
-                ComposeRecyclerViewBridge(
-                    modifier = Modifier.fillMaxSize(),
-                    viewModel = viewModel,
-                    fragment = this@ArticleFragment
-                )
-            }
+            )
         }
         return composeView
     }
@@ -84,23 +75,22 @@ class ArticleFragment : Fragment(), ControllableFragment {
     }
 }
 
-// 你的顶层 Compose 函数定义在这里
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArticleScreen(
     title: String,
-    onBackClick: () -> Unit,
-    content: @Composable () -> Unit
+    viewModel: ArticleViewModel,
+    fragment: Fragment,
+    onBackClick: () -> Unit
 ) {
+    val isLoading by viewModel.isLoading.observeAsState(initial = false)
+    val posts by viewModel.posts.observeAsState(initial = emptyList())
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
-                    Text(
-                        text = title, 
-                        maxLines = 1, 
-                        overflow = TextOverflow.Ellipsis 
-                    ) 
+                title = {
+                    Text(text = title, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -111,7 +101,11 @@ fun ArticleScreen(
                     IconButton(onClick = { /* 更多操作 */ }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "More")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    titleContentColor = Color.Black
+                )
             )
         }
     ) { paddingValues ->
@@ -119,9 +113,24 @@ fun ArticleScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
+                .background(Color(0xFFF5F5F5))
         ) {
-            content()
+            if (isLoading && posts.isEmpty()) {
+                // 核心修复：恢复居中加载动画，并适当缩小尺寸 (32dp)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
+                        strokeWidth = 3.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            } else {
+                ComposeRecyclerViewBridge(
+                    modifier = Modifier.fillMaxSize(),
+                    viewModel = viewModel,
+                    fragment = fragment
+                )
+            }
         }
     }
 }
