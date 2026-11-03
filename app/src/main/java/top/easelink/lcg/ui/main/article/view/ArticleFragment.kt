@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -76,8 +77,18 @@ class ArticleFragment : Fragment(), ControllableFragment {
         inflater: android.view.LayoutInflater, container: android.view.ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val composeView = ComposeView(requireContext())
+        val context = requireContext()
+        val swipeRefreshLayout = SwipeRefreshLayout(context)
+        val composeView = ComposeView(context)
+        
         composeView.setContent {
+            val isLoading by viewModel.isLoading.observeAsState(initial = false)
+            
+            // 同步加载状态到原生下拉刷新圈
+            LaunchedEffect(isLoading) {
+                swipeRefreshLayout.isRefreshing = isLoading
+            }
+            
             ArticleScreen(
                 title = viewModel.articleTitle.observeAsState(title.ifEmpty { "帖子详情" }).value ?: "帖子详情",
                 articleUrl = url,
@@ -86,7 +97,14 @@ class ArticleFragment : Fragment(), ControllableFragment {
                 onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }
             )
         }
-        return composeView
+        
+        // 触发下拉刷新
+        swipeRefreshLayout.setOnRefreshListener {
+            viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
+        }
+        
+        swipeRefreshLayout.addView(composeView)
+        return swipeRefreshLayout
     }
 
     companion object {

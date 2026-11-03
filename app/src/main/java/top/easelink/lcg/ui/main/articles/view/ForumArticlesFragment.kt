@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.compose.runtime.LaunchedEffect
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import org.greenrobot.eventbus.EventBus
@@ -26,12 +28,20 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val composeView = ComposeView(requireContext())
-        
+        val context = requireContext()
+        // 核心机制：外层套用原生 SwipeRefreshLayout
+        val swipeRefreshLayout = SwipeRefreshLayout(context)
+        val composeView = ComposeView(context)
+
         composeView.setContent {
             val articles by viewModel.articles.observeAsState(initial = emptyList())
             val tabs by viewModel.threadList.observeAsState(initial = emptyList())
-            
+
+            // 当列表数据发生变化时，自动关闭刷新动画
+            LaunchedEffect(articles, tabs) {
+                swipeRefreshLayout.isRefreshing = false
+            }
+
             val title = arguments?.getString("title") ?: "帖子列表"
 
             ForumArticlesScreen(
@@ -48,7 +58,15 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
                 }
             )
         }
-        return composeView
+
+        // 下拉触发请求
+        swipeRefreshLayout.setOnRefreshListener {
+            val url = arguments?.getString("url") ?: ""
+            viewModel.initUrlAndFetch(url, ArticleFetcher.FetchType.FETCH_INIT)
+        }
+
+        swipeRefreshLayout.addView(composeView)
+        return swipeRefreshLayout
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
