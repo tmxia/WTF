@@ -1,87 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_gravity="bottom"
     android:layout_width="match_parent"
-    android:layout_marginStart="16dp"
-    android:layout_marginEnd="16dp"
-    android:layout_marginBottom="16dp"
     android:layout_height="wrap_content"
-    app:contentPadding="16dp"
-    app:cardBackgroundColor="@color/white"
-    app:cardCornerRadius="16dp"
-    app:cardUseCompatPadding="true">
+    android:background="@color/white"
+    android:fillViewport="true"
+    android:overScrollMode="never">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:padding="16dp">
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/comment_title"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:maxLines="1"
-            android:ellipsize="end"
             android:text="@string/comment_article_dialog_title"
+            android:textColor="@color/black"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="@color/black"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/reply_content_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:boxCornerRadiusTopStart="8dp"
-            app:boxCornerRadiusTopEnd="8dp"
-            app:boxCornerRadiusBottomStart="8dp"
+            android:layout_marginTop="12dp"
+            app:boxBackgroundColor="#F5F5F5"
             app:boxCornerRadiusBottomEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusTopStart="8dp"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="1.5dp"
+            app:boxStrokeColor="@color/pojie_logo"
             app:layout_constraintTop_toBottomOf="@id/comment_title">
 
+            <!-- 移除写死的 minHeight 100dp，改用 minLines，并加上隐藏的 line 防止挤压消失 -->
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/reply_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textMultiLine"
-                android:hint="@string/comment_article_input_hint"
                 android:gravity="top|start"
-                android:padding="12dp"
-                android:minHeight="100dp"
-                android:maxHeight="200dp"
-                android:maxLines="6" />
+                android:hint="@string/comment_article_input_hint"
+                android:inputType="textMultiLine"
+                android:maxLines="6"
+                android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- 核心修复：去掉死板的固定宽高，恢复 Material 标准按钮样式 -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_cancel"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
+        <!-- 底部按钮区域 -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="@string/reply_post_btn_cancel"
-            android:textColor="@color/gray"
-            android:textSize="14sp"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintEnd_toStartOf="@id/btn_confirm"
-            app:layout_constraintTop_toBottomOf="@id/reply_content_layout" />
+            android:gravity="end"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/reply_content_layout">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_confirm"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/reply_post_btn_confirm"
-            android:backgroundTint="@color/pojie_logo"
-            android:textColor="@color/white"
-            android:textSize="14sp"
-            app:cornerRadius="8dp"
-            app:layout_constraintBottom_toBottomOf="@id/btn_cancel"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/btn_cancel" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_cancel"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="@string/reply_post_btn_cancel"
+                android:textColor="@color/gray"
+                android:textSize="14sp" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_confirm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/reply_post_btn_confirm"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                app:backgroundTint="@color/pojie_logo"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
-</com.google.android.material.card.MaterialCardView>
+</androidx.core.widget.NestedScrollView>

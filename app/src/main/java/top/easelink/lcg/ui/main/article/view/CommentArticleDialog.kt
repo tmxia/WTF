@@ -58,6 +58,8 @@ class CommentArticleDialog : TopDialog() {
         dialog?.window?.apply {
             setBackgroundDrawableResource(android.R.color.transparent) 
             setWindowAnimations(R.style.BottomInOutAnim)
+            
+            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             attributes = attributes.apply {
                 width = WindowManager.LayoutParams.MATCH_PARENT
                 height = WindowManager.LayoutParams.WRAP_CONTENT

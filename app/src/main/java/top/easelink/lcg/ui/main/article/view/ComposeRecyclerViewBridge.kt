@@ -21,7 +21,7 @@ fun ComposeRecyclerViewBridge(
     val posts by viewModel.posts.observeAsState(initial = emptyList<Post>())
     val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
 
-    // 强制监听 posts 变化，触发重组
+    
     AndroidView(
         modifier = modifier,
         factory = { context ->
@@ -41,7 +41,7 @@ fun ComposeRecyclerViewBridge(
                 } else {
                     posts
                 }
-                // 只有当数据不为空时才刷新，或者无论如何都强制 setData
+                
                 adapter.setData(displayPosts, hasMore)
             }
         }

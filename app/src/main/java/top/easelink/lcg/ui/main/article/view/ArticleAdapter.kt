@@ -68,7 +68,7 @@ class ArticleAdapter(
         mPostList.clear()
         mPostList.addAll(posts)
         this.hasMoreItem = hasMore
-        // 暴力刷新，确保 100% 渲染
+        
         notifyDataSetChanged()
     }
 
