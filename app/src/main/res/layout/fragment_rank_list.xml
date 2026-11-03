@@ -6,7 +6,6 @@
         android:clipToPadding="false"
     android:layout_height="wrap_content"
     
-    android:padding="@dimen/dp_2"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <TextView
@@ -35,9 +34,6 @@
         android:textColor="@color/gray" />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rank_recycler_view"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        
         android:layout_below="@id/rank_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
