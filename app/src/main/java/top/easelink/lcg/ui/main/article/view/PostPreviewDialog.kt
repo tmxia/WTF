@@ -54,6 +54,9 @@ class PostPreviewDialog : TopDialog() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // 核心修复：在数据加载完成前保持透明，彻底杜绝“加载窗口”闪现
+        binding.root.alpha = 0f
+
                 // 核心修复：让 Window 铺满全屏，且背景透明，由内部 Card 呈现内容
         dialog?.window?.apply {
             setBackgroundDrawableResource(android.R.color.transparent)
@@ -89,6 +92,7 @@ class PostPreviewDialog : TopDialog() {
                                 binding.contentTextView,
                                 this
                             )
+                    binding.root.alpha = 1f
                         )
                     })
                     mViewModel.author.observe(viewLifecycleOwner, Observer {
