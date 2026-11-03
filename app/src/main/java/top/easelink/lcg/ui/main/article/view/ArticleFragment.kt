@@ -47,7 +47,7 @@ class ArticleFragment : Fragment(), ControllableFragment {
 
         composeView.setContent {
             ArticleScreen(
-                title = title.ifEmpty { viewModel.title.value ?: "帖子详情" },
+                title = title.ifEmpty { "帖子详情" },
                 onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }
             ) {
                 // 这里原来是你写的 ComposeRecyclerViewBridge 等桥接逻辑，
