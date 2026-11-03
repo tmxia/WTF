@@ -100,14 +100,8 @@ class PostPreviewDialog : TopDialog() {
                     mViewModel.date.observe(viewLifecycleOwner, Observer {
                         binding.dateTextView.text = it
                     })
-                    mViewModel.loadingResult.observe(viewLifecycleOwner, Observer { status ->
-                        if (status == -1) {
-                            binding.loadingStatus.visibility = View.GONE
-                        } else {
-                            binding.loadingStatus.visibility = View.VISIBLE
-                            binding.loadingInfo.setText(status)
-                        }
-                    })
+                    // 静默加载：不显示加载过程窗口
+                    binding.loadingStatus.visibility = View.GONE
                     mViewModel.initUrl(query)
                 }
         } catch (e: Exception) {
