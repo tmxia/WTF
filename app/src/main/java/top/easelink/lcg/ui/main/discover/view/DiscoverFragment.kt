@@ -64,8 +64,8 @@ class DiscoverFragment : Fragment(), ControllableFragment {
                     }
                 ,
                 onRankLongClick = { url ->
-                    top.easelink.lcg.ui.main.article.view.PostPreviewDialog.newInstance(url)
-                        .show(parentFragmentManager, top.easelink.lcg.ui.main.article.view.PostPreviewDialog.TAG)
+                    PostPreviewDialog.newInstance(url)
+                        .show(parentFragmentManager, PostPreviewDialog.TAG)
                 }
             )
             }
