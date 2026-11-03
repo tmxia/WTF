@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import com.airbnb.lottie.LottieAnimationView
+import com.airbnb.lottie.LottieDrawable
 import androidx.core.content.ContextCompat
 import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.source.model.Article
@@ -181,7 +182,7 @@ fun ForumArticlesScreen(
                                 LottieAnimationView(context).apply {
                                     setBackgroundResource(R.drawable.bg_oval)
                                     setAnimation(R.raw.swipe_up)
-                                    repeatCount = LottieDrawable.INFINITE
+                                    repeatCount = android.animation.ValueAnimator.INFINITE
                                     scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
                                     elevation = 4f
                                     isFocusable = true
