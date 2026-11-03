@@ -48,7 +48,7 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
             .padding(horizontal = 6.dp, vertical = 2.5.dp) // MTF 标准外边距
             .clickable { onItemClick(article.url) }
     ) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 13.dp)) { // MTF 标准内边距
+        Column(modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.5.dp)) { // MTF 标准内边距
             // 第一行：作者、标签、时间
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -107,7 +107,7 @@ fun ForumChip(name: String) {
             .clip(RoundedCornerShape(50))
             .background(Color.Transparent)
             .border(0.1.dp, Color(0xFFA0A0A0), RoundedCornerShape(50)) // 极细边框
-            .padding(horizontal = 6.dp, vertical = 1.dp)
+            .padding(horizontal = 6.dp, vertical = 2.5.dp)
     ) {
         Text(
             text = name,

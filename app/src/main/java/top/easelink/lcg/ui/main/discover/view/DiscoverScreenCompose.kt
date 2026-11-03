@@ -72,7 +72,7 @@ fun ForumNavigationSection(
             .fillMaxWidth()
             .padding(horizontal = 6.dp, vertical = 2.5.dp)
     ) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 13.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.5.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -159,7 +159,7 @@ fun RankListSection(model: RankListModel, onRankClick: (String) -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 6.dp, vertical = 2.5.dp)
     ) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 13.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.5.dp)) {
             Text(
                 text = "今日热榜",
                 fontSize = 16.sp,
