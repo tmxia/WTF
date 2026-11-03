@@ -3,19 +3,25 @@ package top.easelink.lcg.ui.main.article.view
 import android.os.Bundle
 import android.view.View
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.google.android.material.appbar.AppBarLayout
@@ -30,6 +36,9 @@ import top.easelink.lcg.ui.main.model.ReplyPostEvent
 import top.easelink.lcg.ui.main.model.ScreenCaptureEvent
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant
+import top.easelink.lcg.ui.main.article.view.DownloadLinkDialog.Companion.newInstance as newDownloadLinkDialog
+import top.easelink.lcg.ui.main.article.view.ReplyPostDialog.Companion.newInstance as newReplyPostDialog
+import top.easelink.lcg.ui.main.article.view.ScreenCaptureDialog.Companion.TAG
 
 class ArticleFragment : Fragment(), ControllableFragment {
     var title: String = ""
@@ -41,13 +50,11 @@ class ArticleFragment : Fragment(), ControllableFragment {
 
     override fun onResume() {
         super.onResume()
-        // 隐藏 Activity 全局 AppBar，解决双层 Toolbar
         requireActivity().findViewById<AppBarLayout>(R.id.app_bar_layout)?.visibility = View.GONE
     }
 
     override fun onPause() {
         super.onPause()
-        // 恢复 Activity 全局 AppBar
         requireActivity().findViewById<AppBarLayout>(R.id.app_bar_layout)?.visibility = View.VISIBLE
     }
 
@@ -104,7 +111,6 @@ fun ArticleScreen(
 ) {
     val context = LocalContext.current
 
-    // 1. 收集所有旧版存在的 LiveData 状态
     val isLoading by viewModel.isLoading.observeAsState(initial = false)
     val posts by viewModel.posts.observeAsState(initial = emptyList())
     val isFavorited by viewModel.isFavorited.observeAsState(initial = false)
@@ -113,39 +119,44 @@ fun ArticleScreen(
     val shouldDisplayPosts by viewModel.shouldDisplayPosts.observeAsState(initial = true)
 
     var showMenu by remember { mutableStateOf(false) }
-    
-    // 用于处理 EventBus 事件的状态
-    var showReplyDialog by remember { mutableStateOf(false) }
-    var replyEventData by remember { mutableStateOf<ReplyPostEvent?>(null) }
-    var showCaptureDialog by remember { mutableStateOf(false) }
-    var captureImagePath by remember { mutableStateOf("") }
 
-    // 2. 恢复 EventBus 监听
+    // 恢复 EventBus 监听，使用原生的 DialogFragment
     DisposableEffect(Unit) {
         val subscriber = object {
             @Subscribe(threadMode = ThreadMode.MAIN)
             fun onReplyEvent(event: ReplyPostEvent) {
-                replyEventData = event
-                showReplyDialog = true
+                if (fragment.isAdded) {
+                    newReplyPostDialog(event.replyUrl, event.author)
+                        .show(fragment.parentFragmentManager, "ReplyPostDialog")
+                }
             }
 
             @Subscribe(threadMode = ThreadMode.MAIN)
             fun onCaptureEvent(event: ScreenCaptureEvent) {
-                captureImagePath = event.imagePath
-                showCaptureDialog = true
+                if (fragment.isAdded) {
+                    ScreenCaptureDialog.newInstance(event.imagePath)
+                        .show(fragment.parentFragmentManager, TAG)
+                }
             }
         }
         EventBus.getDefault().register(subscriber)
-        onDispose {
-            EventBus.getDefault().unregister(subscriber)
-        }
+        onDispose { EventBus.getDefault().unregister(subscriber) }
     }
 
     Scaffold(
+        // 顶部贴顶，交由 TopAppBar 接管状态栏
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text(text = title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = { 
+                    Text(
+                        text = title, 
+                        maxLines = 1, 
+                        overflow = TextOverflow.Ellipsis,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -156,42 +167,51 @@ fun ArticleScreen(
                         IconButton(onClick = { showMenu = !showMenu }) {
                             Icon(Icons.Filled.MoreVert, contentDescription = "More")
                         }
+                        // 菜单优化：带图标、统一颜色、自适应宽度
                         DropdownMenu(
                             expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
+                            onDismissRequest = { showMenu = false },
+                            modifier = Modifier.background(Color.White)
                         ) {
                             DropdownMenuItem(
-                                text = { Text("刷新") },
+                                leadingIcon = { Icon(Icons.Outlined.Refresh, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                text = { Text("刷新", fontSize = 14.sp, color = Color.DarkGray) },
                                 onClick = {
                                     showMenu = false
                                     viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
                                 }
                             )
-                            // 恢复：浏览器打开
                             DropdownMenuItem(
-                                text = { Text("在浏览器打开") },
+                                leadingIcon = { Icon(Icons.Outlined.Language, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                text = { Text("在浏览器打开", fontSize = 14.sp, color = Color.DarkGray) },
                                 onClick = {
                                     showMenu = false
                                     WebViewActivity.startWebViewWith(WebsiteConstant.SERVER_BASE_URL + articleUrl, context)
                                 }
                             )
-                            // 恢复：提取下载链接
                             DropdownMenuItem(
-                                text = { Text("提取下载链接") },
+                                leadingIcon = { Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                text = { Text("提取下载链接", fontSize = 14.sp, color = Color.DarkGray) },
                                 onClick = {
                                     showMenu = false
                                     val urls = viewModel.extractDownloadUrl()
-                                    if (!urls.isNullOrEmpty()) {
-                                        // 暂时用 Android Toast 兜底，如果你写了 Compose 弹窗可以替换
-                                        android.widget.Toast.makeText(context, "提取到链接: ${urls.first()}", android.widget.Toast.LENGTH_LONG).show()
+                                    if (!urls.isNullOrEmpty() && fragment.isAdded) {
+                                        newDownloadLinkDialog(urls).show(fragment.parentFragmentManager, "DownloadLinkDialog")
                                     } else {
                                         android.widget.Toast.makeText(context, R.string.download_link_not_found, android.widget.Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             )
-                            // 恢复：动态收藏文字
                             DropdownMenuItem(
-                                text = { Text(if (isFavorited) "取消收藏" else "添加收藏") },
+                                leadingIcon = { 
+                                    Icon(
+                                        if (isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, 
+                                        contentDescription = null, 
+                                        modifier = Modifier.size(20.dp),
+                                        tint = if (isFavorited) Color.Red else Color.DarkGray
+                                    ) 
+                                },
+                                text = { Text(if (isFavorited) "取消收藏" else "添加收藏", fontSize = 14.sp, color = Color.DarkGray) },
                                 onClick = {
                                     showMenu = false
                                     viewModel.toggleFavorite()
@@ -205,67 +225,84 @@ fun ArticleScreen(
                     titleContentColor = Color.Black
                 )
             )
+        },
+        bottomBar = {
+            val replyUrl = posts.firstOrNull()?.replyUrl
+            // 恢复底部评论栏，点击直接调起原生回复弹窗
+            if (!isLoading && replyUrl != null && shouldDisplayPosts) {
+                BottomAppBar(
+                    containerColor = Color.White,
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    modifier = Modifier.height(64.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFF0F0F0))
+                                .clickable {
+                                    if (fragment.isAdded) {
+                                        CommentArticleDialog.newInstance(replyUrl)
+                                            .show(fragment.parentFragmentManager, "CommentArticleDialog")
+                                    }
+                                }
+                                .padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text("写评论...", color = Color.Gray, fontSize = 14.sp)
+                        }
+                        
+                        Spacer(modifier = Modifier.width(12.dp))
+                        
+                        IconButton(
+                            onClick = {
+                                if (fragment.isAdded) {
+                                    CommentArticleDialog.newInstance(replyUrl)
+                                        .show(fragment.parentFragmentManager, "CommentArticleDialog")
+                                }
+                            },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF2C2C2C)) // 深灰色更加协调
+                        ) {
+                            Icon(Icons.Filled.Edit, contentDescription = "Reply", tint = Color.White, modifier = Modifier.size(20.dp))
+                        }
+                    }
+                }
+            }
         }
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5))
-                .padding(top = paddingValues.calculateTopPadding())
+                .padding(top = paddingValues.calculateTopPadding(), bottom = paddingValues.calculateBottomPadding())
         ) {
             if (isLoading && posts.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(32.dp),
-                        strokeWidth = 3.dp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    CircularProgressIndicator(modifier = Modifier.size(32.dp), strokeWidth = 3.dp)
                 }
             } else if (isNotFound) {
-                // 恢复：404 提示
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = "帖子不存在或已被删除", color = Color.Gray)
                 }
             } else if (blockMessage.isNotEmpty()) {
-                // 恢复：黑名单拦截提示
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = blockMessage, color = Color.Red)
                 }
             } else if (shouldDisplayPosts) {
-                // 主体列表渲染
                 ComposeRecyclerViewBridge(
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
                     fragment = fragment
                 )
-
-                // 恢复：悬浮的“写评论”按钮
-                val replyUrl = posts.firstOrNull()?.replyUrl
-                if (replyUrl != null) {
-                    FloatingActionButton(
-                        onClick = {
-                            // TODO: 请替换为你现在使用的 Compose 评论弹窗
-                            // 例如: showCommentDialog = true
-                        },
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(16.dp),
-                        containerColor = MaterialTheme.colorScheme.primary
-                    ) {
-                        Icon(Icons.Filled.Edit, contentDescription = "Reply")
-                    }
-                }
             }
         }
-    }
-
-    // 处理 EventBus 弹窗
-    if (showReplyDialog && replyEventData != null) {
-        // TODO: 这里替换为你现在的 Compose 回复弹窗，并在关闭时设置 showReplyDialog = false
-        // 比如: ReplyDialog(replyEventData = replyEventData, onDismiss = { showReplyDialog = false })
-    }
-    if (showCaptureDialog) {
-        // TODO: 这里替换为你现在的 Compose 截图弹窗，并在关闭时设置 showCaptureDialog = false
-        // 比如: ScreenCaptureDialog(imagePath = captureImagePath, onDismiss = { showCaptureDialog = false })
     }
 }
