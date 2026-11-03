@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset // 核心修复：补全缺失的扩展函数
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,18 +37,15 @@ fun ForumArticlesScreen(
     onTabSelected: (String) -> Unit,
     onArticleClick: (String) -> Unit
 ) {
-    // 组合出完整的 tab 列表
     val displayTabs = remember(tabs) {
         val list = mutableListOf("全部")
         tabs.filter { it.threadName != "全部" }.forEach { list.add(it.threadName) }
         list
     }
     
-    // 初始化 PagerState
     val pagerState = rememberPagerState(pageCount = { displayTabs.size })
     val scope = rememberCoroutineScope()
 
-    // 核心联动 1：滑动 Pager 时更新 Tab 选中项并请求数据
     LaunchedEffect(pagerState.currentPage) {
         if (pagerState.currentPage > 0) {
             val index = pagerState.currentPage - 1
@@ -67,7 +65,6 @@ fun ForumArticlesScreen(
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        // 1. 顶部固定栏
         Column(modifier = Modifier.background(Color.White)) {
             TopAppBar(
                 windowInsets = WindowInsets(0, 0, 0, 0),
@@ -75,7 +72,7 @@ fun ForumArticlesScreen(
                     Text(
                         text = title,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.Bold, // 标题加粗
                         color = Color.Black
                     )
                 },
@@ -92,14 +89,24 @@ fun ForumArticlesScreen(
                     selectedTabIndex = pagerState.currentPage,
                     edgePadding = 16.dp,
                     containerColor = Color.White,
+                    // contentColor 控制的是默认的水波纹和高亮色，这里强制覆盖为红色
                     contentColor = Color(0xFFE65100),
-                    divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) }
+                    divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) },
+                    // 核心修复：自定义指示器，精准对齐首页的细红线
+                    indicator = { tabPositions ->
+                        TabRowDefaults.SecondaryIndicator(
+                            Modifier
+                                .tabIndicatorOffset(tabPositions[pagerState.currentPage])
+                                .fillMaxWidth(),
+                            height = 3.dp, // 与首页 3dp 高度完全一致
+                            color = Color(0xFFE65100) // 与首页主题红完全一致
+                        )
+                    }
                 ) {
                     displayTabs.forEachIndexed { index, tabTitle ->
                         Tab(
                             selected = pagerState.currentPage == index,
                             onClick = {
-                                // 核心联动 2：点击 Tab 时滚动 Pager
                                 scope.launch {
                                     pagerState.animateScrollToPage(index)
                                 }
@@ -107,7 +114,9 @@ fun ForumArticlesScreen(
                             text = {
                                 Text(
                                     text = tabTitle,
-                                    fontSize = 14.sp,
+                                    fontSize = 15.sp, // 字体稍大，对齐首页
+                                    // 核心修复：强制覆盖默认颜色，选中为红，未选中为灰
+                                    color = if (pagerState.currentPage == index) Color(0xFFE65100) else Color(0xFF888888),
                                     fontWeight = if (pagerState.currentPage == index) FontWeight.Medium else FontWeight.Normal
                                 )
                             }
@@ -117,18 +126,13 @@ fun ForumArticlesScreen(
             }
         }
 
-        // 2. 列表区（使用 HorizontalPager 实现左右滑动）
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            // 优化滑动缓存，让切换更流畅
-            beyondBoundsPageCount = 1 
+            beyondBoundsPageCount = 1
         ) { page ->
-            // 这里为了简单，所有的页面共用同一个 articles 数据源。
-            // 当滑动时，上面的 LaunchedEffect 会触发 onTabSelected 去请求新数据。
-            // 虽然有微小延迟，但滑动体验和动画已与首页完全一致。
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
