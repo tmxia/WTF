@@ -70,13 +70,6 @@ fun ForumArticlesScreen(
                         edgePadding = 16.dp,
                         containerColor = Color.White,
                         contentColor = Color(0xFFE65100), // 统一主题红
-                        indicator = { tabPositions ->
-                            TabRowDefaults.Indicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                                height = 3.dp,
-                                color = Color(0xFFE65100)
-                            )
-                        },
                         divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) }
                     ) {
                     val displayTabs = mutableListOf("全部")
