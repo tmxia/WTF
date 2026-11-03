@@ -155,16 +155,16 @@ fun ForumArticlesScreen(
                         }
                     }
 
-                    AnimatedVisibility(
-                        visible = showBackToTop,
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp)
-                    ) {
+                    if (showBackToTop) {
                         FloatingActionButton(
                             onClick = { scope.launch { pageListState.animateScrollToItem(0) } },
                             containerColor = Color.White,
                             contentColor = Color(0xFFE65100),
                             shape = CircleShape,
-                            elevation = FloatingActionButtonDefaults.elevation(4.dp)
+                            elevation = FloatingActionButtonDefaults.elevation(4.dp),
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(24.dp)
                         ) {
                             Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "回到顶部")
                         }
