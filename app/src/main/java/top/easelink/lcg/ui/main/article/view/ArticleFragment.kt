@@ -76,7 +76,6 @@ class ArticleFragment : Fragment(), ControllableFragment {
         val swipeRefreshLayout = SwipeRefreshLayout(context).apply {
             
             setDistanceToTriggerSync(300)
-            setOnChildScrollUpCallback { _, _ -> !isListAtTop }
             setSlingshotDistance(350)
             
             layoutParams = ViewGroup.LayoutParams(

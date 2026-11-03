@@ -42,7 +42,7 @@ class DiscoverFragment : Fragment(), ControllableFragment {
                 ContextCompat.getColor(requireContext(), R.color.colorAccent),
                 ContextCompat.getColor(requireContext(), R.color.colorPrimaryDark)
             )
-            // 核心修复：如果 Compose 列表不在顶部，不允许下拉刷新
+            
             setOnChildScrollUpCallback { _, _ -> !isListAtTop }
             setOnRefreshListener {
                 viewModel.refreshOptions(requireContext())
