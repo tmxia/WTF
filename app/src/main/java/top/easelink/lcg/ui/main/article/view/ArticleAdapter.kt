@@ -95,18 +95,21 @@ class ArticleAdapter(
     }
 
     
-    private fun getRealPost(position: Int): Post {
-        if (mPostList.isEmpty()) return mPostList.firstOrNull() ?: throw IllegalStateException()
-        if (position == 0) return mPostList[0] // 主楼永远在最前
+    private fun getRealPost(position: Int): Post? {
+        if (mPostList.isEmpty()) return null
+        if (position < 0 || position >= mPostList.size) return null
+        if (position == 0) return mPostList[0]
         
-        // 只有纯回复区才反转
-        if (isReverse && position < mPostList.size) {
-            // 总数如果是 5 (主楼 + 4个回复)，position=1 (第一个回复)
-            // 反转后应该对应原来的 4 (最后一个回复)
-            // 索引为 size - position
-            return mPostList[mPostList.size - position]
+        // 强安全判断：如果只有一楼，或者不满足倒序条件，直接返回
+        if (mPostList.size <= 2) return mPostList.getOrNull(position)
+
+        val realIndex = if (isReverse) {
+            val idx = mPostList.size - position
+            idx.coerceIn(1, mPostList.size - 1)
+        } else {
+            position
         }
-        return mPostList.getOrNull(position) ?: mPostList[0]
+        return mPostList.getOrNull(realIndex) ?: mPostList[0]
     }
 
     override fun getItemCount() = when {
