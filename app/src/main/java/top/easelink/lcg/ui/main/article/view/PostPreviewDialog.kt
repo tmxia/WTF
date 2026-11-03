@@ -104,8 +104,8 @@ class PostPreviewDialog : TopDialog() {
                     // 处理失败兜底，原本的 loading 窗口已彻底移除
                     mViewModel.loadingResult.observe(viewLifecycleOwner, Observer { status ->
                         if (status != -1) {
-                            binding.contentTextView.text = "加载失败，请稍后重试"
-                            binding.root.alpha = 1f
+                            // 彻底杜绝加载失败时的白框弹窗，直接静默关闭
+                            dismissDialog()
                         }
                     })
                     

@@ -154,6 +154,7 @@ fun RankItemCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
                 onClick = { onRankClick(rank.url) },
                 onLongClick = { onRankLongClick(rank.url) }
