@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -42,7 +44,7 @@ fun ForumArticlesScreen(
     title: String,
     tabs: List<ForumThread>,
     articles: List<Article>,
-    isLoading: Boolean, // 新增：接收加载状态
+    isLoading: Boolean, 
     onBackClick: () -> Unit,
     onTabSelected: (String) -> Unit,
     onArticleClick: (String) -> Unit,
@@ -92,7 +94,9 @@ fun ForumArticlesScreen(
                         divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) },
                         indicator = { tabPositions ->
                             TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]).fillMaxWidth(),
+                                Modifier
+                                    .tabIndicatorOffset(tabPositions[pagerState.currentPage])
+                                    .fillMaxWidth(),
                                 height = 3.dp,
                                 color = Color(0xFFE65100)
                             )
@@ -102,6 +106,14 @@ fun ForumArticlesScreen(
                             Tab(
                                 selected = pagerState.currentPage == index,
                                 onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                                // 核心修复：彻底去除突兀的水波纹，只保留颜色反馈
+                                interactionSource = remember { MutableInteractionSource() }.also { 
+                                    LaunchedEffect(it) { 
+                                        it.interactions.collect { 
+                                            if (it is PressInteraction.Release || it is PressInteraction.Cancel) { }
+                                        } 
+                                    } 
+                                },
                                 text = {
                                     Text(
                                         text = tabTitle,
@@ -121,10 +133,10 @@ fun ForumArticlesScreen(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 beyondBoundsPageCount = 1
             ) { page ->
-                // 核心修复：每个 Tab 页面独立管理自己的滚动状态，彻底解决状态污染问题
+                
                 val pageListState = rememberLazyListState()
                 
-                // 独立监听触底加载
+                
                 LaunchedEffect(pageListState, articles.size, isLoading) {
                     snapshotFlow { pageListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
                         .collect { lastIndex ->
@@ -134,7 +146,7 @@ fun ForumArticlesScreen(
                         }
                 }
 
-                // 独立监听返回顶部按钮
+                
                 val showBackToTop by remember {
                     derivedStateOf { pageListState.firstVisibleItemIndex > 30 }
                 }
@@ -149,7 +161,7 @@ fun ForumArticlesScreen(
                         items(articles) { article ->
                             ArticleCard(article, onArticleClick)
                         }
-                        // 底部加载圈
+                        
                         item {
                             if (isLoading && articles.isNotEmpty()) {
                                 Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
@@ -180,7 +192,7 @@ fun ForumArticlesScreen(
                                 }
                             },
                             update = { lottieView ->
-                                // 每次滚动状态改变时，强制播放一次动画，提示用户可点击
+                                
                                 lottieView.playAnimation()
                             }
                         )

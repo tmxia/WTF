@@ -73,7 +73,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
                     EventBus.getDefault().post(OpenArticleEvent(url))
                 },
                 onLoadMore = {
-                    // 核心补齐：触底加载下一页
+                    
                     viewModel.fetchArticles(ArticleFetcher.FetchType.FETCH_MORE) { _ -> }
                 }
             )
