@@ -81,7 +81,7 @@ class ArticleAdapter(
             override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
                 val old = oldList[oldItemPosition]
                 val new = newList[newItemPosition]
-                return old.pid == new.pid || (old.replyUrl != null && old.replyUrl == new.replyUrl)
+                return old.replyUrl == new.replyUrl && old.author == new.author && old.date == new.date
             }
 
             override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
@@ -96,16 +96,18 @@ class ArticleAdapter(
 
     
     private fun getRealPost(position: Int): Post {
-        if (mPostList.isEmpty()) return Post()
+        if (mPostList.isEmpty()) {
+            // 如果列表为空，返回一个安全的占位对象（确保传入所需参数，这里依赖外部数据不会真的为空）
+            return mPostList.firstOrNull() ?: throw IllegalStateException("Empty list")
+        }
         if (position == 0) return mPostList[0]
-        if (position == mPostList.size) return Post()
         
         val realIndex = if (isReverse) {
-            mPostList.size - position
+            (mPostList.size - 1) - (position - 1) + 1 // 修正倒序索引：跳过主楼，倒序其他
         } else {
             position
         }
-        return mPostList.getOrElse(realIndex) { Post() }
+        return mPostList.getOrNull(realIndex) ?: mPostList[0]
     }
 
     override fun getItemCount() = when {

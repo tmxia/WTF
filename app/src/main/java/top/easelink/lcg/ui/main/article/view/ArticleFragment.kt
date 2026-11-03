@@ -121,11 +121,11 @@ fun ArticleScreen(
 
     var showMenu by remember { mutableStateOf(false) }
     
-    // 核心：使用 SharedPreferences 持久化记忆倒序状态
+    // 持久化倒序状态
     val prefs = remember { context.getSharedPreferences("article_settings", android.content.Context.MODE_PRIVATE) }
     var isReverse by remember { mutableStateOf(prefs.getBoolean("is_reverse", false)) }
 
-    // 恢复 EventBus 监听，使用原生的 DialogFragment
+    // EventBus 监听
     DisposableEffect(Unit) {
         val subscriber = object {
             @Subscribe(threadMode = ThreadMode.MAIN)
@@ -135,7 +135,6 @@ fun ArticleScreen(
                         .show(fragment.parentFragmentManager, "ReplyPostDialog")
                 }
             }
-
             @Subscribe(threadMode = ThreadMode.MAIN)
             fun onCaptureEvent(event: ScreenCaptureEvent) {
                 if (fragment.isAdded) {
@@ -149,11 +148,11 @@ fun ArticleScreen(
     }
 
     Scaffold(
-        modifier = Modifier.statusBarsPadding(), // 核心修复：统一由外层处理一次状态栏高度
+        modifier = Modifier.statusBarsPadding(), // 避免状态栏双重留白
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0), // 核心修复：去掉 TopAppBar 自带的顶部留白
+                windowInsets = WindowInsets(0, 0, 0, 0), // 贴顶
                 title = { 
                     Text(
                         text = title, 
@@ -173,12 +172,20 @@ fun ArticleScreen(
                         IconButton(onClick = { showMenu = !showMenu }) {
                             Icon(Icons.Filled.MoreVert, contentDescription = "More")
                         }
-                        // 菜单优化：带图标、统一颜色、自适应宽度
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
                             modifier = Modifier.background(Color.White)
                         ) {
+                            DropdownMenuItem(
+                                leadingIcon = { Icon(Icons.Default.List, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                text = { Text(if (isReverse) "顺序显示" else "倒序显示", fontSize = 14.sp, color = Color.DarkGray) },
+                                onClick = {
+                                    showMenu = false
+                                    isReverse = !isReverse
+                                    prefs.edit().putBoolean("is_reverse", isReverse).apply()
+                                }
+                            )
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text("刷新", fontSize = 14.sp, color = Color.DarkGray) },
@@ -232,60 +239,8 @@ fun ArticleScreen(
                 )
             )
         },
-        bottomBar = {
-            val replyUrl = posts.firstOrNull()?.replyUrl
-            // 恢复底部评论栏，点击直接调起原生回复弹窗
-            if (!isLoading && replyUrl != null && shouldDisplayPosts) {
-                BottomAppBar(
-                    containerColor = Color.White,
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    modifier = Modifier.height(64.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFF0F0F0))
-                                .clickable {
-                                    if (fragment.isAdded) {
-                                        CommentArticleDialog.newInstance(replyUrl)
-                                            .show(fragment.parentFragmentManager, "CommentArticleDialog")
-                                    }
-                                }
-                                .padding(horizontal = 16.dp),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text("写评论...", color = Color.Gray, fontSize = 14.sp)
-                        }
-                        
-                        Spacer(modifier = Modifier.width(12.dp))
-                        
-                        IconButton(
-                            onClick = {
-                                if (fragment.isAdded) {
-                                    CommentArticleDialog.newInstance(replyUrl)
-                                        .show(fragment.parentFragmentManager, "CommentArticleDialog")
-                                }
-                            },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFF2C2C2C)) // 深灰色更加协调
-                        ) {
-                            Icon(Icons.Filled.Edit, contentDescription = "Reply", tint = Color.White, modifier = Modifier.size(20.dp))
-                        }
-                    }
-                }
-            }
-        }
         floatingActionButton = {
             val replyUrl = posts.firstOrNull()?.replyUrl
-            // 只有在不是加载中、有回复链接且正常展示内容时，才显示悬浮回复按钮
             if (!isLoading && replyUrl != null && shouldDisplayPosts) {
                 FloatingActionButton(
                     onClick = {
@@ -294,13 +249,13 @@ fun ArticleScreen(
                                 .show(fragment.parentFragmentManager, "CommentArticleDialog")
                         }
                     },
-                    containerColor = MaterialTheme.colorScheme.primary, // 使用主题色
+                    containerColor = Color(0xFF2C2C2C), // 深色悬浮按钮
                     contentColor = Color.White
                 ) {
                     Icon(Icons.Filled.Edit, contentDescription = "Reply")
                 }
             }
-        },
+        }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -325,7 +280,7 @@ fun ArticleScreen(
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
                     fragment = fragment,
-                    isReverse = isReverse // 传入持久化状态
+                    isReverse = isReverse // 传参给 Bridge
                 )
             }
         }
