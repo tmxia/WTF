@@ -44,32 +44,43 @@ fun DiscoverScreenCompose(
         return
     }
 
-    LazyColumn(
+    // 提取数据源
+    val forumModel = models.filterIsInstance<ForumListModel>().firstOrNull()
+    val rankModels = models.filterIsInstance<RankListModel>().flatMap { it.listModel }
+
+    // 核心修复：使用 Column 固定顶部
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5)),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .background(Color(0xFFF5F5F5))
+            .padding(top = 12.dp)
     ) {
-        models.forEach { model ->
-            when (model) {
-                is ForumListModel -> {
-                    item { ForumNavigationSection(model, onForumClick, onMoreForumsClick) }
-                }
-                is RankListModel -> {
-                    item {
-                        Text(
-                            text = "今日热榜",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFFE65100),
-                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp, start = 4.dp)
-                        )
-                    }
-                    items(model.listModel) { rank ->
-                        RankItemCard(rank, onRankClick)
-                    }
-                }
+        // 1. 常用板块导航（固定不动）
+        if (forumModel != null) {
+            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                ForumNavigationSection(forumModel, onForumClick, onMoreForumsClick)
+            }
+        }
+
+        // 2. 下方列表（支持独立滑动）
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f), // 关键：占据剩余全部空间
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                Text(
+                    text = "今日热榜",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFFE65100),
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp, start = 4.dp)
+                )
+            }
+            items(rankModels) { rank ->
+                RankItemCard(rank, onRankClick)
             }
         }
     }
@@ -146,11 +157,10 @@ fun RankItemCard(rank: RankModel, onRankClick: (String) -> Unit) {
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // 统一：标题 15sp Bold
             Text(
                 text = rank.title,
                 fontSize = 15.sp,
-                fontWeight = FontWeight.Medium, 
+                fontWeight = FontWeight.Medium,
                 color = Color.Black,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -159,7 +169,6 @@ fun RankItemCard(rank: RankModel, onRankClick: (String) -> Unit) {
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // 统一：热度 13sp Normal
             Text(
                 text = "热度: ${rank.num}",
                 fontSize = 13.sp,
