@@ -16,7 +16,6 @@ import top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher
 import top.easelink.lcg.ui.main.articles.viewmodel.ForumArticlesViewModel
 import top.easelink.lcg.ui.main.model.OpenArticleEvent
 import top.easelink.lcg.ui.main.source.model.ForumThread
-import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 
 class ForumArticlesFragment : Fragment(), ControllableFragment {
 
@@ -56,9 +55,13 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         val url = arguments?.getString("url") ?: ""
         val showTab = arguments?.getBoolean("showTab") ?: false
 
-        // 监听 ViewModel 里的 threadList (用于渲染顶部 Tab)
+        if (showTab) {
+            // 立即初始化一个默认的“全部”Tab，防止数据回来前页面看着是空的
+            setupTabs(emptyList())
+        }
+
         viewModel.threadList.observe(viewLifecycleOwner) { threadList ->
-            if (showTab && threadList.isNotEmpty()) {
+            if (showTab) {
                 setupTabs(threadList)
             } else {
                 forumTab.visibility = View.GONE
@@ -71,12 +74,10 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
     }
 
     private fun setupTabs(threadList: List<ForumThread>) {
-        if (forumTab.childCount > 0) return // 防止重复添加
-
         forumTab.visibility = View.VISIBLE
         forumTab.removeAllTabs()
 
-        // 默认加一个“全部”标签
+        // 无论 threadList 有没有数据，都强行显示一个“全部”
         forumTab.addTab(forumTab.newTab().setText("全部").setTag(""))
 
         for (thread in threadList) {
@@ -85,10 +86,13 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
 
         forumTab.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
-                val url = tab?.tag as? String ?: ""
-                if (url.isNotEmpty()) {
-                    // 切换标签重新加载数据
-                    viewModel.initUrlAndFetch(url, ArticleFetcher.FetchType.FETCH_INIT)
+                val tagUrl = tab?.tag as? String ?: ""
+                if (tagUrl.isNotEmpty()) {
+                    viewModel.initUrlAndFetch(tagUrl, ArticleFetcher.FetchType.FETCH_INIT)
+                } else {
+                    // 点击“全部”回到初始 URL
+                    val baseUrl = arguments?.getString("url") ?: ""
+                    viewModel.initUrlAndFetch(baseUrl, ArticleFetcher.FetchType.FETCH_INIT)
                 }
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
