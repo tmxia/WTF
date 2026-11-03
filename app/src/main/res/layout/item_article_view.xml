@@ -25,7 +25,6 @@
         android:paddingEnd="0dp"
         android:paddingBottom="12dp">
 
-        <!-- 推荐角标 -->
         <ImageView
             android:id="@+id/recommend_flag"
             android:layout_width="@dimen/dp_30"
@@ -51,7 +50,6 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Title" />
 
-        <!-- 印章 -->
         <top.easelink.framework.customview.ELStampView
             android:id="@+id/stamp"
             android:layout_width="@dimen/dp_30"
@@ -76,11 +74,8 @@
             app:layout_constraintTop_toBottomOf="@id/title_text_view"
             tools:text="10 / 200" />
 
-        <!-- 板块标签：强制为 wrap_content，加内边距 -->
         <TextView
             android:id="@+id/origin"
-            android:layout_width="wrap_content"
-            android:textColor="#666666"
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -93,6 +88,7 @@
             android:paddingEnd="6dp"
             android:paddingBottom="2dp"
             android:singleLine="true"
+            android:textColor="#666666"
             app:layout_constraintStart_toStartOf="@id/title_text_view"
             app:layout_constraintTop_toBottomOf="@id/reply_and_view"
             tools:text="『原创发布区』" />

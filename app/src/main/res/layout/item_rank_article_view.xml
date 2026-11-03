@@ -20,7 +20,6 @@
         android:paddingEnd="0dp"
         android:paddingBottom="12dp">
 
-        <!-- 序号 -->
         <TextView
             android:id="@+id/index"
             android:layout_width="wrap_content"
@@ -35,13 +34,12 @@
             app:layout_constraintBottom_toBottomOf="@id/title_text_view"
             tools:text="1" />
 
-        <!-- 标题 -->
         <TextView
             android:id="@+id/title_text_view"
             style="@style/TextStyle.Heading"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:fontFamily="sans-serif-medium"
             android:maxLines="2"
@@ -52,11 +50,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             tools:text="Title" />
 
-        <!-- 板块标签：强制为 wrap_content -->
         <TextView
             android:id="@+id/forum"
-            android:layout_width="wrap_content"
-            android:textColor="#666666"
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -69,11 +64,11 @@
             android:paddingEnd="6dp"
             android:paddingBottom="2dp"
             android:singleLine="true"
+            android:textColor="#666666"
             app:layout_constraintStart_toStartOf="@id/title_text_view"
             app:layout_constraintTop_toBottomOf="@id/title_text_view"
             tools:text="『原创发布区』" />
 
-        <!-- 热度 -->
         <TextView
             android:id="@+id/num"
             style="@style/TextStyle.Title.Sub"
