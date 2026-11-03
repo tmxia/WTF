@@ -61,8 +61,14 @@ class DiscoverFragment : Fragment(), ControllableFragment {
             }
         }
 
-        // 把 Compose 塞进下拉刷新容器
-        swipeRefreshLayout.addView(composeView)
+        // 把 Compose 塞进下拉刷新容器，并强制宽高撑满
+        swipeRefreshLayout.addView(
+            composeView,
+            SwipeRefreshLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        )
 
         // 监听 isLoading，控制下拉刷新的旋转动画
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
@@ -74,8 +80,7 @@ class DiscoverFragment : Fragment(), ControllableFragment {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // 强制每次进入页面都检查并拉取数据
-        android.util.Log.d("Discover", "onViewCreated: 触发数据加载")
+        // 强制触发数据加载
         viewModel.initOptions(requireContext())
     }
 }

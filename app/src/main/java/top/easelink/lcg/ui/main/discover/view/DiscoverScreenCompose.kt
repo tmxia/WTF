@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -93,12 +94,11 @@ fun ForumNavigationSection(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            // 使用 LazyRow 实现横向滑动折叠效果
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                model.forumList.take(4).forEach { forum ->
+                items(model.forumList.take(8)) { forum ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -122,24 +122,27 @@ fun ForumNavigationSection(
                     }
                 }
                 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .width(60.dp)
-                        .clickable { onMoreClick() }
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_more),
-                        contentDescription = "更多",
-                        tint = Color(0xFF999999),
-                        modifier = Modifier.size(36.dp)
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "更多",
-                        fontSize = 11.sp,
-                        color = Color(0xFF333333)
-                    )
+                // 最尾部加一个“更多”按钮
+                item {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .width(60.dp)
+                            .clickable { onMoreClick() }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_more),
+                            contentDescription = "更多",
+                            tint = Color(0xFF999999),
+                            modifier = Modifier.size(36.dp)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "更多",
+                            fontSize = 11.sp,
+                            color = Color(0xFF333333)
+                        )
+                    }
                 }
             }
         }
