@@ -3,12 +3,12 @@
 package top.easelink.lcg.ui.main.discover.view
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,10 +44,13 @@ fun DiscoverScreenCompose(
         return
     }
 
+    // 核心修复：增加全局 padding 和 item 间距，解决贴边和拥挤问题
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(Color(0xFFF5F5F5)),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(models) { model ->
             when (model) {
@@ -68,11 +71,10 @@ fun ForumNavigationSection(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 6.dp, vertical = 2.5.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.5.dp)) {
+        // 核心修复：卡片内部统一 16.dp 的边距
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -80,21 +82,20 @@ fun ForumNavigationSection(
             ) {
                 Text(
                     text = "常用板块导航",
-                    fontSize = 14.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
                 Text(
                     text = "右滑查看更多 >",
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     color = Color(0xFF999999),
                     modifier = Modifier.clickable { onMoreClick() }
                 )
             }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -102,16 +103,16 @@ fun ForumNavigationSection(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .width(60.dp)
+                            .width(56.dp)
                             .clickable { onForumClick(forum.title, forum.url) }
                     ) {
                         Icon(
                             painter = painterResource(id = forum.drawableRes),
                             contentDescription = forum.title,
                             tint = Color.Unspecified,
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(40.dp)
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = forum.title,
                             fontSize = 11.sp,
@@ -121,22 +122,20 @@ fun ForumNavigationSection(
                         )
                     }
                 }
-                
-                
                 item {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .width(60.dp)
+                            .width(56.dp)
                             .clickable { onMoreClick() }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_more),
                             contentDescription = "更多",
                             tint = Color(0xFF999999),
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(40.dp)
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "更多",
                             fontSize = 11.sp,
@@ -155,19 +154,19 @@ fun RankListSection(model: RankListModel, onRankClick: (String) -> Unit) {
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 6.dp, vertical = 2.5.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.5.dp)) {
+        Column(modifier = Modifier.padding(vertical = 16.dp)) {
             Text(
                 text = "今日热榜",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFFE65100)
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFE65100),
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
-            Spacer(modifier = Modifier.height(12.dp))
             
+            Spacer(modifier = Modifier.height(12.dp))
+
             model.listModel.forEach { rank ->
                 RankItem(rank, onRankClick)
             }
@@ -181,41 +180,41 @@ fun RankItem(rank: RankModel, onRankClick: (String) -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
             .clickable { onRankClick(rank.url) }
-            .padding(vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp) // 增加热榜单项的上下留白
     ) {
+        // 优化前三名数字背景块
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(20.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .size(22.dp)
+                .clip(CircleShape)
                 .background(getRankColor(rank.index))
         ) {
             Text(
                 text = rank.index.toString(),
-                fontSize = 11.sp,
+                fontSize = 12.sp,
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )
         }
-        
-        Spacer(modifier = Modifier.width(8.dp))
-        
+
+        Spacer(modifier = Modifier.width(12.dp))
+
         Text(
             text = rank.title,
-            fontSize = 13.sp,
+            fontSize = 14.sp,
             color = Color.Black,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
-        
-        Spacer(modifier = Modifier.width(10.dp))
-        
+
+        Spacer(modifier = Modifier.width(12.dp))
+
         Text(
             text = "热度: ${rank.num}",
-            fontSize = 11.sp,
+            fontSize = 12.sp,
             color = Color(0xFFE65100)
         )
     }
@@ -223,9 +222,9 @@ fun RankItem(rank: RankModel, onRankClick: (String) -> Unit) {
 
 fun getRankColor(index: Int): Color {
     return when (index) {
-        1 -> Color(0xFFFF705E)
-        2 -> Color(0xFFFFB900)
-        3 -> Color(0xFFA8C500)
+        1 -> Color(0xFFFF5252) // 更鲜艳的红色
+        2 -> Color(0xFFFFB300) // 金色
+        3 -> Color(0x8BC34A)   // 绿色
         else -> Color(0xFFCCCCCC)
     }
 }
