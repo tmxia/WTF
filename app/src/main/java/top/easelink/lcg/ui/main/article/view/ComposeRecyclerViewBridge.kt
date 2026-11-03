@@ -1,6 +1,7 @@
 package top.easelink.lcg.ui.main.article.view
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
@@ -20,6 +21,9 @@ fun ComposeRecyclerViewBridge(
     val posts by viewModel.posts.observeAsState(initial = emptyList())
     val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
 
+    // 监听新数据的追加（为了平滑动画）
+    val newPosts by viewModel.newPostsAppended.observeAsState(initial = emptyList())
+
     AndroidView(
         modifier = modifier,
         factory = { context ->
@@ -28,13 +32,20 @@ fun ComposeRecyclerViewBridge(
                 setPadding(0, 0, 0, 0)
                 clipToPadding = false
                 overScrollMode = RecyclerView.OVER_SCROLL_NEVER
-                // 将 Adapter 挂载到 RecyclerView 上
                 adapter = ArticleAdapter(viewModel, fragment)
             }
         },
         update = { recyclerView ->
-            // 当 Compose 监听到数据更新时，将数据推给 Adapter
-            (recyclerView.adapter as? ArticleAdapter)?.setData(posts, hasMore)
+            val adapter = recyclerView.adapter as? ArticleAdapter
+            if (adapter != null) {
+                // 每次更新时，直接根据最新的 posts 和 hasMore 赋值
+                adapter.setData(posts, hasMore)
+                
+                // 如果加载了更多数据，滚动到底部（可选体验优化）
+                if (newPosts.isNotEmpty()) {
+                    recyclerView.scrollToPosition(adapter.itemCount - 1)
+                }
+            }
         }
     )
 }

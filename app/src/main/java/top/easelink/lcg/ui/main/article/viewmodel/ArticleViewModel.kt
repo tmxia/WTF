@@ -102,7 +102,9 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                         }
                         else -> {
                             
-                            posts.value?.addAll(response.postList)
+                            val currentList = posts.value?.toMutableList() ?: mutableListOf()
+                            currentList.addAll(response.postList)
+                            safeUpdate(posts, currentList)
                             safeUpdate(newPostsAppended, response.postList)
                         }
                     }
