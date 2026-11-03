@@ -224,8 +224,6 @@ fun ArticleCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(),
                 onClick = { onItemClick(article.url) },
                 onLongClick = { onLongClick(article.url) }
             )
