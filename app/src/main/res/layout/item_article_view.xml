@@ -20,9 +20,9 @@
         android:id="@+id/article_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
+        android:paddingStart="0dp"
         android:paddingTop="12dp"
-        android:paddingEnd="16dp"
+        android:paddingEnd="0dp"
         android:paddingBottom="12dp">
 
         <!-- 推荐角标 -->
@@ -79,6 +79,8 @@
         <!-- 板块标签：强制为 wrap_content，加内边距 -->
         <TextView
             android:id="@+id/origin"
+            android:layout_width="wrap_content"
+            android:textColor="#666666"
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
