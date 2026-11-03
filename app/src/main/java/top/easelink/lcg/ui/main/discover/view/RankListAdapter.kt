@@ -60,7 +60,12 @@ class RankListAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                 titleTextView.layoutParams = params
                 titleTextView.text = model.title
                 num.text = getMappingStringByType(num.context, model.type, model.num)
-                forum.text = model.forum
+                if (model.forum.isNullOrBlank()) {
+                    forum.visibility = View.GONE
+                } else {
+                    forum.visibility = View.VISIBLE
+                    forum.text = model.forum
+                }
             }
         }
 

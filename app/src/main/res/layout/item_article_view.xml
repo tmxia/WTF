@@ -5,40 +5,33 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/layout"
     android:layout_width="match_parent"
-    android:layout_marginStart="16dp"
-    android:layout_marginEnd="16dp"
     android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
     android:layout_marginTop="4dp"
-    android:layout_marginBottom="8dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="6dp"
     android:clickable="true"
     android:focusable="true"
-    android:background="@color/white"
-    android:foreground="?attr/selectableItemBackgroundBorderless"
+    android:foreground="?attr/selectableItemBackground"
     android:longClickable="true"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="0dp">
+    app:cardCornerRadius="8dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/article_container"
         android:layout_width="match_parent"
-    android:layout_marginStart="16dp"
-    android:layout_marginEnd="16dp"
         android:layout_height="wrap_content"
-        android:paddingStart="0dp"
-        android:paddingTop="14dp"
-        android:paddingEnd="0dp"
-        android:paddingBottom="14dp">
+        android:padding="14dp">
 
-        <!-- 推荐角标：补回 -->
         <ImageView
             android:id="@+id/recommend_flag"
-            android:layout_width="@dimen/dp_30"
-            android:layout_height="@dimen/dp_30"
+            android:layout_width="@dimen/dp_24"
+            android:layout_height="@dimen/dp_24"
             android:contentDescription="@null"
             android:src="@drawable/ic_recommendation"
+            android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:visibility="gone"
             tools:visibility="visible"/>
 
         <TextView
@@ -48,20 +41,17 @@
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-medium"
             android:maxLines="2"
-            android:textSize="@dimen/sp_14"
+            android:textSize="15sp"
             android:textStyle="normal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Title" />
 
-        <!-- 印章：补回 -->
         <top.easelink.framework.customview.ELStampView
             android:id="@+id/stamp"
             android:layout_width="@dimen/dp_30"
             android:layout_height="@dimen/dp_30"
-            android:layout_marginTop="3dp"
-            android:layout_marginEnd="8dp"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -69,34 +59,33 @@
             tools:stampText="50"
             tools:visibility="visible" />
 
-        <TextView
-            android:id="@+id/reply_and_view"
-            style="@style/TextStyle.Title.Sub"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            app:layout_constraintStart_toStartOf="@id/title_text_view"
-            app:layout_constraintTop_toBottomOf="@id/title_text_view"
-            tools:text="10 / 200" />
-
+        <!-- 标签：改为灰色的文字背景，宽度自适应 -->
         <TextView
             android:id="@+id/origin"
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="8dp"
             android:background="@drawable/bg_tag"
-            android:ellipsize="middle"
-            android:maxWidth="@dimen/dp_200"
             android:paddingStart="6dp"
             android:paddingTop="2dp"
             android:paddingEnd="6dp"
             android:paddingBottom="2dp"
-            android:singleLine="true"
             android:textColor="#666666"
-            app:layout_constraintStart_toStartOf="@id/title_text_view"
+            android:textSize="11sp"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/reply_and_view"
             tools:text="『原创发布区』" />
+
+        <TextView
+            android:id="@+id/reply_and_view"
+            style="@style/TextStyle.Title.Sub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/title_text_view"
+            tools:text="10 / 200" />
 
         <TextView
             android:id="@+id/author_text_view"
@@ -112,8 +101,9 @@
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/origin"
+            app:layout_constraintTop_toBottomOf="@id/author_text_view"
             tools:text="2019-07-04" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

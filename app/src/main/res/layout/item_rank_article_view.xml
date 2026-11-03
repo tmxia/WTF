@@ -5,20 +5,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
     android:layout_marginTop="4dp"
-    android:layout_marginBottom="8dp"
-    app:cardCornerRadius="12dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="6dp"
+    app:cardCornerRadius="8dp"
     app:cardElevation="0dp"
     app:cardBackgroundColor="@color/white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/article_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingTop="14dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="14dp">
+        android:padding="14dp">
 
         <TextView
             android:id="@+id/index"
@@ -42,7 +40,7 @@
             android:layout_marginStart="12dp"
             android:fontFamily="sans-serif-medium"
             android:maxLines="2"
-            android:textSize="14sp"
+            android:textSize="15sp"
             android:textStyle="normal"
             app:layout_constraintStart_toEndOf="@id/index"
             app:layout_constraintTop_toTopOf="parent"
@@ -54,16 +52,14 @@
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="8dp"
             android:background="@drawable/bg_tag"
-            android:ellipsize="middle"
-            android:maxWidth="@dimen/dp_200"
             android:paddingStart="6dp"
             android:paddingTop="2dp"
             android:paddingEnd="6dp"
             android:paddingBottom="2dp"
-            android:singleLine="true"
             android:textColor="#666666"
+            android:textSize="11sp"
             app:layout_constraintStart_toStartOf="@id/title_text_view"
             app:layout_constraintTop_toBottomOf="@id/title_text_view"
             tools:text="『原创发布区』" />
