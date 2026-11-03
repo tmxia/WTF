@@ -26,9 +26,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import com.airbnb.lottie.LottieAnimationView
+import androidx.core.content.ContextCompat
+import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
 
@@ -156,18 +160,30 @@ fun ForumArticlesScreen(
                     }
 
                     if (showBackToTop) {
-                        FloatingActionButton(
-                            onClick = { scope.launch { pageListState.animateScrollToItem(0) } },
-                            containerColor = Color.White,
-                            contentColor = Color(0xFFE65100),
-                            shape = CircleShape,
-                            elevation = FloatingActionButtonDefaults.elevation(4.dp),
+                        AndroidView(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .padding(24.dp)
-                        ) {
-                            Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "回到顶部")
-                        }
+                                .padding(end = 20.dp, bottom = 54.dp)
+                                .size(32.dp),
+                            factory = { context ->
+                                LottieAnimationView(context).apply {
+                                    setBackgroundResource(R.drawable.bg_oval)
+                                    setAnimation(R.raw.swipe_up)
+                                    repeatCount = LottieDrawable.INFINITE
+                                    scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                                    elevation = 4f
+                                    isFocusable = true
+                                    isClickable = true
+                                    setOnClickListener {
+                                        scope.launch { pageListState.animateScrollToItem(0) }
+                                    }
+                                }
+                            },
+                            update = { lottieView ->
+                                // 每次滚动状态改变时，强制播放一次动画，提示用户可点击
+                                lottieView.playAnimation()
+                            }
+                        )
                     }
                 }
             }
