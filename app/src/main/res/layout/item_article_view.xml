@@ -5,6 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/layout"
     android:layout_width="match_parent"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
     android:layout_height="wrap_content"
     android:layout_marginTop="4dp"
     android:layout_marginBottom="8dp"
@@ -19,10 +21,12 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/article_container"
         android:layout_width="match_parent"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
+        android:paddingStart="0dp"
         android:paddingTop="14dp"
-        android:paddingEnd="16dp"
+        android:paddingEnd="0dp"
         android:paddingBottom="14dp">
 
         <!-- 推荐角标：补回 -->

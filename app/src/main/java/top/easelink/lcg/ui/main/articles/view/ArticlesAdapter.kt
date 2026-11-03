@@ -111,7 +111,12 @@ class ArticlesAdapter(
                 authorTextView.text = article.author
                 dateTextView.text = article.date
                 replyAndView.text = article.let { "${it.reply} / ${it.view}" }
-                origin.text = article.origin
+                if (article.origin.isNullOrBlank()) {
+                    origin.visibility = View.GONE
+                } else {
+                    origin.visibility = View.VISIBLE
+                    origin.text = article.origin
+                }
                 if (article.isRecommended) {
                     recommendFlag.visibility = View.VISIBLE
                 } else {
