@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -37,10 +38,11 @@ fun ForumArticlesScreen(
     title: String,
     tabs: List<ForumThread>,
     articles: List<Article>,
+    isLoading: Boolean, // 新增：接收加载状态
     onBackClick: () -> Unit,
     onTabSelected: (String) -> Unit,
     onArticleClick: (String) -> Unit,
-    onLoadMore: () -> Unit // 核心修复：明确声明此参数
+    onLoadMore: () -> Unit
 ) {
     val displayTabs = remember(tabs) {
         val list = mutableListOf("全部")
@@ -50,22 +52,6 @@ fun ForumArticlesScreen(
     
     val pagerState = rememberPagerState(pageCount = { displayTabs.size })
     val scope = rememberCoroutineScope()
-    val lazyListState = rememberLazyListState()
-    
-    // 触底加载更多
-    LaunchedEffect(lazyListState) {
-        snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
-            .collect { lastIndex ->
-                if (lastIndex != null && lastIndex >= articles.size - 3 && articles.isNotEmpty()) {
-                    onLoadMore()
-                }
-            }
-    }
-
-    // 返回顶部按钮显隐
-    val showBackToTop by remember {
-        derivedStateOf { lazyListState.firstVisibleItemIndex > 30 }
-    }
 
     LaunchedEffect(pagerState.currentPage) {
         if (pagerState.currentPage > 0) {
@@ -77,7 +63,6 @@ fun ForumArticlesScreen(
         } else {
             onTabSelected("")
         }
-        lazyListState.scrollToItem(0)
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
@@ -132,38 +117,59 @@ fun ForumArticlesScreen(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 beyondBoundsPageCount = 1
             ) { page ->
-                LazyColumn(
-                    state = lazyListState,
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
-                ) {
-                    items(articles) { article ->
-                        ArticleCard(article, onArticleClick)
-                    }
-                    item {
-                        if (articles.isNotEmpty()) {
-                            Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = Color(0xFFE65100))
+                // 核心修复：每个 Tab 页面独立管理自己的滚动状态，彻底解决状态污染问题
+                val pageListState = rememberLazyListState()
+                
+                // 独立监听触底加载
+                LaunchedEffect(pageListState, articles.size, isLoading) {
+                    snapshotFlow { pageListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+                        .collect { lastIndex ->
+                            if (!isLoading && lastIndex != null && lastIndex >= articles.size - 3 && articles.isNotEmpty()) {
+                                onLoadMore()
+                            }
+                        }
+                }
+
+                // 独立监听返回顶部按钮
+                val showBackToTop by remember {
+                    derivedStateOf { pageListState.firstVisibleItemIndex > 30 }
+                }
+
+                Box(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        state = pageListState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        items(articles) { article ->
+                            ArticleCard(article, onArticleClick)
+                        }
+                        // 底部加载圈
+                        item {
+                            if (isLoading && articles.isNotEmpty()) {
+                                Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = Color(0xFFE65100))
+                                }
                             }
                         }
                     }
-                }
-            }
-        }
 
-        AnimatedVisibility(
-            visible = showBackToTop,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp)
-        ) {
-            FloatingActionButton(
-                onClick = { scope.launch { lazyListState.animateScrollToItem(0) } },
-                containerColor = Color.White,
-                contentColor = Color(0xFFE65100),
-                shape = CircleShape,
-                elevation = FloatingActionButtonDefaults.elevation(4.dp)
-            ) {
-                Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "回到顶部")
+                    AnimatedVisibility(
+                        visible = showBackToTop,
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp)
+                    ) {
+                        FloatingActionButton(
+                            onClick = { scope.launch { pageListState.animateScrollToItem(0) } },
+                            containerColor = Color.White,
+                            contentColor = Color(0xFFE65100),
+                            shape = CircleShape,
+                            elevation = FloatingActionButtonDefaults.elevation(4.dp)
+                        ) {
+                            Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "回到顶部")
+                        }
+                    }
+                }
             }
         }
     }

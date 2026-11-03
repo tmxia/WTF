@@ -51,6 +51,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         composeView.setContent {
             val articles by viewModel.articles.observeAsState(initial = emptyList())
             val tabs by viewModel.threadList.observeAsState(initial = emptyList())
+            val isLoading by viewModel.isLoading.observeAsState(initial = false)
             
             
             LaunchedEffect(articles, tabs) {
@@ -62,6 +63,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
                 title = title,
                 tabs = tabs,
                 articles = articles,
+                isLoading = isLoading,
                 onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() },
                 onTabSelected = { url ->
                     val finalUrl = if (url.isEmpty()) arguments?.getString("url") ?: "" else url
