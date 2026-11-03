@@ -35,6 +35,16 @@ fun DiscoverScreenCompose(
     onMoreForumsClick: () -> Unit,
     onRankClick: (String) -> Unit
 ) {
+    if (models.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "暂无数据，请下拉刷新", color = Color.Gray)
+        }
+        return
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()

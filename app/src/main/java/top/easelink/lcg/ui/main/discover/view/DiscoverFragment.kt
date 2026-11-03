@@ -74,8 +74,8 @@ class DiscoverFragment : Fragment(), ControllableFragment {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (viewModel.aggregationModels.value.isNullOrEmpty()) {
-            viewModel.initOptions(requireContext())
-        }
+        // 强制每次进入页面都检查并拉取数据
+        android.util.Log.d("Discover", "onViewCreated: 触发数据加载")
+        viewModel.initOptions(requireContext())
     }
 }
