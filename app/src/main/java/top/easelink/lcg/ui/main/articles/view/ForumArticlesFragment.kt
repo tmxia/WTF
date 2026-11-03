@@ -73,31 +73,39 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         }
     }
 
+    private var isTabListenerAdded = false
+
     private fun setupTabs(threadList: List<ForumThread>) {
         forumTab.visibility = View.VISIBLE
         forumTab.removeAllTabs()
 
-        // 无论 threadList 有没有数据，都强行显示一个“全部”
+        // 1. 强制添加唯一的“全部”
         forumTab.addTab(forumTab.newTab().setText("全部").setTag(""))
 
+        // 2. 遍历数据，过滤掉可能重复的“全部”，并添加其他分类
         for (thread in threadList) {
+            if (thread.threadName == "全部") continue // 防止重名
             forumTab.addTab(forumTab.newTab().setText(thread.threadName).setTag(thread.threadUrl))
         }
 
-        forumTab.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-                val tagUrl = tab?.tag as? String ?: ""
-                if (tagUrl.isNotEmpty()) {
-                    viewModel.initUrlAndFetch(tagUrl, ArticleFetcher.FetchType.FETCH_INIT)
-                } else {
-                    // 点击“全部”回到初始 URL
-                    val baseUrl = arguments?.getString("url") ?: ""
-                    viewModel.initUrlAndFetch(baseUrl, ArticleFetcher.FetchType.FETCH_INIT)
+        // 3. 确保监听器只绑定一次，防止切换 Tab 触发 N 次网络请求
+        if (!isTabListenerAdded) {
+            isTabListenerAdded = true
+            forumTab.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+                override fun onTabSelected(tab: TabLayout.Tab?) {
+                    val tagUrl = tab?.tag as? String ?: ""
+                    if (tagUrl.isNotEmpty()) {
+                        viewModel.initUrlAndFetch(tagUrl, ArticleFetcher.FetchType.FETCH_INIT)
+                    } else {
+                        // 点击“全部”回到初始 URL
+                        val baseUrl = arguments?.getString("url") ?: ""
+                        viewModel.initUrlAndFetch(baseUrl, ArticleFetcher.FetchType.FETCH_INIT)
+                    }
                 }
-            }
-            override fun onTabUnselected(tab: TabLayout.Tab?) {}
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
-        })
+                override fun onTabUnselected(tab: TabLayout.Tab?) {}
+                override fun onTabReselected(tab: TabLayout.Tab?) {}
+            })
+        }
     }
 
     companion object {
