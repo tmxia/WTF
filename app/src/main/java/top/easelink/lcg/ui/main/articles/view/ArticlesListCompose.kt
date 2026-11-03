@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -36,9 +35,13 @@ fun ForumArticlesScreen(
     var selectedTabIndex by remember { mutableStateOf(0) }
 
     Scaffold(
+        // 核心修复1：彻底禁用 Scaffold 默认的状态栏留白
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             Column(modifier = Modifier.background(Color.White)) {
                 TopAppBar(
+                    // 核心修复2：彻底禁用 TopAppBar 默认的状态栏留白
+                    windowInsets = WindowInsets(0, 0, 0, 0),
                     title = {
                         Text(
                             text = title,
@@ -67,7 +70,6 @@ fun ForumArticlesScreen(
                         contentColor = Color(0xFFE65100),
                         divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) }
                     ) {
-                        
                         val displayTabs = mutableListOf("全部")
                         tabs.filter { it.threadName != "全部" }.forEach {
                             displayTabs.add(it.threadName)
@@ -78,7 +80,6 @@ fun ForumArticlesScreen(
                                 selected = selectedTabIndex == index,
                                 onClick = {
                                     selectedTabIndex = index
-                                    
                                     val url = if (index == 0) "" else tabs.filter { it.threadName != "全部" }[index - 1].threadUrl
                                     onTabSelected(url)
                                 },
@@ -96,13 +97,14 @@ fun ForumArticlesScreen(
             }
         }
     ) { paddingValues ->
+        // 核心修复3：使用 paddingValues 让列表在固定表头下方平滑滚动
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(Color(0xFFF5F5F5)),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(vertical = 8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp), // 调整卡片间距，不再拥挤
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp) // 增加左右边距
         ) {
             items(articles) { article ->
                 ArticleCard(article, onArticleClick)
@@ -119,10 +121,10 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 6.dp, vertical = 2.5.dp)
             .clickable { onItemClick(article.url) }
     ) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 13.dp)) {
+        // 核心修复4：移除原先突兀的 6.dp 边距，改用标准的 16.dp 内部留白
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -133,35 +135,35 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF333333)
                 )
-                
+
                 if (article.origin.isNotBlank()) {
                     Spacer(modifier = Modifier.width(8.dp))
                     ForumChip(article.origin)
                 }
-                
+
                 Spacer(modifier = Modifier.weight(1f))
-                
+
                 Text(
                     text = article.date,
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     color = Color(0xFF999999)
                 )
             }
-            
-            Spacer(modifier = Modifier.height(9.dp))
-            
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             Text(
                 text = article.title,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold, // 标题加粗更醒目
                 color = Color.Black,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 lineHeight = 22.sp
             )
-            
-            Spacer(modifier = Modifier.height(11.dp))
-            
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Text(
                 text = "${article.reply} / ${article.view}",
                 fontSize = 13.sp,
@@ -178,7 +180,7 @@ fun ForumChip(name: String) {
             .clip(RoundedCornerShape(50))
             .background(Color.Transparent)
             .border(0.1.dp, Color(0xFFA0A0A0), RoundedCornerShape(50))
-            .padding(horizontal = 6.dp, vertical = 1.dp)
+            .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
         Text(
             text = name,

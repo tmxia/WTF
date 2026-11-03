@@ -44,7 +44,7 @@ fun DiscoverScreenCompose(
         return
     }
 
-    // 核心修复：增加全局 padding 和 item 间距，解决贴边和拥挤问题
+    // 统一外边距与间距，与帖子列表页保持绝对一致
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -52,10 +52,29 @@ fun DiscoverScreenCompose(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(models) { model ->
+        models.forEach { model ->
             when (model) {
-                is ForumListModel -> ForumNavigationSection(model, onForumClick, onMoreForumsClick)
-                is RankListModel -> RankListSection(model, onRankClick)
+                is ForumListModel -> {
+                    item {
+                        ForumNavigationSection(model, onForumClick, onMoreForumsClick)
+                    }
+                }
+                is RankListModel -> {
+                    // 把热榜标题当作列表里的一个纯文本项
+                    item {
+                        Text(
+                            text = "今日热榜",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFE65100),
+                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp, start = 4.dp)
+                        )
+                    }
+                    // 核心改变：把热榜里的每一个 Item 拆成独立的卡片，使用统一的间距
+                    items(model.listModel) { rank ->
+                        RankItemCard(rank, onRankClick)
+                    }
+                }
             }
         }
     }
@@ -73,7 +92,6 @@ fun ForumNavigationSection(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        // 核心修复：卡片内部统一 16.dp 的边距
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -148,83 +166,67 @@ fun ForumNavigationSection(
     }
 }
 
+// 核心重构：将热榜每一项做成独立的帖子级卡片
 @Composable
-fun RankListSection(model: RankListModel, onRankClick: (String) -> Unit) {
+fun RankItemCard(rank: RankModel, onRankClick: (String) -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(vertical = 16.dp)) {
-            Text(
-                text = "今日热榜",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFE65100),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-
-            model.listModel.forEach { rank ->
-                RankItem(rank, onRankClick)
-            }
-        }
-    }
-}
-
-@Composable
-fun RankItem(rank: RankModel, onRankClick: (String) -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onRankClick(rank.url) }
-            .padding(horizontal = 16.dp, vertical = 12.dp) // 增加热榜单项的上下留白
     ) {
-        // 优化前三名数字背景块
-        Box(
-            contentAlignment = Alignment.Center,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .size(22.dp)
-                .clip(CircleShape)
-                .background(getRankColor(rank.index))
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp) // 和 ArticleCard 完全一样的 16dp 内边距
         ) {
+            // 优化后的排名色块
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(24.dp) // 稍微放大一点，更饱满
+                    .clip(CircleShape)
+                    .background(getRankColor(rank.index))
+            ) {
+                Text(
+                    text = rank.index.toString(),
+                    fontSize = 12.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
             Text(
-                text = rank.index.toString(),
-                fontSize = 12.sp,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
+                text = rank.title,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium, // 标题加粗，对齐帖子卡片
+                color = Color.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Text(
+                text = "热度: ${rank.num}",
+                fontSize = 13.sp,
+                color = Color(0xFFE65100)
             )
         }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Text(
-            text = rank.title,
-            fontSize = 14.sp,
-            color = Color.Black,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Text(
-            text = "热度: ${rank.num}",
-            fontSize = 12.sp,
-            color = Color(0xFFE65100)
-        )
     }
 }
 
 fun getRankColor(index: Int): Color {
     return when (index) {
-        1 -> Color(0xFFFF5252) // 更鲜艳的红色
+        1 -> Color(0xFFFF5252) // 红色
         2 -> Color(0xFFFFB300) // 金色
         3 -> Color(0x8BC34A)   // 绿色
-        else -> Color(0xFFCCCCCC)
+        else -> Color(0xFFCCCCCC) // 灰色
     }
 }
