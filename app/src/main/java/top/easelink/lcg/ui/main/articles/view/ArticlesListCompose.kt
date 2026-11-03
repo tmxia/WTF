@@ -34,77 +34,77 @@ fun ForumArticlesScreen(
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
 
-    Scaffold(
-        // 核心修复1：彻底禁用 Scaffold 默认的状态栏留白
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            Column(modifier = Modifier.background(Color.White)) {
-                TopAppBar(
-                    // 核心修复2：彻底禁用 TopAppBar 默认的状态栏留白
-                    windowInsets = WindowInsets(0, 0, 0, 0),
-                    title = {
-                        Text(
-                            text = title,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
+    // 核心修复：抛弃 Scaffold，改用最稳固的 Column 布局，保证表头永不滚动
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
+    ) {
+        // 1. 顶部固定栏
+        Column(modifier = Modifier.background(Color.White)) {
+            TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0), // 去除状态栏留白
+                title = {
+                    Text(
+                        text = title,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "返回",
+                            tint = Color.Black
                         )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "返回",
-                                tint = Color.Black
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-                )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
 
-                if (tabs.isNotEmpty()) {
-                    ScrollableTabRow(
-                        selectedTabIndex = selectedTabIndex,
-                        edgePadding = 16.dp,
-                        containerColor = Color.White,
-                        contentColor = Color(0xFFE65100),
-                        divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) }
-                    ) {
-                        val displayTabs = mutableListOf("全部")
-                        tabs.filter { it.threadName != "全部" }.forEach {
-                            displayTabs.add(it.threadName)
-                        }
+            if (tabs.isNotEmpty()) {
+                ScrollableTabRow(
+                    selectedTabIndex = selectedTabIndex,
+                    edgePadding = 16.dp,
+                    containerColor = Color.White,
+                    contentColor = Color(0xFFE65100),
+                    divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) }
+                ) {
+                    val displayTabs = mutableListOf("全部")
+                    tabs.filter { it.threadName != "全部" }.forEach {
+                        displayTabs.add(it.threadName)
+                    }
 
-                        displayTabs.forEachIndexed { index, tabTitle ->
-                            Tab(
-                                selected = selectedTabIndex == index,
-                                onClick = {
-                                    selectedTabIndex = index
-                                    val url = if (index == 0) "" else tabs.filter { it.threadName != "全部" }[index - 1].threadUrl
-                                    onTabSelected(url)
-                                },
-                                text = {
-                                    Text(
-                                        text = tabTitle,
-                                        fontSize = 14.sp,
-                                        fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                }
-                            )
-                        }
+                    displayTabs.forEachIndexed { index, tabTitle ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = {
+                                selectedTabIndex = index
+                                val url = if (index == 0) "" else tabs.filter { it.threadName != "全部" }[index - 1].threadUrl
+                                onTabSelected(url)
+                            },
+                            text = {
+                                Text(
+                                    text = tabTitle,
+                                    fontSize = 14.sp,
+                                    fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        )
                     }
                 }
             }
         }
-    ) { paddingValues ->
-        // 核心修复3：使用 paddingValues 让列表在固定表头下方平滑滚动
+
+        // 2. 列表区 (weight 占满剩余空间，确保独立滚动)
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color(0xFFF5F5F5)),
-            verticalArrangement = Arrangement.spacedBy(12.dp), // 调整卡片间距，不再拥挤
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp) // 增加左右边距
+                .fillMaxWidth()
+                .weight(1f), // 关键：占据剩余全部空间
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
         ) {
             items(articles) { article ->
                 ArticleCard(article, onArticleClick)
@@ -123,12 +123,12 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
             .fillMaxWidth()
             .clickable { onItemClick(article.url) }
     ) {
-        // 核心修复4：移除原先突兀的 6.dp 边距，改用标准的 16.dp 内部留白
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
+                // 统一：作者字体 14sp Medium
                 Text(
                     text = article.author,
                     fontSize = 14.sp,
@@ -143,19 +143,22 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
 
                 Spacer(modifier = Modifier.weight(1f))
 
+                // 统一：时间 12sp Normal，灰色
                 Text(
                     text = article.date,
                     fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
                     color = Color(0xFF999999)
                 )
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // 统一：标题 16sp Bold，黑色
             Text(
                 text = article.title,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold, // 标题加粗更醒目
+                fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -164,9 +167,11 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // 统一：底部数据 13sp Normal，灰色
             Text(
                 text = "${article.reply} / ${article.view}",
                 fontSize = 13.sp,
+                fontWeight = FontWeight.Normal,
                 color = Color(0xFF999999)
             )
         }
@@ -185,6 +190,7 @@ fun ForumChip(name: String) {
         Text(
             text = name,
             fontSize = 10.sp,
+            fontWeight = FontWeight.Normal,
             color = Color(0xFF808080),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis

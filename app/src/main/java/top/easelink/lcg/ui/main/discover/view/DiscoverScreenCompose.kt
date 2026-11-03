@@ -44,7 +44,6 @@ fun DiscoverScreenCompose(
         return
     }
 
-    // 统一外边距与间距，与帖子列表页保持绝对一致
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -55,12 +54,9 @@ fun DiscoverScreenCompose(
         models.forEach { model ->
             when (model) {
                 is ForumListModel -> {
-                    item {
-                        ForumNavigationSection(model, onForumClick, onMoreForumsClick)
-                    }
+                    item { ForumNavigationSection(model, onForumClick, onMoreForumsClick) }
                 }
                 is RankListModel -> {
-                    // 把热榜标题当作列表里的一个纯文本项
                     item {
                         Text(
                             text = "今日热榜",
@@ -70,7 +66,6 @@ fun DiscoverScreenCompose(
                             modifier = Modifier.padding(top = 8.dp, bottom = 4.dp, start = 4.dp)
                         )
                     }
-                    // 核心改变：把热榜里的每一个 Item 拆成独立的卡片，使用统一的间距
                     items(model.listModel) { rank ->
                         RankItemCard(rank, onRankClick)
                     }
@@ -98,67 +93,31 @@ fun ForumNavigationSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "常用板块导航",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-                Text(
-                    text = "右滑查看更多 >",
-                    fontSize = 12.sp,
-                    color = Color(0xFF999999),
-                    modifier = Modifier.clickable { onMoreClick() }
-                )
+                Text("常用板块导航", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Text("右滑查看更多 >", fontSize = 12.sp, fontWeight = FontWeight.Normal, color = Color(0xFF999999), modifier = Modifier.clickable { onMoreClick() })
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 items(model.forumList.take(8)) { forum ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .width(56.dp)
-                            .clickable { onForumClick(forum.title, forum.url) }
+                        modifier = Modifier.width(56.dp).clickable { onForumClick(forum.title, forum.url) }
                     ) {
-                        Icon(
-                            painter = painterResource(id = forum.drawableRes),
-                            contentDescription = forum.title,
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(40.dp)
-                        )
+                        Icon(painterResource(id = forum.drawableRes), forum.title, tint = Color.Unspecified, modifier = Modifier.size(40.dp))
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = forum.title,
-                            fontSize = 11.sp,
-                            color = Color(0xFF333333),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Text(forum.title, fontSize = 11.sp, fontWeight = FontWeight.Normal, color = Color(0xFF333333), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
                 item {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .width(56.dp)
-                            .clickable { onMoreClick() }
+                        modifier = Modifier.width(56.dp).clickable { onMoreClick() }
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_more),
-                            contentDescription = "更多",
-                            tint = Color(0xFF999999),
-                            modifier = Modifier.size(40.dp)
-                        )
+                        Icon(painterResource(id = R.drawable.ic_more), "更多", tint = Color(0xFF999999), modifier = Modifier.size(40.dp))
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "更多",
-                            fontSize = 11.sp,
-                            color = Color(0xFF333333)
-                        )
+                        Text("更多", fontSize = 11.sp, fontWeight = FontWeight.Normal, color = Color(0xFF333333))
                     }
                 }
             }
@@ -166,45 +125,32 @@ fun ForumNavigationSection(
     }
 }
 
-// 核心重构：将热榜每一项做成独立的帖子级卡片
 @Composable
 fun RankItemCard(rank: RankModel, onRankClick: (String) -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onRankClick(rank.url) }
+        modifier = Modifier.fillMaxWidth().clickable { onRankClick(rank.url) }
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp) // 和 ArticleCard 完全一样的 16dp 内边距
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
-            // 优化后的排名色块
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(24.dp) // 稍微放大一点，更饱满
-                    .clip(CircleShape)
-                    .background(getRankColor(rank.index))
+                modifier = Modifier.size(24.dp).clip(CircleShape).background(getRankColor(rank.index))
             ) {
-                Text(
-                    text = rank.index.toString(),
-                    fontSize = 12.sp,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                Text(rank.index.toString(), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
 
             Spacer(modifier = Modifier.width(12.dp))
 
+            // 统一：标题 15sp Bold
             Text(
                 text = rank.title,
                 fontSize = 15.sp,
-                fontWeight = FontWeight.Medium, // 标题加粗，对齐帖子卡片
+                fontWeight = FontWeight.Bold, 
                 color = Color.Black,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -213,9 +159,11 @@ fun RankItemCard(rank: RankModel, onRankClick: (String) -> Unit) {
 
             Spacer(modifier = Modifier.width(12.dp))
 
+            // 统一：热度 13sp Normal
             Text(
                 text = "热度: ${rank.num}",
                 fontSize = 13.sp,
+                fontWeight = FontWeight.Normal,
                 color = Color(0xFFE65100)
             )
         }
@@ -224,9 +172,9 @@ fun RankItemCard(rank: RankModel, onRankClick: (String) -> Unit) {
 
 fun getRankColor(index: Int): Color {
     return when (index) {
-        1 -> Color(0xFFFF5252) // 红色
-        2 -> Color(0xFFFFB300) // 金色
-        3 -> Color(0x8BC34A)   // 绿色
-        else -> Color(0xFFCCCCCC) // 灰色
+        1 -> Color(0xFFFF5252)
+        2 -> Color(0xFFFFB300)
+        3 -> Color(0xFF8BC34A)
+        else -> Color(0xFFCCCCCC)
     }
 }
