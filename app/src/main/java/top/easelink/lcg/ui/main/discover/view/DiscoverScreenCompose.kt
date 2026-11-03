@@ -1,5 +1,9 @@
+@file:OptIn(ExperimentalLayoutApi::class)
+
 package top.easelink.lcg.ui.main.discover.view
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -78,7 +82,7 @@ fun ForumNavigationSection(model: ForumListModel, onForumClick: (String, String)
             
             // 简易网格展示板块（采用 FlowRow 或手动 Row）
             // 这里用 Row 包裹，支持自动换行
-            androidx.compose.foundation.layout.FlowRow(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
