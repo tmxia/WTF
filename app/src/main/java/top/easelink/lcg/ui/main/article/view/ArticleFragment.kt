@@ -71,12 +71,12 @@ class ArticleFragment : Fragment(), ControllableFragment {
         savedInstanceState: Bundle?
     ): View {
         val context = requireContext()
-        // 核心 1：外层套用 SwipeRefreshLayout
+        
         val swipeRefreshLayout = SwipeRefreshLayout(context).apply {
-            // 核心 2：注入防误触机制
+            
             setDistanceToTriggerSync(200)
             setSlingshotDistance(300)
-            // 核心 3：强制填满高度
+            
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -93,7 +93,7 @@ class ArticleFragment : Fragment(), ControllableFragment {
         composeView.setContent {
             val isLoading by viewModel.isLoading.observeAsState(initial = false)
             
-            // 数据加载完毕后自动关闭刷新圈
+            
             LaunchedEffect(isLoading) {
                 swipeRefreshLayout.isRefreshing = isLoading
             }
@@ -107,7 +107,7 @@ class ArticleFragment : Fragment(), ControllableFragment {
             )
         }
 
-        // 触发下拉刷新
+        
         swipeRefreshLayout.setOnRefreshListener {
             viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
         }

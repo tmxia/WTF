@@ -21,9 +21,9 @@ class RecommendFragment : Fragment(R.layout.fragment_recommend) {
 
         binding.viewPager.setCurrentItem(2, false)
 
-        binding.mainTab.setSelectedTabIndicatorColor(android.graphics.Color.parseColor("#E65100")) // 统一主题红
+        binding.mainTab.setSelectedTabIndicatorColor(android.graphics.Color.parseColor("#E65100")) 
         binding.mainTab.setTabTextColors(android.graphics.Color.parseColor("#888888"), android.graphics.Color.parseColor("#E65100"))
-        binding.mainTab.setSelectedTabIndicatorHeight(6) // 3dp 左右
+        binding.mainTab.setSelectedTabIndicatorHeight(6) 
 
         TabLayoutMediator(binding.mainTab, binding.viewPager) { tab, position ->
             tab.text = adapter.getTabTitle(position)

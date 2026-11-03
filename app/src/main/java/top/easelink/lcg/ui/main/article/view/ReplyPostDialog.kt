@@ -76,9 +76,9 @@ class ReplyPostDialog : DialogFragment() {
     override fun onStart() {
         super.onStart()
         dialog?.window?.apply {
-            // 去掉系统默认的黑色直角背景
+            
             setBackgroundDrawableResource(android.R.color.transparent)
-            // 核心修复：允许被软键盘顶起
+            
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             setGravity(Gravity.BOTTOM)

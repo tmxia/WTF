@@ -29,12 +29,12 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         savedInstanceState: Bundle?
     ): View {
         val context = requireContext()
-        // 核心 1：外层套用 SwipeRefreshLayout
+        
         val swipeRefreshLayout = SwipeRefreshLayout(context).apply {
-            // 核心 2：注入防误触机制
+            
             setDistanceToTriggerSync(200)
             setSlingshotDistance(300)
-            // 核心 3：强制填满高度，防止列表滑动时把表头顶飞
+            
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -52,7 +52,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
             val articles by viewModel.articles.observeAsState(initial = emptyList())
             val tabs by viewModel.threadList.observeAsState(initial = emptyList())
             
-            // 数据加载完毕后自动关闭刷新圈
+            
             LaunchedEffect(articles, tabs) {
                 swipeRefreshLayout.isRefreshing = false
             }
@@ -73,7 +73,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
             )
         }
 
-        // 触发下拉刷新
+        
         swipeRefreshLayout.setOnRefreshListener {
             val url = arguments?.getString("url") ?: ""
             viewModel.initUrlAndFetch(url, ArticleFetcher.FetchType.FETCH_INIT)
