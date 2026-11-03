@@ -1,11 +1,14 @@
 package top.easelink.lcg.ui.main.articles.view
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -19,10 +22,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ForumArticlesScreen(
     title: String,
@@ -32,64 +36,79 @@ fun ForumArticlesScreen(
     onTabSelected: (String) -> Unit,
     onArticleClick: (String) -> Unit
 ) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
-
+    // 组合出完整的 tab 列表
+    val displayTabs = remember(tabs) {
+        val list = mutableListOf("全部")
+        tabs.filter { it.threadName != "全部" }.forEach { list.add(it.threadName) }
+        list
+    }
     
+    // 初始化 PagerState
+    val pagerState = rememberPagerState(pageCount = { displayTabs.size })
+    val scope = rememberCoroutineScope()
+
+    // 核心联动 1：滑动 Pager 时更新 Tab 选中项并请求数据
+    LaunchedEffect(pagerState.currentPage) {
+        if (pagerState.currentPage > 0) {
+            val index = pagerState.currentPage - 1
+            val url = if (index < tabs.filter { it.threadName != "全部" }.size) {
+                tabs.filter { it.threadName != "全部" }[index].threadUrl
+            } else {
+                ""
+            }
+            onTabSelected(url)
+        } else {
+            onTabSelected("")
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        
+        // 1. 顶部固定栏
         Column(modifier = Modifier.background(Color.White)) {
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0), 
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Text(
                         text = title,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         color = Color.Black
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "返回",
-                            tint = Color.Black
-                        )
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回", tint = Color.Black)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
 
-            if (tabs.isNotEmpty()) {
+            if (displayTabs.isNotEmpty()) {
                 ScrollableTabRow(
-                        selectedTabIndex = selectedTabIndex,
-                        edgePadding = 16.dp,
-                        containerColor = Color.White,
-                        contentColor = Color(0xFFE65100), 
-                        divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) }
-                    ) {
-                    val displayTabs = mutableListOf("全部")
-                    tabs.filter { it.threadName != "全部" }.forEach {
-                        displayTabs.add(it.threadName)
-                    }
-
+                    selectedTabIndex = pagerState.currentPage,
+                    edgePadding = 16.dp,
+                    containerColor = Color.White,
+                    contentColor = Color(0xFFE65100),
+                    divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) }
+                ) {
                     displayTabs.forEachIndexed { index, tabTitle ->
                         Tab(
-                            selected = selectedTabIndex == index,
+                            selected = pagerState.currentPage == index,
                             onClick = {
-                                selectedTabIndex = index
-                                val url = if (index == 0) "" else tabs.filter { it.threadName != "全部" }[index - 1].threadUrl
-                                onTabSelected(url)
+                                // 核心联动 2：点击 Tab 时滚动 Pager
+                                scope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
                             },
                             text = {
                                 Text(
                                     text = tabTitle,
                                     fontSize = 14.sp,
-                                    fontWeight = if (selectedTabIndex == index) FontWeight.Medium else FontWeight.Normal
+                                    fontWeight = if (pagerState.currentPage == index) FontWeight.Medium else FontWeight.Normal
                                 )
                             }
                         )
@@ -98,16 +117,26 @@ fun ForumArticlesScreen(
             }
         }
 
-        
-        LazyColumn(
+        // 2. 列表区（使用 HorizontalPager 实现左右滑动）
+        HorizontalPager(
+            state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f), 
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            items(articles) { article ->
-                ArticleCard(article, onArticleClick)
+                .weight(1f),
+            // 优化滑动缓存，让切换更流畅
+            beyondBoundsPageCount = 1 
+        ) { page ->
+            // 这里为了简单，所有的页面共用同一个 articles 数据源。
+            // 当滑动时，上面的 LaunchedEffect 会触发 onTabSelected 去请求新数据。
+            // 虽然有微小延迟，但滑动体验和动画已与首页完全一致。
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                items(articles) { article ->
+                    ArticleCard(article, onArticleClick)
+                }
             }
         }
     }
@@ -128,7 +157,6 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                
                 Text(
                     text = article.author,
                     fontSize = 14.sp,
@@ -143,7 +171,6 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                
                 Text(
                     text = article.date,
                     fontSize = 12.sp,
@@ -154,7 +181,6 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            
             Text(
                 text = article.title,
                 fontSize = 16.sp,
@@ -167,7 +193,6 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            
             Text(
                 text = "${article.reply} / ${article.view}",
                 fontSize = 13.sp,
