@@ -40,6 +40,7 @@ import top.easelink.lcg.ui.main.article.view.ReplyPostDialog.Companion.newInstan
 import top.easelink.lcg.ui.main.article.view.ScreenCaptureDialog.Companion.TAG
 
 class ArticleFragment : Fragment(), ControllableFragment {
+
     var title: String = ""
     var url: String = ""
 
@@ -74,8 +75,9 @@ class ArticleFragment : Fragment(), ControllableFragment {
         
         val swipeRefreshLayout = SwipeRefreshLayout(context).apply {
             
-            setDistanceToTriggerSync(200)
-            setSlingshotDistance(300)
+            setDistanceToTriggerSync(300)
+            setOnChildScrollUpCallback { _, _ -> !isListAtTop }
+            setSlingshotDistance(350)
             
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
