@@ -15,12 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
 import top.easelink.framework.topbase.ControllableFragment
+import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
 
 class ArticleFragment : Fragment(), ControllableFragment {
 
@@ -39,7 +40,7 @@ class ArticleFragment : Fragment(), ControllableFragment {
                 title = viewModel.title.value ?: "帖子详情",
                 onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }
             ) {
-                // 这就是你的核心逻辑：把复杂的 RecyclerView 交给 Compose 托管
+                // 无缝桥接原生 RecyclerView，彻底交由 Compose 托管生命周期
                 ComposeRecyclerViewBridge(
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
@@ -48,16 +49,6 @@ class ArticleFragment : Fragment(), ControllableFragment {
             }
         }
         return composeView
-    }
-
-    companion object {
-        fun newInstance(url: String): ArticleFragment {
-            val fragment = ArticleFragment()
-            val args = Bundle()
-            args.putString("url", url)
-            fragment.arguments = args
-            return fragment
-        }
     }
 }
 
@@ -75,10 +66,11 @@ fun ArticleScreen(
                     title = {
                         Text(
                             text = title,
-                            fontSize = 18.sp,
+                            fontSize = 17.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     },
                     navigationIcon = {
@@ -93,11 +85,12 @@ fun ArticleScreen(
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
                 )
+                // 一条极细的分隔线
                 HorizontalDivider(thickness = 0.5.dp, color = Color(0xFFEEEEEE))
             }
         }
     ) { paddingValues ->
-        // 这里的 Box 会占据 AppBar 下方所有空间，底色设为灰色，以便衬托白色卡片
+        // 整个下层背景设置为浅灰，凸显白色卡片
         Box(
             modifier = Modifier
                 .fillMaxSize()
