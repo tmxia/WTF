@@ -4,13 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.getValue // 补全缺失的 getValue 扩展
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.topbase.ControllableFragment
-import top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher // 补全缺失的 import
+import top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher
 import top.easelink.lcg.ui.main.articles.viewmodel.ForumArticlesViewModel
 import top.easelink.lcg.ui.main.model.OpenArticleEvent
 
