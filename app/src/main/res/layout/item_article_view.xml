@@ -9,12 +9,11 @@
     android:layout_marginStart="16dp"
     android:layout_marginTop="4dp"
     android:layout_marginEnd="16dp"
-    android:layout_marginBottom="6dp"
+    android:layout_marginBottom="4dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
-    android:longClickable="true"
-    app:cardCornerRadius="8dp"
+    app:cardCornerRadius="12dp"
     app:cardElevation="0dp"
     app:cardBackgroundColor="@color/white">
 
@@ -23,10 +22,12 @@
         android:layout_height="wrap_content"
         android:padding="14dp">
 
+        <!-- 头像 (WTF 原生没有，但可以预留或用角标) -->
+        <!-- 角标 -->
         <ImageView
             android:id="@+id/recommend_flag"
-            android:layout_width="@dimen/dp_24"
-            android:layout_height="@dimen/dp_24"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_recommendation"
             android:visibility="gone"
@@ -34,24 +35,52 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:visibility="visible"/>
 
+        <!-- 用户名和标签同行 -->
         <TextView
-            android:id="@+id/title_text_view"
-            style="@style/TextStyle.Heading"
-            android:layout_width="0dp"
+            android:id="@+id/author_text_view"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:maxLines="2"
-            android:textSize="15sp"
-            android:textStyle="normal"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:textColor="#666666"
+            android:textSize="13sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="Title" />
+            tools:text="HackXK" />
 
+        <!-- 标签：MTF 胶囊风格 -->
+        <TextView
+            android:id="@+id/origin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_forum_chip"
+            android:paddingStart="6dp"
+            android:paddingTop="1dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="1dp"
+            android:textColor="#808080"
+            android:textSize="10sp"
+            app:layout_constraintBottom_toBottomOf="@id/author_text_view"
+            app:layout_constraintStart_toEndOf="@id/author_text_view"
+            app:layout_constraintTop_toTopOf="@id/author_text_view"
+            tools:text="移动安全区" />
+
+        <!-- 时间 (放在最右侧) -->
+        <TextView
+            android:id="@+id/date_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#999999"
+            android:textSize="11sp"
+            app:layout_constraintBottom_toBottomOf="@id/author_text_view"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/author_text_view"
+            tools:text="2026-11-2" />
+
+        <!-- 印章 (放在最右侧) -->
         <top.easelink.framework.customview.ELStampView
             android:id="@+id/stamp"
-            android:layout_width="@dimen/dp_30"
-            android:layout_height="@dimen/dp_30"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -59,51 +88,34 @@
             tools:stampText="50"
             tools:visibility="visible" />
 
-        <!-- 标签：改为灰色的文字背景，宽度自适应 -->
+        <!-- 标题 -->
         <TextView
-            android:id="@+id/origin"
-            style="@style/TextStyle.Title.Sub"
-            android:layout_width="wrap_content"
+            android:id="@+id/title_text_view"
+            style="@style/TextStyle.Heading"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_tag"
-            android:paddingStart="6dp"
-            android:paddingTop="2dp"
-            android:paddingEnd="6dp"
-            android:paddingBottom="2dp"
-            android:textColor="#666666"
-            android:textSize="11sp"
+            android:layout_marginTop="9dp"
+            android:fontFamily="sans-serif-medium"
+            android:lineHeight="22dp"
+            android:maxLines="2"
+            android:textSize="16sp"
+            android:textStyle="normal"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/reply_and_view"
-            tools:text="『原创发布区』" />
+            app:layout_constraintTop_toBottomOf="@id/author_text_view"
+            tools:text="Electron 应用逆向分析实战：Thief 7.2.1 VIP 验证机制拆解" />
 
+        <!-- 底部数据 -->
         <TextView
             android:id="@+id/reply_and_view"
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="11dp"
+            android:textColor="#999999"
+            android:textSize="12sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/title_text_view"
             tools:text="10 / 200" />
-
-        <TextView
-            android:id="@+id/author_text_view"
-            style="@style/TextStyle.Title.Sub"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/reply_and_view"
-            tools:text="Author" />
-
-        <TextView
-            android:id="@+id/date_text_view"
-            style="@style/TextStyle.Title.Sub"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/author_text_view"
-            tools:text="2019-07-04" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

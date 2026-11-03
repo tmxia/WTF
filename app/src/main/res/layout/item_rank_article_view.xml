@@ -8,8 +8,8 @@
     android:layout_marginStart="16dp"
     android:layout_marginTop="4dp"
     android:layout_marginEnd="16dp"
-    android:layout_marginBottom="6dp"
-    app:cardCornerRadius="8dp"
+    android:layout_marginBottom="4dp"
+    app:cardCornerRadius="12dp"
     app:cardElevation="0dp"
     app:cardBackgroundColor="@color/white">
 
@@ -19,59 +19,62 @@
         android:layout_height="wrap_content"
         android:padding="14dp">
 
+        <!-- 名次徽章 -->
         <TextView
             android:id="@+id/index"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:background="@drawable/bg_rank_badge"
             android:gravity="center"
-            android:textStyle="normal"
-            android:fontFamily="sans-serif-medium"
-            android:textSize="16sp"
-            android:textColor="#FF5722"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/title_text_view"
             app:layout_constraintBottom_toBottomOf="@id/title_text_view"
             tools:text="1" />
 
+        <!-- 标题 -->
         <TextView
             android:id="@+id/title_text_view"
             style="@style/TextStyle.Heading"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="8dp"
             android:fontFamily="sans-serif-medium"
-            android:maxLines="2"
-            android:textSize="15sp"
+            android:maxLines="1"
+            android:textSize="13sp"
             android:textStyle="normal"
             app:layout_constraintStart_toEndOf="@id/index"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            tools:text="Title" />
+            tools:text="微信输入法 绿色版 v3.0.0.38" />
 
+        <!-- 标签 -->
         <TextView
             android:id="@+id/forum"
-            style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_tag"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_forum_chip"
             android:paddingStart="6dp"
-            android:paddingTop="2dp"
+            android:paddingTop="1dp"
             android:paddingEnd="6dp"
-            android:paddingBottom="2dp"
-            android:textColor="#666666"
-            android:textSize="11sp"
+            android:paddingBottom="1dp"
+            android:textColor="#808080"
+            android:textSize="10sp"
             app:layout_constraintStart_toStartOf="@id/title_text_view"
             app:layout_constraintTop_toBottomOf="@id/title_text_view"
-            tools:text="『原创发布区』" />
+            tools:text="精品软件区" />
 
+        <!-- 热度 -->
         <TextView
             android:id="@+id/num"
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="end"
             android:textColor="@color/red_dark2"
+            android:textSize="12sp"
             app:layout_constraintBaseline_toBaselineOf="@id/forum"
             app:layout_constraintEnd_toEndOf="parent"
             tools:text="热度: 57" />
