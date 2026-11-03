@@ -252,4 +252,11 @@
         <item name="cardBackgroundColor">@color/white</item>
     </style>
 
+
+    <style name="CustomTabTextAppearance" parent="TextAppearance.MaterialComponents.Button">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="textAllCaps">false</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
 </resources>

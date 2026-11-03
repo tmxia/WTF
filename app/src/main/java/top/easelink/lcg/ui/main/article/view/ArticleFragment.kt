@@ -2,6 +2,7 @@ package top.easelink.lcg.ui.main.article.view
 
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons

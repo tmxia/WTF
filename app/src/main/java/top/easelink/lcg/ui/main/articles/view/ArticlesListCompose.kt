@@ -66,12 +66,19 @@ fun ForumArticlesScreen(
 
             if (tabs.isNotEmpty()) {
                 ScrollableTabRow(
-                    selectedTabIndex = selectedTabIndex,
-                    edgePadding = 16.dp,
-                    containerColor = Color.White,
-                    contentColor = Color(0xFFE65100),
-                    divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) }
-                ) {
+                        selectedTabIndex = selectedTabIndex,
+                        edgePadding = 16.dp,
+                        containerColor = Color.White,
+                        contentColor = Color(0xFFE65100), // 统一主题红
+                        indicator = { tabPositions ->
+                            TabRowDefaults.Indicator(
+                                Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                                height = 3.dp,
+                                color = Color(0xFFE65100)
+                            )
+                        },
+                        divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) }
+                    ) {
                     val displayTabs = mutableListOf("全部")
                     tabs.filter { it.threadName != "全部" }.forEach {
                         displayTabs.add(it.threadName)
@@ -89,7 +96,7 @@ fun ForumArticlesScreen(
                                 Text(
                                     text = tabTitle,
                                     fontSize = 14.sp,
-                                    fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal
+                                    fontWeight = if (selectedTabIndex == index) FontWeight.Medium else FontWeight.Normal
                                 )
                             }
                         )
