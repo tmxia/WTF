@@ -174,7 +174,7 @@ fun ArticleScreen(
                             modifier = Modifier.background(Color.White)
                         ) {
                             DropdownMenuItem(
-                                leadingIcon = { Icon(Icons.Outlined.Refresh, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text("刷新", fontSize = 14.sp, color = Color.DarkGray) },
                                 onClick = {
                                     showMenu = false
@@ -182,7 +182,7 @@ fun ArticleScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                leadingIcon = { Icon(Icons.Outlined.Language, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text("在浏览器打开", fontSize = 14.sp, color = Color.DarkGray) },
                                 onClick = {
                                     showMenu = false
@@ -190,7 +190,7 @@ fun ArticleScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                leadingIcon = { Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                leadingIcon = { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text("提取下载链接", fontSize = 14.sp, color = Color.DarkGray) },
                                 onClick = {
                                     showMenu = false
@@ -205,7 +205,7 @@ fun ArticleScreen(
                             DropdownMenuItem(
                                 leadingIcon = { 
                                     Icon(
-                                        if (isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, 
+                                        if (isFavorited) Icons.Filled.Favorite else Icons.Default.FavoriteBorder, 
                                         contentDescription = null, 
                                         modifier = Modifier.size(20.dp),
                                         tint = if (isFavorited) Color.Red else Color.DarkGray
