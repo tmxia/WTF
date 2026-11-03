@@ -206,6 +206,7 @@ fun ForumArticlesScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ArticleCard(
     article: Article, 
