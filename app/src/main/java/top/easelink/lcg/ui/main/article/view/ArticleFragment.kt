@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,8 +69,34 @@ class ArticleFragment : Fragment(), ControllableFragment {
         inflater: android.view.LayoutInflater, container: android.view.ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val composeView = ComposeView(requireContext())
-        composeView.setContentView {
+        val context = requireContext()
+        // 核心 1：外层套用 SwipeRefreshLayout
+        val swipeRefreshLayout = SwipeRefreshLayout(context).apply {
+            // 核心 2：注入防误触机制
+            setDistanceToTriggerSync(200)
+            setSlingshotDistance(300)
+            // 核心 3：强制填满高度
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+        
+        val composeView = ComposeView(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+
+        composeView.setContent {
+            val isLoading by viewModel.isLoading.observeAsState(initial = false)
+            
+            // 数据加载完毕后自动关闭刷新圈
+            LaunchedEffect(isLoading) {
+                swipeRefreshLayout.isRefreshing = isLoading
+            }
+
             ArticleScreen(
                 title = viewModel.articleTitle.observeAsState(title.ifEmpty { "帖子详情" }).value ?: "帖子详情",
                 articleUrl = url,
@@ -77,7 +105,14 @@ class ArticleFragment : Fragment(), ControllableFragment {
                 onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }
             )
         }
-        return composeView
+
+        // 触发下拉刷新
+        swipeRefreshLayout.setOnRefreshListener {
+            viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
+        }
+
+        swipeRefreshLayout.addView(composeView)
+        return swipeRefreshLayout
     }
     
     

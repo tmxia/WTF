@@ -94,6 +94,9 @@ class ArticlesFragment : BaseFragment<FragmentArticlesBinding, ArticlesViewModel
                 ContextCompat.getColor(context, R.color.colorAccent),
                 ContextCompat.getColor(context, R.color.colorPrimaryDark)
             )
+            setDistanceToTriggerSync(200)
+            setSlingshotDistance(300)
+
             setScrollUpChild(binding.recyclerView)
             setOnRefreshListener {
                 viewModel.fetchArticles(ArticleFetcher.FetchType.FETCH_INIT) {}

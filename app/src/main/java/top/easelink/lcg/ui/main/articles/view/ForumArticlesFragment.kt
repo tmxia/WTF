@@ -28,17 +28,36 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val composeView = ComposeView(requireContext())
+        val context = requireContext()
+        // 核心 1：外层套用 SwipeRefreshLayout
+        val swipeRefreshLayout = SwipeRefreshLayout(context).apply {
+            // 核心 2：注入防误触机制
+            setDistanceToTriggerSync(200)
+            setSlingshotDistance(300)
+            // 核心 3：强制填满高度，防止列表滑动时把表头顶飞
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
         
-        composeView.layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
+        val composeView = ComposeView(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+
         composeView.setContent {
             val articles by viewModel.articles.observeAsState(initial = emptyList())
             val tabs by viewModel.threadList.observeAsState(initial = emptyList())
-            val title = arguments?.getString("title") ?: "帖子列表"
             
+            // 数据加载完毕后自动关闭刷新圈
+            LaunchedEffect(articles, tabs) {
+                swipeRefreshLayout.isRefreshing = false
+            }
+
+            val title = arguments?.getString("title") ?: "帖子列表"
             ForumArticlesScreen(
                 title = title,
                 tabs = tabs,
@@ -53,7 +72,15 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
                 }
             )
         }
-        return composeView
+
+        // 触发下拉刷新
+        swipeRefreshLayout.setOnRefreshListener {
+            val url = arguments?.getString("url") ?: ""
+            viewModel.initUrlAndFetch(url, ArticleFetcher.FetchType.FETCH_INIT)
+        }
+
+        swipeRefreshLayout.addView(composeView)
+        return swipeRefreshLayout
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

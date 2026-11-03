@@ -31,6 +31,10 @@ class DiscoverFragment : Fragment(), ControllableFragment {
     ): View {
         
         val swipeRefreshLayout = SwipeRefreshLayout(requireContext()).apply {
+            // 核心修复：增加触发距离（默认大概 60dp，这里强制改为 200dp），防止轻微滑动误触
+            setDistanceToTriggerSync(200)
+            // 核心修复：增加下拉回弹阻尼，让手感更沉稳
+            setSlingshotDistance(300)
             setColorSchemeColors(
                 ContextCompat.getColor(requireContext(), R.color.colorPrimary),
                 ContextCompat.getColor(requireContext(), R.color.colorAccent),
