@@ -65,28 +65,11 @@ class ArticleAdapter(
 
 
     fun setData(posts: List<Post>, hasMore: Boolean = false) {
-        val oldList = ArrayList(mPostList)
-        val newList = ArrayList(posts)
-        this.hasMoreItem = hasMore
-
-        val diffResult = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-            override fun getOldListSize() = oldList.size
-            override fun getNewListSize() = newList.size
-
-            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                val old = oldList[oldItemPosition]
-                val new = newList[newItemPosition]
-                return oldItemPosition == newItemPosition
-            }
-
-            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                return oldList[oldItemPosition] == newList[newItemPosition]
-            }
-        })
-
         mPostList.clear()
-        mPostList.addAll(newList)
-        diffResult.dispatchUpdatesTo(this)
+        mPostList.addAll(posts)
+        this.hasMoreItem = hasMore
+        // 暴力刷新，确保 100% 渲染
+        notifyDataSetChanged()
     }
 
     

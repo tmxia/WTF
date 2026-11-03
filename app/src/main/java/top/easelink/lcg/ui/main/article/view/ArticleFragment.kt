@@ -80,7 +80,7 @@ class ArticleFragment : Fragment(), ControllableFragment {
         return composeView
     }
     
-    // 扩展方法，确保 setContent 不会因为重名导致异常
+    
     private fun ComposeView.setContentView(content: @Composable () -> Unit) {
         this.setContent {
             content()
@@ -148,7 +148,7 @@ fun ArticleScreen(
     }
 
     Scaffold(
-        // 核心修复：彻底移除 statusBarsPadding，避免双重留白
+        
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
