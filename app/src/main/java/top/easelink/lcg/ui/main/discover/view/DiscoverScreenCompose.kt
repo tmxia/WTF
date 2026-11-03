@@ -2,6 +2,7 @@
 
 package top.easelink.lcg.ui.main.discover.view
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -12,14 +13,13 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.Card
-import androidx.compose.material3.ripple
-import androidx.compose.material3.Card
-import androidx.compose.material3.rippleDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,8 +34,6 @@ import top.easelink.lcg.ui.main.discover.model.DiscoverModel
 import top.easelink.lcg.ui.main.discover.model.ForumListModel
 import top.easelink.lcg.ui.main.discover.model.RankListModel
 import top.easelink.lcg.ui.main.discover.model.RankModel
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 
 @Composable
 fun DiscoverScreenCompose(
@@ -52,29 +50,25 @@ fun DiscoverScreenCompose(
         return
     }
 
-    
     val forumModel = models.filterIsInstance<ForumListModel>().firstOrNull()
     val rankModels = models.filterIsInstance<RankListModel>().flatMap { it.listModel }
 
-    
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
             .padding(top = 12.dp)
     ) {
-        
         if (forumModel != null) {
             Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                 ForumNavigationSection(forumModel, onForumClick, onMoreForumsClick)
             }
         }
 
-        
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f), 
+                .weight(1f),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -144,14 +138,13 @@ fun ForumNavigationSection(
     }
 }
 
-@Composable
 @OptIn(ExperimentalFoundationApi::class)
+@Composable
 fun RankItemCard(
-    rank: RankModel, 
+    rank: RankModel,
     onRankClick: (String) -> Unit,
     onRankLongClick: (String) -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -159,9 +152,8 @@ fun RankItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
-                interactionSource = interactionSource,
+                interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
                 onClick = { onRankClick(rank.url) },
                 onLongClick = { onRankLongClick(rank.url) }

@@ -216,7 +216,7 @@ fun ArticleCard(
     onLongClick: (String) -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    Card(
+        Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
@@ -224,7 +224,7 @@ fun ArticleCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
-                interactionSource = interactionSource,
+                interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
                 onClick = { onItemClick(article.url) },
                 onLongClick = { onLongClick(article.url) }
