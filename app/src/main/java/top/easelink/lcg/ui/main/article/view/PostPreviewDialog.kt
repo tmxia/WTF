@@ -52,7 +52,6 @@ class PostPreviewDialog : TopDialog() {
         super.onViewCreated(view, savedInstanceState)
 
         // 核心修复：在数据加载完成前，整个弹窗完全透明，彻底杜绝白块或加载窗口闪现
-        binding.root.alpha = 0f
 
         dialog?.window?.apply {
             setBackgroundDrawableResource(android.R.color.transparent)
@@ -89,7 +88,6 @@ class PostPreviewDialog : TopDialog() {
                             )
                         )
                         // 数据完全渲染完毕后，淡入显示弹窗
-                        binding.root.alpha = 1f
                     })
                     mViewModel.author.observe(viewLifecycleOwner, Observer {
                         binding.authorTextView.text = it
@@ -102,13 +100,7 @@ class PostPreviewDialog : TopDialog() {
                     })
                     
                     // 处理失败兜底，原本的 loading 窗口已彻底移除
-                    mViewModel.loadingResult.observe(viewLifecycleOwner, Observer { status ->
-                        if (status != -1) {
-                            // 彻底杜绝加载失败时的白框弹窗，直接静默关闭
-                            dismissDialog()
-                        }
-                    })
-                    
+                                        
                     mViewModel.initUrl(query)
                 }
         } catch (e: Exception) {

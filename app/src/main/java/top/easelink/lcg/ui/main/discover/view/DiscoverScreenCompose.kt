@@ -5,6 +5,7 @@ package top.easelink.lcg.ui.main.discover.view
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -13,7 +14,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ripple
+import androidx.compose.material3.Card
+import androidx.compose.material3.rippleDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -148,6 +151,7 @@ fun RankItemCard(
     onRankClick: (String) -> Unit,
     onRankLongClick: (String) -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -155,7 +159,10 @@ fun RankItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
+                interactionSource = interactionSource,
+                indication = ripple(),
                 onClick = { onRankClick(rank.url) },
                 onLongClick = { onRankLongClick(rank.url) }
             )
