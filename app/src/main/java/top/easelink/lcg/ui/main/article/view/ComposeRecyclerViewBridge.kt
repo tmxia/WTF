@@ -17,11 +17,11 @@ fun ComposeRecyclerViewBridge(
     viewModel: ArticleViewModel,
     fragment: Fragment
 ) {
-    // 监听 ViewModel 中的数据变化
+    
     val posts by viewModel.posts.observeAsState(initial = emptyList())
     val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
 
-    // 监听新数据的追加（为了平滑动画）
+    
     val newPosts by viewModel.newPostsAppended.observeAsState(initial = emptyList())
 
     AndroidView(
@@ -38,10 +38,10 @@ fun ComposeRecyclerViewBridge(
         update = { recyclerView ->
             val adapter = recyclerView.adapter as? ArticleAdapter
             if (adapter != null) {
-                // 每次更新时，直接根据最新的 posts 和 hasMore 赋值
+                
                 adapter.setData(posts, hasMore)
                 
-                // 如果加载了更多数据，滚动到底部（可选体验优化）
+                
                 if (newPosts.isNotEmpty()) {
                     recyclerView.scrollToPosition(adapter.itemCount - 1)
                 }

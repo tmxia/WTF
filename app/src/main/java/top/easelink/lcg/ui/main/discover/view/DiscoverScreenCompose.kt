@@ -94,7 +94,7 @@ fun ForumNavigationSection(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 使用 LazyRow 实现横向滑动折叠效果
+            
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -122,7 +122,7 @@ fun ForumNavigationSection(
                     }
                 }
                 
-                // 最尾部加一个“更多”按钮
+                
                 item {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,

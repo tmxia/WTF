@@ -10,8 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.* 
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -86,11 +85,10 @@ fun ArticleScreen(
     val isLoading by viewModel.isLoading.observeAsState(initial = false)
     val posts by viewModel.posts.observeAsState(initial = emptyList())
 
-    // 菜单展开状态
     var showMenu by remember { mutableStateOf(false) }
 
     Scaffold(
-        // 核心修复 1：强制忽略系统的 WindowInsets，防止顶部出现巨大空白
+        
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
@@ -103,12 +101,11 @@ fun ArticleScreen(
                     }
                 },
                 actions = {
+                    
                     Box {
-                        // 核心修复 2：恢复点击事件
-                        IconButton(onClick = { showMenu = true }) {
+                        IconButton(onClick = { showMenu = !showMenu }) {
                             Icon(Icons.Filled.MoreVert, contentDescription = "More")
                         }
-                        // 下拉菜单
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false }
@@ -140,8 +137,9 @@ fun ArticleScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5)) // 给整个页面加个底色，防露出黑洞
-                .padding(top = paddingValues.calculateTopPadding()) // 只避让顶部 Toolbar，不避让两侧
+                .background(Color(0xFFF5F5F5))
+                
+                .padding(top = paddingValues.calculateTopPadding())
         ) {
             if (isLoading && posts.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

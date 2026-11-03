@@ -29,7 +29,7 @@ class DiscoverFragment : Fragment(), ControllableFragment {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // 创建原生的下拉刷新容器
+        
         val swipeRefreshLayout = SwipeRefreshLayout(requireContext()).apply {
             setColorSchemeColors(
                 ContextCompat.getColor(requireContext(), R.color.colorPrimary),
@@ -41,7 +41,7 @@ class DiscoverFragment : Fragment(), ControllableFragment {
             }
         }
 
-        // 创建 Compose 视图
+        
         val composeView = ComposeView(requireContext()).apply {
             setContent {
                 val models by viewModel.aggregationModels.observeAsState(initial = emptyList())
@@ -61,7 +61,7 @@ class DiscoverFragment : Fragment(), ControllableFragment {
             }
         }
 
-        // 把 Compose 塞进下拉刷新容器，并强制宽高撑满
+        
         swipeRefreshLayout.addView(
             composeView,
             ViewGroup.LayoutParams(
@@ -70,7 +70,7 @@ class DiscoverFragment : Fragment(), ControllableFragment {
             )
         )
 
-        // 监听 isLoading，控制下拉刷新的旋转动画
+        
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             swipeRefreshLayout.isRefreshing = isLoading
         }
@@ -80,7 +80,7 @@ class DiscoverFragment : Fragment(), ControllableFragment {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // 强制触发数据加载
+        
         viewModel.initOptions(requireContext())
     }
 }

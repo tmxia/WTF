@@ -30,18 +30,18 @@ class DiscoverViewModel : ViewModel() {
     fun refreshOptions(context: Context) {
         isLoading.value = true
         
-        // 1. 先创建一个全新的 List 实例，确保 LiveData 能检测到数据变化
+        
         val newList = mutableListOf<DiscoverModel>()
         newList.add(ForumListModel(generateAllForums(context)))
-        aggregationModels.postValue(newList.toMutableList()) // 使用 toList() 创建全新对象触发刷新
+        aggregationModels.postValue(newList.toMutableList()) 
 
         viewModelScope.launch(IOPool) {
             runCatching {
                 fetchRank(RankType.HEAT, DateType.TODAY).let { ranks ->
-                    // 2. 将热榜数据加入刚刚创建的 List 中
+                    
                     newList.add(ranks)
-                    // 3. 再次传入新的拷贝，触发 UI 刷新
-                    aggregationModels.postValue(newList.toMutableList()) // 使用 toList() 创建全新对象触发刷新 
+                    
+                    aggregationModels.postValue(newList.toMutableList()) 
                 }
             }.getOrElse {
                 when (it) {

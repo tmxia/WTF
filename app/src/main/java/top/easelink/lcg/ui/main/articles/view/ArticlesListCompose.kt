@@ -67,7 +67,7 @@ fun ForumArticlesScreen(
                         contentColor = Color(0xFFE65100),
                         divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) }
                     ) {
-                        // 强行加入“全部”，并过滤可能重复的“全部”
+                        
                         val displayTabs = mutableListOf("全部")
                         tabs.filter { it.threadName != "全部" }.forEach {
                             displayTabs.add(it.threadName)
@@ -78,7 +78,7 @@ fun ForumArticlesScreen(
                                 selected = selectedTabIndex == index,
                                 onClick = {
                                     selectedTabIndex = index
-                                    // 如果是全部，传空字符串；否则传对应 url
+                                    
                                     val url = if (index == 0) "" else tabs.filter { it.threadName != "全部" }[index - 1].threadUrl
                                     onTabSelected(url)
                                 },
