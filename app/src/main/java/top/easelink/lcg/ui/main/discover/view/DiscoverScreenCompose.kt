@@ -61,7 +61,7 @@ fun DiscoverScreenCompose(
                         Text(
                             text = "今日热榜",
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Medium,
                             color = Color(0xFFE65100),
                             modifier = Modifier.padding(top = 8.dp, bottom = 4.dp, start = 4.dp)
                         )
@@ -93,7 +93,7 @@ fun ForumNavigationSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("常用板块导航", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Text("常用板块导航", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color.Black)
                 Text("右滑查看更多 >", fontSize = 12.sp, fontWeight = FontWeight.Normal, color = Color(0xFF999999), modifier = Modifier.clickable { onMoreClick() })
             }
 
@@ -141,7 +141,7 @@ fun RankItemCard(rank: RankModel, onRankClick: (String) -> Unit) {
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.size(24.dp).clip(CircleShape).background(getRankColor(rank.index))
             ) {
-                Text(rank.index.toString(), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(rank.index.toString(), fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.White)
             }
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -150,7 +150,7 @@ fun RankItemCard(rank: RankModel, onRankClick: (String) -> Unit) {
             Text(
                 text = rank.title,
                 fontSize = 15.sp,
-                fontWeight = FontWeight.Bold, 
+                fontWeight = FontWeight.Medium, 
                 color = Color.Black,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

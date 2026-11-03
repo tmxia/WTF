@@ -31,6 +31,11 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         val context = requireContext()
         // 核心机制：外层套用原生 SwipeRefreshLayout
         val swipeRefreshLayout = SwipeRefreshLayout(context)
+        // 强制填满父容器，解决 Compose 嵌套导致的高度溢出、表头跟着滚的问题
+        swipeRefreshLayout.layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
         val composeView = ComposeView(context)
 
         composeView.setContent {
