@@ -83,8 +83,8 @@ class ReplyPostDialog : DialogFragment() {
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             setGravity(Gravity.BOTTOM)
             val params = attributes
-            params.horizontalMargin = 0.04f
-            params.verticalMargin = 0.04f
+            
+            
             attributes = params
         }
     }

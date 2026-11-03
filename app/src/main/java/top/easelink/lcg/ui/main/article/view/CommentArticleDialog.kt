@@ -64,8 +64,8 @@ class CommentArticleDialog : TopDialog() {
                 width = WindowManager.LayoutParams.MATCH_PARENT
                 height = WindowManager.LayoutParams.WRAP_CONTENT
                 gravity = Gravity.BOTTOM
-                horizontalMargin = 0.04f 
-                verticalMargin = 0.04f   
+                 
+                   
             }
         }
     }

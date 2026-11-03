@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
+<com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/white"
-    android:fillViewport="true"
-    android:overScrollMode="never">
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="16dp"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:cardUseCompatPadding="false">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -35,12 +39,12 @@
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusTopStart="8dp"
-            app:boxStrokeWidth="1dp"
-            app:boxStrokeWidthFocused="1.5dp"
             app:boxStrokeColor="@color/pojie_logo"
+            app:boxStrokeWidth="0dp"
+            app:boxStrokeWidthFocused="1dp"
             app:layout_constraintTop_toBottomOf="@id/comment_title">
 
-            <!-- 移除写死的 minHeight 100dp，改用 minLines，并加上隐藏的 line 防止挤压消失 -->
+            <!-- 核心调整：minLines 从 3 改为 2，大幅减少输入框的留白 -->
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/reply_content"
                 android:layout_width="match_parent"
@@ -49,14 +53,13 @@
                 android:hint="@string/comment_article_input_hint"
                 android:inputType="textMultiLine"
                 android:maxLines="6"
-                android:minLines="3" />
+                android:minLines="2" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- 底部按钮区域 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:gravity="end"
             android:orientation="horizontal"
             app:layout_constraintTop_toBottomOf="@id/reply_content_layout">
@@ -68,7 +71,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:text="@string/reply_post_btn_cancel"
-                android:textColor="@color/gray"
+                android:textColor="#888888"
                 android:textSize="14sp" />
 
             <com.google.android.material.button.MaterialButton
@@ -82,4 +85,4 @@
                 app:cornerRadius="8dp" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
-</androidx.core.widget.NestedScrollView>
+</com.google.android.material.card.MaterialCardView>
