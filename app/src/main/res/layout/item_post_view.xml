@@ -6,17 +6,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:background="@drawable/rectangle_bg_white_12dp"
-    android:paddingBottom="@dimen/dp_5">
+    android:layout_marginHorizontal="6dp"
+    android:layout_marginVertical="2.5dp"
+    android:paddingHorizontal="10dp"
+    android:paddingVertical="13dp">
 
     <ImageView
         android:id="@+id/post_avatar"
         style="@style/TextStyle.Heading"
-        android:layout_width="@dimen/dp_40"
-        android:layout_height="@dimen/dp_40"
-        android:layout_marginStart="@dimen/dp_8"
-        android:layout_marginTop="@dimen/dp_10"
+        android:layout_width="@dimen/dp_30"
+        android:layout_height="@dimen/dp_30"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:contentDescription="@null"
@@ -25,66 +25,64 @@
     <TextView
         android:id="@+id/author_text_view"
         style="@style/TextStyle.Title.Sub"
-        android:layout_marginTop="@dimen/dp_5"
-        android:layout_marginStart="@dimen/dp_5"
-        android:layout_width="@dimen/dp_0"
+        android:layout_marginStart="10dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
         app:layout_constraintStart_toEndOf="@id/post_avatar"
         app:layout_constraintTop_toTopOf="@id/post_avatar"
-        tools:text="Author"/>
+        tools:text="HackXK" />
 
     <TextView
         android:id="@+id/date_text_view"
         style="@style/TextStyle.Title.Sub"
-        android:layout_marginTop="@dimen/dp_5"
-        android:layout_marginStart="@dimen/dp_5"
-        android:layout_width="@dimen/dp_0"
+        android:layout_marginTop="2.5dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textSize="11sp"
+        android:textColor="#999999"
         app:layout_constraintTop_toBottomOf="@id/author_text_view"
-        app:layout_constraintStart_toEndOf="@id/post_avatar"
-        tools:text="2019-07-04"/>
+        app:layout_constraintStart_toStartOf="@id/author_text_view"
+        tools:text="2019-07-04" />
 
     <top.easelink.framework.customview.htmltextview.HtmlTextView
         android:id="@+id/content_text_view"
         style="@style/TextStyle.Title"
-        android:paddingBottom="@dimen/dp_2"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dp_10"
+        android:layout_marginTop="9dp"
         android:textIsSelectable="true"
         android:focusableInTouchMode="true"
         android:textColorHighlight="@color/translucent_white"
         android:focusable="true"
-        android:textSize="@dimen/sp_14"
-        android:lineSpacingExtra="@dimen/dp_4"
-        android:layout_marginEnd="@dimen/dp_8"
-        app:layout_constraintTop_toBottomOf="@id/post_avatar"
-        app:layout_constraintStart_toStartOf="@id/post_avatar"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:textSize="16sp"
+        android:lineSpacingExtra="6dp"
+        android:textColor="@color/black"
         android:textStyle="normal"
-        tools:text="This repository contains a detailed sample app that implements MVVM architecture using Dagger2, Android Room, RxJava2 ,etc" />
+        app:layout_constraintTop_toBottomOf="@id/post_avatar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="This is the post content" />
 
     <View
         android:id="@+id/guide_line"
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_0_1"
-        android:layout_marginTop="@dimen/dp_6"
-        android:layout_marginStart="@dimen/dp_20"
-        android:layout_marginEnd="@dimen/dp_20"
+        android:layout_marginTop="11dp"
         android:background="@drawable/rectangle_bg"
         android:backgroundTint="@color/slight_light_gray"
-        app:layout_constraintTop_toBottomOf="@id/content_text_view"
-        />
+        app:layout_constraintTop_toBottomOf="@id/content_text_view" />
 
     <LinearLayout
         android:id="@+id/post_btn_group"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="end"
-        app:layout_constraintTop_toBottomOf="@id/guide_line"
-        android:layout_marginTop="@dimen/dp_3"
-        android:layout_marginBottom="@dimen/dp_1"
-        android:layout_marginEnd="@dimen/dp_8" >
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/guide_line" >
+
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/post_btn_capture"
             android:padding="@dimen/dp_4"
@@ -92,7 +90,7 @@
             android:layout_height="@dimen/dp_25"
             android:src="@drawable/btn_selector_capture"
             app:tint="@color/btn_color"
-            android:layout_marginEnd="@dimen/dp_25"
+            android:layout_marginEnd="@dimen/dp_20"
             android:contentDescription="@null" />
 
         <androidx.appcompat.widget.AppCompatImageView
@@ -102,7 +100,7 @@
             android:layout_height="@dimen/dp_25"
             android:src="@drawable/btn_selector_thubm_up"
             app:tint="@color/btn_color"
-            android:layout_marginEnd="@dimen/dp_25"
+            android:layout_marginEnd="@dimen/dp_20"
             android:contentDescription="@null" />
 
         <androidx.appcompat.widget.AppCompatImageView
@@ -112,7 +110,7 @@
             android:layout_height="@dimen/dp_25"
             android:src="@drawable/btn_selector_reply"
             app:tint="@color/btn_color"
-            android:layout_marginEnd="@dimen/dp_25"
+            android:layout_marginEnd="@dimen/dp_20"
             android:contentDescription="@null" />
 
         <androidx.appcompat.widget.AppCompatImageView
@@ -124,13 +122,4 @@
             app:tint="@color/btn_color"
             android:contentDescription="@null" />
     </LinearLayout>
-
-    <include
-        android:id="@+id/reply_header"
-        layout="@layout/item_reply_header"
-        android:layout_marginTop="@dimen/dp_20"
-        app:layout_constraintTop_toBottomOf="@id/post_btn_group"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        />
 </androidx.constraintlayout.widget.ConstraintLayout>

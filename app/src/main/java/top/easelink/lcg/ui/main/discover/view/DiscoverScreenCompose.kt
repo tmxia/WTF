@@ -3,6 +3,7 @@
 package top.easelink.lcg.ui.main.discover.view
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,10 +37,7 @@ fun DiscoverScreenCompose(
     onRankClick: (String) -> Unit
 ) {
     if (models.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(text = "暂无数据，请下拉刷新", color = Color.Gray)
         }
         return
@@ -48,9 +46,7 @@ fun DiscoverScreenCompose(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5)),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .background(Color(0xFFF5F5F5))
     ) {
         items(models) { model ->
             when (model) {
@@ -71,9 +67,11 @@ fun ForumNavigationSection(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 6.dp, vertical = 2.5.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 13.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -81,7 +79,7 @@ fun ForumNavigationSection(
             ) {
                 Text(
                     text = "常用板块导航",
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
@@ -154,13 +152,15 @@ fun RankListSection(model: RankListModel, onRankClick: (String) -> Unit) {
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 6.dp, vertical = 2.5.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 13.dp)) {
             Text(
                 text = "今日热榜",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
                 color = Color(0xFFE65100)
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -178,6 +178,7 @@ fun RankItem(rank: RankModel, onRankClick: (String) -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
             .clickable { onRankClick(rank.url) }
             .padding(vertical = 8.dp)
     ) {
@@ -196,7 +197,7 @@ fun RankItem(rank: RankModel, onRankClick: (String) -> Unit) {
             )
         }
         
-        Spacer(modifier = Modifier.width(10.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         
         Text(
             text = rank.title,

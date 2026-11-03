@@ -28,9 +28,7 @@ fun ArticlesListCompose(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5)),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .background(Color(0xFFF5F5F5))
     ) {
         items(articles) { article ->
             ArticleCard(article, onItemClick)
@@ -46,9 +44,10 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 6.dp, vertical = 2.5.dp) // MTF 标准外边距
             .clickable { onItemClick(article.url) }
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 13.dp)) { // MTF 标准内边距
             // 第一行：作者、标签、时间
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -56,8 +55,9 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
             ) {
                 Text(
                     text = article.author,
-                    fontSize = 13.sp,
-                    color = Color(0xFF666666)
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF333333)
                 )
                 
                 if (article.origin.isNotBlank()) {
@@ -83,7 +83,8 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
                 fontWeight = FontWeight.Medium,
                 color = Color.Black,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 22.sp
             )
             
             Spacer(modifier = Modifier.height(11.dp))
@@ -91,7 +92,7 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
             // 底部数据
             Text(
                 text = "${article.reply} / ${article.view}",
-                fontSize = 12.sp,
+                fontSize = 13.sp,
                 color = Color(0xFF999999)
             )
         }
@@ -103,13 +104,16 @@ fun ForumChip(name: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
-            .background(Color(0xFFF5F5F5))
-            .padding(horizontal = 6.dp, vertical = 2.dp)
+            .background(Color.Transparent)
+            .border(0.1.dp, Color(0xFFA0A0A0), RoundedCornerShape(50)) // 极细边框
+            .padding(horizontal = 6.dp, vertical = 1.dp)
     ) {
         Text(
             text = name,
             fontSize = 10.sp,
-            color = Color(0xFF808080)
+            color = Color(0xFF808080),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
