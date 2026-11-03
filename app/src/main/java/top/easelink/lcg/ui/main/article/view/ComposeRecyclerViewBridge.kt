@@ -1,8 +1,6 @@
 package top.easelink.lcg.ui.main.article.view
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
@@ -33,19 +31,18 @@ fun ComposeRecyclerViewBridge(
             }
         },
         update = { recyclerView ->
+            if (!recyclerView.isAttachedToWindow) return@AndroidView
             val adapter = recyclerView.adapter as? ArticleAdapter
             if (adapter != null) {
-                // 核心修复：在数据源头进行倒序反转，彻底告别崩溃和闪烁
+                // 在数据源进行安全反转
                 val displayPosts = if (isReverse && posts.size > 1) {
-                    // 主楼(post[0])永远在最前，其余的回复进行反转
                     listOf(posts[0]) + posts.drop(1).reversed()
                 } else {
                     posts
                 }
-                // 交给 DiffUtil 进行平滑更新，不再调用 setReverse
+                // 交给 DiffUtil 进行平滑更新
                 adapter.setData(displayPosts, hasMore)
             }
-        }
         }
     )
 }

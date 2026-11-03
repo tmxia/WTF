@@ -3,22 +3,16 @@ package top.easelink.lcg.ui.main.article.view
 import android.os.Bundle
 import android.view.View
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,10 +46,7 @@ class ArticleFragment : Fragment(), ControllableFragment {
 
     override fun onResume() {
         super.onResume()
-        // 隐藏旧版的 Toolbar
         requireActivity().findViewById<AppBarLayout>(R.id.app_bar_layout)?.visibility = View.GONE
-        
-        // 终极方案：让 Fragment 的 ComposeView 突破父控件的边距限制，强制贴顶
         (view?.parent as? View)?.fitsSystemWindows = false
     }
 
@@ -68,7 +59,6 @@ class ArticleFragment : Fragment(), ControllableFragment {
         super.onCreate(savedInstanceState)
         url = arguments?.getString(ARG_URL) ?: ""
         title = arguments?.getString(ARG_TITLE) ?: ""
-
         viewModel.setUrl(url)
         viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
     }
@@ -77,18 +67,9 @@ class ArticleFragment : Fragment(), ControllableFragment {
         inflater: android.view.LayoutInflater, container: android.view.ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val context = requireContext()
-        val swipeRefreshLayout = SwipeRefreshLayout(context)
-        val composeView = ComposeView(context)
-        
+        // 彻底移除 SwipeRefreshLayout，杜绝误触，直接返回原生 Compose
+        val composeView = ComposeView(requireContext())
         composeView.setContent {
-            val isLoading by viewModel.isLoading.observeAsState(initial = false)
-            
-            // 同步加载状态到原生下拉刷新圈
-            LaunchedEffect(isLoading) {
-                swipeRefreshLayout.isRefreshing = isLoading
-            }
-            
             ArticleScreen(
                 title = viewModel.articleTitle.observeAsState(title.ifEmpty { "帖子详情" }).value ?: "帖子详情",
                 articleUrl = url,
@@ -97,14 +78,7 @@ class ArticleFragment : Fragment(), ControllableFragment {
                 onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }
             )
         }
-        
-        // 触发下拉刷新
-        swipeRefreshLayout.setOnRefreshListener {
-            viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
-        }
-        
-        swipeRefreshLayout.addView(composeView)
-        return swipeRefreshLayout
+        return composeView
     }
 
     companion object {
@@ -143,11 +117,9 @@ fun ArticleScreen(
 
     var showMenu by remember { mutableStateOf(false) }
     
-    // 持久化倒序状态
     val prefs = remember { context.getSharedPreferences("article_settings", android.content.Context.MODE_PRIVATE) }
     var isReverse by remember { mutableStateOf(prefs.getBoolean("is_reverse", false)) }
 
-    // EventBus 监听
     DisposableEffect(Unit) {
         val subscriber = object {
             @Subscribe(threadMode = ThreadMode.MAIN)
@@ -170,10 +142,11 @@ fun ArticleScreen(
     }
 
     Scaffold(
+        modifier = Modifier.statusBarsPadding(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0.dp),
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = { 
                     Text(
                         text = title, 
@@ -263,24 +236,27 @@ fun ArticleScreen(
         floatingActionButton = {
             val replyUrl = posts.firstOrNull()?.replyUrl
             if (!isLoading && replyUrl != null && shouldDisplayPosts) {
-                // 核心修改：使用 SmallFloatingActionButton 缩小体积
-                SmallSmallFloatingActionButton(
+                // 恢复为原生的 FloatingActionButton，并通过 modifier 控制精确的 40dp 尺寸
+                FloatingActionButton(
                     onClick = {
                         if (fragment.isAdded) {
                             CommentArticleDialog.newInstance(replyUrl)
                                 .show(fragment.parentFragmentManager, "CommentArticleDialog")
                         }
                     },
-                    containerColor = Color(0xFF2C2C2C), 
+                    containerColor = Color(0xFF2C2C2C),
                     contentColor = Color.White,
-                    modifier = Modifier.size(40.dp) // 精确控制为 40dp
+                    modifier = Modifier.size(40.dp)
                 ) {
-                    Icon(
-                        Icons.Filled.Edit, 
-                        contentDescription = "Reply",
-                        modifier = Modifier.size(16.dp) // 图标缩到 16dp
-                    )
+                    Icon(Icons.Filled.Edit, contentDescription = "Reply", modifier = Modifier.size(18.dp))
                 }
+            }
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF5F5F5))
                 .padding(top = paddingValues.calculateTopPadding())
         ) {
             if (isLoading && posts.isEmpty()) {
@@ -300,7 +276,7 @@ fun ArticleScreen(
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
                     fragment = fragment,
-                    isReverse = isReverse // 传参给 Bridge
+                    isReverse = isReverse
                 )
             }
         }
