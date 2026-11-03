@@ -1,20 +1,15 @@
-@file:OptIn(ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 
 package top.easelink.lcg.ui.main.discover.view
 
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,27 +27,40 @@ import top.easelink.lcg.ui.main.discover.model.RankListModel
 @Composable
 fun DiscoverScreenCompose(
     models: List<DiscoverModel>,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
     onForumClick: (String, String) -> Unit,
+    onMoreForumsClick: () -> Unit,
     onRankClick: (String) -> Unit
 ) {
-    LazyColumn(
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5)),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .background(Color(0xFFF5F5F5))
     ) {
-        items(models) { model ->
-            when (model) {
-                is ForumListModel -> ForumNavigationSection(model, onForumClick)
-                is RankListModel -> RankListSection(model, onRankClick)
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(models) { model ->
+                when (model) {
+                    is ForumListModel -> ForumNavigationSection(model, onForumClick, onMoreForumsClick)
+                    is RankListModel -> RankListSection(model, onRankClick)
+                }
             }
         }
     }
 }
 
 @Composable
-fun ForumNavigationSection(model: ForumListModel, onForumClick: (String, String) -> Unit) {
+fun ForumNavigationSection(
+    model: ForumListModel,
+    onForumClick: (String, String) -> Unit,
+    onMoreClick: () -> Unit
+) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -74,19 +82,19 @@ fun ForumNavigationSection(model: ForumListModel, onForumClick: (String, String)
                 Text(
                     text = "右滑查看更多 >",
                     fontSize = 11.sp,
-                    color = Color(0xFF999999)
+                    color = Color(0xFF999999),
+                    modifier = Modifier.clickable { onMoreClick() }
                 )
             }
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 简易网格展示板块（采用 FlowRow 或手动 Row）
-            // 这里用 Row 包裹，支持自动换行
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // 只展示前 4 个板块
                 model.forumList.take(4).forEach { forum ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -97,7 +105,7 @@ fun ForumNavigationSection(model: ForumListModel, onForumClick: (String, String)
                         Icon(
                             painter = painterResource(id = forum.drawableRes),
                             contentDescription = forum.title,
-                            tint = Color.Unspecified, // 保留原图标颜色
+                            tint = Color.Unspecified,
                             modifier = Modifier.size(36.dp)
                         )
                         Spacer(modifier = Modifier.height(6.dp))
@@ -109,6 +117,27 @@ fun ForumNavigationSection(model: ForumListModel, onForumClick: (String, String)
                             overflow = TextOverflow.Ellipsis
                         )
                     }
+                }
+                
+                // 添加“更多”按钮
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .width(60.dp)
+                        .clickable { onMoreClick() }
+                ) {
+                    Icon(
+                        painter = painterResource(id = top.easelink.lcg.R.drawable.ic_more),
+                        contentDescription = "更多",
+                        tint = Color(0xFF999999),
+                        modifier = Modifier.size(36.dp)
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "更多",
+                        fontSize = 11.sp,
+                        color = Color(0xFF333333)
+                    )
                 }
             }
         }
@@ -128,7 +157,7 @@ fun RankListSection(model: RankListModel, onRankClick: (String) -> Unit) {
                 text = "今日热榜",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFE65100) // 橙红色
+                color = Color(0xFFE65100)
             )
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -148,7 +177,6 @@ fun RankItem(rank: top.easelink.lcg.ui.main.discover.model.RankModel, onRankClic
             .clickable { onRankClick(rank.url) }
             .padding(vertical = 8.dp)
     ) {
-        // 排名徽章
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -166,7 +194,6 @@ fun RankItem(rank: top.easelink.lcg.ui.main.discover.model.RankModel, onRankClic
         
         Spacer(modifier = Modifier.width(10.dp))
         
-        // 标题
         Text(
             text = rank.title,
             fontSize = 13.sp,
@@ -178,7 +205,6 @@ fun RankItem(rank: top.easelink.lcg.ui.main.discover.model.RankModel, onRankClic
         
         Spacer(modifier = Modifier.width(10.dp))
         
-        // 热度
         Text(
             text = "热度: ${rank.num}",
             fontSize = 11.sp,
@@ -189,9 +215,9 @@ fun RankItem(rank: top.easelink.lcg.ui.main.discover.model.RankModel, onRankClic
 
 fun getRankColor(index: Int): Color {
     return when (index) {
-        1 -> Color(0xFFFF705E) // 红
-        2 -> Color(0xFFFFB900) // 橙
-        3 -> Color(0xFFA8C500) // 绿
-        else -> Color(0xFFCCCCCC) // 灰
+        1 -> Color(0xFFFF705E)
+        2 -> Color(0xFFFFB900)
+        3 -> Color(0xFFA8C500)
+        else -> Color(0xFFCCCCCC)
     }
 }
