@@ -263,25 +263,24 @@ fun ArticleScreen(
         floatingActionButton = {
             val replyUrl = posts.firstOrNull()?.replyUrl
             if (!isLoading && replyUrl != null && shouldDisplayPosts) {
-                FloatingActionButton(
+                // 核心修改：使用 SmallFloatingActionButton 缩小体积
+                SmallSmallFloatingActionButton(
                     onClick = {
                         if (fragment.isAdded) {
                             CommentArticleDialog.newInstance(replyUrl)
                                 .show(fragment.parentFragmentManager, "CommentArticleDialog")
                         }
                     },
-                    containerColor = Color(0xFF2C2C2C), // 深色悬浮按钮
-                    contentColor = Color.White
+                    containerColor = Color(0xFF2C2C2C), 
+                    contentColor = Color.White,
+                    modifier = Modifier.size(40.dp) // 精确控制为 40dp
                 ) {
-                    Icon(Icons.Filled.Edit, contentDescription = "Reply")
+                    Icon(
+                        Icons.Filled.Edit, 
+                        contentDescription = "Reply",
+                        modifier = Modifier.size(16.dp) // 图标缩到 16dp
+                    )
                 }
-            }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
                 .padding(top = paddingValues.calculateTopPadding())
         ) {
             if (isLoading && posts.isEmpty()) {

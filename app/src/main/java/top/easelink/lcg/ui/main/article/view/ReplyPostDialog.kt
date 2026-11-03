@@ -38,6 +38,21 @@ class ReplyPostDialog : DialogFragment() {
         replyPostViewModel = ViewModelProvider(this)[ReplyPostViewModel::class.java]
 
         binding.btnCancel.setOnClickListener { dismiss() }
+        // 核心美化：动态注入卡片背景
+        val bgDrawable = android.graphics.drawable.GradientDrawable().apply {
+            setColor(android.graphics.Color.WHITE)
+            cornerRadius = 32f
+        }
+        binding.root.background = bgDrawable
+        binding.root.setPadding(48, 48, 48, 48)
+
+        val editBg = android.graphics.drawable.GradientDrawable().apply {
+            setColor(android.graphics.Color.parseColor("#F5F5F5"))
+            cornerRadius = 16f
+        }
+        binding.replyContent.background = editBg
+        binding.replyContent.setPadding(32, 32, 32, 32)
+        
         binding.replyTo.text = getString(R.string.reply_post_dialog_title, arguments?.getString(REPLY_POST_AUTHOR))
 
         replyPostViewModel.sending.observe(viewLifecycleOwner) { isSending ->
@@ -61,8 +76,13 @@ class ReplyPostDialog : DialogFragment() {
     override fun onStart() {
         super.onStart()
         dialog?.window?.apply {
+            setBackgroundDrawableResource(android.R.color.transparent)
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             setGravity(Gravity.BOTTOM)
+            val params = attributes
+            params.horizontalMargin = 0.04f
+            params.verticalMargin = 0.04f
+            attributes = params
         }
     }
 
