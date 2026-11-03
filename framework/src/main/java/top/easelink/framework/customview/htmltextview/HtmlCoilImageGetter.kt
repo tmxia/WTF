@@ -89,20 +89,32 @@ class HtmlCoilImageGetter(
         fun setDrawable(drawable: Drawable) {
             this.drawable = drawable
 
-            val targetWidth = if (textView.measuredWidth > 0) {
-                textView.measuredWidth - textView.paddingLeft - textView.paddingRight
-            } else {
-                context.resources.displayMetrics.widthPixels
-            }.coerceAtLeast(1)
-
-            val intrinsicWidth = drawable.intrinsicWidth.takeIf { it > 0 } ?: targetWidth
+            val intrinsicWidth = drawable.intrinsicWidth.takeIf { it > 0 } ?: 0
             val intrinsicHeight = drawable.intrinsicHeight.takeIf { it > 0 } ?: 1
-            val scaledHeight = (targetWidth * intrinsicHeight / intrinsicWidth.toFloat()).toInt()
 
-            drawable.setBounds(0, 0, targetWidth, scaledHeight)
-            setBounds(0, 0, targetWidth, scaledHeight)
+            // 核心修复：如果原图很小（通常是表情/小图标），不要去拉伸它！
+            if (intrinsicWidth in 1..150) {
+                // 按照屏幕密度适当缩放，但保持小巧，最大不超过 3 倍行高（约 54px）
+                val density = context.resources.displayMetrics.density
+                val finalWidth = (intrinsicWidth * density).toInt().coerceAtMost(72)
+                val finalHeight = (intrinsicHeight * density).toInt().coerceAtMost(72)
+                
+                drawable.setBounds(0, 0, finalWidth, finalHeight)
+                setBounds(0, 0, finalWidth, finalHeight)
+            } else {
+                // 正常大图，按原来的逻辑缩放到屏幕宽度
+                val targetWidth = if (textView.measuredWidth > 0) {
+                    textView.measuredWidth - textView.paddingLeft - textView.paddingRight
+                } else {
+                    context.resources.displayMetrics.widthPixels
+                }.coerceAtLeast(1)
 
-            // 触发 TextView 重排，把占位 bounds 替换成真实尺寸。
+                val scaledHeight = (targetWidth * intrinsicHeight / intrinsicWidth.toFloat()).toInt()
+                drawable.setBounds(0, 0, targetWidth, scaledHeight)
+                setBounds(0, 0, targetWidth, scaledHeight)
+            }
+
+            // 触发 TextView 重排
             textView.text = textView.text
         }
     }

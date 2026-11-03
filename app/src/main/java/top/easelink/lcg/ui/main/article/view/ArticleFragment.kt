@@ -119,7 +119,7 @@ fun ArticleScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF5F5F5))
+                .background(Color.White)
         ) {
             content()
         }
