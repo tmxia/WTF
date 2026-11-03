@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalLayoutApi::class)
 
 package top.easelink.lcg.ui.main.discover.view
 
@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,36 +22,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.discover.model.DiscoverModel
 import top.easelink.lcg.ui.main.discover.model.ForumListModel
 import top.easelink.lcg.ui.main.discover.model.RankListModel
+import top.easelink.lcg.ui.main.discover.model.RankModel
 
 @Composable
 fun DiscoverScreenCompose(
     models: List<DiscoverModel>,
-    isRefreshing: Boolean,
-    onRefresh: () -> Unit,
     onForumClick: (String, String) -> Unit,
     onMoreForumsClick: () -> Unit,
     onRankClick: (String) -> Unit
 ) {
-    PullToRefreshBox(
-        isRefreshing = isRefreshing,
-        onRefresh = onRefresh,
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(Color(0xFFF5F5F5)),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(models) { model ->
-                when (model) {
-                    is ForumListModel -> ForumNavigationSection(model, onForumClick, onMoreForumsClick)
-                    is RankListModel -> RankListSection(model, onRankClick)
-                }
+        items(models) { model ->
+            when (model) {
+                is ForumListModel -> ForumNavigationSection(model, onForumClick, onMoreForumsClick)
+                is RankListModel -> RankListSection(model, onRankClick)
             }
         }
     }
@@ -94,7 +90,6 @@ fun ForumNavigationSection(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 只展示前 4 个板块
                 model.forumList.take(4).forEach { forum ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -119,7 +114,6 @@ fun ForumNavigationSection(
                     }
                 }
                 
-                // 添加“更多”按钮
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
@@ -127,7 +121,7 @@ fun ForumNavigationSection(
                         .clickable { onMoreClick() }
                 ) {
                     Icon(
-                        painter = painterResource(id = top.easelink.lcg.R.drawable.ic_more),
+                        painter = painterResource(id = R.drawable.ic_more),
                         contentDescription = "更多",
                         tint = Color(0xFF999999),
                         modifier = Modifier.size(36.dp)
@@ -169,7 +163,7 @@ fun RankListSection(model: RankListModel, onRankClick: (String) -> Unit) {
 }
 
 @Composable
-fun RankItem(rank: top.easelink.lcg.ui.main.discover.model.RankModel, onRankClick: (String) -> Unit) {
+fun RankItem(rank: RankModel, onRankClick: (String) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
