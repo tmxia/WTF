@@ -52,7 +52,7 @@ class PostPreviewDialog : TopDialog() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 核心修复：初始状态完全不可见，彻底杜绝加载过程中的白块/小窗口闪现
+        
         binding.root.visibility = View.INVISIBLE
 
         dialog?.window?.apply {
@@ -65,11 +65,16 @@ class PostPreviewDialog : TopDialog() {
             attributes = params
         }
 
+        
+        binding.dialogRoot.setOnClickListener {
+            dismissDialog()
+        }
+
         binding.exit.setOnClickListener {
             dismissDialog()
         }
 
-        dialog?.setCanceledOnTouchOutside(true)
+        
         initView()
     }
 
@@ -88,7 +93,7 @@ class PostPreviewDialog : TopDialog() {
                                 this
                             )
                         )
-                        // 内容加载完毕，瞬间显示完整弹窗
+                        
                         binding.root.visibility = View.VISIBLE
                     })
                     mViewModel.author.observe(viewLifecycleOwner, Observer {
@@ -101,12 +106,12 @@ class PostPreviewDialog : TopDialog() {
                         binding.dateTextView.text = it
                     })
                     
-                    // 监听加载状态，失败则直接静默关闭，绝不留下小窗口
+                    
                     mViewModel.loadingResult.observe(viewLifecycleOwner, Observer { status ->
                         if (status == -1) {
                             binding.root.visibility = View.VISIBLE
                         } else if (status != R.string.preview_loading) {
-                            // 网络失败或解析错误，直接消失
+                            
                             dismissDialog()
                         }
                     })

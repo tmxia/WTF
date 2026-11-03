@@ -111,7 +111,7 @@ fun ForumArticlesScreen(
                             Tab(
                                 selected = pagerState.currentPage == index,
                                 onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                                // 核心修复：彻底去除突兀的水波纹，只保留颜色反馈
+                                
                                 interactionSource = remember { MutableInteractionSource() }.also { 
                                     LaunchedEffect(it) { 
                                         it.interactions.collect { 
