@@ -86,7 +86,12 @@ fun ArticleScreen(
     val isLoading by viewModel.isLoading.observeAsState(initial = false)
     val posts by viewModel.posts.observeAsState(initial = emptyList())
 
+    // 菜单展开状态
+    var showMenu by remember { mutableStateOf(false) }
+
     Scaffold(
+        // 核心修复 1：强制忽略系统的 WindowInsets，防止顶部出现巨大空白
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = {
@@ -98,8 +103,31 @@ fun ArticleScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* 更多操作 */ }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "More")
+                    Box {
+                        // 核心修复 2：恢复点击事件
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "More")
+                        }
+                        // 下拉菜单
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("刷新") },
+                                onClick = {
+                                    showMenu = false
+                                    viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("收藏 / 取消收藏") },
+                                onClick = {
+                                    showMenu = false
+                                    viewModel.toggleFavorite()
+                                }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -112,11 +140,10 @@ fun ArticleScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color(0xFFF5F5F5))
+                .background(Color(0xFFF5F5F5)) // 给整个页面加个底色，防露出黑洞
+                .padding(top = paddingValues.calculateTopPadding()) // 只避让顶部 Toolbar，不避让两侧
         ) {
             if (isLoading && posts.isEmpty()) {
-                // 核心修复：恢复居中加载动画，并适当缩小尺寸 (32dp)
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(32.dp),
