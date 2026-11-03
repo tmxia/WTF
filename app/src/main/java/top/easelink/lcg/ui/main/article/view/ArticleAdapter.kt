@@ -61,6 +61,14 @@ class ArticleAdapter(
 
     private var hasMoreItem: Boolean = false
 
+
+    fun setData(posts: List<Post>, hasMore: Boolean = false) {
+        mPostList.clear()
+        mPostList.addAll(posts)
+        this.hasMoreItem = hasMore
+        notifyDataSetChanged()
+    }
+
     override fun getItemCount() = when {
         mPostList.isEmpty() -> 1 
         hasMoreItem -> mPostList.size + 1

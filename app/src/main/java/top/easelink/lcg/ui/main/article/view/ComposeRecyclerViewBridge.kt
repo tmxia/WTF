@@ -1,6 +1,8 @@
 package top.easelink.lcg.ui.main.article.view
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -14,25 +16,25 @@ fun ComposeRecyclerViewBridge(
     viewModel: ArticleViewModel,
     fragment: Fragment
 ) {
+    // 监听 ViewModel 中的数据变化
+    val posts by viewModel.posts.observeAsState(initial = emptyList())
+    val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
+
     AndroidView(
         modifier = modifier,
         factory = { context ->
             RecyclerView(context).apply {
                 layoutManager = LinearLayoutManager(context)
-                // 彻底取消 RecyclerView 的边距，让内部的 MaterialCardView 自由发挥
                 setPadding(0, 0, 0, 0)
                 clipToPadding = false
                 overScrollMode = RecyclerView.OVER_SCROLL_NEVER
-                // 应用原有的 Adapter
+                // 将 Adapter 挂载到 RecyclerView 上
                 adapter = ArticleAdapter(viewModel, fragment)
             }
         },
         update = { recyclerView ->
-            // 数据更新逻辑
-            (recyclerView.adapter as? ArticleAdapter)?.apply {
-                // 调用原有的数据更新方法
-                // notifyDataSetChanged()
-            }
+            // 当 Compose 监听到数据更新时，将数据推给 Adapter
+            (recyclerView.adapter as? ArticleAdapter)?.setData(posts, hasMore)
         }
     )
 }
