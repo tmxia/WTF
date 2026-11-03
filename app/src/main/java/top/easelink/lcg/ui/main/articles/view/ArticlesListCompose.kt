@@ -34,16 +34,16 @@ fun ForumArticlesScreen(
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
 
-    // 核心修复：抛弃 Scaffold，改用最稳固的 Column 布局，保证表头永不滚动
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        // 1. 顶部固定栏
+        
         Column(modifier = Modifier.background(Color.White)) {
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0), // 去除状态栏留白
+                windowInsets = WindowInsets(0, 0, 0, 0), 
                 title = {
                     Text(
                         text = title,
@@ -98,11 +98,11 @@ fun ForumArticlesScreen(
             }
         }
 
-        // 2. 列表区 (weight 占满剩余空间，确保独立滚动)
+        
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f), // 关键：占据剩余全部空间
+                .weight(1f), 
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
         ) {
@@ -128,7 +128,7 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // 统一：作者字体 14sp Medium
+                
                 Text(
                     text = article.author,
                     fontSize = 14.sp,
@@ -143,7 +143,7 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // 统一：时间 12sp Normal，灰色
+                
                 Text(
                     text = article.date,
                     fontSize = 12.sp,
@@ -154,7 +154,7 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // 统一：标题 16sp Bold，黑色
+            
             Text(
                 text = article.title,
                 fontSize = 16.sp,
@@ -167,7 +167,7 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 统一：底部数据 13sp Normal，灰色
+            
             Text(
                 text = "${article.reply} / ${article.view}",
                 fontSize = 13.sp,

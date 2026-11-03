@@ -38,7 +38,7 @@ class ReplyPostDialog : DialogFragment() {
         replyPostViewModel = ViewModelProvider(this)[ReplyPostViewModel::class.java]
 
         binding.btnCancel.setOnClickListener { dismiss() }
-        // 核心美化：动态注入卡片背景
+        
         val bgDrawable = android.graphics.drawable.GradientDrawable().apply {
             setColor(android.graphics.Color.WHITE)
             cornerRadius = 32f

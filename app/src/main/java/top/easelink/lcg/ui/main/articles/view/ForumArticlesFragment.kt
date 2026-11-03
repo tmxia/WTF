@@ -29,7 +29,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         savedInstanceState: Bundle?
     ): View {
         val composeView = ComposeView(requireContext())
-        // 强制填充全屏，彻底解决内部 List 把外部头部顶飞的问题
+        
         composeView.layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT

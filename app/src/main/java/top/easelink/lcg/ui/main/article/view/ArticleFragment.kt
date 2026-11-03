@@ -67,9 +67,8 @@ class ArticleFragment : Fragment(), ControllableFragment {
         inflater: android.view.LayoutInflater, container: android.view.ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // 彻底移除 SwipeRefreshLayout，杜绝误触，直接返回原生 Compose
         val composeView = ComposeView(requireContext())
-        composeView.setContent {
+        composeView.setContentView {
             ArticleScreen(
                 title = viewModel.articleTitle.observeAsState(title.ifEmpty { "帖子详情" }).value ?: "帖子详情",
                 articleUrl = url,
@@ -79,6 +78,13 @@ class ArticleFragment : Fragment(), ControllableFragment {
             )
         }
         return composeView
+    }
+    
+    // 扩展方法，确保 setContent 不会因为重名导致异常
+    private fun ComposeView.setContentView(content: @Composable () -> Unit) {
+        this.setContent {
+            content()
+        }
     }
 
     companion object {
@@ -142,7 +148,7 @@ fun ArticleScreen(
     }
 
     Scaffold(
-        modifier = Modifier.statusBarsPadding(),
+        // 核心修复：彻底移除 statusBarsPadding，避免双重留白
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
@@ -236,7 +242,6 @@ fun ArticleScreen(
         floatingActionButton = {
             val replyUrl = posts.firstOrNull()?.replyUrl
             if (!isLoading && replyUrl != null && shouldDisplayPosts) {
-                // 恢复为原生的 FloatingActionButton，并通过 modifier 控制精确的 40dp 尺寸
                 FloatingActionButton(
                     onClick = {
                         if (fragment.isAdded) {

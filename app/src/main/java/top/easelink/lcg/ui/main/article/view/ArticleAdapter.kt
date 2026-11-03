@@ -76,7 +76,7 @@ class ArticleAdapter(
             override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
                 val old = oldList[oldItemPosition]
                 val new = newList[newItemPosition]
-                return old.replyUrl == new.replyUrl && old.author == new.author && old.date == new.date
+                return oldItemPosition == newItemPosition
             }
 
             override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
@@ -91,7 +91,7 @@ class ArticleAdapter(
 
     
     private fun getRealPost(position: Int): Post? {
-        // 恢复最安全的直接获取，防止任何越界崩溃
+        
         return mPostList.getOrNull(position)
     }
 

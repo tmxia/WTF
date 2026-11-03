@@ -44,29 +44,29 @@ fun DiscoverScreenCompose(
         return
     }
 
-    // 提取数据源
+    
     val forumModel = models.filterIsInstance<ForumListModel>().firstOrNull()
     val rankModels = models.filterIsInstance<RankListModel>().flatMap { it.listModel }
 
-    // 核心修复：使用 Column 固定顶部
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
             .padding(top = 12.dp)
     ) {
-        // 1. 常用板块导航（固定不动）
+        
         if (forumModel != null) {
             Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                 ForumNavigationSection(forumModel, onForumClick, onMoreForumsClick)
             }
         }
 
-        // 2. 下方列表（支持独立滑动）
+        
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f), // 关键：占据剩余全部空间
+                .weight(1f), 
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {

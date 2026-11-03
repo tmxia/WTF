@@ -56,31 +56,31 @@ class CommentArticleDialog : TopDialog() {
 
     private fun setupDialogWindow() {
         dialog?.window?.apply {
-            setBackgroundDrawableResource(android.R.color.transparent) // 去除默认背景
+            setBackgroundDrawableResource(android.R.color.transparent) 
             setWindowAnimations(R.style.BottomInOutAnim)
             attributes = attributes.apply {
                 width = WindowManager.LayoutParams.MATCH_PARENT
                 height = WindowManager.LayoutParams.WRAP_CONTENT
                 gravity = Gravity.BOTTOM
-                horizontalMargin = 0.04f // 左右各留 4% 边距，形成悬浮卡片感
-                verticalMargin = 0.04f   // 底部留边距
+                horizontalMargin = 0.04f 
+                verticalMargin = 0.04f   
             }
         }
     }
 
     private fun setupUI() {
-        // 核心美化：给根布局加圆角白色背景
+        
         val bgDrawable = android.graphics.drawable.GradientDrawable().apply {
             setColor(android.graphics.Color.WHITE)
-            cornerRadius = 32f // 约 16dp 圆角
+            cornerRadius = 32f 
         }
         binding.root.background = bgDrawable
-        binding.root.setPadding(48, 48, 48, 48) // 统一内边距
+        binding.root.setPadding(48, 48, 48, 48) 
 
-        // 美化输入框：浅灰背景+小圆角+内边距
+        
         val editBg = android.graphics.drawable.GradientDrawable().apply {
             setColor(android.graphics.Color.parseColor("#F5F5F5"))
-            cornerRadius = 16f // 8dp
+            cornerRadius = 16f 
         }
         binding.replyContent.background = editBg
         binding.replyContent.setPadding(32, 32, 32, 32)
