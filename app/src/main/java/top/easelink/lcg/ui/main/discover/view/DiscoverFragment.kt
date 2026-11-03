@@ -64,7 +64,7 @@ class DiscoverFragment : Fragment(), ControllableFragment {
         // 把 Compose 塞进下拉刷新容器，并强制宽高撑满
         swipeRefreshLayout.addView(
             composeView,
-            SwipeRefreshLayout.LayoutParams(
+            ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )

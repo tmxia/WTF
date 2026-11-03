@@ -41,7 +41,7 @@ class DiscoverViewModel : ViewModel() {
                     // 2. 将热榜数据加入刚刚创建的 List 中
                     newList.add(ranks)
                     // 3. 再次传入新的拷贝，触发 UI 刷新
-                    aggregationModels.postValue(newList.toList()) 
+                    aggregationModels.postValue(newList) 
                 }
             }.getOrElse {
                 when (it) {
