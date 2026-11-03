@@ -28,27 +28,17 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val context = requireContext()
-        // 核心机制：外层套用原生 SwipeRefreshLayout
-        val swipeRefreshLayout = SwipeRefreshLayout(context)
-        // 强制填满父容器，解决 Compose 嵌套导致的高度溢出、表头跟着滚的问题
-        swipeRefreshLayout.layoutParams = ViewGroup.LayoutParams(
+        val composeView = ComposeView(requireContext())
+        // 强制填充全屏，彻底解决内部 List 把外部头部顶飞的问题
+        composeView.layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
-        val composeView = ComposeView(context)
-
         composeView.setContent {
             val articles by viewModel.articles.observeAsState(initial = emptyList())
             val tabs by viewModel.threadList.observeAsState(initial = emptyList())
-
-            // 当列表数据发生变化时，自动关闭刷新动画
-            LaunchedEffect(articles, tabs) {
-                swipeRefreshLayout.isRefreshing = false
-            }
-
             val title = arguments?.getString("title") ?: "帖子列表"
-
+            
             ForumArticlesScreen(
                 title = title,
                 tabs = tabs,
@@ -63,15 +53,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
                 }
             )
         }
-
-        // 下拉触发请求
-        swipeRefreshLayout.setOnRefreshListener {
-            val url = arguments?.getString("url") ?: ""
-            viewModel.initUrlAndFetch(url, ArticleFetcher.FetchType.FETCH_INIT)
-        }
-
-        swipeRefreshLayout.addView(composeView)
-        return swipeRefreshLayout
+        return composeView
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

@@ -35,7 +35,7 @@
             android:layout_marginStart="10dp"
             android:textColor="@color/black"
             android:textSize="15sp"
-            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
             app:layout_constraintStart_toEndOf="@id/post_avatar"
             app:layout_constraintTop_toTopOf="@id/post_avatar"
             tools:text="HackXK" />
