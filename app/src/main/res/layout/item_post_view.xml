@@ -1,125 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<com.google.android.material.card.MaterialCardView
     android:id="@+id/post_card"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/rectangle_bg_white_12dp"
     android:layout_marginHorizontal="6dp"
     android:layout_marginVertical="2.5dp"
-    android:paddingHorizontal="10dp"
-    android:paddingVertical="13dp">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/white">
 
-    <ImageView
-        android:id="@+id/post_avatar"
-        style="@style/TextStyle.Heading"
-        android:layout_width="@dimen/dp_30"
-        android:layout_height="@dimen/dp_30"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="@null"
-        tools:src="@drawable/ic_noavatar_middle"/>
-
-    <TextView
-        android:id="@+id/author_text_view"
-        style="@style/TextStyle.Title.Sub"
-        android:layout_marginStart="10dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:textColor="@color/black"
-        app:layout_constraintStart_toEndOf="@id/post_avatar"
-        app:layout_constraintTop_toTopOf="@id/post_avatar"
-        tools:text="HackXK" />
-
-    <TextView
-        android:id="@+id/date_text_view"
-        style="@style/TextStyle.Title.Sub"
-        android:layout_marginTop="2.5dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="11sp"
-        android:textColor="#999999"
-        app:layout_constraintTop_toBottomOf="@id/author_text_view"
-        app:layout_constraintStart_toStartOf="@id/author_text_view"
-        tools:text="2019-07-04" />
-
-    <top.easelink.framework.customview.htmltextview.HtmlTextView
-        android:id="@+id/content_text_view"
-        style="@style/TextStyle.Title"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="9dp"
-        android:textIsSelectable="true"
-        android:focusableInTouchMode="true"
-        android:textColorHighlight="@color/translucent_white"
-        android:focusable="true"
-        android:textSize="16sp"
-        android:lineSpacingExtra="6dp"
-        android:textColor="@color/black"
-        android:textStyle="normal"
-        app:layout_constraintTop_toBottomOf="@id/post_avatar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:text="This is the post content" />
-
-    <View
-        android:id="@+id/guide_line"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_0_1"
-        android:layout_marginTop="11dp"
-        android:background="@drawable/rectangle_bg"
-        android:backgroundTint="@color/slight_light_gray"
-        app:layout_constraintTop_toBottomOf="@id/content_text_view" />
-
-    <LinearLayout
-        android:id="@+id/post_btn_group"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="end"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/guide_line" >
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="13dp">
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/post_btn_capture"
-            android:padding="@dimen/dp_4"
-            android:layout_width="@dimen/dp_25"
-            android:layout_height="@dimen/dp_25"
-            android:src="@drawable/btn_selector_capture"
-            app:tint="@color/btn_color"
-            android:layout_marginEnd="@dimen/dp_20"
-            android:contentDescription="@null" />
+        <ImageView
+            android:id="@+id/post_avatar"
+            style="@style/TextStyle.Heading"
+            android:layout_width="@dimen/dp_30"
+            android:layout_height="@dimen/dp_30"
+            android:contentDescription="@null"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/ic_noavatar_middle"/>
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/post_btn_thumb_up"
-            android:padding="@dimen/dp_4"
-            android:layout_width="@dimen/dp_25"
-            android:layout_height="@dimen/dp_25"
-            android:src="@drawable/btn_selector_thubm_up"
-            app:tint="@color/btn_color"
-            android:layout_marginEnd="@dimen/dp_20"
-            android:contentDescription="@null" />
+        <TextView
+            android:id="@+id/author_text_view"
+            style="@style/TextStyle.Title.Sub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/post_avatar"
+            app:layout_constraintTop_toTopOf="@id/post_avatar"
+            tools:text="HackXK" />
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/post_btn_reply"
-            android:padding="@dimen/dp_4"
-            android:layout_width="@dimen/dp_25"
-            android:layout_height="@dimen/dp_25"
-            android:src="@drawable/btn_selector_reply"
-            app:tint="@color/btn_color"
-            android:layout_marginEnd="@dimen/dp_20"
-            android:contentDescription="@null" />
+        <TextView
+            android:id="@+id/date_text_view"
+            style="@style/TextStyle.Title.Sub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2.5dp"
+            android:textColor="#999999"
+            android:textSize="11sp"
+            app:layout_constraintStart_toStartOf="@id/author_text_view"
+            app:layout_constraintTop_toBottomOf="@id/author_text_view"
+            tools:text="2019-07-04" />
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/post_btn_copy"
-            android:padding="@dimen/dp_4"
-            android:layout_width="@dimen/dp_25"
-            android:layout_height="@dimen/dp_25"
-            android:src="@drawable/btn_selector_copy"
-            app:tint="@color/btn_color"
-            android:contentDescription="@null" />
-    </LinearLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <top.easelink.framework.customview.htmltextview.HtmlTextView
+            android:id="@+id/content_text_view"
+            style="@style/TextStyle.Title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="9dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:lineSpacingExtra="6dp"
+            android:textColor="@color/black"
+            android:textColorHighlight="@color/translucent_white"
+            android:textIsSelectable="true"
+            android:textSize="16sp"
+            android:textStyle="normal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/post_avatar"
+            tools:text="This is the post content" />
+
+        <View
+            android:id="@+id/guide_line"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_0_1"
+            android:layout_marginTop="11dp"
+            android:background="@drawable/rectangle_bg"
+            android:backgroundTint="@color/slight_light_gray"
+            app:layout_constraintTop_toBottomOf="@id/content_text_view" />
+
+        <LinearLayout
+            android:id="@+id/post_btn_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="end"
+            app:layout_constraintTop_toBottomOf="@id/guide_line">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/post_btn_capture"
+                android:layout_width="@dimen/dp_25"
+                android:layout_height="@dimen/dp_25"
+                android:layout_marginEnd="@dimen/dp_20"
+                android:contentDescription="@null"
+                android:padding="@dimen/dp_4"
+                android:src="@drawable/btn_selector_capture"
+                app:tint="@color/btn_color" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/post_btn_thumb_up"
+                android:layout_width="@dimen/dp_25"
+                android:layout_height="@dimen/dp_25"
+                android:layout_marginEnd="@dimen/dp_20"
+                android:contentDescription="@null"
+                android:padding="@dimen/dp_4"
+                android:src="@drawable/btn_selector_thubm_up"
+                app:tint="@color/btn_color" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/post_btn_reply"
+                android:layout_width="@dimen/dp_25"
+                android:layout_height="@dimen/dp_25"
+                android:layout_marginEnd="@dimen/dp_20"
+                android:contentDescription="@null"
+                android:padding="@dimen/dp_4"
+                android:src="@drawable/btn_selector_reply"
+                app:tint="@color/btn_color" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/post_btn_copy"
+                android:layout_width="@dimen/dp_25"
+                android:layout_height="@dimen/dp_25"
+                android:contentDescription="@null"
+                android:padding="@dimen/dp_4"
+                android:src="@drawable/btn_selector_copy"
+                app:tint="@color/btn_color" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>
