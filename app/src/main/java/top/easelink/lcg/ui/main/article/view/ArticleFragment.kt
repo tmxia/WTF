@@ -24,6 +24,9 @@ import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
 
 class ArticleFragment : Fragment(), ControllableFragment {
+    var title: String = ""
+    var url: String = ""
+
 
     private val viewModel: ArticleViewModel by viewModels()
 
@@ -98,6 +101,21 @@ fun ArticleScreen(
                 .background(Color(0xFFF5F5F5))
         ) {
             content()
+        }
+    }
+
+    companion object {
+        private const val ARG_URL = "url"
+        private const val ARG_TITLE = "title"
+
+        @JvmStatic
+        fun newInstance(url: String, title: String = ""): ArticleFragment {
+            return ArticleFragment().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_URL, url)
+                    putString(ARG_TITLE, title)
+                }
+            }
         }
     }
 }
