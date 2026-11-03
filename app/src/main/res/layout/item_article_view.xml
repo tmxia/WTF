@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="4dp"
-    android:layout_marginBottom="4dp"
+    android:layout_marginBottom="8dp"
     android:clickable="true"
     android:focusable="true"
     android:background="@color/white"
@@ -20,27 +20,16 @@
         android:id="@+id/article_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="0dp"
-        android:paddingTop="12dp"
-        android:paddingEnd="0dp"
-        android:paddingBottom="12dp">
-
-        <ImageView
-            android:id="@+id/recommend_flag"
-            android:layout_width="@dimen/dp_30"
-            android:layout_height="@dimen/dp_30"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_recommendation"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        android:paddingStart="16dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="14dp">
 
         <TextView
             android:id="@+id/title_text_view"
             style="@style/TextStyle.Heading"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:layout_marginEnd="8dp"
             android:fontFamily="sans-serif-medium"
             android:maxLines="2"
             android:textSize="@dimen/sp_14"
@@ -50,26 +39,12 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Title" />
 
-        <top.easelink.framework.customview.ELStampView
-            android:id="@+id/stamp"
-            android:layout_width="@dimen/dp_30"
-            android:layout_height="@dimen/dp_30"
-            android:layout_marginTop="3dp"
-            android:layout_marginEnd="8dp"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:stampColor="@color/colorAccent"
-            tools:stampText="50"
-            tools:visibility="visible" />
-
         <TextView
             android:id="@+id/reply_and_view"
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="0dp"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="8dp"
             app:layout_constraintStart_toStartOf="@id/title_text_view"
             app:layout_constraintTop_toBottomOf="@id/title_text_view"
             tools:text="10 / 200" />
@@ -79,7 +54,7 @@
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
             android:background="@drawable/bg_tag"
             android:ellipsize="middle"
             android:maxWidth="@dimen/dp_200"
@@ -98,8 +73,7 @@
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
-            app:layout_constraintEnd_toEndOf="@id/title_text_view"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/reply_and_view"
             tools:text="Author" />
 
@@ -108,7 +82,7 @@
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="@id/author_text_view"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/origin"
             tools:text="2019-07-04" />
     </androidx.constraintlayout.widget.ConstraintLayout>
