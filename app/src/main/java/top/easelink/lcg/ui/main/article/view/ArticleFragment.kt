@@ -5,6 +5,7 @@ import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -119,6 +120,10 @@ fun ArticleScreen(
     val shouldDisplayPosts by viewModel.shouldDisplayPosts.observeAsState(initial = true)
 
     var showMenu by remember { mutableStateOf(false) }
+    
+    // 核心：使用 SharedPreferences 持久化记忆倒序状态
+    val prefs = remember { context.getSharedPreferences("article_settings", android.content.Context.MODE_PRIVATE) }
+    var isReverse by remember { mutableStateOf(prefs.getBoolean("is_reverse", false)) }
 
     // 恢复 EventBus 监听，使用原生的 DialogFragment
     DisposableEffect(Unit) {
@@ -144,10 +149,11 @@ fun ArticleScreen(
     }
 
     Scaffold(
-        // 顶部贴顶，交由 TopAppBar 接管状态栏
+        modifier = Modifier.statusBarsPadding(), // 核心修复：统一由外层处理一次状态栏高度
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0), // 核心修复：去掉 TopAppBar 自带的顶部留白
                 title = { 
                     Text(
                         text = title, 
@@ -277,12 +283,30 @@ fun ArticleScreen(
                 }
             }
         }
+        floatingActionButton = {
+            val replyUrl = posts.firstOrNull()?.replyUrl
+            // 只有在不是加载中、有回复链接且正常展示内容时，才显示悬浮回复按钮
+            if (!isLoading && replyUrl != null && shouldDisplayPosts) {
+                FloatingActionButton(
+                    onClick = {
+                        if (fragment.isAdded) {
+                            CommentArticleDialog.newInstance(replyUrl)
+                                .show(fragment.parentFragmentManager, "CommentArticleDialog")
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary, // 使用主题色
+                    contentColor = Color.White
+                ) {
+                    Icon(Icons.Filled.Edit, contentDescription = "Reply")
+                }
+            }
+        },
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5))
-                .padding(top = paddingValues.calculateTopPadding(), bottom = paddingValues.calculateBottomPadding())
+                .padding(top = paddingValues.calculateTopPadding())
         ) {
             if (isLoading && posts.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -300,7 +324,8 @@ fun ArticleScreen(
                 ComposeRecyclerViewBridge(
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
-                    fragment = fragment
+                    fragment = fragment,
+                    isReverse = isReverse // 传入持久化状态
                 )
             }
         }

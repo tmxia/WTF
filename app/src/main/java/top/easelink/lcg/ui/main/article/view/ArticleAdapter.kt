@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import coil.transform.RoundedCornersTransformation
@@ -59,14 +60,52 @@ class ArticleAdapter(
 
 
 
-    private var hasMoreItem: Boolean = false
+        private var hasMoreItem: Boolean = false
+    private var isReverse: Boolean = false
 
+    fun setReverse(reverse: Boolean) {
+        if (this.isReverse == reverse) return
+        this.isReverse = reverse
+        notifyDataSetChanged() // 排序切换时刷新
+    }
 
     fun setData(posts: List<Post>, hasMore: Boolean = false) {
-        mPostList.clear()
-        mPostList.addAll(posts)
+        val oldList = ArrayList(mPostList)
+        val newList = ArrayList(posts)
         this.hasMoreItem = hasMore
-        notifyDataSetChanged()
+
+        val diffResult = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize() = oldList.size
+            override fun getNewListSize() = newList.size
+
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                val old = oldList[oldItemPosition]
+                val new = newList[newItemPosition]
+                return old.pid == new.pid || (old.replyUrl != null && old.replyUrl == new.replyUrl)
+            }
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                return oldList[oldItemPosition] == newList[newItemPosition]
+            }
+        })
+
+        mPostList.clear()
+        mPostList.addAll(newList)
+        diffResult.dispatchUpdatesTo(this)
+    }
+
+    
+    private fun getRealPost(position: Int): Post {
+        if (mPostList.isEmpty()) return Post()
+        if (position == 0) return mPostList[0]
+        if (position == mPostList.size) return Post()
+        
+        val realIndex = if (isReverse) {
+            mPostList.size - position
+        } else {
+            position
+        }
+        return mPostList.getOrElse(realIndex) { Post() }
     }
 
     override fun getItemCount() = when {
@@ -289,7 +328,7 @@ class ArticleAdapter(
 
         @SuppressLint("SetTextI18n")
         override fun onBind(position: Int) {
-            post = mPostList[position]
+            post = getRealPost(position)
             post?.let { p ->
                 with(binding) {
                     try {

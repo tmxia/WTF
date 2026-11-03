@@ -15,7 +15,8 @@ import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
 fun ComposeRecyclerViewBridge(
     modifier: Modifier = Modifier,
     viewModel: ArticleViewModel,
-    fragment: Fragment
+    fragment: Fragment,
+    isReverse: Boolean = false
 ) {
     
     val posts by viewModel.posts.observeAsState(initial = emptyList())
