@@ -6,11 +6,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,19 +21,92 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import top.easelink.lcg.ui.main.source.model.Article
+import top.easelink.lcg.ui.main.source.model.ForumThread
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ArticlesListCompose(
+fun ForumArticlesScreen(
+    title: String,
+    tabs: List<ForumThread>,
     articles: List<Article>,
-    onItemClick: (String) -> Unit
+    onBackClick: () -> Unit,
+    onTabSelected: (String) -> Unit,
+    onArticleClick: (String) -> Unit
 ) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
-        items(articles) { article ->
-            ArticleCard(article, onItemClick)
+    var selectedTabIndex by remember { mutableStateOf(0) }
+
+    Scaffold(
+        topBar = {
+            Column(modifier = Modifier.background(Color.White)) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = title,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "返回",
+                                tint = Color.Black
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                )
+
+                if (tabs.isNotEmpty()) {
+                    ScrollableTabRow(
+                        selectedTabIndex = selectedTabIndex,
+                        edgePadding = 16.dp,
+                        containerColor = Color.White,
+                        contentColor = Color(0xFFE65100),
+                        divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) }
+                    ) {
+                        // 强行加入“全部”，并过滤可能重复的“全部”
+                        val displayTabs = mutableListOf("全部")
+                        tabs.filter { it.threadName != "全部" }.forEach {
+                            displayTabs.add(it.threadName)
+                        }
+
+                        displayTabs.forEachIndexed { index, tabTitle ->
+                            Tab(
+                                selected = selectedTabIndex == index,
+                                onClick = {
+                                    selectedTabIndex = index
+                                    // 如果是全部，传空字符串；否则传对应 url
+                                    val url = if (index == 0) "" else tabs.filter { it.threadName != "全部" }[index - 1].threadUrl
+                                    onTabSelected(url)
+                                },
+                                text = {
+                                    Text(
+                                        text = tabTitle,
+                                        fontSize = 14.sp,
+                                        fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(Color(0xFFF5F5F5)),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 8.dp)
+        ) {
+            items(articles) { article ->
+                ArticleCard(article, onArticleClick)
+            }
         }
     }
 }
@@ -45,11 +119,10 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 6.dp, vertical = 2.5.dp) // MTF 标准外边距
+            .padding(horizontal = 6.dp, vertical = 2.5.dp)
             .clickable { onItemClick(article.url) }
     ) {
-        Column(modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.5.dp)) { // MTF 标准内边距
-            // 第一行：作者、标签、时间
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 13.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -77,7 +150,6 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
             
             Spacer(modifier = Modifier.height(9.dp))
             
-            // 标题
             Text(
                 text = article.title,
                 fontSize = 16.sp,
@@ -90,7 +162,6 @@ fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
             
             Spacer(modifier = Modifier.height(11.dp))
             
-            // 底部数据
             Text(
                 text = "${article.reply} / ${article.view}",
                 fontSize = 13.sp,
@@ -106,8 +177,8 @@ fun ForumChip(name: String) {
         modifier = Modifier
             .clip(RoundedCornerShape(50))
             .background(Color.Transparent)
-            .border(0.1.dp, Color(0xFFA0A0A0), RoundedCornerShape(50)) // 极细边框
-            .padding(horizontal = 6.dp, vertical = 2.5.dp)
+            .border(0.1.dp, Color(0xFFA0A0A0), RoundedCornerShape(50))
+            .padding(horizontal = 6.dp, vertical = 1.dp)
     ) {
         Text(
             text = name,
