@@ -42,6 +42,10 @@ class LargeImageDialog : TopDialog() {
                 size(Size.ORIGINAL)
             }
         }
+        // 核心修复：给图片和根布局都加上关闭事件
+        binding.photo.setOnClickListener { dismissDialog() }
+        binding.root.setOnClickListener { dismissDialog() }
+        
         binding.exit.setOnClickListener {
             dismissDialog()
         }
