@@ -19,7 +19,9 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxHeight="600dp"
+            android:maxHeight="500dp"
+            android:scrollbars="none"
+            android:fadeScrollbars="false"
             android:overScrollMode="never">
 
             <androidx.constraintlayout.widget.ConstraintLayout

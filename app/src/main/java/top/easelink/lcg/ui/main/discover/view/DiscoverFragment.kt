@@ -15,6 +15,9 @@ import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.discover.viewmodel.DiscoverViewModel
+import top.easelink.lcg.ui.main.article.view.PostPreviewDialog
+import org.greenrobot.eventbus.EventBus
+import top.easelink.lcg.ui.main.model.OpenArticleEvent
 import top.easelink.lcg.ui.main.forumnav.view.ForumNavigationFragment
 import top.easelink.lcg.ui.main.model.OpenArticleEvent
 import top.easelink.lcg.ui.main.model.OpenForumEvent
@@ -61,7 +64,12 @@ class DiscoverFragment : Fragment(), ControllableFragment {
                     onRankClick = { url ->
                         EventBus.getDefault().post(OpenArticleEvent(url))
                     }
-                )
+                ,
+                onRankLongClick = { url ->
+                    top.easelink.lcg.ui.main.article.view.PostPreviewDialog.newInstance(url)
+                        .show(parentFragmentManager, top.easelink.lcg.ui.main.article.view.PostPreviewDialog.TAG)
+                }
+            )
             }
         }
 

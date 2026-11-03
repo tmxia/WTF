@@ -4,6 +4,7 @@ package top.easelink.lcg.ui.main.discover.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -35,7 +36,8 @@ fun DiscoverScreenCompose(
     models: List<DiscoverModel>,
     onForumClick: (String, String) -> Unit,
     onMoreForumsClick: () -> Unit,
-    onRankClick: (String) -> Unit
+    onRankClick: (String) -> Unit,
+    onRankLongClick: (String) -> Unit
 ) {
     if (models.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -80,7 +82,7 @@ fun DiscoverScreenCompose(
                 )
             }
             items(rankModels) { rank ->
-                RankItemCard(rank, onRankClick)
+                RankItemCard(rank, onRankClick, onRankLongClick)
             }
         }
     }
@@ -137,12 +139,23 @@ fun ForumNavigationSection(
 }
 
 @Composable
-fun RankItemCard(rank: RankModel, onRankClick: (String) -> Unit) {
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun RankItemCard(
+    rank: RankModel, 
+    onRankClick: (String) -> Unit,
+    onRankLongClick: (String) -> Unit
+) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier.fillMaxWidth().clickable { onRankClick(rank.url) }
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = { onRankClick(rank.url) },
+                onLongClick = { onRankLongClick(rank.url) }
+            )
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

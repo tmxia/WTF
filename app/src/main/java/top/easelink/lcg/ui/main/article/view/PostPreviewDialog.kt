@@ -57,6 +57,8 @@ class PostPreviewDialog : TopDialog() {
                 // 核心修复：让 Window 铺满全屏，且背景透明，由内部 Card 呈现内容
         dialog?.window?.apply {
             setBackgroundDrawableResource(android.R.color.transparent)
+            // 核心修复：去除弹窗所有过渡动画，瞬间弹出
+            setWindowAnimations(0)
             val params = attributes
             params.width = ViewGroup.LayoutParams.MATCH_PARENT
             params.height = ViewGroup.LayoutParams.MATCH_PARENT
