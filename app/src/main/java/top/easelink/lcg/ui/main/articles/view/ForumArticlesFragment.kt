@@ -80,7 +80,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         forumTab.addTab(forumTab.newTab().setText("全部").setTag(""))
 
         for (thread in threadList) {
-            forumTab.addTab(forumTab.newTab().setText(thread.title).setTag(thread.url))
+            forumTab.addTab(forumTab.newTab().setText(thread.threadName).setTag(thread.threadUrl))
         }
 
         forumTab.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
