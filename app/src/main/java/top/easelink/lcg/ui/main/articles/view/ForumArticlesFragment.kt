@@ -10,9 +10,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.topbase.ControllableFragment
+import top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher // 补全缺失的 import
 import top.easelink.lcg.ui.main.articles.viewmodel.ForumArticlesViewModel
 import top.easelink.lcg.ui.main.model.OpenArticleEvent
-import top.easelink.lcg.ui.main.source.model.Article
 
 class ForumArticlesFragment : Fragment(), ControllableFragment {
 
@@ -43,11 +43,12 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         super.onViewCreated(view, savedInstanceState)
         
         // 如果刚进入页面还没有数据，触发一次加载
-        // 注意：这里传入的 URL 可能会根据上一个页面传过来的参数而变化。
-        // 目前先硬编码一个默认的“精品软件”版块 URL 用于测试。
         if (viewModel.articles.value == null) {
-            val defaultUrl = "https://www.52pojie.cn/forum-37-1.html" // 精品软件区
-            viewModel.initUrlAndFetch(defaultUrl, ArticleFetcher.FetchType.FETCH_INIT)
+            // 优先使用上层传过来的 URL 和标题
+            val url = arguments?.getString("url") ?: "https://www.52pojie.cn/forum-37-1.html"
+            val title = arguments?.getString("title") ?: "精品软件"
+            viewModel.setTitle(title)
+            viewModel.initUrlAndFetch(url, ArticleFetcher.FetchType.FETCH_INIT)
         }
     }
 
