@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -19,15 +18,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import top.easelink.lcg.ui.main.source.model.ForumThread // 假设数据模型叫这个，按实际改
+import top.easelink.lcg.ui.main.source.model.Article
 
 @Composable
 fun ArticlesListCompose(
-    articles: List<ForumThread>,
+    articles: List<Article>,
     onItemClick: (String) -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5)),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -38,7 +39,7 @@ fun ArticlesListCompose(
 }
 
 @Composable
-fun ArticleCard(article: ForumThread, onItemClick: (String) -> Unit) {
+fun ArticleCard(article: Article, onItemClick: (String) -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -48,18 +49,18 @@ fun ArticleCard(article: ForumThread, onItemClick: (String) -> Unit) {
             .clickable { onItemClick(article.url) }
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            // 第一行：作者、时间、标签
+            // 第一行：作者、标签、时间
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = article.author ?: "匿名",
+                    text = article.author,
                     fontSize = 13.sp,
                     color = Color(0xFF666666)
                 )
                 
-                if (!article.origin.isNullOrBlank()) {
+                if (article.origin.isNotBlank()) {
                     Spacer(modifier = Modifier.width(8.dp))
                     ForumChip(article.origin)
                 }
@@ -67,7 +68,7 @@ fun ArticleCard(article: ForumThread, onItemClick: (String) -> Unit) {
                 Spacer(modifier = Modifier.weight(1f))
                 
                 Text(
-                    text = article.date ?: "",
+                    text = article.date,
                     fontSize = 11.sp,
                     color = Color(0xFF999999)
                 )
@@ -102,8 +103,8 @@ fun ForumChip(name: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
-            .background(Color.Transparent)
-            .padding(horizontal = 6.dp, vertical = 1.dp)
+            .background(Color(0xFFF5F5F5))
+            .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
         Text(
             text = name,
