@@ -61,13 +61,8 @@ class ArticleAdapter(
 
 
         private var hasMoreItem: Boolean = false
-    private var isReverse: Boolean = false
 
-    fun setReverse(reverse: Boolean) {
-        if (this.isReverse == reverse) return
-        this.isReverse = reverse
-        notifyDataSetChanged() // 排序切换时刷新
-    }
+
 
     fun setData(posts: List<Post>, hasMore: Boolean = false) {
         val oldList = ArrayList(mPostList)
@@ -96,20 +91,8 @@ class ArticleAdapter(
 
     
     private fun getRealPost(position: Int): Post? {
-        if (mPostList.isEmpty()) return null
-        if (position < 0 || position >= mPostList.size) return null
-        if (position == 0) return mPostList[0]
-        
-        // 强安全判断：如果只有一楼，或者不满足倒序条件，直接返回
-        if (mPostList.size <= 2) return mPostList.getOrNull(position)
-
-        val realIndex = if (isReverse) {
-            val idx = mPostList.size - position
-            idx.coerceIn(1, mPostList.size - 1)
-        } else {
-            position
-        }
-        return mPostList.getOrNull(realIndex) ?: mPostList[0]
+        // 恢复最安全的直接获取，防止任何越界崩溃
+        return mPostList.getOrNull(position)
     }
 
     override fun getItemCount() = when {

@@ -36,7 +36,7 @@
             android:layout_marginEnd="8dp"
             android:textColor="#333333"
             android:textSize="14sp"
-            android:fontFamily="sans-serif-medium"
+            
             app:layout_constraintEnd_toStartOf="@id/reply_position"
             app:layout_constraintStart_toEndOf="@id/reply_avatar"
             app:layout_constraintTop_toTopOf="@id/reply_avatar"

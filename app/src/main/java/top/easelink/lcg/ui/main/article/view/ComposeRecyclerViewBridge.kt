@@ -35,11 +35,17 @@ fun ComposeRecyclerViewBridge(
         update = { recyclerView ->
             val adapter = recyclerView.adapter as? ArticleAdapter
             if (adapter != null) {
-                // 先更新倒序状态（Adapter 内部会触发刷新）
-                adapter.setReverse(isReverse)
-                // 再更新数据（DiffUtil 会平滑处理差异）
-                adapter.setData(posts, hasMore)
+                // 核心修复：在数据源头进行倒序反转，彻底告别崩溃和闪烁
+                val displayPosts = if (isReverse && posts.size > 1) {
+                    // 主楼(post[0])永远在最前，其余的回复进行反转
+                    listOf(posts[0]) + posts.drop(1).reversed()
+                } else {
+                    posts
+                }
+                // 交给 DiffUtil 进行平滑更新，不再调用 setReverse
+                adapter.setData(displayPosts, hasMore)
             }
+        }
         }
     )
 }
