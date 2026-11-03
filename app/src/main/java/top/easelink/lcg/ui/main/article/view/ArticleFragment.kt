@@ -1,6 +1,8 @@
 package top.easelink.lcg.ui.main.article.view
 
 import android.os.Bundle
+import android.view.View
+import com.google.android.material.appbar.AppBarLayout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import top.easelink.framework.topbase.ControllableFragment
+import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
 
@@ -31,6 +34,18 @@ class ArticleFragment : Fragment(), ControllableFragment {
     private val viewModel: ArticleViewModel by viewModels()
 
     override fun isControllable(): Boolean = true
+
+    override fun onResume() {
+        super.onResume()
+        // 核心修复：隐藏 Activity 全局 AppBar，解决双层 Toolbar 导致的大白条
+        requireActivity().findViewById<AppBarLayout>(R.id.app_bar_layout)?.visibility = View.GONE
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // 恢复 Activity 全局 AppBar
+        requireActivity().findViewById<AppBarLayout>(R.id.app_bar_layout)?.visibility = View.VISIBLE
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
