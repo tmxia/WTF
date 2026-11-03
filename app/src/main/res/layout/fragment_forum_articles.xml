@@ -1,71 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <data>
-        <variable
-            name="viewModel"
-            type="top.easelink.lcg.ui.main.articles.viewmodel.ForumArticlesViewModel"/>
-    </data>
-
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:layout_width="match_parent"
-        
-        android:clipToPadding="false"
-        android:layout_height="match_parent">
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/white"
-            android:clipChildren="false"
-            android:focusable="true"
-            android:clickable="true"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/articleToolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                style="@style/Toolbar"
-                app:titleTextColor="@color/black"
-                app:layout_scrollFlags="scroll|enterAlways"/>
-
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/forumTab"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/articleToolbar"
-                android:minHeight="@dimen/dp_40"
-                android:background="@color/white"
-                android:visibility="gone"
-                app:tabRippleColor="@null"
-        app:tabIndicatorColor="@color/colorAccent"
-                app:tabIndicatorHeight="@dimen/dp_3"
-                app:tabTextColor="@color/gray"
-                app:tabSelectedTextColor="@color/colorAccent"
-                app:tabMode="scrollable"
-        app:tabPaddingStart="12dp"
-        app:tabPaddingEnd="12dp"
-                app:tabTextAppearance="@style/AppTab.TextAppearance"/>
-
-            <top.easelink.framework.customview.ScrollChildSwipeRefreshLayout
-                android:id="@+id/refreshLayout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_below="@id/forumTab"
-                app:refreshing="@{viewModel.isLoading}">
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerView"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="#F5F5F5"
-                android:clipToPadding="false"
-                    android:visibility="gone"
-                    tools:visibility="visible"/>
-            </top.easelink.framework.customview.ScrollChildSwipeRefreshLayout>
-        </RelativeLayout>
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
-</layout>
+<androidx.compose.ui.platform.ComposeView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/compose_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5" />
