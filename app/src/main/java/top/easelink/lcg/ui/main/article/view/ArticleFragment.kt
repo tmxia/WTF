@@ -4,260 +4,107 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.DefaultItemAnimator
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
-import top.easelink.framework.topbase.ControllableFragment
-import top.easelink.framework.topbase.TopFragment
-import top.easelink.lcg.R
-import top.easelink.lcg.databinding.FragmentArticleBinding
-import top.easelink.lcg.ui.main.article.view.DownloadLinkDialog.Companion.newInstance as newDownloadLinkDialog
-import top.easelink.lcg.ui.main.article.view.ReplyPostDialog.Companion.newInstance as newReplyPostDialog
-import top.easelink.lcg.ui.main.article.view.ScreenCaptureDialog.Companion.TAG
-import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener.Companion.FETCH_POST_INIT
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
-import top.easelink.lcg.ui.main.model.ReplyPostEvent
-import top.easelink.lcg.ui.main.model.ScreenCaptureEvent
-import top.easelink.lcg.ui.main.source.model.Post
-import top.easelink.lcg.ui.webview.view.WebViewActivity
-import top.easelink.lcg.utils.WebsiteConstant
-import top.easelink.lcg.utils.showMessage
+import top.easelink.framework.topbase.ControllableFragment
 
-class ArticleFragment : TopFragment(), ControllableFragment {
+class ArticleFragment : Fragment(), ControllableFragment {
 
-    companion object {
-        fun newInstance(url: String): ArticleFragment {
-            return ArticleFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARTICLE_URL, url)
-                }
-            }
-        }
-
-        private const val ARTICLE_URL = "article_url"
-        private const val REPLY_POST_REQUEST_KEY = "reply_post_request"
-    }
-
-    private lateinit var viewModel: ArticleViewModel
-    private var articleUrl: String = ""
-    private var _binding: FragmentArticleBinding? = null
-    private val binding get() = _binding!!
+    private val viewModel: ArticleViewModel by viewModels()
 
     override fun isControllable(): Boolean = true
 
-    override fun getBackStackTag(): String = articleUrl
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        articleUrl = arguments?.getString(ARTICLE_URL).orEmpty()
-        EventBus.getDefault().register(this)
-    }
-
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentArticleBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.clRootView) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
-            binding.postRecyclerView.setPadding(
-                binding.postRecyclerView.paddingLeft,
-                binding.postRecyclerView.paddingTop,
-                binding.postRecyclerView.paddingRight,
-                systemBars.bottom
-            )
-
-            insets
-        }
-
-        viewModel = ViewModelProvider(this)[ArticleViewModel::class.java]
-        initObserver()
-        setUp()
-        setupToolBar()
-        viewModel.setUrl(articleUrl)
-        viewModel.fetchArticlePost(FETCH_POST_INIT)
-        viewModel.checkIsFavorited()
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        EventBus.getDefault().unregister(this)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-    private fun initObserver() {
-        viewModel.articleTitle.observe(viewLifecycleOwner) {
-            binding.articleToolbar.title = it
-        }
-        viewModel.shouldDisplayPosts.observe(viewLifecycleOwner) {
-            binding.postRecyclerView.visibility = if (it) View.VISIBLE else View.GONE
-        }
-        viewModel.blockMessage.observe(viewLifecycleOwner) {
-            binding.blockText.text = it
-            binding.blockContainer.visibility = if (it.isNotEmpty()) View.VISIBLE else View.GONE
-        }
-        viewModel.isNotFound.observe(viewLifecycleOwner) {
-            binding.notFoundContainer.visibility = if (it) View.VISIBLE else View.GONE
-        }
-        viewModel.isLoading.observe(viewLifecycleOwner) {
-            binding.fetchingProgressBar.visibility = if (it) View.VISIBLE else View.GONE
-        }
-        viewModel.isFavorited.observe(viewLifecycleOwner) {
-            updateFavoriteMenuItem(it)
-        }
-    }
-
-    private fun setUp() {
-        binding.postRecyclerView.apply {
-            layoutManager = LinearLayoutManager(context).apply {
-                orientation = RecyclerView.VERTICAL
-            }
-            itemAnimator = DefaultItemAnimator()
-            val articleAdapter = ArticleAdapter(viewModel, this@ArticleFragment)
-            adapter = articleAdapter
-
-            
-            
-            viewModel.posts.observe(viewLifecycleOwner) { posts ->
-                if (posts.isNotEmpty() && posts[0].replyUrl != null) {
-                    binding.comment.visibility = View.VISIBLE
-                    binding.comment.setOnClickListener {
-                        showCommentDialog(posts[0].replyUrl!!)
-                    }
-                } else {
-                    binding.comment.visibility = View.GONE
-                }
-                articleAdapter.setItems(posts)
-            }
-
-            viewModel.newPostsAppended.observe(viewLifecycleOwner) { newPosts ->
-                articleAdapter.appendItems(newPosts)
-            }
-
-            viewModel.postInsertedAt.observe(viewLifecycleOwner) { (position, post) ->
-                articleAdapter.insertItem(position, post)
-            }
-
-            viewModel.hasMorePages.observe(viewLifecycleOwner) { hasMore ->
-                articleAdapter.setHasMore(hasMore)
+        val composeView = ComposeView(requireContext())
+        
+        composeView.setContent {
+            ArticleScreen(
+                title = viewModel.title.value ?: "帖子详情",
+                onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }
+            ) {
+                // 这就是你的核心逻辑：把复杂的 RecyclerView 交给 Compose 托管
+                ComposeRecyclerViewBridge(
+                    modifier = Modifier.fillMaxSize(),
+                    viewModel = viewModel,
+                    fragment = this
+                )
             }
         }
+        return composeView
     }
 
-    @Suppress("DEPRECATION")
-    private fun Bundle.safeGetPost(key: String): Post? {
-        return when {
-            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU -> {
-                getParcelable(key, Post::class.java)
-            }
-            else -> getParcelable(key) as? Post
+    companion object {
+        fun newInstance(url: String): ArticleFragment {
+            val fragment = ArticleFragment()
+            val args = Bundle()
+            args.putString("url", url)
+            fragment.arguments = args
+            return fragment
         }
     }
+}
 
-    private fun showCommentDialog(replyUrl: String) {
-        try {
-            parentFragmentManager.setFragmentResultListener(
-                REPLY_POST_REQUEST_KEY,
-                viewLifecycleOwner
-            ) { _, bundle ->
-                bundle.safeGetPost("post")?.let { post ->
-                    viewModel.addPostToTop(post)
-                    binding.postRecyclerView.scrollToPosition(1)
-                    showMessage(R.string.reply_post_succeed)
-                } ?: showMessage(R.string.reply_post_failed)
-            }
-
-            val dialog = CommentArticleDialog.newInstance(replyUrl)
-            dialog.show(parentFragmentManager, "CommentArticleDialog")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun setupToolBar() {
-        binding.articleToolbar.apply {
-            setNavigationOnClickListener {
-                requireActivity().onBackPressedDispatcher.onBackPressed()
-            }
-            inflateMenu(R.menu.article)
-            setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    R.id.action_open_in_webview -> {
-                        WebViewActivity.startWebViewWith(
-                            WebsiteConstant.SERVER_BASE_URL + articleUrl,
-                            requireContext()
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ArticleScreen(
+    title: String,
+    onBackClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            Column(modifier = Modifier.background(Color.White)) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = title,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            maxLines = 1
                         )
-                    }
-                    R.id.action_extract_urls -> {
-                        viewModel.extractDownloadUrl()?.takeIf { it.isNotEmpty() }?.let { urls ->
-                            newDownloadLinkDialog(urls).show(
-                                parentFragmentManager,
-                                "DownloadLinkDialog"
-                            )
-                        } ?: run {
-                            showMessage(R.string.download_link_not_found)
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "返回", tint = Color.Black)
                         }
-                    }
-                    R.id.action_add_to_my_favorite -> {
-                        viewModel.toggleFavorite()
-                    }
-                    else -> {  }
-                }
-                true
+                    },
+                    actions = {
+                        IconButton(onClick = { /* 更多菜单 */ }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "更多", tint = Color.Black)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                )
+                HorizontalDivider(thickness = 0.5.dp, color = Color(0xFFEEEEEE))
             }
         }
-    }
-
-    private fun updateFavoriteMenuItem(isFavorited: Boolean) {
-        binding.articleToolbar.menu.findItem(R.id.action_add_to_my_favorite)?.let {
-            it.title = if (isFavorited) {
-                getString(R.string.remove_from_favorite)
-            } else {
-                getString(R.string.add_to_my_favorite)
-            }
-        }
-    }
-
-    @Suppress("unused")
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onMessageEvent(event: ReplyPostEvent) {
-        try {
-            newReplyPostDialog(event.replyUrl, event.author).show(
-                parentFragmentManager,
-                "ReplyPostDialog"
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    @Suppress("unused")
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onMessageEvent(event: ScreenCaptureEvent) {
-        try {
-            ScreenCaptureDialog.newInstance(event.imagePath).show(
-                parentFragmentManager,
-                TAG
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
+    ) { paddingValues ->
+        // 这里的 Box 会占据 AppBar 下方所有空间，底色设为灰色，以便衬托白色卡片
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(Color(0xFFF5F5F5))
+        ) {
+            content()
         }
     }
 }
