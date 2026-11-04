@@ -43,6 +43,27 @@
         android:layout_marginBottom="4dp"
             android:layout_height="wrap_content"
             android:text="@string/start_auto_sign_in" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_manual_sign_in"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp"
+            android:text="立即手动签到" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switch_show_sign_in_toast"
+            android:padding="@dimen/dp_12"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="4dp"
+            android:background="@color/white"
+            android:elevation="@dimen/dp_2"
+            android:text="签到结果显示提示" />
+
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_marginTop="20dp"

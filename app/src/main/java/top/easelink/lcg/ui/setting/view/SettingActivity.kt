@@ -26,6 +26,8 @@ import top.easelink.lcg.ui.main.logout.view.LogoutHintDialog
 import top.easelink.lcg.ui.setting.viewmodel.SettingViewModel
 import top.easelink.lcg.utils.setStatusBarPadding
 import top.easelink.lcg.utils.showMessage
+import top.easelink.lcg.utils.SignInManager
+import android.widget.Toast
 
 class SettingActivity : TopActivity() {
 
@@ -127,8 +129,31 @@ class SettingActivity : TopActivity() {
                 mViewModel.scheduleJob(isChecked)
             }
 
+            // 修复原先错误的绑定（之前绑到了同步收藏）
             autoSignSwitch.setOnCheckedChangeListener { _: CompoundButton, isChecked: Boolean ->
-                mViewModel.setSyncFavorite(isChecked)
+                mViewModel.scheduleJob(isChecked) 
+            }
+
+            // 读取是否显示提示的配置
+            val prefs = getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
+            switchShowSignInToast.isChecked = prefs.getBoolean("show_sign_in_toast", true)
+            switchShowSignInToast.setOnCheckedChangeListener { _, isChecked ->
+                prefs.edit().putBoolean("show_sign_in_toast", isChecked).apply()
+            }
+
+            // 绑定手动签到按钮
+            btnManualSignIn.setOnClickListener {
+                btnManualSignIn.isEnabled = false
+                btnManualSignIn.text = "正在签到..."
+                SignInManager.performSignIn(this) { success, msg ->
+                    runOnUiThread {
+                        btnManualSignIn.isEnabled = true
+                        btnManualSignIn.text = "立即手动签到"
+                        if (switchShowSignInToast.isChecked) {
+                            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
             }
 
             searchEngineSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
