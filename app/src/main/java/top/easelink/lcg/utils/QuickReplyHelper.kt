@@ -1,13 +1,17 @@
 package top.easelink.lcg.utils
 
+import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.text.InputType
+import android.view.Gravity
+import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputLayout
 import org.json.JSONArray
 
@@ -98,37 +102,92 @@ object QuickReplyHelper {
         container.addView(addBtn)
     }
 
+    // 用纯手工打造的极简弹窗，拒绝任何原生丑样式
     private fun showEditDeleteDialog(context: Context, index: Int, phrase: String, onUpdated: () -> Unit) {
-        val options = if (index == -1) arrayOf("新增短语") else arrayOf("编辑短语", "删除短语")
-        MaterialAlertDialogBuilder(context)
-            .setTitle(if (index == -1) "新增快捷短语" else "操作: $phrase")
-            .setItems(options) { _, which ->
-                if (index == -1 || which == 0) {
-                    showInputDialog(context, index, phrase, onUpdated)
-                } else {
-                    val list = getQuickReplies(context)
-                    if (index in list.indices) {
-                        list.removeAt(index)
-                        saveQuickReplies(context, list)
-                        onUpdated()
+        val items = if (index == -1) arrayOf("新增短语") else arrayOf("编辑短语", "删除短语")
+        val titleStr = if (index == -1) "新增快捷短语" else "操作: $phrase"
+        
+        val dialog = AlertDialog.Builder(context).create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        val density = context.resources.displayMetrics.density
+        
+        // 核心：外层套一个 Material 大圆角卡片
+        val card = MaterialCardView(context).apply {
+            radius = 16f * density
+            setCardBackgroundColor(Color.WHITE)
+            strokeWidth = 0
+            elevation = 0f
+        }
+
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding((24 * density).toInt(), (20 * density).toInt(), (24 * density).toInt(), (16 * density).toInt())
+        }
+
+        layout.addView(TextView(context).apply {
+            text = titleStr
+            textSize = 16f
+            setTextColor(Color.parseColor("#333333"))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        })
+
+        items.forEachIndexed { i, item ->
+            layout.addView(TextView(context).apply {
+                text = item
+                textSize = 14f
+                setTextColor(Color.parseColor("#666666"))
+                setPadding(0, (16 * density).toInt(), 0, (16 * density).toInt())
+                setOnClickListener {
+                    dialog.dismiss()
+                    if (index == -1 || i == 0) showInputDialog(context, index, phrase, onUpdated)
+                    else {
+                        val list = getQuickReplies(context)
+                        if (index in list.indices) {
+                            list.removeAt(index)
+                            saveQuickReplies(context, list)
+                            onUpdated()
+                        }
                     }
                 }
-            }
-            .show()
+            })
+        }
+        card.addView(layout)
+        dialog.setView(card)
+        dialog.show()
     }
 
     private fun showInputDialog(context: Context, index: Int, phrase: String, onUpdated: () -> Unit) {
+        val dialog = AlertDialog.Builder(context).create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         val density = context.resources.displayMetrics.density
-        val padding = (20 * density).toInt()
-        
+
+        val card = MaterialCardView(context).apply {
+            radius = 16f * density
+            setCardBackgroundColor(Color.WHITE)
+            strokeWidth = 0
+            elevation = 0f
+        }
+
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding((24 * density).toInt(), (20 * density).toInt(), (24 * density).toInt(), (16 * density).toInt())
+        }
+
+        layout.addView(TextView(context).apply {
+            text = if (index == -1) "新增短语" else "编辑短语"
+            textSize = 16f
+            setTextColor(Color.parseColor("#333333"))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        })
+
         val textInputLayout = TextInputLayout(context).apply {
             hint = "输入快捷短语"
             boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
-            // 使用 setBoxCornerRadii 修复之前的 val 报错问题
-            setBoxCornerRadii(12f * density, 12f * density, 12f * density, 12f * density)
-            setPadding(padding, (12 * density).toInt(), padding, 0)
+            setBoxCornerRadii(8f * density, 8f * density, 8f * density, 8f * density)
+            setPadding(0, (16 * density).toInt(), 0, 0)
         }
-        
+
         val input = EditText(context).apply {
             setText(phrase)
             setSelection(text.length)
@@ -138,22 +197,44 @@ object QuickReplyHelper {
             setPadding(pad, pad, pad, pad)
         }
         textInputLayout.addView(input)
+        layout.addView(textInputLayout)
 
-        MaterialAlertDialogBuilder(context)
-            .setTitle(if (index == -1) "新增短语" else "编辑短语")
-            .setView(textInputLayout)
-            .setPositiveButton("保存") { _, _ ->
+        val btnLayout = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.END
+            setPadding(0, (16 * density).toInt(), 0, 0)
+        }
+
+        btnLayout.addView(TextView(context).apply {
+            text = "取消"
+            textSize = 14f
+            setTextColor(Color.parseColor("#888888"))
+            setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
+            setOnClickListener { dialog.dismiss() }
+        })
+
+        btnLayout.addView(TextView(context).apply {
+            text = "保存"
+            textSize = 14f
+            setTextColor(Color.parseColor("#E53935"))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
+            setOnClickListener {
                 val newText = input.text.toString().trim()
                 if (newText.isNotEmpty()) {
                     val list = getQuickReplies(context)
                     if (index == -1) list.add(newText)
                     else if (index in list.indices) list[index] = newText
-                    
                     saveQuickReplies(context, list)
                     onUpdated()
                 }
+                dialog.dismiss()
             }
-            .setNegativeButton("取消", null)
-            .show()
+        })
+
+        layout.addView(btnLayout)
+        card.addView(layout)
+        dialog.setView(card)
+        dialog.show()
     }
 }
