@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,15 +27,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.framework.topbase.TopFragment
@@ -57,7 +51,6 @@ import java.util.Calendar
 
 class MeFragment : TopFragment(), ControllableFragment {
     private lateinit var viewModel: MeViewModel
-    private var swipeRefreshLayout: SwipeRefreshLayout? = null
 
     companion object {
         private var lastFetchInfoTime = 0L
@@ -70,32 +63,18 @@ class MeFragment : TopFragment(), ControllableFragment {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val context = requireContext()
-        val root = SwipeRefreshLayout(context).apply {
-            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            setColorSchemeColors(ContextCompat.getColor(context, R.color.colorPrimary))
-            setDistanceToTriggerSync(250)
-            setSlingshotDistance(300)
-            setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
-        }
-        
+        // 核心重构：彻底放弃 SwipeRefreshLayout 包裹，直接使用 ComposeView 充满，消除一切原生测量死锁
         val composeView = ComposeView(context).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            // 核心防崩溃配置：绑定到当前 Fragment 的生命周期
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         }
-
-        root.addView(composeView)
-        swipeRefreshLayout = root
-
-        return root
+        return composeView
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel = ViewModelProvider(this)[MeViewModel::class.java]
-
-        val swipe = view as SwipeRefreshLayout
-        val compose = swipe.getChildAt(0) as ComposeView
+        val compose = view as ComposeView
 
         compose.setContent {
             MeScreenContent(
@@ -105,30 +84,20 @@ class MeFragment : TopFragment(), ControllableFragment {
             )
         }
 
-        setupSwipeRefresh()
-
         if (SystemClock.elapsedRealtime() - lastFetchInfoTime > MINIMUM_REQUEST_INTERVAL) {
             lastFetchInfoTime = SystemClock.elapsedRealtime()
-            viewModel.fetchUserInfoDirect()
+            try {
+                viewModel.fetchUserInfoDirect()
+            } catch (e: Exception) {
+                // 容错处理
+            }
         }
 
         AccountManager.isLoggedIn.observe(viewLifecycleOwner) {
-            // 使用纯正的 Boolean 判断，彻底避开泛型擦除和 isEmpty 报错
+            // 不管它是 String 还是 Boolean，我们只认底层的 UserDataRepo
             if (!UserDataRepo.isLoggedIn && isAdded && isVisible && SystemClock.elapsedRealtime() - MINIMUM_HINT_SHOW_INTERVAL > lastShowLoginHintTime) {
                 lastShowLoginHintTime = SystemClock.elapsedRealtime()
                 Toast.makeText(requireContext(), R.string.login_hint_message, Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun setupSwipeRefresh() {
-        swipeRefreshLayout?.apply {
-            setOnRefreshListener {
-                viewModel.fetchUserInfoDirect()
-                viewLifecycleOwner.lifecycleScope.launch {
-                    delay(1000)
-                    isRefreshing = false
-                }
             }
         }
     }
@@ -146,9 +115,10 @@ fun MeScreenContent(
     onSettingClick: () -> Unit,
     onNavigate: (Fragment) -> Unit
 ) {
-    // 核心修正：使用 UserDataRepo.isLoggedIn，它是一个纯粹的 Boolean，避免 LiveData<String> 导致的崩溃
+    // 使用绝对安全的 UserDataRepo 判断
     val isLoggedIn = UserDataRepo.isLoggedIn
-    val userInfo by AccountManager.userInfo.observeAsState(initial = null)
+    // 安全获取用户数据
+    val userInfo = AccountManager.userInfo.value
     val context = LocalContext.current
 
     var signInText by remember { mutableStateOf("去签到") }
@@ -182,8 +152,8 @@ fun MeScreenContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .background(Color(0xFFF5F5F5))
+            .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
         Card(
@@ -214,7 +184,7 @@ fun MeScreenContent(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = if (isLoggedIn) (userInfo?.userName ?: "") else "未登录",
+                            text = if (isLoggedIn) (userInfo?.userName ?: "加载中...") else "未登录",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium,
                             color = Color.Black
@@ -222,7 +192,7 @@ fun MeScreenContent(
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = if (isLoggedIn) (userInfo?.groupInfo ?: "") else "请先登录",
+                                text = if (isLoggedIn) (userInfo?.groupInfo ?: "加载中...") else "请先登录",
                                 fontSize = 13.sp,
                                 color = Color.Gray
                             )
@@ -236,17 +206,22 @@ fun MeScreenContent(
                                         .clickable(enabled = !isSigningIn && signInText.contains("未签到")) {
                                             isSigningIn = true
                                             signInText = "签到中..."
-                                            SignInManager.performSignIn(context) { status, msg ->
-                                                isSigningIn = false
-                                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                                                if (status == "SUCCESS" || status == "ALREADY_DONE") {
-                                                    val sp = SharedPreferencesHelper.getUserSp()
-                                                    sp.edit().putLong("sp_key_last_sign_in_at", System.currentTimeMillis()).apply()
-                                                    signInText = "✅ 已签到"
-                                                    signInColor = Color(0xFF4CAF50)
-                                                } else {
-                                                    signInText = "🔥 未签到，点我"
+                                            try {
+                                                SignInManager.performSignIn(context) { status, msg ->
+                                                    isSigningIn = false
+                                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                                    if (status == "SUCCESS" || status == "ALREADY_DONE") {
+                                                        val sp = SharedPreferencesHelper.getUserSp()
+                                                        sp.edit().putLong("sp_key_last_sign_in_at", System.currentTimeMillis()).apply()
+                                                        signInText = "✅ 已签到"
+                                                        signInColor = Color(0xFF4CAF50)
+                                                    } else {
+                                                        signInText = "🔥 未签到，点我"
+                                                    }
                                                 }
+                                            } catch (e: Exception) {
+                                                isSigningIn = false
+                                                signInText = "🔥 未签到，点我"
                                             }
                                         }
                                         .padding(horizontal = 8.dp, vertical = 2.dp)
@@ -282,12 +257,12 @@ fun MeScreenContent(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            InfoRow(icon = R.drawable.ic_coin, text = "吾爱币 : ${userInfo?.wuaiCoin ?: 0}")
-                            InfoRow(icon = R.drawable.ic_anwser_rate, text = "采纳率 : ${userInfo?.answerRate ?: 0} %")
+                            InfoRow(icon = R.drawable.ic_coin, text = "吾爱币 : ${userInfo?.wuaiCoin ?: "0"}")
+                            InfoRow(icon = R.drawable.ic_anwser_rate, text = "采纳率 : ${userInfo?.answerRate ?: "0"} %")
                         }
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            InfoRow(icon = R.drawable.ic_credit_v2, text = "积分 : ${userInfo?.credit ?: 0}")
-                            InfoRow(icon = R.drawable.ic_heart, text = "热心值 : ${userInfo?.enthusiasticValue ?: 0} 点")
+                            InfoRow(icon = R.drawable.ic_credit_v2, text = "积分 : ${userInfo?.credit ?: "0"}")
+                            InfoRow(icon = R.drawable.ic_heart, text = "热心值 : ${userInfo?.enthusiasticValue ?: "0"} 点")
                         }
                     }
                 }
