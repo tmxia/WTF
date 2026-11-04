@@ -102,7 +102,7 @@ object QuickReplyHelper {
         container.addView(addBtn)
     }
 
-    // 限制宽度的纯手工极简弹窗
+    
     private fun showEditDeleteDialog(context: Context, index: Int, phrase: String, onUpdated: () -> Unit) {
         val items = if (index == -1) arrayOf("新增短语") else arrayOf("编辑短语", "删除短语")
         val titleStr = if (index == -1) "新增快捷短语" else "操作: $phrase"
@@ -156,7 +156,7 @@ object QuickReplyHelper {
         dialog.setView(card)
         dialog.show()
         
-        // 核心修复：限制宽度为屏幕的 75% 或 280dp
+        
         val width = (280 * density).toInt()
         dialog.window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
     }
@@ -242,7 +242,7 @@ object QuickReplyHelper {
         dialog.setView(card)
         dialog.show()
         
-        // 核心修复：限制宽度
+        
         val width = (280 * density).toInt()
         dialog.window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
     }

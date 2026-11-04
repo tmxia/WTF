@@ -1,6 +1,8 @@
 package top.easelink.lcg.ui.main.article.view
 
 import android.annotation.SuppressLint
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import android.widget.Toast
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -137,6 +139,45 @@ class ArticleAdapter(
     }
 
     
+        private fun showFloorMenu(context: Context, position: Int, content: String, replyUrl: String?) {
+        // 从 replyUrl 提取 pid 以生成精确的楼层链接
+        val pid = replyUrl?.let { 
+            val match = Regex("pid=(\\d+)").find(it)
+            match?.groupValues?.get(1) 
+        }
+        
+        // 构造链接：如果有 pid 就用重定向链接
+        val floorLink = if (pid != null) {
+            "https://www.52pojie.cn/forum.php?mod=redirect&goto=findpost&pid=$pid"
+        } else {
+            null
+        }
+
+        val options = if (floorLink != null) {
+            arrayOf("复制文字", "复制楼层链接")
+        } else {
+            arrayOf("复制文字")
+        }
+
+        MaterialAlertDialogBuilder(context)
+            .setTitle("楼层操作")
+            .setItems(options) { _, which ->
+                if (which == 0) {
+                    if (copyContent(content, position.toString())) {
+                        showMessage(R.string.copy_succeed)
+                    } else {
+                        showMessage(R.string.copy_failed)
+                    }
+                } else if (which == 1 && floorLink != null) {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    val clip = android.content.ClipData.newPlainText("Floor Link", floorLink)
+                    clipboard.setPrimaryClip(clip)
+                    Toast.makeText(context, "楼层链接已复制", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .show()
+    }
+
     fun insertItem(position: Int, post: Post) {
         val safePos = position.coerceIn(0, mPostList.size)
         mPostList.add(safePos, post)
@@ -252,7 +293,10 @@ class ArticleAdapter(
                         postBtnGroup.visibility = View.GONE
                     }
                     
-                    contentTextView.setOnLongClickListener { true }
+                    contentTextView.setOnLongClickListener { 
+                            showFloorMenu(root.context, position, p.content, p.replyUrl)
+                            true 
+                        }
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
@@ -388,7 +432,10 @@ class ArticleAdapter(
                             replyBtnGroup.visibility = View.GONE
                         }
                         
-                        replyContentTextView.setOnLongClickListener { true }
+                        replyContentTextView.setOnLongClickListener { 
+                            showFloorMenu(root.context, position, p.content, p.replyUrl)
+                            true 
+                        }
                     } catch (e: Exception) {
                         Timber.e(e)
                     }
