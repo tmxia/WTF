@@ -11,7 +11,9 @@ import androidx.work.Operation
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import top.easelink.lcg.BuildConfig
 import top.easelink.lcg.account.UserDataRepo
@@ -35,18 +37,20 @@ class SignInWorker(context: Context, workerParams: WorkerParameters) :
         }
 
         return try {
-            when (performWebViewSignIn()) {
-                SignInResult.SUCCESS, SignInResult.ALREADY_DONE -> {
-                    markSignInDone()
-                    Result.success()
-                }
-                SignInResult.LOGIN_REQUIRED -> {
-                    Timber.w("Sign in failed: login required")
-                    Result.failure()
-                }
-                SignInResult.FAILED -> {
-                    Timber.w("Sign in failed, will retry")
-                    Result.retry()
+            withContext(Dispatchers.IO) {
+                suspendCancellableCoroutine { continuation ->
+                    SignInManager.performSignIn { status, _ ->
+                        if (continuation.isActive) {
+                            val result = when (status) {
+                                "SUCCESS", "ALREADY_DONE" -> {
+                                    markSignInDone()
+                                    Result.success()
+                                }
+                                else -> Result.retry()
+                            }
+                            continuation.resume(result)
+                        }
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -54,22 +58,6 @@ class SignInWorker(context: Context, workerParams: WorkerParameters) :
             Result.failure()
         }
     }
-
-    private suspend fun performWebViewSignIn(): SignInResult = suspendCancellableCoroutine { continuation ->
-        SignInManager.performSignIn(applicationContext) { status, _ ->
-            if (continuation.isActive) {
-                val result = when (status) {
-                    "SUCCESS" -> SignInResult.SUCCESS
-                    "ALREADY_DONE" -> SignInResult.ALREADY_DONE
-                    "LOGIN_REQUIRED" -> SignInResult.LOGIN_REQUIRED
-                    else -> SignInResult.FAILED
-                }
-                continuation.resume(result)
-            }
-        }
-    }
-
-    enum class SignInResult { SUCCESS, ALREADY_DONE, LOGIN_REQUIRED, FAILED }
 
     companion object {
         private val WORK_INTERVAL: Long = if (BuildConfig.DEBUG) 15L else 8L
@@ -110,7 +98,7 @@ class SignInWorker(context: Context, workerParams: WorkerParameters) :
 
             return WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 TAG,
-                ExistingPeriodicWorkPolicy.UPDATE, 
+                ExistingPeriodicWorkPolicy.UPDATE,
                 request
             )
         }

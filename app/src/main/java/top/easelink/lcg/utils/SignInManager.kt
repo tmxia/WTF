@@ -1,80 +1,42 @@
 package top.easelink.lcg.utils
 
-import android.annotation.SuppressLint
-import android.content.Context
-import android.os.Handler
-import android.os.Looper
-import android.webkit.CookieManager
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import timber.log.Timber
+import top.easelink.lcg.network.JsoupClient
 
 object SignInManager {
 
-    
+    private const val APPLY_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=apply&id=2"
+    private const val DRAW_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=draw&id=2"
 
+    /**
+     * 纯 Jsoup 签到方案（底层已带持久化 Cookie 和 400ms 限流防封）
+     */
+    fun performSignIn(onResult: (String, String) -> Unit) {
+        try {
+            // 1. 发起申请签到任务
+            val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL)
+            
+            // 判断是否已经签过
+            val applyMessage = applyResponse.getElementsByClass("alert_info")
+                .first()?.selectFirst("p")?.text().orEmpty()
 
-
-    @SuppressLint("SetJavaScriptEnabled")
-    fun performSignIn(context: Context, onResult: (String, String) -> Unit) {
-        Handler(Looper.getMainLooper()).post {
-            val webView = WebView(context.applicationContext)
-            val settings = webView.settings
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            settings.userAgentString = "Mozilla/5.0 (Linux; Android 13; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
-
-            CookieManager.getInstance().setAcceptCookie(true)
-            CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
-
-            webView.webViewClient = object : WebViewClient() {
-                override fun onPageFinished(view: WebView?, url: String?) {
-                    super.onPageFinished(view, url)
-                    if (url?.contains("52pojie.cn") == true) {
-                        val js = """
-                            (function() {
-                                if (document.title.indexOf("登录") > -1 || document.body.innerText.indexOf("您需要登录") > -1) {
-                                    return "LOGIN_REQUIRED";
-                                }
-                                if (document.body.innerText.indexOf("已签到") > -1) {
-                                    return "ALREADY_DONE";
-                                }
-                                var link = document.querySelector('a[href*="task&do=apply&id=2"]');
-                                if (link) {
-                                    link.click();
-                                    return "SUCCESS";
-                                }
-                                return "FAILED";
-                            })();
-                        """.trimIndent()
-
-                        view?.evaluateJavascript(js) { result ->
-                            val cleanResult = result?.replace("\"", "")
-                            when (cleanResult) {
-                                "ALREADY_DONE" -> {
-                                    onResult("ALREADY_DONE", "今日已签到")
-                                    view.destroy()
-                                }
-                                "SUCCESS" -> {
-                                    
-                                    Handler(Looper.getMainLooper()).postDelayed({
-                                        onResult("SUCCESS", "签到成功！")
-                                        view.destroy()
-                                    }, 1500)
-                                }
-                                "LOGIN_REQUIRED" -> {
-                                    onResult("LOGIN_REQUIRED", "登录已失效")
-                                    view.destroy()
-                                }
-                                else -> {
-                                    onResult("FAILED", "签到失败")
-                                    view.destroy()
-                                }
-                            }
-                        }
-                    }
-                }
+            if (applyMessage.contains("已申请") || applyMessage.contains("已完成")) {
+                Timber.d("今日已签到: $applyMessage")
+                onResult("ALREADY_DONE", "今日已签到")
+                return
             }
-            webView.loadUrl("https://www.52pojie.cn/")
+
+            // 2. 如果没签过，发起领取奖励任务
+            val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL)
+            val drawText = drawResponse.getElementsByClass("alert_info")
+                .first()?.selectFirst("p")?.text().orEmpty()
+
+            Timber.d("签到成功结果: $drawText")
+            onResult("SUCCESS", "签到成功！")
+            
+        } catch (e: Exception) {
+            Timber.e(e, "Jsoup 签到请求异常")
+            onResult("FAILED", "签到失败，请检查网络或登录状态")
         }
     }
 }
