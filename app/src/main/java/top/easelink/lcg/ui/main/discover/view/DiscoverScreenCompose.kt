@@ -1,31 +1,19 @@
-@file:OptIn(ExperimentalLayoutApi::class)
-
 package top.easelink.lcg.ui.main.discover.view
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Card
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.RefreshDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +29,7 @@ import top.easelink.lcg.ui.main.discover.model.ForumListModel
 import top.easelink.lcg.ui.main.discover.model.RankListModel
 import top.easelink.lcg.ui.main.discover.model.RankModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DiscoverScreenCompose(
     models: List<DiscoverModel>,
@@ -50,16 +39,8 @@ fun DiscoverScreenCompose(
     onRankLongClick: (String) -> Unit,
     onRefresh: () -> Unit
 ) {
-    if (models.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(text = "暂无数据，请下拉刷新", color = Color.Gray)
-        }
-        return
-    }
-
     val forumModel = models.filterIsInstance<ForumListModel>().firstOrNull()
     val rankModels = models.filterIsInstance<RankListModel>().flatMap { it.listModel }
-
 
     Column(
         modifier = Modifier
@@ -73,37 +54,47 @@ fun DiscoverScreenCompose(
             }
         }
 
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp, start = 4.dp, end = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "今日热榜",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFFE65100)
-                    )
-                    IconButton(onClick = onRefresh, modifier = Modifier.size(24.dp)) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "刷新",
-                            tint = Color(0xFFE65100)
+        if (models.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = "暂无数据，请点击刷新", color = Color.Gray)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp, bottom = 4.dp, start = 4.dp, end = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "今日热榜",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFFE65100)
                         )
+                        IconButton(
+                            onClick = onRefresh,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "刷新",
+                                tint = Color(0xFFE65100)
+                            )
+                        }
                     }
                 }
-            }
-            items(rankModels) { rank ->
-                RankItemCard(rank, onRankClick, onRankLongClick)
+                items(rankModels) { rank ->
+                    RankItemCard(rank, onRankClick, onRankLongClick)
+                }
             }
         }
     }
@@ -164,8 +155,7 @@ fun ForumNavigationSection(
 fun RankItemCard(
     rank: RankModel,
     onRankClick: (String) -> Unit,
-    onRankLongClick: (String) -> Unit,
-    onRefresh: () -> Unit
+    onRankLongClick: (String) -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
