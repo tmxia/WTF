@@ -140,13 +140,13 @@ class ArticleAdapter(
 
     
         private fun showFloorMenu(context: Context, position: Int, content: String, replyUrl: String?) {
-        // 从 replyUrl 提取 pid 以生成精确的楼层链接
+        
         val pid = replyUrl?.let { 
             val match = Regex("pid=(\\d+)").find(it)
             match?.groupValues?.get(1) 
         }
         
-        // 构造链接：如果有 pid 就用重定向链接
+        
         val floorLink = if (pid != null) {
             "https://www.52pojie.cn/forum.php?mod=redirect&goto=findpost&pid=$pid"
         } else {
