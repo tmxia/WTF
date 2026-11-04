@@ -118,8 +118,8 @@ fun MeScreenContent(
 ) {
     
     val isLoggedInString by AccountManager.isLoggedIn.observeAsState(initial = "")
-    val isLoggedIn = UserDataRepo.isLoggedIn
     val userInfo by AccountManager.userInfo.observeAsState(initial = null)
+    val isLoggedIn = userInfo != null && !userInfo?.userName.isNullOrBlank()
     val context = LocalContext.current
 
     var signInText by remember { mutableStateOf("去签到") }
