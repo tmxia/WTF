@@ -25,6 +25,7 @@ import top.easelink.framework.utils.addFragmentInFragment
 import top.easelink.framework.utils.dpToPx
 import top.easelink.lcg.R
 import top.easelink.lcg.account.AccountManager
+import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.databinding.FragmentMeBinding
 import top.easelink.lcg.ui.main.articles.view.FavoriteArticlesFragment
 import top.easelink.lcg.ui.main.follow.view.FollowFragment
@@ -119,7 +120,7 @@ class MeFragment : TopFragment(), ControllableFragment {
 
 
     private fun updateSignInButton() {
-        if (!AccountManager.isLoggedIn.value!!) {
+        if (!UserDataRepo.isLoggedIn) {
             binding.btnSignInState.text = "请先登录"
             binding.btnSignInState.setTextColor(android.graphics.Color.parseColor("#999999"))
             binding.btnSignInState.isEnabled = false
