@@ -65,10 +65,10 @@
 
             <HorizontalScrollView
                 android:id="@+id/quick_reply_scroll"
-                android:layout_marginBottom="16dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
+                android:layout_marginBottom="16dp"
                 android:scrollbars="none"
                 android:visibility="gone">
 
@@ -82,10 +82,10 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/reply_content_layout"
-            android:layout_marginTop="16dp"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             app:boxBackgroundColor="#F5F5F5"
             app:boxCornerRadiusBottomEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
