@@ -21,6 +21,7 @@ import top.easelink.lcg.databinding.DialogCommentArticleBinding
 import top.easelink.lcg.ui.main.article.viewmodel.ReplyPostViewModel
 import top.easelink.lcg.ui.main.source.model.Post
 import top.easelink.lcg.utils.showMessage
+import top.easelink.lcg.utils.QuickReplyHelper
 
 class CommentArticleDialog : TopDialog() {
 
@@ -89,149 +90,27 @@ class CommentArticleDialog : TopDialog() {
 
         
         // 读取折叠状态并绑定点击事件 (默认折叠)
-        val prefs = requireContext().getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val prefs = requireContext().getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
         var isExpanded = prefs.getBoolean("quick_reply_expanded", false)
         
-        binding.quickReplyScroll.visibility = if (isExpanded) View.VISIBLE else View.GONE
+        binding.quickReplyScroll.visibility = if (isExpanded) android.view.View.VISIBLE else android.view.View.GONE
         binding.quickReplyArrow.text = if (isExpanded) "▲" else "▼"
 
         binding.quickReplyHeader.setOnClickListener {
             isExpanded = !isExpanded
-            binding.quickReplyScroll.visibility = if (isExpanded) View.VISIBLE else View.GONE
+            binding.quickReplyScroll.visibility = if (isExpanded) android.view.View.VISIBLE else android.view.View.GONE
             binding.quickReplyArrow.text = if (isExpanded) "▲" else "▼"
             prefs.edit().putBoolean("quick_reply_expanded", isExpanded).apply()
         }
 
-        // 渲染快捷回复短语
-        renderQuickReplies()
-
- 
-
-        
-        val editBg = android.graphics.drawable.GradientDrawable().apply {
-            setColor(android.graphics.Color.parseColor("#F5F5F5"))
-            cornerRadius = 16f 
-        }
-        binding.replyContent.background = editBg
-        binding.replyContent.setPadding(32, 32, 32, 32)
-
-        binding.btnCancel.setOnClickListener {
-            dismissDialog()
+        // 渲染快捷短语
+        QuickReplyHelper.renderQuickReplies(requireContext(), binding.quickReplyContainer) { phrase ->
+            val current = binding.replyContent.text?.toString() ?: ""
+            if (current.isEmpty()) binding.replyContent.setText(phrase)
+            else binding.replyContent.setText("$current $phrase")
+            binding.replyContent.setSelection(binding.replyContent.text?.length ?: 0)
         }
 
-        binding.btnConfirm.apply {
-            replyPostViewModel.sending.observe(viewLifecycleOwner, Observer { isSending ->
-                setText(if (isSending) R.string.reply_post_btn_sending else R.string.reply_post_btn_sent)
-            })
-
-            setOnClickListener {
-                if (System.currentTimeMillis() - lastClickTime < 2000) {
-                    showMessage(R.string.reply_btn_debounced_notice)
-                    return@setOnClickListener
-                }
-                lastClickTime = System.currentTimeMillis()
-                handleReplyAction()
-            }
-        }
-    }
-
-    private fun handleReplyAction() {
-        val content = binding.replyContent.text?.toString()?.trim() ?: ""
-        replyPostViewModel.sendReply(arguments?.getString(REPLY_POST_URL), content) { success ->
-            binding.root.postDelayed({
-                setResult(content, success)
-                dismissDialog()
-            }, 1000L)
-        }
-    }
-
-    private fun setResult(content: String, success: Boolean) {
-        parentFragmentManager.setFragmentResult(
-            REPLY_POST_REQUEST_KEY,
-            Bundle().apply {
-                putInt("result_code", if (success) REPLY_POST_RESULT_SUCCESS else REPLY_POST_RESULT_FAILED)
-                putParcelable("post", createPost(content))
-            }
-        )
-    }
-
-    private fun createPost(content: String) = Post(
-        UserDataRepo.username,
-        UserDataRepo.avatar,
-        CommonUtils.getCurrentDate(),
-        content,
-        null,
-        null
-    )
-
-    
-    private fun getQuickReplies(): MutableList<String> {
-        val prefs = requireContext().getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
-        val json = prefs.getString("quick_replies_json", null)
-        val list = mutableListOf<String>()
-        if (json != null) {
-            try {
-                val array = JSONArray(json)
-                for (i in 0 until array.length()) {
-                    list.add(array.getString(i))
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        if (list.isEmpty()) {
-            list.addAll(listOf("感谢分享", "支持楼主", "谢谢大佬", "看看是什么", "学习了"))
-        }
-        return list
-    }
-
-    private fun saveQuickReplies(list: List<String>) {
-        val array = JSONArray()
-        list.forEach { array.put(it) }
-        requireContext().getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
-            .edit().putString("quick_replies_json", array.toString()).apply()
-    }
-
-    private fun renderQuickReplies() {
-        val container = binding.quickReplyContainer
-        container.removeAllViews()
-        val density = resources.displayMetrics.density
-        val list = getQuickReplies()
-
-        // 渲染已有的短语
-        list.forEachIndexed { index, phrase ->
-            val textView = TextView(requireContext()).apply {
-                text = phrase
-                setTextColor(android.graphics.Color.parseColor("#666666"))
-                textSize = 12f
-                val padH = (12 * density).toInt()
-                val padV = (6 * density).toInt()
-                setPadding(padH, padV, padH, padV)
-                
-                background = android.graphics.drawable.GradientDrawable().apply {
-                    setColor(android.graphics.Color.parseColor("#F5F5F5"))
-                    cornerRadius = 16f * density
-                }
-                
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { marginEnd = (8 * density).toInt() }
-
-                setOnClickListener {
-                    val current = binding.replyContent.text?.toString() ?: ""
-                    if (current.isEmpty()) binding.replyContent.setText(phrase)
-                    else binding.replyContent.setText("$current $phrase")
-                    binding.replyContent.setSelection(binding.replyContent.text?.length ?: 0)
-                }
-
-                setOnLongClickListener {
-                    showEditDeleteDialog(index, phrase)
-                    true
-                }
-            }
-            container.addView(textView)
-        }
 
         // 添加一个“+ 添加”按钮
         val addBtn = TextView(requireContext()).apply {

@@ -8,6 +8,7 @@ import top.easelink.lcg.R
 import top.easelink.lcg.databinding.DialogReplyPostBinding
 import top.easelink.lcg.ui.main.article.viewmodel.ReplyPostViewModel
 import top.easelink.lcg.utils.showMessage
+import top.easelink.lcg.utils.QuickReplyHelper
 
 class ReplyPostDialog : DialogFragment() {
 
@@ -37,7 +38,29 @@ class ReplyPostDialog : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         replyPostViewModel = ViewModelProvider(this)[ReplyPostViewModel::class.java]
 
-        binding.btnCancel.setOnClickListener { dismiss() }
+        
+        // 折叠快捷短语
+        val prefs = requireContext().getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
+        var isExpanded = prefs.getBoolean("quick_reply_expanded", false)
+        binding.quickReplyScroll.visibility = if (isExpanded) android.view.View.VISIBLE else android.view.View.GONE
+        binding.quickReplyArrow.text = if (isExpanded) "▲" else "▼"
+
+        binding.quickReplyHeader.setOnClickListener {
+            isExpanded = !isExpanded
+            binding.quickReplyScroll.visibility = if (isExpanded) android.view.View.VISIBLE else android.view.View.GONE
+            binding.quickReplyArrow.text = if (isExpanded) "▲" else "▼"
+            prefs.edit().putBoolean("quick_reply_expanded", isExpanded).apply()
+        }
+
+        // 渲染快捷短语
+        QuickReplyHelper.renderQuickReplies(requireContext(), binding.quickReplyContainer) { phrase ->
+            val current = binding.replyContent.text?.toString() ?: ""
+            if (current.isEmpty()) binding.replyContent.setText(phrase)
+            else binding.replyContent.setText("$current $phrase")
+            binding.replyContent.setSelection(binding.replyContent.text?.length ?: 0)
+        }
+
+binding.btnCancel.setOnClickListener { dismiss() }
         
         val bgDrawable = android.graphics.drawable.GradientDrawable().apply {
             setColor(android.graphics.Color.WHITE)
