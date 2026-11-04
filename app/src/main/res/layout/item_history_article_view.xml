@@ -4,61 +4,68 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/layout"
-    style="@style/Widget.LCG.ItemCard">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/favorite_container"
         android:layout_width="match_parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
         android:layout_height="wrap_content"
-        android:paddingTop="@dimen/dp_12"
-        android:paddingBottom="@dimen/dp_12">
+        android:padding="14dp">
 
         <TextView
             android:id="@+id/title_text_view"
             style="@style/TextStyle.Heading"
-            android:textStyle="normal"
-        android:fontFamily="sans-serif-medium"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/dp_14"
-            android:layout_marginEnd="@dimen/dp_8"
-            android:maxLines="2"
+            android:layout_marginEnd="8dp"
             android:ellipsize="end"
-            android:textSize="@dimen/sp_16"
+            android:fontFamily="sans-serif-medium"
             android:lineSpacingExtra="@dimen/dp_2"
-            app:layout_constraintStart_toStartOf="parent"
+            android:maxLines="2"
+            android:textSize="@dimen/sp_16"
+            android:textStyle="normal"
             app:layout_constraintEnd_toStartOf="@id/remove_button"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="这是一个比较长的阅读记录文章标题，可能会超出一行" />
+            tools:text="这是一个比较长的阅读记录 文章标题，可能会超出一行" />
 
+        <!-- 优化删除按钮：缩小尺寸，降低透明度，避免喧宾夺主 -->
         <ImageButton
             android:id="@+id/remove_button"
-            android:layout_width="@dimen/dp_36"
-            android:layout_height="@dimen/dp_36"
-            android:layout_marginEnd="@dimen/dp_8"
-            android:padding="@dimen/dp_8"
-            android:src="@drawable/ic_close_black_24dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/remove_history_item"
-            app:tint="@color/semi_gray"
+            android:contentDescription="删除"
+            android:padding="4dp"
+            android:src="@drawable/ic_close_black_24dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/title_text_view" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="#BDBDBD" />
 
         <TextView
             android:id="@+id/author_text_view"
             style="@style/TextStyle.Title.Sub"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dp_8"
-            android:layout_marginEnd="@dimen/dp_8"
+            android:layout_marginTop="8dp"
             android:ellipsize="end"
             android:maxLines="1"
-            app:layout_constraintTop_toBottomOf="@id/title_text_view"
-            app:layout_constraintStart_toStartOf="@id/title_text_view"
+            android:textColor="#999999"
+            android:textSize="12sp"
             app:layout_constraintEnd_toStartOf="@id/date_text_view"
-            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/title_text_view"
             tools:text="Author" />
 
         <TextView
@@ -66,11 +73,12 @@
             style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/dp_8"
-            app:layout_constraintTop_toTopOf="@id/author_text_view"
+            android:layout_marginStart="8dp"
+            android:textColor="#999999"
+            android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="@id/author_text_view"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginEnd="@dimen/dp_14"
+            app:layout_constraintTop_toTopOf="@id/author_text_view"
             tools:text="3 小时前" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
