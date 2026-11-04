@@ -68,7 +68,7 @@ class MeFragment : TopFragment(), ControllableFragment {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val context = requireContext()
-        // 直接使用 ComposeView，去掉复杂的 View 嵌套以防止测量崩溃
+        // 直接使用 ComposeView，彻底规避原生嵌套滚动的测量冲突
         val root = SwipeRefreshLayout(context).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             setColorSchemeColors(ContextCompat.getColor(context, R.color.colorPrimary))
@@ -94,6 +94,7 @@ class MeFragment : TopFragment(), ControllableFragment {
         val swipe = view as SwipeRefreshLayout
         val compose = swipe.getChildAt(0) as ComposeView
 
+        // 在 onViewCreated 中 setContent，确保 ViewTreeLifecycleOwner 已经就绪，防止崩溃
         compose.setContent {
             MeScreenContent(
                 viewModel = viewModel,
@@ -129,16 +130,10 @@ class MeFragment : TopFragment(), ControllableFragment {
         }
     }
 
-    // 跳转修复：若 R.id.clRootView 不存在，回退到 Activity 的根容器
+    // 精准匹配原有的跳转逻辑（硬编码 R.id.clRootView）
     private fun showFragment(fragment: Fragment) {
-        val activity = activity ?: return
-        val containerId = activity.resources.getIdentifier("clRootView", "id", activity.packageName)
-        val targetId = if (containerId != 0) containerId else android.R.id.content
-        
-        try {
-            addFragmentInActivity(activity.supportFragmentManager, fragment, targetId)
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), "页面打开失败", Toast.LENGTH_SHORT).show()
+        activity?.supportFragmentManager?.let {
+            addFragmentInActivity(it, fragment, R.id.clRootView)
         }
     }
 }
