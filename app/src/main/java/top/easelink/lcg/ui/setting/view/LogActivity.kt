@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import top.easelink.lcg.R
 import top.easelink.lcg.utils.AppLogManager
 import top.easelink.lcg.utils.LogItem
@@ -85,13 +86,28 @@ class LogActivity : AppCompatActivity() {
             }
         }
         adapter.submit(filtered)
-        
-        // 处理空状态展示
-        if (filtered.isEmpty()) {
-            tvEmpty.visibility = View.VISIBLE
-        } else {
-            tvEmpty.visibility = View.GONE
+        tvEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+    }
+
+    private fun showLogDetailDialog(item: LogItem) {
+        val levelStr = when (item.level) {
+            Log.ERROR -> "ERROR"
+            Log.WARN -> "WARN"
+            Log.INFO -> "INFO"
+            else -> "DEBUG"
         }
+        val fullText = "[${item.time}] $levelStr/${item.tag}\n\n${item.message}"
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("日志详情")
+            .setMessage(fullText)
+            .setPositiveButton("复制") { _, _ ->
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("LogDetail", fullText))
+                Toast.makeText(this, "已复制该条日志", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("关闭", null)
+            .show()
     }
 
     inner class LogAdapter : RecyclerView.Adapter<LogAdapter.ViewHolder>() {
@@ -116,6 +132,9 @@ class LogActivity : AppCompatActivity() {
             }
             holder.tvHeader.text = "[${item.time}] $levelStr/${item.tag}"
             holder.tvMessage.text = item.message
+            holder.itemView.setOnClickListener {
+                showLogDetailDialog(item)
+            }
         }
 
         override fun getItemCount() = list.size

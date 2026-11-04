@@ -4,6 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
     app:cardBackgroundColor="@color/white"
     app:cardCornerRadius="8dp"
     app:cardElevation="0dp">
@@ -26,7 +29,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
+            android:ellipsize="end"
             android:lineSpacingExtra="2dp"
+            android:maxLines="3"
             android:textColor="@color/black_effective"
             android:textSize="13sp" />
     </LinearLayout>

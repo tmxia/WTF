@@ -16,8 +16,10 @@ object AppLogManager {
     private const val MAX_LOG_SIZE = 1000
     private val logs = LinkedList<LogItem>()
     private val formatter = SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.getDefault())
+    var isCollecting = false
 
     fun addLog(priority: Int, tag: String?, message: String, throwable: Throwable?) {
+        if (!isCollecting) return
         if (logs.size >= MAX_LOG_SIZE) {
             logs.removeFirst()
         }
@@ -52,7 +54,7 @@ object AppLogManager {
         return sb.toString()
     }
 
-    // 自定义 Timber Tree 用于拦截所有日志
+    // 自定义 Timber Tree
     class LogTree : Timber.Tree() {
         override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
             addLog(priority, tag, message, t)
