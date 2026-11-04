@@ -93,9 +93,8 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val url = arguments?.getString("url") ?: ""
-        if (viewModel.articles.value == null) {
-            viewModel.initUrlAndFetch(url, ArticleFetcher.FetchType.FETCH_INIT)
-        }
+        // 核心修复：强制首次请求数据，不再被 null 判断卡住
+        viewModel.initUrlAndFetch(url, ArticleFetcher.FetchType.FETCH_INIT)
     }
 
     companion object {

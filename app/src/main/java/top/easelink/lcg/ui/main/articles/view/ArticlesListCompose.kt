@@ -65,15 +65,14 @@ fun ForumArticlesScreen(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(pagerState.currentPage) {
-        if (pagerState.currentPage > 0) {
+            if (pagerState.currentPage > 0) {
             val index = pagerState.currentPage - 1
             val url = if (index < tabs.filter { it.threadName != "全部" }.size) {
                 tabs.filter { it.threadName != "全部" }[index].threadUrl
             } else { "" }
             onTabSelected(url)
-        } else {
-            onTabSelected("")
         }
+        
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
