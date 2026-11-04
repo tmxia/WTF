@@ -1,6 +1,9 @@
 package top.easelink.lcg.ui.main.article.view
 
 import android.os.Bundle
+import android.content.Context
+import android.widget.TextView
+import android.widget.LinearLayout
 import android.view.*
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Observer
@@ -77,7 +80,64 @@ class CommentArticleDialog : TopDialog() {
             cornerRadius = 32f 
         }
         binding.root.background = bgDrawable
-        binding.root.setPadding(48, 48, 48, 48) 
+        binding.root.setPadding(48, 48, 48, 48)
+
+        
+        // 读取折叠状态并绑定点击事件 (默认折叠)
+        val prefs = requireContext().getSharedPreferences("settings", Context.MODE_PRIVATE)
+        var isExpanded = prefs.getBoolean("quick_reply_expanded", false)
+        
+        binding.quickReplyScroll.visibility = if (isExpanded) View.VISIBLE else View.GONE
+        binding.quickReplyArrow.text = if (isExpanded) "▲" else "▼"
+
+        binding.quickReplyHeader.setOnClickListener {
+            isExpanded = !isExpanded
+            binding.quickReplyScroll.visibility = if (isExpanded) View.VISIBLE else View.GONE
+            binding.quickReplyArrow.text = if (isExpanded) "▲" else "▼"
+            prefs.edit().putBoolean("quick_reply_expanded", isExpanded).apply()
+        }
+
+        // 生成快捷回复短语
+        val quickPhrases = listOf("感谢分享", "支持楼主", "谢谢大佬", "看看是什么", "学习了")
+        val container = binding.quickReplyContainer
+        container.removeAllViews()
+        val density = resources.displayMetrics.density
+
+        for (phrase in quickPhrases) {
+            val textView = TextView(requireContext()).apply {
+                text = phrase
+                setTextColor(android.graphics.Color.parseColor("#666666"))
+                textSize = 12f
+                val padH = (12 * density).toInt()
+                val padV = (6 * density).toInt()
+                setPadding(padH, padV, padH, padV)
+                
+                // 胶囊状圆角背景
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(android.graphics.Color.parseColor("#F5F5F5"))
+                    cornerRadius = 16f * density
+                }
+                
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { marginEnd = (8 * density).toInt() }
+
+                setOnClickListener {
+                    val current = binding.replyContent.text?.toString() ?: ""
+                    if (current.isEmpty()) {
+                        binding.replyContent.setText(phrase)
+                    } else {
+                        // 如果已有内容，在末尾空格追加
+                        binding.replyContent.setText("$current $phrase")
+                    }
+                    // 将光标移到最末尾
+                    binding.replyContent.setSelection(binding.replyContent.text?.length ?: 0)
+                }
+            }
+            container.addView(textView)
+        }
+ 
 
         
         val editBg = android.graphics.drawable.GradientDrawable().apply {
