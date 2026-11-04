@@ -109,6 +109,7 @@ class SettingActivity : TopActivity() {
             // 调试模式开关逻辑
             val logPrefs = getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
             val isDebugEnabled = logPrefs.getBoolean("debug_mode_enabled", false)
+            AppLogManager.isCollecting = isDebugEnabled
             
             // 初始化状态
             debugModeSwitch.isChecked = isDebugEnabled
@@ -118,16 +119,16 @@ class SettingActivity : TopActivity() {
             debugModeSwitch.setOnCheckedChangeListener { _, isChecked ->
                 logPrefs.edit().putBoolean("debug_mode_enabled", isChecked).apply()
                 
-                // 联动控制日志入口和分割线的可见性
                 openLogPageBtn.visibility = if (isChecked) View.VISIBLE else View.GONE
                 logDivider.visibility = if (isChecked) View.VISIBLE else View.GONE
 
+                // 核心修复：直接控制内存收集器，绝对不调用 Timber.uprootAll()
+                AppLogManager.isCollecting = isChecked
                 if (isChecked) {
-                    Timber.plant(AppLogManager.LogTree())
-                } else {
-                    Timber.uprootAll()
-                    if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
+                    AppLogManager.clearLogs()
+                    Timber.d("调试模式已开启，开始捕获日志")
                 }
+            }
             }
 
             // 进入日志页

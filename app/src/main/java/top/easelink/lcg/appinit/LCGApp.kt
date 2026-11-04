@@ -15,6 +15,7 @@ import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.network.LCGCookieJar
 import top.easelink.lcg.service.work.SignInWorker
+import top.easelink.lcg.utils.AppLogManager
 
 class LCGApp : Application() {
     private val applicationJob = SupervisorJob()
@@ -26,6 +27,11 @@ class LCGApp : Application() {
         if (BuildConfig.DEBUG) {
             Timber.plant(DebugTree())
         }
+        
+        // 核心修复：无条件挂载日志树，并恢复调试模式开关状态
+        Timber.plant(AppLogManager.LogTree())
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        AppLogManager.isCollecting = prefs.getBoolean("debug_mode_enabled", false)
         initCoil()
         AppGuardStarter.init(this)
         ShiplyInitialization.init(this@LCGApp)
