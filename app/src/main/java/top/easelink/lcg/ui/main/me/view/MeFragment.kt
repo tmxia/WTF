@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -42,6 +43,7 @@ import top.easelink.framework.topbase.TopFragment
 import top.easelink.framework.utils.addFragmentInActivity
 import top.easelink.lcg.R
 import top.easelink.lcg.account.AccountManager
+import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.ui.main.articles.view.FavoriteArticlesFragment
 import top.easelink.lcg.ui.main.follow.view.FollowFragment
 import top.easelink.lcg.ui.main.history.view.HistoryArticlesFragment
@@ -68,7 +70,6 @@ class MeFragment : TopFragment(), ControllableFragment {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val context = requireContext()
-        // 直接使用 ComposeView，彻底规避原生嵌套滚动的测量冲突
         val root = SwipeRefreshLayout(context).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             setColorSchemeColors(ContextCompat.getColor(context, R.color.colorPrimary))
@@ -79,6 +80,8 @@ class MeFragment : TopFragment(), ControllableFragment {
         
         val composeView = ComposeView(context).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            // 核心防崩溃配置：绑定到当前 Fragment 的生命周期
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         }
 
         root.addView(composeView)
@@ -94,7 +97,6 @@ class MeFragment : TopFragment(), ControllableFragment {
         val swipe = view as SwipeRefreshLayout
         val compose = swipe.getChildAt(0) as ComposeView
 
-        // 在 onViewCreated 中 setContent，确保 ViewTreeLifecycleOwner 已经就绪，防止崩溃
         compose.setContent {
             MeScreenContent(
                 viewModel = viewModel,
@@ -111,7 +113,8 @@ class MeFragment : TopFragment(), ControllableFragment {
         }
 
         AccountManager.isLoggedIn.observe(viewLifecycleOwner) { loggedIn ->
-            if (!loggedIn && isAdded && isVisible && SystemClock.elapsedRealtime() - MINIMUM_HINT_SHOW_INTERVAL > lastShowLoginHintTime) {
+            // 注意：这里的 loggedIn 大概率是 String 类型（用户名），只要非空就视为已登录
+            if ((loggedIn == null || loggedIn.isEmpty()) && isAdded && isVisible && SystemClock.elapsedRealtime() - MINIMUM_HINT_SHOW_INTERVAL > lastShowLoginHintTime) {
                 lastShowLoginHintTime = SystemClock.elapsedRealtime()
                 Toast.makeText(requireContext(), R.string.login_hint_message, Toast.LENGTH_SHORT).show()
             }
@@ -130,7 +133,6 @@ class MeFragment : TopFragment(), ControllableFragment {
         }
     }
 
-    // 精准匹配原有的跳转逻辑（硬编码 R.id.clRootView）
     private fun showFragment(fragment: Fragment) {
         activity?.supportFragmentManager?.let {
             addFragmentInActivity(it, fragment, R.id.clRootView)
@@ -144,7 +146,8 @@ fun MeScreenContent(
     onSettingClick: () -> Unit,
     onNavigate: (Fragment) -> Unit
 ) {
-    val isLoggedIn by AccountManager.isLoggedIn.observeAsState(initial = false)
+    // 核心修正：使用 UserDataRepo.isLoggedIn，它是一个纯粹的 Boolean，避免 LiveData<String> 导致的崩溃
+    val isLoggedIn = UserDataRepo.isLoggedIn
     val userInfo by AccountManager.userInfo.observeAsState(initial = null)
     val context = LocalContext.current
 
@@ -211,7 +214,7 @@ fun MeScreenContent(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = if (isLoggedIn) userInfo?.userName ?: "" else "未登录",
+                            text = if (isLoggedIn) (userInfo?.userName ?: "") else "未登录",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium,
                             color = Color.Black
@@ -219,7 +222,7 @@ fun MeScreenContent(
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = if (isLoggedIn) userInfo?.groupInfo ?: "" else "请先登录",
+                                text = if (isLoggedIn) (userInfo?.groupInfo ?: "") else "请先登录",
                                 fontSize = 13.sp,
                                 color = Color.Gray
                             )
