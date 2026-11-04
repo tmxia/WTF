@@ -67,13 +67,14 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
             return
         }
         safeUpdate(isLoading, true)
-        Timber.d("【业务层】开始加载详情/帖子数据, Type=$type, Query=$query")
 
         val query: String? = when (type) {
             FETCH_POST_INIT -> mUrl
             FETCH_POST_MORE -> nextPageUrl
             else -> null
         }
+
+        Timber.d("【业务层】开始加载详情/帖子数据, Type=$type, Query=$query")
 
         if (query.isNullOrBlank()) {
             safeUpdate(isLoading, false)
