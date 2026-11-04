@@ -200,36 +200,42 @@ fun ArticleScreen(
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
-                modifier = Modifier.background(Color.White)
+                            modifier = Modifier.background(Color.White)
                         ) {
-                DropdownMenuItem(
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
-                    text = { Text(if (showOpOnly) "显示全部帖子" else "只看楼主", fontSize = 14.sp, color = Color.DarkGray) }
-                DropdownMenuItem(
-                    leadingIcon = { Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
-                    text = { Text(if (filterSpam) "关闭灌水过滤" else "过滤灌水回复", fontSize = 14.sp, color = Color.DarkGray) },
-                    onClick = { 
-                        showMenu = false
-                        filterSpam = !filterSpam 
-                    }
-                ),
-                    onClick = { 
-                        showMenu = false
-                        showOpOnly = !showOpOnly 
-                    }
-                )
-                DropdownMenuItem(
-                    leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
-                    text = { Text("复制链接", fontSize = 14.sp, color = Color.DarkGray) },
-                    onClick = {
-                        showMenu = false
-                        val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                        val clip = android.content.ClipData.newPlainText("Post Link", top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL + articleUrl)
-                        clipboard.setPrimaryClip(clip)
-                        android.widget.Toast.makeText(context, "链接已复制", android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                )
-                
+                            // 1. 只看楼主
+                            DropdownMenuItem(
+                                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                text = { Text(if (showOpOnly) "显示全部帖子" else "只看楼主", fontSize = 14.sp, color = Color.DarkGray) },
+                                onClick = {
+                                    showMenu = false
+                                    showOpOnly = !showOpOnly
+                                }
+                            )
+                            
+                            // 2. 过滤灌水
+                            DropdownMenuItem(
+                                leadingIcon = { Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                text = { Text(if (filterSpam) "关闭灌水过滤" else "过滤灌水回复", fontSize = 14.sp, color = Color.DarkGray) },
+                                onClick = {
+                                    showMenu = false
+                                    filterSpam = !filterSpam
+                                }
+                            )
+
+                            // 3. 复制链接
+                            DropdownMenuItem(
+                                leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                text = { Text("复制链接", fontSize = 14.sp, color = Color.DarkGray) },
+                                onClick = {
+                                    showMenu = false
+                                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                    val clip = android.content.ClipData.newPlainText("Post Link", top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL + articleUrl)
+                                    clipboard.setPrimaryClip(clip)
+                                    android.widget.Toast.makeText(context, "链接已复制", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            )
+
+                            // 4. 倒序显示
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.List, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text(if (isReverse) "顺序显示" else "倒序显示", fontSize = 14.sp, color = Color.DarkGray) },
@@ -239,6 +245,8 @@ fun ArticleScreen(
                                     prefs.edit().putBoolean("is_reverse", isReverse).apply()
                                 }
                             )
+
+                            // 5. 刷新
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text("刷新", fontSize = 14.sp, color = Color.DarkGray) },
@@ -247,6 +255,8 @@ fun ArticleScreen(
                                     viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
                                 }
                             )
+
+                            // 6. 浏览器打开
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text("在浏览器打开", fontSize = 14.sp, color = Color.DarkGray) },
@@ -255,6 +265,8 @@ fun ArticleScreen(
                                     WebViewActivity.startWebViewWith(WebsiteConstant.SERVER_BASE_URL + articleUrl, context)
                                 }
                             )
+
+                            // 7. 提取下载链接
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text("提取下载链接", fontSize = 14.sp, color = Color.DarkGray) },
@@ -268,14 +280,16 @@ fun ArticleScreen(
                                     }
                                 }
                             )
+
+                            // 8. 收藏/取消收藏
                             DropdownMenuItem(
-                                leadingIcon = { 
+                                leadingIcon = {
                                     Icon(
-                                        if (isFavorited) Icons.Filled.Favorite else Icons.Default.FavoriteBorder, 
-                                        contentDescription = null, 
+                                        if (isFavorited) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+                                        contentDescription = null,
                                         modifier = Modifier.size(20.dp),
                                         tint = if (isFavorited) Color.Red else Color.DarkGray
-                                    ) 
+                                    )
                                 },
                                 text = { Text(if (isFavorited) "取消收藏" else "添加收藏", fontSize = 14.sp, color = Color.DarkGray) },
                                 onClick = {
