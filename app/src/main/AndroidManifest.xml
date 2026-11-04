@@ -114,6 +114,7 @@
             android:exported="false">
         </activity>
         <activity android:name=".ui.setting.view.LogActivity" android:exported="false" />
+        <activity android:name=".ui.setting.view.LogDetailActivity" android:exported="false" />
     </application>
 
 </manifest>

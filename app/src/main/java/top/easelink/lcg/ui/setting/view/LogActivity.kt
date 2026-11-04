@@ -54,6 +54,13 @@ class LogActivity : AppCompatActivity() {
             applyFilter()
         }
 
+        findViewById<TextView>(R.id.btn_clear_log).setOnClickListener {
+            AppLogManager.clearLogs()
+            allLogs = emptyList()
+            applyFilter()
+            Toast.makeText(this, "日志已清空", Toast.LENGTH_SHORT).show()
+        }
+
         findViewById<TextView>(R.id.btn_export_log).setOnClickListener {
             val logText = AppLogManager.exportLogs()
             if (logText.isBlank()) {
@@ -102,40 +109,7 @@ class LogActivity : AppCompatActivity() {
         tvEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
     }
 
-    private fun showLogDetailDialog(item: LogItem) {
-        val levelStr = when (item.level) {
-            Log.ERROR -> "ERROR"
-            Log.WARN -> "WARN"
-            Log.INFO -> "INFO"
-            else -> "DEBUG"
-        }
-        val fullText = "[${item.time}] $levelStr/${item.tag}\n\n${item.message}"
-
-        // 核心修复：使用自定义的圆角布局
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_log_detail, null)
-        val dialog = android.app.AlertDialog.Builder(this).create()
-        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
-        dialog.setView(dialogView)
-        dialog.show()
-
-        // 限制弹窗宽度
-        val density = resources.displayMetrics.density
-        dialog.window?.setLayout((300 * density).toInt(), android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
-
-        val tvContent = dialogView.findViewById<TextView>(R.id.tv_dialog_log_content)
-        tvContent.text = fullText
-
-        dialogView.findViewById<View>(R.id.btn_dialog_close).setOnClickListener {
-            dialog.dismiss()
-        }
-
-        dialogView.findViewById<View>(R.id.btn_dialog_copy).setOnClickListener {
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(ClipData.newPlainText("LogDetail", fullText))
-            Toast.makeText(this, "已复制该条日志", Toast.LENGTH_SHORT).show()
-            dialog.dismiss()
-        }
-    }
+    
 
     inner class LogAdapter : RecyclerView.Adapter<LogAdapter.ViewHolder>() {
         private var list: List<LogItem> = emptyList()
@@ -160,7 +134,14 @@ class LogActivity : AppCompatActivity() {
             holder.tvHeader.text = "[${item.time}] $levelStr/${item.tag}"
             holder.tvMessage.text = item.message
             holder.itemView.setOnClickListener {
-                showLogDetailDialog(item)
+                val intent = android.content.Intent(context, LogDetailActivity::class.java).apply {
+                    putExtra("time", item.time)
+                    putExtra("level", item.level)
+                    putExtra("tag", item.tag)
+                    putExtra("message", item.message)
+                    putExtra("stack", item.stackTrace)
+                }
+                context.startActivity(intent)
             }
         }
 
