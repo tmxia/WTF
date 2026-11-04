@@ -21,57 +21,28 @@
         android:id="@+id/favoriteContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="14dp"
-        android:paddingTop="12dp"
-        android:paddingEnd="14dp"
-        android:paddingBottom="12dp">
+        android:padding="14dp">
 
-        <!-- 1. 第一行：标题，占据顶部首要位置，彻底杜绝与时间重叠 -->
-        <TextView
-            android:id="@+id/title_text_view"
-            style="@style/TextStyle.Heading"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:fontFamily="sans-serif-medium"
-            android:maxLines="2"
-            android:textColor="@color/black_effective"
-            android:textSize="15sp"
-            android:textStyle="normal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="豆包AI生图无水印成品" />
-
-        <!-- 2. 第二行：作者、浏览数据、来源、时间，全部沉底、依次水平排列 -->
+        <!-- 第一行：作者、标签、时间（防止标题过长导致时间乱跑） -->
+        <!-- 作者占左边，最大宽度的一半，超长截断 -->
         <TextView
             android:id="@+id/author_text_view"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#999999"
-            android:textSize="12sp"
+            android:textColor="#666666"
+            android:textSize="13sp"
+            app:layout_constraintEnd_toStartOf="@id/dateTime"
+            app:layout_constraintHorizontal_weight="1"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/title_text_view"
+            app:layout_constraintTop_toTopOf="parent"
             tools:text="收藏作者" />
 
-        <TextView
-            android:id="@+id/reply_and_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:textColor="#999999"
-            android:textSize="12sp"
-            app:layout_constraintBottom_toBottomOf="@id/author_text_view"
-            app:layout_constraintStart_toEndOf="@id/author_text_view"
-            app:layout_constraintTop_toTopOf="@id/author_text_view"
-            tools:text="0 / 0" />
-
+        <!-- 标签紧跟在作者后面，同样限制宽度 -->
         <TextView
             android:id="@+id/origin"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:ellipsize="end"
@@ -80,22 +51,53 @@
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="@id/author_text_view"
             app:layout_constraintEnd_toStartOf="@id/dateTime"
-            app:layout_constraintStart_toEndOf="@id/reply_and_view"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@id/author_text_view"
             app:layout_constraintTop_toTopOf="@id/author_text_view"
             tools:text="『收藏文章』" />
 
-        <!-- 时间固定在最右侧 -->
+        <!-- 时间固定死在整个卡片最右侧 -->
         <TextView
             android:id="@+id/dateTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:textColor="#999999"
-            android:textSize="11sp"
+            android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="@id/author_text_view"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/author_text_view"
             tools:text="2026-11-03" />
+
+        <!-- 第二行：大标题，独享整行，最多两行显示 -->
+        <TextView
+            android:id="@+id/title_text_view"
+            style="@style/TextStyle.Heading"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="2"
+            android:textColor="@color/black_effective"
+            android:textSize="15sp"
+            android:textStyle="normal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/author_text_view"
+            tools:text="这是一个超长的标题这是超长标题" />
+
+        <!-- 第三行：底部浏览数据，放在最左下角 -->
+        <TextView
+            android:id="@+id/reply_and_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="#999999"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/title_text_view"
+            tools:text="10 / 200" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
