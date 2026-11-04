@@ -112,9 +112,9 @@ class MeFragment : TopFragment(), ControllableFragment {
             viewModel.fetchUserInfoDirect()
         }
 
-        AccountManager.isLoggedIn.observe(viewLifecycleOwner) { loggedIn ->
-            // 注意：这里的 loggedIn 大概率是 String 类型（用户名），只要非空就视为已登录
-            if ((loggedIn == null || loggedIn.isEmpty()) && isAdded && isVisible && SystemClock.elapsedRealtime() - MINIMUM_HINT_SHOW_INTERVAL > lastShowLoginHintTime) {
+        AccountManager.isLoggedIn.observe(viewLifecycleOwner) {
+            // 使用纯正的 Boolean 判断，彻底避开泛型擦除和 isEmpty 报错
+            if (!UserDataRepo.isLoggedIn && isAdded && isVisible && SystemClock.elapsedRealtime() - MINIMUM_HINT_SHOW_INTERVAL > lastShowLoginHintTime) {
                 lastShowLoginHintTime = SystemClock.elapsedRealtime()
                 Toast.makeText(requireContext(), R.string.login_hint_message, Toast.LENGTH_SHORT).show()
             }
