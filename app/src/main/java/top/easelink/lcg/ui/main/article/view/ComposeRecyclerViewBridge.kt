@@ -17,6 +17,7 @@ fun ComposeRecyclerViewBridge(
     viewModel: ArticleViewModel,
     fragment: Fragment,
     isReverse: Boolean = false,
+    showOpOnly: Boolean = false,
     onScrollStateChanged: (Boolean) -> Unit = {},
     onReady: (RecyclerView) -> Unit = {}
 ) {
@@ -46,10 +47,16 @@ fun ComposeRecyclerViewBridge(
         update = { recyclerView ->
             val adapter = recyclerView.adapter as? ArticleAdapter
             if (adapter != null) {
-                val displayPosts = if (isReverse && posts.size > 1) {
-                    listOf(posts[0]) + posts.drop(1).reversed()
+                val filteredPosts = if (showOpOnly) {
+                    val opAuthor = posts.firstOrNull()?.author
+                    posts.filter { it.author == opAuthor }
                 } else {
                     posts
+                }
+                val displayPosts = if (isReverse && filteredPosts.size > 1) {
+                    listOf(filteredPosts[0]) + filteredPosts.drop(1).reversed()
+                } else {
+                    filteredPosts
                 }
                 
                 adapter.setData(displayPosts, hasMore)

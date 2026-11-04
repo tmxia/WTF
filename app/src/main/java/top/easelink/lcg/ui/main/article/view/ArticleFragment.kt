@@ -140,6 +140,7 @@ fun ArticleScreen(
 
     var showMenu by remember { mutableStateOf(false) }
     var showBackToTop by remember { mutableStateOf(false) }
+    var showOpOnly by remember { mutableStateOf(false) }
     var recyclerView by remember { mutableStateOf<androidx.recyclerview.widget.RecyclerView?>(null) }
     
     val prefs = remember { context.getSharedPreferences("article_settings", android.content.Context.MODE_PRIVATE) }
@@ -194,6 +195,25 @@ fun ArticleScreen(
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
+                DropdownMenuItem(
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                    text = { Text(if (showOpOnly) "显示全部帖子" else "只看楼主", fontSize = 14.sp, color = Color.DarkGray) },
+                    onClick = { 
+                        showMenu = false
+                        showOpOnly = !showOpOnly 
+                    }
+                )
+                DropdownMenuItem(
+                    leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                    text = { Text("复制链接", fontSize = 14.sp, color = Color.DarkGray) },
+                    onClick = {
+                        showMenu = false
+                        val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        val clip = android.content.ClipData.newPlainText("Post Link", top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL + articleUrl)
+                        clipboard.setPrimaryClip(clip)
+                        android.widget.Toast.makeText(context, "链接已复制", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                )
                             modifier = Modifier.background(Color.White)
                         ) {
                             DropdownMenuItem(
@@ -317,6 +337,7 @@ fun ArticleScreen(
                             viewModel = viewModel,
                             fragment = fragment,
                             isReverse = isReverse,
+                            showOpOnly = showOpOnly,
                             onScrollStateChanged = { show -> showBackToTop = show },
                             onReady = { rv -> recyclerView = rv }
                         )
