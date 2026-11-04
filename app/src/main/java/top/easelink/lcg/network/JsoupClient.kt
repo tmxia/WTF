@@ -114,6 +114,27 @@ object JsoupClient : ApiRequest {
         url: String,
         form: MutableMap<String, String>?
     ): Connection.Response {
+        Timber.d("【网络层】POST 请求: \$url")
+        return getConnection(url)
+            .apply {
+                if (form != null) {
+                    data(form)
+                }
+            }
+            .postDataCharset("gbk")
+            .method(Connection.Method.POST)
+            .execute()
+            .also {
+                updateCookies(it.cookies())
+                Timber.d("【网络层】POST 完成: 状态码=\${it.statusCode()}")
+            }
+    }
+
+    /* 原始方法已被覆盖，保留占位 */
+    fun _deprecated_sendPostRequestWithUrl(
+        url: String,
+        form: MutableMap<String, String>?
+    ): Connection.Response {
         return getConnection(url)
             .apply {
                 if (form != null) {
@@ -217,6 +238,7 @@ object JsoupClient : ApiRequest {
             messageText.take(120)
         )
         if (sessionExpiredFiredOnce.compareAndSet(false, true)) {
+            Timber.e("【状态层】检测到登录失效（触发风控或 Cookie 过期）: hasMessageLogin=\$hasMessageLogin, message=\$messageText")
             
             Timber.w("检测到风控拦截，启动静默 WebView 刷新 Cookie...")
             refreshCookieSilently {

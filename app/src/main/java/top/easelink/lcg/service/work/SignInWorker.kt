@@ -26,13 +26,14 @@ class SignInWorker(context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
+        Timber.d("【任务层】WorkManager 唤醒自动签到任务")
         if (!UserDataRepo.isLoggedIn) {
-            Timber.d("Sign in skipped: not logged in")
+            Timber.w("【任务层】签到跳过: 用户未登录")
             return Result.success()
         }
         
         if (isRecentlyExecuted()) {
-            Timber.d("Sign in skipped: recently executed")
+            Timber.w("【任务层】签到跳过: 7 小时内已执行过")
             return Result.success()
         }
 
