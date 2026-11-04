@@ -180,6 +180,19 @@
             android:background="@color/white" />
 
 
+                <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/keep_alive_switch"
+            android:padding="@dimen/dp_12"
+            android:elevation="@dimen/dp_2"
+            android:background="@color/white"
+            android:layout_width="match_parent"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:layout_height="wrap_content"
+            android:text="@string/battery_keep_alive" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/account_btn"
             android:padding="@dimen/dp_12"

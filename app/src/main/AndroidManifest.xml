@@ -16,6 +16,8 @@
         <package android:name="com.tencent.mm" />
     </queries>
 
+        <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <application
         android:largeHeap="true"
         android:allowBackup="false"

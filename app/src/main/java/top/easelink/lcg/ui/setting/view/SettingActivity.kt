@@ -1,6 +1,12 @@
 package top.easelink.lcg.ui.setting.view
 
 import android.os.Bundle
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.PowerManager
+import android.provider.Settings
+
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
@@ -84,6 +90,35 @@ class SettingActivity : TopActivity() {
         updateAccountButton(UserDataRepo.isLoggedIn)
 
         binding.apply {
+
+            // 后台保活逻辑
+            val prefs = getSharedPreferences("battery_settings", Context.MODE_PRIVATE)
+            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+            keepAliveSwitch.isChecked = if (prefs.contains("battery_state")) {
+                prefs.getBoolean("battery_state", true)
+            } else {
+                powerManager.isIgnoringBatteryOptimizations(packageName)
+            }
+
+            keepAliveSwitch.setOnCheckedChangeListener { _, isChecked ->
+                prefs.edit().putBoolean("battery_state", isChecked).apply()
+                if (isChecked) {
+                    if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+                        try {
+                            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                data = Uri.parse("package:$packageName")
+                            }
+                            startActivity(intent)
+                        } catch (e: Exception) {
+                            startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                        }
+                    }
+                } else {
+                    startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                    showMessage("请在系统设置中允许电池优化，以彻底关闭保活。")
+                }
+            }
+
             checkUpdateBtn.setOnClickListener {
                 showMessage(R.string.app_is_latest)
             }
