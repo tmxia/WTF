@@ -67,6 +67,7 @@
 
             <HorizontalScrollView
                 android:id="@+id/quick_reply_scroll"
+                android:layout_marginBottom="8dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
@@ -84,10 +85,10 @@
         <!-- 输入框 -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/reply_content_layout"
+            android:layout_marginTop="10dp"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             app:boxBackgroundColor="#F5F5F5"
             app:boxCornerRadiusBottomEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
@@ -101,6 +102,7 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/reply_content"
                 android:layout_width="match_parent"
+                android:paddingTop="12dp"
                 android:layout_height="wrap_content"
                 android:gravity="top|start"
                 android:hint="@string/comment_article_input_hint"
