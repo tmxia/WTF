@@ -19,25 +19,23 @@ fun ComposeRecyclerViewBridge(
     isReverse: Boolean = false,
     showOpOnly: Boolean = false,
     filterSpam: Boolean = false,
+    searchKeyword: String = "",
     onScrollStateChanged: (Boolean) -> Unit = {},
     onReady: (RecyclerView) -> Unit = {}
 ) {
     val posts by viewModel.posts.observeAsState(initial = emptyList<Post>())
     val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
 
-    
     AndroidView(
         modifier = modifier,
         factory = { context ->
             RecyclerView(context).apply {
                 setBackgroundColor(android.graphics.Color.TRANSPARENT)
-
                 layoutManager = LinearLayoutManager(context)
                 setPadding(0, 0, 0, 0)
                 clipToPadding = false
                 overScrollMode = RecyclerView.OVER_SCROLL_NEVER
                 adapter = ArticleAdapter(viewModel, fragment)
-            
                 addOnScrollListener(object : RecyclerView.OnScrollListener() {
                     override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(rv, dx, dy)
@@ -57,20 +55,25 @@ fun ComposeRecyclerViewBridge(
                     posts
                 }
                 
-                
                 if (filterSpam) {
                     filteredPosts = filteredPosts.filter { post ->
-                        
                         val plainText = post.content?.replace(Regex("<[^>]*>"), "")?.trim() ?: ""
                         plainText.length >= 5
                     }
                 }
+
+                if (searchKeyword.isNotBlank()) {
+                    filteredPosts = filteredPosts.filter { post ->
+                        post.content?.contains(searchKeyword, ignoreCase = true) == true
+                    }
+                }
+
                 val displayPosts = if (isReverse && filteredPosts.size > 1) {
                     listOf(filteredPosts[0]) + filteredPosts.drop(1).reversed()
                 } else {
                     filteredPosts
                 }
-                
+
                 adapter.setData(displayPosts, hasMore)
             }
         }

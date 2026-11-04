@@ -146,6 +146,7 @@ fun ArticleScreen(
     var showBackToTop by remember { mutableStateOf(false) }
     var showOpOnly by remember { mutableStateOf(false) }
     var filterSpam by remember { mutableStateOf(false) }
+    var searchKeyword by remember { mutableStateOf("") }
     var recyclerView by remember { mutableStateOf<androidx.recyclerview.widget.RecyclerView?>(null) }
     
     val prefs = remember { context.getSharedPreferences("article_settings", android.content.Context.MODE_PRIVATE) }
@@ -219,6 +220,35 @@ fun ArticleScreen(
                                 onClick = {
                                     showMenu = false
                                     filterSpam = !filterSpam
+                                }
+                            )
+                            
+                            DropdownMenuItem(
+                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                text = { Text(if (searchKeyword.isNotBlank()) "清除搜索: $searchKeyword" else "搜索帖子内容", fontSize = 14.sp, color = Color.DarkGray) },
+                                onClick = {
+                                    showMenu = false
+                                    if (searchKeyword.isNotBlank()) {
+                                        searchKeyword = ""
+                                    } else {
+                                        val density = context.resources.displayMetrics.density
+                                        val padding = (20 * density).toInt()
+                                        val input = android.widget.EditText(context).apply {
+                                            hint = "输入关键字"
+                                            setPadding(padding, padding / 2, padding, padding / 2)
+                                        }
+                                        com.google.android.material.dialog.MaterialAlertDialogBuilder(context)
+                                            .setTitle("搜索本贴内容")
+                                            .setView(input)
+                                            .setPositiveButton("搜索") { _, _ ->
+                                                val keyword = input.text.toString().trim()
+                                                if (keyword.isNotEmpty()) {
+                                                    searchKeyword = keyword
+                                                }
+                                            }
+                                            .setNegativeButton("取消", null)
+                                            .show()
+                                    }
                                 }
                             )
 
@@ -367,6 +397,7 @@ fun ArticleScreen(
                             isReverse = isReverse,
                             showOpOnly = showOpOnly,
                             filterSpam = filterSpam,
+                            searchKeyword = searchKeyword,
                             onScrollStateChanged = { show -> showBackToTop = show },
                             onReady = { rv -> recyclerView = rv }
                         )
