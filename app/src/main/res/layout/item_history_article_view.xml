@@ -8,8 +8,8 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
-    android:layout_marginTop="4dp"
-    android:layout_marginBottom="4dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
@@ -21,41 +21,40 @@
         android:id="@+id/favorite_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="14dp">
+        android:paddingStart="16dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="14dp">
 
         <TextView
             android:id="@+id/title_text_view"
-            style="@style/TextStyle.Heading"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:ellipsize="end"
             android:fontFamily="sans-serif-medium"
-            android:lineSpacingExtra="@dimen/dp_2"
+            android:lineSpacingExtra="2dp"
             android:maxLines="2"
-            android:textSize="@dimen/sp_16"
-            android:textStyle="normal"
+            android:textColor="@color/black_effective"
+            android:textSize="15sp"
             app:layout_constraintEnd_toStartOf="@id/remove_button"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="这是一个比较长的阅读记录 文章标题，可能会超出一行" />
+            tools:text="去除升级、违规提示的迅雷 11.1.12.1692" />
 
-        <!-- 优化删除按钮：缩小尺寸，降低透明度，避免喧宾夺主 -->
         <ImageButton
             android:id="@+id/remove_button"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="删除"
-            android:padding="4dp"
             android:src="@drawable/ic_close_black_24dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="#BDBDBD" />
+            app:layout_constraintTop_toTopOf="@id/title_text_view"
+            app:tint="#CCCCCC" />
 
         <TextView
             android:id="@+id/author_text_view"
-            style="@style/TextStyle.Title.Sub"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -66,11 +65,10 @@
             app:layout_constraintEnd_toStartOf="@id/date_text_view"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/title_text_view"
-            tools:text="Author" />
+            tools:text="映梓" />
 
         <TextView
             android:id="@+id/date_text_view"
-            style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -79,7 +77,7 @@
             app:layout_constraintBottom_toBottomOf="@id/author_text_view"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/author_text_view"
-            tools:text="3 小时前" />
+            tools:text="13 分钟前" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

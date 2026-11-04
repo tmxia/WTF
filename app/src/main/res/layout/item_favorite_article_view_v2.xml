@@ -8,8 +8,8 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
-    android:layout_marginTop="4dp"
-    android:layout_marginBottom="4dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
@@ -21,28 +21,29 @@
         android:id="@+id/favoriteContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="14dp">
+        android:paddingStart="16dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="14dp">
 
         <TextView
             android:id="@+id/title_text_view"
-            style="@style/TextStyle.Heading"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:fontFamily="sans-serif-medium"
-            android:lineSpacingExtra="@dimen/dp_2"
+            android:lineSpacingExtra="2dp"
             android:maxLines="2"
-            android:textSize="@dimen/sp_16"
-            android:textStyle="normal"
+            android:textColor="@color/black_effective"
+            android:textSize="15sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="收藏文章标题" />
+            tools:text="豆包AI生图无水印成品" />
 
-        <!-- 重新排版信息区域，与首页对齐感更强 -->
+        <!-- 第二行：作者、回复数、时间 -->
         <TextView
             android:id="@+id/author_text_view"
-            style="@style/TextStyle.Title.Sub"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -57,7 +58,6 @@
 
         <TextView
             android:id="@+id/dateTime"
-            style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -68,9 +68,9 @@
             app:layout_constraintTop_toTopOf="@id/author_text_view"
             tools:text="2026-11-03" />
 
+        <!-- 第三行：标签和浏览数据 -->
         <TextView
             android:id="@+id/reply_and_view"
-            style="@style/TextStyle.Title.Sub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
@@ -82,16 +82,16 @@
 
         <TextView
             android:id="@+id/origin"
-            style="@style/TextStyle.Title.Sub"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:ellipsize="middle"
-            android:maxWidth="150dp"
-            android:singleLine="true"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textColor="#999999"
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="@id/reply_and_view"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/reply_and_view"
             app:layout_constraintTop_toTopOf="@id/reply_and_view"
             tools:text="『收藏文章』" />

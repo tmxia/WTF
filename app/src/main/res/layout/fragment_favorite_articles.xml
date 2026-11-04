@@ -12,7 +12,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clRootView"
-        android:background="@color/white"
+        android:background="@color/slight_light_gray"
         android:layout_width="match_parent"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
@@ -34,6 +34,7 @@
             app:subtitleTextColor="@color/black"
             app:titleTextAppearance="@style/Toolbar.TitleText"
             app:titleTextColor="@color/black"
+        android:background="@color/slight_light_gray"
             app:layout_constraintTop_toTopOf="parent"
             />
         <androidx.recyclerview.widget.RecyclerView
@@ -41,7 +42,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:visibility="visible"
-            android:paddingTop="@dimen/dp_4"
+            android:paddingTop="8dp"
             android:paddingBottom="@dimen/dp_8"
             android:clipToPadding="false"
             android:background="@color/slight_light_gray"
@@ -51,7 +52,7 @@
 
         <FrameLayout
             android:visibility="@{viewModel.isLoading? View.VISIBLE:View.GONE, default = gone}"
-            android:background="@color/white"
+            android:background="@color/slight_light_gray"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             app:layout_constraintStart_toStartOf="parent"

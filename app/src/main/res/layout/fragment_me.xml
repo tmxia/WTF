@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -7,254 +6,266 @@
     android:id="@+id/swipe_refresh_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@color/slight_light_gray">
 
     <RelativeLayout
-        android:orientation="vertical"
         android:id="@+id/me_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/slight_light_gray"
         android:clickable="true"
-        android:focusable="true"
-        android:background="@color/white">
+        android:focusable="true">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/me_user_info_card"
-        android:clickable="false"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="@dimen/dp_16"
-        android:layout_alignParentTop="true">
-
-        <ImageView
-            android:id="@+id/me_user_avatar"
-            android:layout_width="@dimen/dp_40"
-            android:layout_height="@dimen/dp_40"
-            android:scaleType="fitCenter"
-            android:contentDescription="@null"
-            android:background="@color/transparent"
-            app:layout_constraintTop_toTopOf="@id/me_user_name"
-            app:layout_constraintBottom_toBottomOf="@id/me_user_group"
-            app:layout_constraintStart_toStartOf="parent"
-            tools:src="@drawable/ic_noavatar_middle_gray"
-            />
-
-        <TextView
-            style="@style/TextStyle.Heading"
-            android:layout_marginStart="@dimen/dp_15"
-            android:id="@+id/me_user_name"
-            android:layout_width="wrap_content"
+        <!-- ================= 第一张大卡片：个人信息 ================= -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/me_user_info_card"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/black_effective"
-            android:textSize="@dimen/sp_16"
-            android:ellipsize="end"
-            android:maxEms="10"
-            android:hint="@string/me_tab_username_placeholder"
-            tools:text="Fabrice"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toEndOf="@id/me_user_avatar" />
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
 
-        <TextView
-            android:id="@+id/setting_btn"
-            android:layout_margin="@dimen/dp_2"
-            android:layout_width="@dimen/dp_20"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
+
+                <!-- 头像 -->
+                <ImageView
+                    android:id="@+id/me_user_avatar"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@color/transparent"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    app:layout_constraintBottom_toBottomOf="@id/me_user_group"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/me_user_name"
+                    tools:src="@drawable/ic_noavatar_middle_gray" />
+
+                <!-- 昵称 -->
+                <TextView
+                    android:id="@+id/me_user_name"
+                    style="@style/TextStyle.Heading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:ellipsize="end"
+                    android:hint="@string/me_tab_username_placeholder"
+                    android:maxEms="10"
+                    android:textColor="@color/black_effective"
+                    android:textSize="18sp"
+                    app:layout_constraintStart_toEndOf="@id/me_user_avatar"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="tmxia" />
+
+                <!-- 签到按钮 (紧贴用户组) -->
+                <TextView
+                    android:id="@+id/btn_sign_in_state"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:paddingStart="6dp"
+                    android:paddingTop="2dp"
+                    android:paddingEnd="6dp"
+                    android:paddingBottom="2dp"
+                    android:text="去签到"
+                    android:textColor="#FFFFFF"
+                    android:textSize="10sp"
+                    app:layout_constraintBottom_toBottomOf="@id/me_user_group"
+                    app:layout_constraintStart_toEndOf="@id/me_user_group"
+                    app:layout_constraintTop_toTopOf="@id/me_user_group" />
+
+                <!-- 用户组 -->
+                <TextView
+                    android:id="@+id/me_user_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:ellipsize="end"
+                    android:hint="@string/me_tab_group_placeholder"
+                    android:maxEms="10"
+                    android:textColor="@color/semi_gray"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="@id/me_user_name"
+                    app:layout_constraintTop_toBottomOf="@id/me_user_name"
+                    tools:text="锋芒初露" />
+
+                <!-- 隐藏的原始签到图片 (防崩溃保留) -->
+                <ImageView
+                    android:id="@+id/me_sign_in_state"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toTopOf="@id/me_user_name"
+                    app:layout_constraintStart_toEndOf="@id/me_user_name" />
+
+                <!-- 设置按钮 -->
+                <TextView
+                    android:id="@+id/setting_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/dp_2"
+                    android:gravity="center"
+                    android:text="@string/setting_title"
+                    android:textColor="@color/gray"
+                    android:textSize="10sp"
+                    app:drawableTopCompat="@drawable/ic_setting_light"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <!-- 积分数据组 -->
+                <androidx.constraintlayout.widget.Group
+                    android:id="@+id/icon_group"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    app:constraint_referenced_ids="me_anwser_rate,me_anwser_rate_icon, me_wuaicoin, me_coin_icon, me_credit, me_credit_icon, me_enthusiastic, me_enthusiastic_icon" />
+
+                <ImageView
+                    android:id="@+id/me_coin_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginTop="20dp"
+                    android:contentDescription="@null"
+                    android:padding="1dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_coin"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/me_user_avatar"
+                    app:tint="@color/pojie_logo" />
+
+                <TextView
+                    android:id="@+id/me_wuaicoin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:hint="@string/me_tab_placeholder"
+                    android:textColor="@color/gray"
+                    android:textSize="13sp"
+                    app:layout_constraintBottom_toBottomOf="@id/me_coin_icon"
+                    app:layout_constraintStart_toEndOf="@id/me_coin_icon"
+                    app:layout_constraintTop_toTopOf="@id/me_coin_icon"
+                    tools:text="吾爱币：1524" />
+
+                <ImageView
+                    android:id="@+id/me_credit_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@null"
+                    android:padding="3dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_credit_v2"
+                    app:layout_constraintBottom_toBottomOf="@id/me_coin_icon"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/me_coin_icon"
+                    app:tint="@color/pojie_logo" />
+
+                <TextView
+                    android:id="@+id/me_credit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:hint="@string/me_tab_placeholder"
+                    android:maxWidth="80dp"
+                    android:textColor="@color/gray"
+                    android:textSize="13sp"
+                    app:layout_constraintBottom_toBottomOf="@id/me_coin_icon"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/me_coin_icon"
+                    app:layout_constraintEnd_toStartOf="@id/me_credit_icon"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    android:layout_marginEnd="4dp"
+                    tools:text="积分：0" />
+
+                <ImageView
+                    android:id="@+id/me_anwser_rate_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginTop="12dp"
+                    android:contentDescription="@null"
+                    android:padding="1dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_anwser_rate"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/me_coin_icon"
+                    app:tint="@color/pojie_logo" />
+
+                <TextView
+                    android:id="@+id/me_anwser_rate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:hint="@string/me_tab_placeholder"
+                    android:maxWidth="80dp"
+                    android:textColor="@color/gray"
+                    android:textSize="13sp"
+                    app:layout_constraintBottom_toBottomOf="@id/me_anwser_rate_icon"
+                    app:layout_constraintStart_toEndOf="@id/me_anwser_rate_icon"
+                    app:layout_constraintTop_toTopOf="@id/me_anwser_rate_icon"
+                    tools:text="采纳率：0%" />
+
+                <ImageView
+                    android:id="@+id/me_enthusiastic_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@null"
+                    android:padding="3dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_heart"
+                    app:layout_constraintBottom_toBottomOf="@id/me_anwser_rate_icon"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/me_anwser_rate_icon"
+                    app:tint="@color/pojie_logo" />
+
+                <TextView
+                    android:id="@+id/me_enthusiastic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginEnd="4dp"
+                    android:hint="@string/me_tab_placeholder"
+                    android:textColor="@color/gray"
+                    android:textSize="13sp"
+                    app:layout_constraintBottom_toBottomOf="@id/me_anwser_rate_icon"
+                    app:layout_constraintEnd_toStartOf="@id/me_enthusiastic_icon"
+                    app:layout_constraintTop_toTopOf="@id/me_anwser_rate_icon"
+                    tools:text="热心值：0点" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ================= 第二张大卡片：功能入口（帖子/收藏等） ================= -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/me_actions_card"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="@string/setting_title"
-            android:textSize="@dimen/sp_8"
-            android:textColor="@color/gray"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:drawableTopCompat="@drawable/ic_setting_light" />
+            android:layout_below="@id/me_user_info_card"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="16dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
 
-        <ImageView
-            android:id="@+id/me_sign_in_state"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_marginStart="@dimen/dp_10"
-            android:layout_marginTop="@dimen/dp_2"
-            android:scaleType="fitCenter"
-            android:padding="@dimen/dp_4"
-            android:contentDescription="@null"
-            app:layout_constraintBottom_toBottomOf="@id/me_user_name"
-            app:layout_constraintStart_toEndOf="@id/me_user_name"
-            app:layout_constraintTop_toTopOf="@id/me_user_name" />
-        <TextView
-            android:layout_marginTop="@dimen/dp_5"
-            android:id="@+id/me_user_group"
-            android:layout_width="wrap_content"
+            <include
+                android:id="@+id/cardview_me_notifications"
+                layout="@layout/cardview_me_notifications"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ================= 子页面容器 ================= -->
+        <FrameLayout
+            android:id="@+id/child_root"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/semi_gray"
-            android:textSize="@dimen/sp_14"
-            android:maxEms="10"
-            android:ellipsize="end"
-            android:hint="@string/me_tab_group_placeholder"
-            tools:text="锋芒毕露"
-            app:layout_constraintTop_toBottomOf="@id/me_user_name"
-            app:layout_constraintStart_toStartOf="@id/me_user_name"
-            />
-        <androidx.constraintlayout.widget.Group
-            android:id="@+id/icon_group"
-            android:layout_width="@dimen/dp_0"
-            android:layout_height="@dimen/dp_0"
-            app:constraint_referenced_ids="me_anwser_rate,me_anwser_rate_icon, me_wuaicoin, me_coin_icon, me_credit, me_credit_icon, me_enthusiastic, me_enthusiastic_icon"
-            />
-
-        <ImageView
-            android:padding="@dimen/dp_1"
-            android:id="@+id/me_coin_icon"
-            android:layout_width="@dimen/dp_20"
-            android:layout_height="@dimen/dp_20"
-            android:scaleType="fitCenter"
-            android:layout_marginTop="@dimen/dp_15"
-            android:src="@drawable/ic_coin"
-            app:layout_constraintTop_toBottomOf="@id/me_user_avatar"
-            app:layout_constraintStart_toStartOf="@id/me_user_avatar"
-            app:tint="@color/pojie_logo"
-            android:contentDescription="@null" />
-
-        <TextView
-            android:gravity="center_vertical|start"
-            android:id="@+id/me_wuaicoin"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_marginStart="@dimen/dp_8"
-            android:textColor="@color/gray"
-            android:textSize="@dimen/sp_12"
-            android:hint="@string/me_tab_placeholder"
-            tools:text="吾爱币：1115CB"
-            app:layout_constraintTop_toTopOf="@id/me_coin_icon"
-            app:layout_constraintBottom_toBottomOf="@id/me_coin_icon"
-            app:layout_constraintStart_toEndOf="@id/me_coin_icon"
-            />
-
-        <ImageView
-            android:padding="@dimen/dp_3"
-            android:id="@+id/me_credit_icon"
-            android:layout_width="@dimen/dp_20"
-            android:layout_height="@dimen/dp_20"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_credit_v2"
-            android:layout_marginStart="@dimen/dp_130"
-            app:layout_constraintTop_toTopOf="@id/me_coin_icon"
-            app:layout_constraintBottom_toBottomOf="@id/me_coin_icon"
-            app:layout_constraintStart_toEndOf="@id/me_coin_icon"
-            app:tint="@color/pojie_logo"
-            android:contentDescription="@null" />
-
-
-        <TextView
-            android:gravity="center_vertical|start"
-            android:id="@+id/me_credit"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:textColor="@color/gray"
-            android:textSize="@dimen/sp_12"
-            android:maxWidth="@dimen/dp_80"
-            android:layout_marginStart="@dimen/dp_8"
-            android:hint="@string/me_tab_placeholder"
-            tools:text="积分：10"
-            app:layout_constraintTop_toTopOf="@id/me_coin_icon"
-            app:layout_constraintBottom_toBottomOf="@id/me_coin_icon"
-            app:layout_constraintStart_toEndOf="@id/me_credit_icon"
-            />
-
-        <ImageView
-            android:padding="@dimen/dp_1"
-            android:id="@+id/me_anwser_rate_icon"
-            android:layout_width="@dimen/dp_20"
-            android:layout_height="@dimen/dp_20"
-            android:scaleType="fitCenter"
-            android:layout_marginTop="@dimen/dp_15"
-            android:src="@drawable/ic_anwser_rate"
-            app:layout_constraintTop_toBottomOf="@id/me_coin_icon"
-            app:layout_constraintStart_toStartOf="@id/me_coin_icon"
-            app:tint="@color/pojie_logo"
-            android:contentDescription="@null" />
-
-        <TextView
-            android:gravity="center_vertical|start"
-            android:id="@+id/me_anwser_rate"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:textColor="@color/gray"
-            android:textSize="@dimen/sp_12"
-            android:maxWidth="@dimen/dp_80"
-            android:layout_marginStart="@dimen/dp_8"
-            android:hint="@string/me_tab_placeholder"
-            tools:text="采纳率：10%"
-            app:layout_constraintTop_toTopOf="@id/me_anwser_rate_icon"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/me_anwser_rate_icon"
-            />
-
-        <ImageView
-            android:padding="@dimen/dp_3"
-            android:id="@+id/me_enthusiastic_icon"
-            android:layout_width="@dimen/dp_20"
-            android:layout_height="@dimen/dp_20"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_heart"
-            android:layout_marginStart="@dimen/dp_130"
-            app:layout_constraintTop_toTopOf="@id/me_anwser_rate_icon"
-            app:layout_constraintBottom_toBottomOf="@id/me_anwser_rate_icon"
-            app:layout_constraintStart_toEndOf="@id/me_anwser_rate_icon"
-            app:tint="@color/pojie_logo"
-            android:contentDescription="@null" />
-
-
-        <TextView
-            android:gravity="center_vertical|start"
-            android:id="@+id/me_enthusiastic"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:textColor="@color/gray"
-            android:textSize="@dimen/sp_12"
-            android:layout_marginStart="@dimen/dp_8"
-            android:hint="@string/me_tab_placeholder"
-            tools:text="热心值：100点"
-            app:layout_constraintTop_toTopOf="@id/me_enthusiastic_icon"
-            app:layout_constraintBottom_toBottomOf="@id/me_enthusiastic_icon"
-            app:layout_constraintStart_toEndOf="@id/me_enthusiastic_icon"
-            />
-
-
-    
-        
-
-
-        <TextView
-            android:id="@+id/btn_sign_in_state"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:text="去签到"
-            android:textColor="#FFFFFF"
-            android:textSize="10sp"
-            app:layout_constraintStart_toEndOf="@id/me_user_group"
-            app:layout_constraintTop_toTopOf="@id/me_user_group"
-            app:layout_constraintBottom_toBottomOf="@id/me_user_group" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
-
-    <include
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dp_10"
-        android:layout_below="@id/me_user_info_card"
-        android:id="@+id/cardview_me_notifications"
-        layout="@layout/cardview_me_notifications"/>
-
-    <FrameLayout
-        android:id="@+id/child_root"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/cardview_me_notifications"
-        />
+            android:layout_below="@id/me_actions_card" />
 
     </RelativeLayout>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
