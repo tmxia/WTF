@@ -134,23 +134,24 @@ class SettingActivity : TopActivity() {
                 mViewModel.scheduleJob(isChecked) 
             }
 
-            // 读取是否显示提示的配置
-            val prefs = getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
-            switchShowSignInToast.isChecked = prefs.getBoolean("show_sign_in_toast", true)
+            // 读取是否显示提示的配置（解决变量名冲突）
+            val signPrefs = getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
+            switchShowSignInToast.isChecked = signPrefs.getBoolean("show_sign_in_toast", true)
             switchShowSignInToast.setOnCheckedChangeListener { _, isChecked ->
-                prefs.edit().putBoolean("show_sign_in_toast", isChecked).apply()
+                signPrefs.edit().putBoolean("show_sign_in_toast", isChecked).apply()
             }
 
             // 绑定手动签到按钮
             btnManualSignIn.setOnClickListener {
                 btnManualSignIn.isEnabled = false
                 btnManualSignIn.text = "正在签到..."
-                SignInManager.performSignIn(this) { success, msg ->
+                // 解决 this 上下文报错，显式指明为 Activity
+                SignInManager.performSignIn(this@SettingActivity) { success, msg ->
                     runOnUiThread {
                         btnManualSignIn.isEnabled = true
                         btnManualSignIn.text = "立即手动签到"
                         if (switchShowSignInToast.isChecked) {
-                            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@SettingActivity, msg, Toast.LENGTH_SHORT).show()
                         }
                     }
                 }

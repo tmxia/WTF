@@ -45,7 +45,7 @@ class LCGApp : Application() {
             }
             delay(2000)
             try {
-                SignInWorker.sendSignInRequest()
+                // SignInWorker.sendSignInRequest() // 已废弃，由 WorkManager 接管
             } catch (e: Exception) {
                 Timber.e(e)
             }
