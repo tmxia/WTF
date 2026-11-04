@@ -26,6 +26,7 @@ fun ComposeRecyclerViewBridge(
     val posts by viewModel.posts.observeAsState(initial = emptyList<Post>())
     val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
 
+    // 原汁原味的过滤逻辑，不加任何全屏遮罩，防止跳闪
     AndroidView(
         modifier = modifier,
         factory = { context ->
@@ -54,7 +55,7 @@ fun ComposeRecyclerViewBridge(
                 } else {
                     posts
                 }
-                
+
                 if (filterSpam) {
                     filteredPosts = filteredPosts.filter { post ->
                         val plainText = post.content?.replace(Regex("<[^>]*>"), "")?.trim() ?: ""
@@ -63,8 +64,11 @@ fun ComposeRecyclerViewBridge(
                 }
 
                 if (searchKeyword.isNotBlank()) {
+                    // 核心修复：彻底剥离 HTML 标签，并且忽略大小写
+                    val cleanKeyword = searchKeyword.trim()
                     filteredPosts = filteredPosts.filter { post ->
-                        post.content?.contains(searchKeyword, ignoreCase = true) == true
+                        val plainText = org.jsoup.Jsoup.parse(post.content ?: "").text()
+                        plainText.contains(cleanKeyword, ignoreCase = true)
                     }
                 }
 
@@ -74,6 +78,7 @@ fun ComposeRecyclerViewBridge(
                     filteredPosts
                 }
 
+                // 直接将数据传给 Adapter，利用它自己的空视图，绝不手动干预，防止屏幕跳闪
                 adapter.setData(displayPosts, hasMore)
             }
         }
