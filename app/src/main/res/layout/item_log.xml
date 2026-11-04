@@ -18,15 +18,16 @@
             android:id="@+id/tv_log_header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#888888"
-            android:textSize="12sp" />
+            android:textColor="#999999"
+            android:textSize="11sp" />
 
         <TextView
             android:id="@+id/tv_log_message"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textColor="@color/black"
+            android:layout_marginTop="6dp"
+            android:lineSpacingExtra="2dp"
+            android:textColor="@color/black_effective"
             android:textSize="13sp" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

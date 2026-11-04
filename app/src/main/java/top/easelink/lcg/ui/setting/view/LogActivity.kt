@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -21,6 +22,7 @@ import java.io.File
 class LogActivity : AppCompatActivity() {
 
     private lateinit var adapter: LogAdapter
+    private lateinit var tvEmpty: TextView
     private var allLogs: List<LogItem> = emptyList()
     private var currentFilter = 0 // 0=全部, 1=Info, 2=Error
 
@@ -29,8 +31,11 @@ class LogActivity : AppCompatActivity() {
         setContentView(R.layout.activity_log)
 
         val toolbar = findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.log_toolbar)
-        toolbar.setNavigationOnClickListener { finish() }
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setHomeButtonEnabled(true)
 
+        tvEmpty = findViewById(R.id.tv_empty)
         adapter = LogAdapter()
         val recycler = findViewById<RecyclerView>(R.id.recycler_logs)
         recycler.layoutManager = LinearLayoutManager(this)
@@ -48,21 +53,27 @@ class LogActivity : AppCompatActivity() {
             applyFilter()
         }
 
-        findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_export_log).setOnClickListener {
+        findViewById<TextView>(R.id.btn_export_log).setOnClickListener {
             val logText = AppLogManager.exportLogs()
             if (logText.isBlank()) {
                 Toast.makeText(this, "没有日志可导出", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            // 导出到本地并复制到剪贴板（免去文件权限烦恼）
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.setPrimaryClip(ClipData.newPlainText("AppLogs", logText))
             
-            // 同时写入文件
             val file = File(getExternalFilesDir(null), "wtf_debug_log.txt")
             file.writeText(logText)
             Toast.makeText(this, "已复制到剪贴板，并保存至:\n${file.absolutePath}", Toast.LENGTH_LONG).show()
         }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            finish()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     private fun applyFilter() {
@@ -74,6 +85,13 @@ class LogActivity : AppCompatActivity() {
             }
         }
         adapter.submit(filtered)
+        
+        // 处理空状态展示
+        if (filtered.isEmpty()) {
+            tvEmpty.visibility = View.VISIBLE
+        } else {
+            tvEmpty.visibility = View.GONE
+        }
     }
 
     inner class LogAdapter : RecyclerView.Adapter<LogAdapter.ViewHolder>() {
