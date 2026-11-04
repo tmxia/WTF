@@ -102,7 +102,7 @@ object QuickReplyHelper {
         container.addView(addBtn)
     }
 
-    // 用纯手工打造的极简弹窗，拒绝任何原生丑样式
+    // 限制宽度的纯手工极简弹窗
     private fun showEditDeleteDialog(context: Context, index: Int, phrase: String, onUpdated: () -> Unit) {
         val items = if (index == -1) arrayOf("新增短语") else arrayOf("编辑短语", "删除短语")
         val titleStr = if (index == -1) "新增快捷短语" else "操作: $phrase"
@@ -112,7 +112,6 @@ object QuickReplyHelper {
 
         val density = context.resources.displayMetrics.density
         
-        // 核心：外层套一个 Material 大圆角卡片
         val card = MaterialCardView(context).apply {
             radius = 16f * density
             setCardBackgroundColor(Color.WHITE)
@@ -122,7 +121,6 @@ object QuickReplyHelper {
 
         val layout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            // 大幅缩小内边距
             setPadding((20 * density).toInt(), (16 * density).toInt(), (20 * density).toInt(), (12 * density).toInt())
         }
 
@@ -139,7 +137,6 @@ object QuickReplyHelper {
                 text = item
                 textSize = 14f
                 setTextColor(Color.parseColor("#666666"))
-                // 减小选项的上下间距
                 setPadding(0, (12 * density).toInt(), 0, (12 * density).toInt())
                 setOnClickListener {
                     dialog.dismiss()
@@ -158,7 +155,8 @@ object QuickReplyHelper {
         card.addView(layout)
         dialog.setView(card)
         dialog.show()
-        // 核心修复：限制宽度为屏幕的 75% 或 280dp，让弹窗更精致
+        
+        // 核心修复：限制宽度为屏幕的 75% 或 280dp
         val width = (280 * density).toInt()
         dialog.window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
     }
@@ -192,7 +190,6 @@ object QuickReplyHelper {
             hint = "输入快捷短语"
             boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
             setBoxCornerRadii(8f * density, 8f * density, 8f * density, 8f * density)
-            // 减小输入框上方的空白
             setPadding(0, 0, 0, 0)
         }
 
@@ -201,7 +198,6 @@ object QuickReplyHelper {
             setSelection(text.length)
             setBackgroundColor(Color.TRANSPARENT)
             inputType = InputType.TYPE_CLASS_TEXT
-            // 缩小输入框内部间距，降低高度
             val pad = (10 * density).toInt()
             setPadding(pad, pad, pad, pad)
         }
@@ -211,7 +207,6 @@ object QuickReplyHelper {
         val btnLayout = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.END
-            // 减小按钮栏的顶部间距
             setPadding(0, (8 * density).toInt(), 0, 0)
         }
 
@@ -246,7 +241,8 @@ object QuickReplyHelper {
         card.addView(layout)
         dialog.setView(card)
         dialog.show()
-        // 核心修复：限制宽度为屏幕的 75% 或 280dp
+        
+        // 核心修复：限制宽度
         val width = (280 * density).toInt()
         dialog.window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
     }

@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
-    android:layout_marginBottom="8dp"
+    android:layout_marginBottom="16dp"
     app:cardBackgroundColor="@color/white"
     app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
@@ -21,20 +21,21 @@
             android:id="@+id/reply_to"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@string/reply_post_dialog_title"
             android:textColor="@color/black"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- 快捷回复短语栏 -->
+        <!-- 快捷短语区域 -->
         <LinearLayout
             android:id="@+id/quick_reply_section"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:orientation="vertical"
-            app:layout_constraintTop_toBottomOf="@id/reply_to">
+            app:layout_constraintTop_toBottomOf="@id/comment_title">
 
             <LinearLayout
                 android:id="@+id/quick_reply_header"
@@ -80,42 +81,43 @@
             </HorizontalScrollView>
         </LinearLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/reply_content_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        <!-- 完美输入框区域：放弃 TextInputLayout，改用卡片包裹 EditText，杜绝一切挖空Bug -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/input_bg_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:boxBackgroundColor="#F5F5F5"
-            app:boxCornerRadiusBottomEnd="8dp"
-            app:boxCornerRadiusBottomStart="8dp"
-            app:boxCornerRadiusTopEnd="8dp"
-            app:boxCornerRadiusTopStart="8dp"
-            app:boxStrokeColor="@color/pojie_logo"
-            app:boxStrokeWidth="0dp"
-            app:boxStrokeWidthFocused="1dp"
-            app:hintEnabled="true"
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="#F5F5F5"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/pojie_logo"
             app:layout_constraintTop_toBottomOf="@id/quick_reply_section">
 
-            <com.google.android.material.textfield.TextInputEditText
+            <EditText
                 android:id="@+id/reply_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
                 android:gravity="top|start"
-                android:paddingTop="14dp"
-                android:paddingBottom="14dp"
+                android:padding="14dp"
                 android:hint="@string/reply_post_input_hint"
                 android:inputType="textMultiLine"
                 android:maxLines="6"
-                android:minLines="2" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:minLines="2"
+                android:textColor="@color/black"
+                android:textColorHint="#999999"
+                android:textSize="15sp" />
+        </com.google.android.material.card.MaterialCardView>
 
+        <!-- 底部按钮 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:gravity="end"
             android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/reply_content_layout">
+            app:layout_constraintTop_toBottomOf="@id/input_bg_card">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_cancel"
