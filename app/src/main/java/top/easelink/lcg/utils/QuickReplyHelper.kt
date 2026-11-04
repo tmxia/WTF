@@ -158,6 +158,9 @@ object QuickReplyHelper {
         card.addView(layout)
         dialog.setView(card)
         dialog.show()
+        // 核心修复：限制宽度为屏幕的 75% 或 280dp，让弹窗更精致
+        val width = (280 * density).toInt()
+        dialog.window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 
     private fun showInputDialog(context: Context, index: Int, phrase: String, onUpdated: () -> Unit) {
@@ -243,5 +246,8 @@ object QuickReplyHelper {
         card.addView(layout)
         dialog.setView(card)
         dialog.show()
+        // 核心修复：限制宽度为屏幕的 75% 或 280dp
+        val width = (280 * density).toInt()
+        dialog.window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 }

@@ -69,19 +69,9 @@ class CommentArticleDialog : TopDialog() {
     }
 
     private fun setupUI() {
-        val bgDrawable = android.graphics.drawable.GradientDrawable().apply {
-            setColor(android.graphics.Color.WHITE)
-            cornerRadius = 32f
-        }
-        binding.root.background = bgDrawable
-        binding.root.setPadding(48, 48, 48, 48)
+        
 
-        val editBg = android.graphics.drawable.GradientDrawable().apply {
-            setColor(android.graphics.Color.parseColor("#F5F5F5"))
-            cornerRadius = 16f
-        }
-        binding.replyContent.background = editBg
-        binding.replyContent.setPadding(32, 32, 32, 32)
+        
 
         
         val prefs = requireContext().getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
