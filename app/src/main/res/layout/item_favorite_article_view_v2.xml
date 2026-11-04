@@ -8,8 +8,8 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
-    android:layout_marginTop="6dp"
-    android:layout_marginBottom="6dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
@@ -21,65 +21,52 @@
         android:id="@+id/favoriteContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingTop="14dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="14dp">
+        android:paddingStart="14dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="12dp">
 
-        <!-- 第一行：左边是作者（或原版标签），右边是时间，完美隔离不乱跑 -->
-        <TextView
-            android:id="@+id/author_text_view"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="#666666"
-            android:textSize="13sp"
-            app:layout_constraintEnd_toStartOf="@id/dateTime"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="收藏作者" />
-
-        <TextView
-            android:id="@+id/dateTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:textColor="#999999"
-            android:textSize="11sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="2026-11-03 02:31:03" />
-
-        <!-- 第二行：大标题 -->
+        <!-- 1. 第一行：标题，占据顶部首要位置，彻底杜绝与时间重叠 -->
         <TextView
             android:id="@+id/title_text_view"
             style="@style/TextStyle.Heading"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="9dp"
             android:ellipsize="end"
             android:fontFamily="sans-serif-medium"
-            android:lineSpacingExtra="2dp"
             android:maxLines="2"
             android:textColor="@color/black_effective"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:textStyle="normal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/author_text_view"
+            app:layout_constraintTop_toTopOf="parent"
             tools:text="豆包AI生图无水印成品" />
 
-        <!-- 第三行：回复浏览数、来源标签 -->
+        <!-- 2. 第二行：作者、浏览数据、来源、时间，全部沉底、依次水平排列 -->
         <TextView
-            android:id="@+id/reply_and_view"
+            android:id="@+id/author_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="11dp"
+            android:layout_marginTop="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textColor="#999999"
             android:textSize="12sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/title_text_view"
+            tools:text="收藏作者" />
+
+        <TextView
+            android:id="@+id/reply_and_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textColor="#999999"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="@id/author_text_view"
+            app:layout_constraintStart_toEndOf="@id/author_text_view"
+            app:layout_constraintTop_toTopOf="@id/author_text_view"
             tools:text="0 / 0" />
 
         <TextView
@@ -91,11 +78,24 @@
             android:maxLines="1"
             android:textColor="#999999"
             android:textSize="12sp"
-            app:layout_constraintBottom_toBottomOf="@id/reply_and_view"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/author_text_view"
+            app:layout_constraintEnd_toStartOf="@id/dateTime"
             app:layout_constraintStart_toEndOf="@id/reply_and_view"
-            app:layout_constraintTop_toTopOf="@id/reply_and_view"
+            app:layout_constraintTop_toTopOf="@id/author_text_view"
             tools:text="『收藏文章』" />
+
+        <!-- 时间固定在最右侧 -->
+        <TextView
+            android:id="@+id/dateTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textColor="#999999"
+            android:textSize="11sp"
+            app:layout_constraintBottom_toBottomOf="@id/author_text_view"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/author_text_view"
+            tools:text="2026-11-03" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
