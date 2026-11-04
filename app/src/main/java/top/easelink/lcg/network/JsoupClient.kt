@@ -4,6 +4,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+
+import android.annotation.SuppressLint
+import android.os.Handler
+import android.os.Looper
+import android.webkit.CookieManager
+import android.webkit.WebView
+import android.webkit.WebViewClient
+
 import org.greenrobot.eventbus.EventBus
 import org.jsoup.Connection
 import org.jsoup.Jsoup
@@ -202,10 +210,53 @@ object JsoupClient : ApiRequest {
             messageText.take(120)
         )
         if (sessionExpiredFiredOnce.compareAndSet(false, true)) {
-            UserDataRepo.clearAll()
-            EventBus.getDefault().post(SessionExpiredEvent())
+            // ================= 核心修复：风控静默自愈 =================
+            Timber.w("检测到风控拦截，启动静默 WebView 刷新 Cookie...")
+            refreshCookieSilently {
+                // 刷新完毕后，重置标记，允许下一次请求重试
+                resetSessionExpiredFlag()
+            }
+            // ==========================================================
         }
     }
 
     private const val SESSION_EXPIRED_MARKER = "您需要先登录才能继续"
+
+    // ================= 移植自终极防封逻辑：静默过盾 =================
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun refreshCookieSilently(onComplete: () -> Unit) {
+        Handler(Looper.getMainLooper()).post {
+            try {
+                val webView = WebView(LCGApp.context).apply {
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    settings.userAgentString = getDeviceUserAgent(LCGApp.context)
+                    CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                    // 注入已有的 Cookie，让 WebView 携带旧凭证去过盾
+                    val currentCookies = getCookiesFor(SERVER_BASE_URL)
+                    val cookieStr = currentCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
+                    CookieManager.getInstance().setCookie(SERVER_BASE_URL, cookieStr)
+
+                    webViewClient = object : WebViewClient() {
+                        override fun onPageFinished(view: WebView?, url: String?) {
+                            super.onPageFinished(view, url)
+                            if (url?.contains(WebsiteConstant.SERVER_HOST) == true) {
+                                // 网页加载完毕，JS 挑战已经执行完，立即提取最新 Cookie
+                                LCGCookieJar.syncFromWebView(SERVER_BASE_URL)
+                                Timber.d("静默过盾完成，已同步最新 Cookie 到 JsoupClient")
+                                view?.destroy()
+                                onComplete()
+                            }
+                        }
+                    }
+                    loadUrl(SERVER_BASE_URL)
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "静默刷新 WebView 异常")
+                onComplete() // 失败也要回调，防止死锁
+            }
+        }
+    }
+    // ==========================================================
+
 }
