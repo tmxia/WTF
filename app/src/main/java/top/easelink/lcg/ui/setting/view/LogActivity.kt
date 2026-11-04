@@ -98,16 +98,30 @@ class LogActivity : AppCompatActivity() {
         }
         val fullText = "[${item.time}] $levelStr/${item.tag}\n\n${item.message}"
 
-        MaterialAlertDialogBuilder(this)
-            .setTitle("日志详情")
-            .setMessage(fullText)
-            .setPositiveButton("复制") { _, _ ->
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("LogDetail", fullText))
-                Toast.makeText(this, "已复制该条日志", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("关闭", null)
-            .show()
+        // 核心修复：使用自定义的圆角布局
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_log_detail, null)
+        val dialog = android.app.AlertDialog.Builder(this).create()
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        dialog.setView(dialogView)
+        dialog.show()
+
+        // 限制弹窗宽度
+        val density = resources.displayMetrics.density
+        dialog.window?.setLayout((300 * density).toInt(), android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+
+        val tvContent = dialogView.findViewById<TextView>(R.id.tv_dialog_log_content)
+        tvContent.text = fullText
+
+        dialogView.findViewById<View>(R.id.btn_dialog_close).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<View>(R.id.btn_dialog_copy).setOnClickListener {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("LogDetail", fullText))
+            Toast.makeText(this, "已复制该条日志", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
     }
 
     inner class LogAdapter : RecyclerView.Adapter<LogAdapter.ViewHolder>() {

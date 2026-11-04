@@ -134,7 +134,7 @@ class SettingActivity : TopActivity() {
                 AppLogManager.isCollecting = isChecked
                 if (isChecked) {
                     AppLogManager.clearLogs()
-                    Timber.d("调试模式已开启，开始捕获日志")
+                    // Timber.d("调试模式已开启，开始捕获日志")
                 }
             }
 
