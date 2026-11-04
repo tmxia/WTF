@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
@@ -77,6 +78,9 @@ class ArticleFragment : Fragment(), ControllableFragment {
         
         
         val composeView = ComposeView(context).apply {
+            setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 
                 ViewGroup.LayoutParams.MATCH_PARENT

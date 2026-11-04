@@ -29,6 +29,8 @@ fun ComposeRecyclerViewBridge(
         modifier = modifier,
         factory = { context ->
             RecyclerView(context).apply {
+                setBackgroundColor(android.graphics.Color.TRANSPARENT)
+
                 layoutManager = LinearLayoutManager(context)
                 setPadding(0, 0, 0, 0)
                 clipToPadding = false
