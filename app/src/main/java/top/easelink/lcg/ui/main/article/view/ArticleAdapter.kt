@@ -212,7 +212,7 @@ class ArticleAdapter(
         private var post: Post? = null
         private val htmlHttpImageGetter: Html.ImageGetter = HtmlCoilImageGetter(binding.root.context, binding.contentTextView, mFragment)
         private val postGestureDetector = GestureDetector(binding.root.context, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onLongPress(e: MotionEvent?) {
+            override fun onLongPress(e: MotionEvent) {
                 val pos = bindingAdapterPosition
                 if (pos != RecyclerView.NO_POSITION) {
                     val p = mPostList.getOrNull(pos)
@@ -348,7 +348,7 @@ class ArticleAdapter(
 
         private var post: Post? = null
         private val replyGestureDetector = GestureDetector(binding.root.context, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onLongPress(e: MotionEvent?) {
+            override fun onLongPress(e: MotionEvent) {
                 val pos = bindingAdapterPosition
                 if (pos != RecyclerView.NO_POSITION) {
                     val p = mPostList.getOrNull(pos)
