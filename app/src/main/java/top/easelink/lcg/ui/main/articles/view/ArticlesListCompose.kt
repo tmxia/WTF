@@ -62,6 +62,12 @@ fun ForumArticlesScreen(
     }
     
     val pagerState = rememberPagerState(pageCount = { displayTabs.size })
+    
+        // 核心修复：在组件首次挂载时，强制请求一次全部数据
+        LaunchedEffect(Unit) {
+            onTabSelected("")
+        }
+        
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(pagerState.currentPage) {

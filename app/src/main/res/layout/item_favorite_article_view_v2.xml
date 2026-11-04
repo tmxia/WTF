@@ -8,8 +8,8 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
-    android:layout_marginTop="4dp"
-    android:layout_marginBottom="4dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
@@ -21,9 +21,12 @@
         android:id="@+id/favoriteContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="14dp">
+        android:paddingStart="16dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="14dp">
 
-        <!-- 第一行：作者、时间 -->
+        <!-- 第一行：左边是作者（或原版标签），右边是时间，完美隔离不乱跑 -->
         <TextView
             android:id="@+id/author_text_view"
             android:layout_width="0dp"
@@ -44,10 +47,9 @@
             android:layout_marginStart="8dp"
             android:textColor="#999999"
             android:textSize="11sp"
-            app:layout_constraintBottom_toBottomOf="@id/author_text_view"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/author_text_view"
-            tools:text="2026-11-03" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="2026-11-03 02:31:03" />
 
         <!-- 第二行：大标题 -->
         <TextView
@@ -68,7 +70,7 @@
             app:layout_constraintTop_toBottomOf="@id/author_text_view"
             tools:text="豆包AI生图无水印成品" />
 
-        <!-- 第三行：数据、标签 -->
+        <!-- 第三行：回复浏览数、来源标签 -->
         <TextView
             android:id="@+id/reply_and_view"
             android:layout_width="wrap_content"
