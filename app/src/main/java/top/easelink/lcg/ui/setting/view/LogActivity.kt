@@ -134,14 +134,15 @@ class LogActivity : AppCompatActivity() {
             holder.tvHeader.text = "[${item.time}] $levelStr/${item.tag}"
             holder.tvMessage.text = item.message
             holder.itemView.setOnClickListener {
-                val intent = android.content.Intent(context, LogDetailActivity::class.java).apply {
+                val ctx = holder.itemView.context
+                val intent = android.content.Intent(ctx, LogDetailActivity::class.java).apply {
                     putExtra("time", item.time)
                     putExtra("level", item.level)
                     putExtra("tag", item.tag)
                     putExtra("message", item.message)
                     putExtra("stack", item.stackTrace)
                 }
-                context.startActivity(intent)
+                ctx.startActivity(intent)
             }
         }
 
