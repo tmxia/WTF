@@ -154,7 +154,7 @@ class MeFragment : TopFragment(), ControllableFragment {
         SignInManager.performSignIn(requireContext()) { success, msg ->
             requireActivity().runOnUiThread {
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                if (success) {
+                if (success == "SUCCESS" || success == "ALREADY_DONE") {
                     val sp = SharedPreferencesHelper.getUserSp()
                     sp.edit().putLong("sp_key_last_sign_in_at", System.currentTimeMillis()).apply()
                 }
