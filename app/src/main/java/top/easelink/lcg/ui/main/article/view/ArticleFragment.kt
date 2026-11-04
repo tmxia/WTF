@@ -199,6 +199,8 @@ fun ArticleScreen(
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
+                modifier = Modifier.background(Color.White)
+                        ) {
                 DropdownMenuItem(
                     leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                     text = { Text(if (showOpOnly) "显示全部帖子" else "只看楼主", fontSize = 14.sp, color = Color.DarkGray) },
@@ -218,8 +220,7 @@ fun ArticleScreen(
                         android.widget.Toast.makeText(context, "链接已复制", android.widget.Toast.LENGTH_SHORT).show()
                     }
                 )
-                            modifier = Modifier.background(Color.White)
-                        ) {
+                
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.List, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text(if (isReverse) "顺序显示" else "倒序显示", fontSize = 14.sp, color = Color.DarkGray) },
