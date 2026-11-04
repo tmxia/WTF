@@ -121,11 +121,10 @@ class MeFragment : TopFragment(), ControllableFragment {
 
     private fun updateSignInButton() {
         if (!UserDataRepo.isLoggedIn) {
-            binding.btnSignInState.text = "请先登录"
-            binding.btnSignInState.setTextColor(android.graphics.Color.parseColor("#999999"))
-            binding.btnSignInState.isEnabled = false
+            binding.btnSignInState.visibility = android.view.View.GONE
             return
         }
+        binding.btnSignInState.visibility = android.view.View.VISIBLE
 
         val sp = SharedPreferencesHelper.getUserSp()
         val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)
@@ -137,15 +136,21 @@ class MeFragment : TopFragment(), ControllableFragment {
             set(java.util.Calendar.MILLISECOND, 0)
         }.timeInMillis
         
+        // 动态绘制圆角背景 (8dp 圆角，非常圆润)
+        val bgDrawable = android.graphics.drawable.GradientDrawable().apply {
+            cornerRadius = 8f * resources.displayMetrics.density
+        }
+
         if (lastTime >= todayStart) {
-            binding.btnSignInState.text = "✅ 今日已签到"
-            binding.btnSignInState.setTextColor(android.graphics.Color.parseColor("#4CAF50")) // 绿色
+            binding.btnSignInState.text = "✅ 已签到"
+            bgDrawable.setColor(android.graphics.Color.parseColor("#4CAF50")) // 绿色背景
             binding.btnSignInState.isEnabled = false
         } else {
-            binding.btnSignInState.text = "🔥 立即签到"
-            binding.btnSignInState.setTextColor(android.graphics.Color.parseColor("#E53935")) // 红色
+            binding.btnSignInState.text = "🔥 未签到，点我"
+            bgDrawable.setColor(android.graphics.Color.parseColor("#E53935")) // 红色背景
             binding.btnSignInState.isEnabled = true
         }
+        binding.btnSignInState.background = bgDrawable
     }
 
     private fun performManualSignIn() {
