@@ -63,9 +63,22 @@ class LogActivity : AppCompatActivity() {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.setPrimaryClip(ClipData.newPlainText("AppLogs", logText))
             
-            val file = File(getExternalFilesDir(null), "wtf_debug_log.txt")
-            file.writeText(logText)
-            Toast.makeText(this, "已复制到剪贴板，并保存至:\n${file.absolutePath}", Toast.LENGTH_LONG).show()
+            // 核心修复：导出到系统的 Download 公共目录
+            try {
+                val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                if (!downloadsDir.exists()) {
+                    downloadsDir.mkdirs()
+                }
+                val fileName = "WTF_Log_${System.currentTimeMillis()}.txt"
+                val file = File(downloadsDir, fileName)
+                file.writeText(logText)
+                Toast.makeText(this, "已复制到剪贴板\n并保存至：Download/$fileName", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                // 兜底（比如某些系统权限问题）
+                val fallbackFile = File(getExternalFilesDir(null), "wtf_debug_log.txt")
+                fallbackFile.writeText(logText)
+                Toast.makeText(this, "系统目录不可写，已保存至：\n${fallbackFile.absolutePath}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
