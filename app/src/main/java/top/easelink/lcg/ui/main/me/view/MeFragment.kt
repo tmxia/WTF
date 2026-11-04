@@ -258,12 +258,13 @@ fun MeScreenContent(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            InfoRow(icon = R.drawable.ic_coin, text = "吾爱币 : ${userInfo?.wuaiCoin ?: "0"}")
-                            InfoRow(icon = R.drawable.ic_anwser_rate, text = "采纳率 : ${userInfo?.answerRate ?: "0"} %")
+                            // 直接使用 API 返回的完整字符串，避免重复拼接
+                            InfoRow(icon = R.drawable.ic_coin, text = userInfo?.wuaiCoin ?: "吾爱币 : 0")
+                            InfoRow(icon = R.drawable.ic_anwser_rate, text = userInfo?.answerRate ?: "采纳率 : 0 %")
                         }
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            InfoRow(icon = R.drawable.ic_credit_v2, text = "积分 : ${userInfo?.credit ?: "0"}")
-                            InfoRow(icon = R.drawable.ic_heart, text = "热心值 : ${userInfo?.enthusiasticValue ?: "0"} 点")
+                            InfoRow(icon = R.drawable.ic_credit_v2, text = userInfo?.credit ?: "积分 : 0")
+                            InfoRow(icon = R.drawable.ic_heart, text = userInfo?.enthusiasticValue ?: "热心值 : 0 点")
                         }
                     }
                 }
