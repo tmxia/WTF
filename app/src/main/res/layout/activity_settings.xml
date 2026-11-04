@@ -304,7 +304,7 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:padding="16dp"
-                    android:text="进入日志页"
+                    android:text="查看系统日志"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
     </LinearLayout>
