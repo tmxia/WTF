@@ -6,13 +6,14 @@ import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ScrollView
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -67,6 +68,7 @@ class MeFragment : TopFragment(), ControllableFragment {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val context = requireContext()
+        // 直接使用 ComposeView，去掉复杂的 View 嵌套以防止测量崩溃
         val root = SwipeRefreshLayout(context).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             setColorSchemeColors(ContextCompat.getColor(context, R.color.colorPrimary))
@@ -75,17 +77,11 @@ class MeFragment : TopFragment(), ControllableFragment {
             setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
         }
         
-        val scrollView = ScrollView(context).apply {
-            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            isFillViewport = true
-        }
-
         val composeView = ComposeView(context).apply {
-            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
 
-        scrollView.addView(composeView)
-        root.addView(scrollView)
+        root.addView(composeView)
         swipeRefreshLayout = root
 
         return root
@@ -96,8 +92,7 @@ class MeFragment : TopFragment(), ControllableFragment {
         viewModel = ViewModelProvider(this)[MeViewModel::class.java]
 
         val swipe = view as SwipeRefreshLayout
-        val scroll = swipe.getChildAt(0) as ScrollView
-        val compose = scroll.getChildAt(0) as ComposeView
+        val compose = swipe.getChildAt(0) as ComposeView
 
         compose.setContent {
             MeScreenContent(
@@ -134,9 +129,16 @@ class MeFragment : TopFragment(), ControllableFragment {
         }
     }
 
+    // 跳转修复：若 R.id.clRootView 不存在，回退到 Activity 的根容器
     private fun showFragment(fragment: Fragment) {
-        activity?.supportFragmentManager?.let {
-            addFragmentInActivity(it, fragment, R.id.clRootView)
+        val activity = activity ?: return
+        val containerId = activity.resources.getIdentifier("clRootView", "id", activity.packageName)
+        val targetId = if (containerId != 0) containerId else android.R.id.content
+        
+        try {
+            addFragmentInActivity(activity.supportFragmentManager, fragment, targetId)
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "页面打开失败", Toast.LENGTH_SHORT).show()
         }
     }
 }
@@ -182,6 +184,7 @@ fun MeScreenContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .background(Color(0xFFF5F5F5))
             .padding(16.dp)
     ) {
