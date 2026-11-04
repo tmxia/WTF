@@ -9,6 +9,8 @@ import android.graphics.Bitmap
 import android.text.Html
 import android.text.TextUtils
 import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.GestureDetector
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -209,6 +211,15 @@ class ArticleAdapter(
 
         private var post: Post? = null
         private val htmlHttpImageGetter: Html.ImageGetter = HtmlCoilImageGetter(binding.root.context, binding.contentTextView, mFragment)
+        private val postGestureDetector = GestureDetector(binding.root.context, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onLongPress(e: MotionEvent?) {
+                val pos = bindingAdapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    val p = mPostList.getOrNull(pos)
+                    if (p != null) showFloorMenu(binding.root.context, pos, p.content, p.replyUrl)
+                }
+            }
+        })
 
         override fun onBind(position: Int) {
             val p = mPostList.getOrNull(position) ?: return
@@ -293,9 +304,9 @@ class ArticleAdapter(
                         postBtnGroup.visibility = View.GONE
                     }
                     
-                    contentTextView.setOnLongClickListener { 
-                            showFloorMenu(root.context, position, p.content, p.replyUrl)
-                            true 
+                    contentTextView.setOnTouchListener { v, event ->
+                            postGestureDetector.onTouchEvent(event)
+                            false // 返回 false 让点击事件继续传递，不拦截普通点击
                         }
                 } catch (e: Exception) {
                     Timber.e(e)
@@ -336,6 +347,15 @@ class ArticleAdapter(
     ) : BaseViewHolder(binding.root), View.OnClickListener {
 
         private var post: Post? = null
+        private val replyGestureDetector = GestureDetector(binding.root.context, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onLongPress(e: MotionEvent?) {
+                val pos = bindingAdapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    val p = mPostList.getOrNull(pos)
+                    if (p != null) showFloorMenu(binding.root.context, pos, p.content, p.replyUrl)
+                }
+            }
+        })
         private val htmlHttpImageGetter: Html.ImageGetter by lazy {
             HtmlCoilImageGetter(binding.root.context, binding.replyContentTextView, mFragment)
         }
@@ -432,9 +452,9 @@ class ArticleAdapter(
                             replyBtnGroup.visibility = View.GONE
                         }
                         
-                        replyContentTextView.setOnLongClickListener { 
-                            showFloorMenu(root.context, position, p.content, p.replyUrl)
-                            true 
+                        replyContentTextView.setOnTouchListener { v, event ->
+                            replyGestureDetector.onTouchEvent(event)
+                            false // 返回 false 让点击事件继续传递，不拦截普通点击
                         }
                     } catch (e: Exception) {
                         Timber.e(e)
