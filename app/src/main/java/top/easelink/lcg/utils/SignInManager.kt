@@ -15,6 +15,13 @@ object SignInManager {
         try {
             
             val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL)
+            val rawHtml = applyResponse.outerHtml()
+            Timber.d("签到任务响应: status=${applyResponse.location()}, body=${rawHtml.take(200)}")
+            if (rawHtml.contains("您需要先登录")) {
+                Timber.e("签到失败：Cookie 已失效，请重新登录")
+                onResult("FAILED", "签到失败：登录已失效")
+                return
+            }
             
             
             val applyMessage = applyResponse.getElementsByClass("alert_info")
@@ -28,6 +35,7 @@ object SignInManager {
 
             
             val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL)
+            Timber.d("领取奖励响应: ${drawResponse.outerHtml().take(200)}")
             val drawText = drawResponse.getElementsByClass("alert_info")
                 .first()?.selectFirst("p")?.text().orEmpty()
 

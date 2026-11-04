@@ -27,6 +27,9 @@ import top.easelink.lcg.ui.setting.viewmodel.SettingViewModel
 import top.easelink.lcg.utils.setStatusBarPadding
 import top.easelink.lcg.utils.showMessage
 import top.easelink.lcg.utils.SignInManager
+import top.easelink.lcg.utils.AppLogManager
+import timber.log.Timber
+import android.content.Intent
 import android.widget.Toast
 
 class SettingActivity : TopActivity() {
@@ -102,6 +105,25 @@ class SettingActivity : TopActivity() {
                 powerManager.isIgnoringBatteryOptimizations(packageName)
             }
 
+            
+            // 调试模式开关逻辑
+            val logPrefs = getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
+            debugModeSwitch.isChecked = logPrefs.getBoolean("debug_mode_enabled", false)
+            debugModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+                logPrefs.edit().putBoolean("debug_mode_enabled", isChecked).apply()
+                if (isChecked) {
+                    Timber.plant(AppLogManager.LogTree())
+                } else {
+                    Timber.uprootAll()
+                    if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
+                }
+            }
+
+            // 进入日志页
+            openLogPageBtn.setOnClickListener {
+                startActivity(Intent(this@SettingActivity, top.easelink.lcg.ui.setting.view.LogActivity::class.java))
+            }
+    
             keepAliveSwitch.setOnCheckedChangeListener { _, isChecked ->
                 prefs.edit().putBoolean("battery_state", isChecked).apply()
                 if (isChecked) {
