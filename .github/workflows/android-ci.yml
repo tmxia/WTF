@@ -111,6 +111,16 @@ jobs:
           path: output/*.apk
           if-no-files-found: error
 
+      
+      # 强制删除旧的 Release 和 Tag，彻底解决 HttpError
+      - name: Delete Existing Release and Tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete "v${{ env.VERSION_NAME }}" --yes || true
+          git push --delete origin "v${{ env.VERSION_NAME }}" || true
+          echo "✅ 已清理可能存在的旧 Tag 与 Release"
+
       # 4. 发布清爽的 Release
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
