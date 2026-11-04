@@ -208,7 +208,7 @@ fun MeScreenContent(
                                             isSigningIn = true
                                             signInText = "签到中..."
                                             try {
-                                                SignInManager.performSignIn(context) { status, msg ->
+                                                SignInManager.performSignIn { status, msg ->
                                                     isSigningIn = false
                                                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                                                     if (status == "SUCCESS" || status == "ALREADY_DONE") {
