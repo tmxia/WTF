@@ -45,7 +45,6 @@ object QuickReplyHelper {
         val density = context.resources.displayMetrics.density
         val list = getQuickReplies(context)
 
-        
         list.forEachIndexed { index, phrase ->
             val textView = TextView(context).apply {
                 text = phrase
@@ -67,7 +66,6 @@ object QuickReplyHelper {
 
                 setOnClickListener { onPhraseClicked(phrase) }
 
-                
                 setOnLongClickListener {
                     showEditDeleteDialog(context, index, phrase) { renderQuickReplies(context, container, onPhraseClicked) }
                     true
@@ -76,7 +74,6 @@ object QuickReplyHelper {
             container.addView(textView)
         }
 
-        
         val addBtn = TextView(context).apply {
             text = "+ 添加"
             setTextColor(Color.parseColor("#888888"))
@@ -127,6 +124,7 @@ object QuickReplyHelper {
         val textInputLayout = TextInputLayout(context).apply {
             hint = "输入快捷短语"
             boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+            // 使用 setBoxCornerRadii 修复之前的 val 报错问题
             setBoxCornerRadii(12f * density, 12f * density, 12f * density, 12f * density)
             setPadding(padding, (12 * density).toInt(), padding, 0)
         }

@@ -27,7 +27,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        
+        <!-- 快捷回复短语栏 -->
         <LinearLayout
             android:id="@+id/quick_reply_section"
             android:layout_width="match_parent"
@@ -65,11 +65,9 @@
 
             <HorizontalScrollView
                 android:id="@+id/quick_reply_scroll"
-                android:layout_marginBottom="8dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                
                 android:scrollbars="none"
                 android:visibility="gone">
 
@@ -80,12 +78,13 @@
                     android:orientation="horizontal" />
             </HorizontalScrollView>
         </LinearLayout>
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/reply_content_layout"
-            android:layout_marginTop="10dp"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             app:boxBackgroundColor="#F5F5F5"
             app:boxCornerRadiusBottomEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
@@ -94,9 +93,8 @@
             app:boxStrokeColor="@color/pojie_logo"
             app:boxStrokeWidth="0dp"
             app:boxStrokeWidthFocused="1dp"
-            app:layout_constraintTop_toBottomOf="@id/reply_to">
+            app:layout_constraintTop_toBottomOf="@id/quick_reply_section">
 
-            <!-- 核心调整：minLines 改为 2 -->
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/reply_content"
                 android:layout_width="match_parent"

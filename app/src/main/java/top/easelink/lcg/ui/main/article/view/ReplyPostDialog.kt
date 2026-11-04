@@ -45,6 +45,14 @@ class ReplyPostDialog : DialogFragment() {
         binding.quickReplyScroll.visibility = if (isExpanded) android.view.View.VISIBLE else android.view.View.GONE
         binding.quickReplyArrow.text = if (isExpanded) "▲" else "▼"
 
+        
+        top.easelink.lcg.utils.QuickReplyHelper.renderQuickReplies(requireContext(), binding.quickReplyContainer) { phrase ->
+            val current = binding.replyContent.text?.toString() ?: ""
+            if (current.isEmpty()) binding.replyContent.setText(phrase)
+            else binding.replyContent.setText("$current $phrase")
+            binding.replyContent.setSelection(binding.replyContent.text?.length ?: 0)
+        }
+
         binding.quickReplyHeader.setOnClickListener {
             isExpanded = !isExpanded
             binding.quickReplyScroll.visibility = if (isExpanded) android.view.View.VISIBLE else android.view.View.GONE
