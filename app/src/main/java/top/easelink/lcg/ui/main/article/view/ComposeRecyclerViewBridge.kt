@@ -57,10 +57,10 @@ fun ComposeRecyclerViewBridge(
                     posts
                 }
                 
-                // 核心新增：过滤灌水/极短回复
+                
                 if (filterSpam) {
                     filteredPosts = filteredPosts.filter { post ->
-                        // 剥离 HTML 标签，只看纯文本
+                        
                         val plainText = post.content?.replace(Regex("<[^>]*>"), "")?.trim() ?: ""
                         plainText.length >= 5
                     }

@@ -202,7 +202,7 @@ fun ArticleScreen(
                             onDismissRequest = { showMenu = false },
                             modifier = Modifier.background(Color.White)
                         ) {
-                            // 1. 只看楼主
+                            
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text(if (showOpOnly) "显示全部帖子" else "只看楼主", fontSize = 14.sp, color = Color.DarkGray) },
@@ -212,7 +212,7 @@ fun ArticleScreen(
                                 }
                             )
                             
-                            // 2. 过滤灌水
+                            
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text(if (filterSpam) "关闭灌水过滤" else "过滤灌水回复", fontSize = 14.sp, color = Color.DarkGray) },
@@ -222,7 +222,7 @@ fun ArticleScreen(
                                 }
                             )
 
-                            // 3. 复制链接
+                            
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text("复制链接", fontSize = 14.sp, color = Color.DarkGray) },
@@ -235,7 +235,7 @@ fun ArticleScreen(
                                 }
                             )
 
-                            // 4. 倒序显示
+                            
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.List, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text(if (isReverse) "顺序显示" else "倒序显示", fontSize = 14.sp, color = Color.DarkGray) },
@@ -246,7 +246,7 @@ fun ArticleScreen(
                                 }
                             )
 
-                            // 5. 刷新
+                            
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text("刷新", fontSize = 14.sp, color = Color.DarkGray) },
@@ -256,7 +256,7 @@ fun ArticleScreen(
                                 }
                             )
 
-                            // 6. 浏览器打开
+                            
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text("在浏览器打开", fontSize = 14.sp, color = Color.DarkGray) },
@@ -266,7 +266,7 @@ fun ArticleScreen(
                                 }
                             )
 
-                            // 7. 提取下载链接
+                            
                             DropdownMenuItem(
                                 leadingIcon = { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
                                 text = { Text("提取下载链接", fontSize = 14.sp, color = Color.DarkGray) },
@@ -281,7 +281,7 @@ fun ArticleScreen(
                                 }
                             )
 
-                            // 8. 收藏/取消收藏
+                            
                             DropdownMenuItem(
                                 leadingIcon = {
                                     Icon(

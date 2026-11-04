@@ -51,7 +51,7 @@ class CommentArticleDialog : TopDialog() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // 核心修复：允许点击弹窗外部空白区域关闭
+        
         dialog?.setCanceledOnTouchOutside(true)
         super.onViewCreated(view, savedInstanceState)
         replyPostViewModel = ViewModelProvider(this)[ReplyPostViewModel::class.java]
