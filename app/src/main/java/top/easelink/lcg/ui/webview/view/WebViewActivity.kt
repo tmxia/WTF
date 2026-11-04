@@ -129,6 +129,24 @@ class WebViewActivity : AppCompatActivity() {
                     mWebView.removeJavascriptInterface(HOOK_NAME)
                     mWebView.addJavascriptInterface(WebViewHook(), HOOK_NAME)
                 }
+                
+                // ================= 核心免登注入 =================
+                try {
+                    // 1. 从 OkHttp 的持久化 CookieJar 中取出之前存好的 CK
+                    val savedCookies = LCGCookieJar.cookiesForUrl(SERVER_BASE_URL)
+                    if (savedCookies.isNotEmpty()) {
+                        // 2. 拼装成标准的 Cookie 字符串
+                        val cookieStr = savedCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
+                        // 3. 注入给 WebView
+                        CookieManager.getInstance().setCookie(SERVER_BASE_URL, cookieStr)
+                        CookieManager.getInstance().flush()
+                        Timber.d("已成功注入持久化 Cookie 到 WebView")
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "注入 Cookie 失败")
+                }
+                // ===============================================
+
                 mWebView.loadUrl(mUrl!!)
             }
             !mHtml.isNullOrEmpty() -> {
