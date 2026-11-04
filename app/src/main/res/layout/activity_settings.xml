@@ -3,15 +3,17 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/slight_light_light_gray"
+    android:scrollbars="none">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:background="@color/slight_light_light_gray"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingBottom="32dp">
 
+        <!-- 顶部导航栏 -->
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             style="@style/Toolbar"
@@ -22,210 +24,322 @@
             app:title="@string/setting_title"
             app:titleTextAppearance="@style/Toolbar.TitleText"/>
 
-        <com.google.android.material.textview.MaterialTextView
+        <!-- ================= 账号 ================= -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:background="@color/transparent"
+            android:layout_marginStart="32dp"
             android:text="@string/account_setting"
-            android:textSize="@dimen/sp_10"
-            android:textColor="@color/gray" />
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:padding="@dimen/dp_12"
-            android:elevation="@dimen/dp_2"
-            android:background="@color/white"
-            android:id="@+id/auto_sign_switch"
-            android:layout_width="match_parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
-            android:layout_height="wrap_content"
-            android:text="@string/start_auto_sign_in" />
-        
+            android:textColor="@color/gray"
+            android:textSize="12sp" />
 
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switch_show_sign_in_toast"
-            android:padding="@dimen/dp_12"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginBottom="4dp"
-            android:background="@color/white"
-            android:elevation="@dimen/dp_2"
-            android:text="签到结果显示提示" />
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
 
-
-        <com.google.android.material.textview.MaterialTextView
-            android:layout_marginTop="20dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:background="@color/transparent"
-            android:text="@string/favorite_setting"
-            android:textSize="@dimen/sp_10"
-            android:textColor="@color/gray" />
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:padding="@dimen/dp_12"
-            android:elevation="@dimen/dp_2"
-            android:background="@color/white"
-            android:id="@+id/sync_favorites_switch"
-            android:layout_width="match_parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
-            android:layout_height="wrap_content"
-            android:text="@string/sync_favorites" />
-
-        <com.google.android.material.textview.MaterialTextView
-            android:layout_marginTop="20dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:background="@color/transparent"
-            android:text="@string/search_setting"
-            android:textSize="@dimen/sp_10"
-            android:textColor="@color/gray" />
-        <FrameLayout
-            android:padding="@dimen/dp_12"
-            android:elevation="@dimen/dp_2"
-            android:background="@color/white"
-            android:layout_width="match_parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="4dp"
-            android:layout_height="wrap_content">
-            <com.google.android.material.textview.MaterialTextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/search_engine_setting"/>
-            <androidx.appcompat.widget.AppCompatSpinner
-                android:layout_gravity="end"
-                android:id="@+id/search_engine_spinner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:entries="@array/search_engine_array" />
-        </FrameLayout>
-
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:padding="@dimen/dp_12"
-            android:elevation="@dimen/dp_2"
-            android:background="@color/white"
-            android:id="@+id/show_search_result_in_webview"
-            android:layout_width="match_parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
-            android:layout_height="wrap_content"
-            android:text="@string/open_search_result_in_webview" />
-
-        <com.google.android.material.textview.MaterialTextView
-            android:layout_marginTop="20dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:background="@color/transparent"
-            android:text="@string/article_setting"
-            android:textSize="@dimen/sp_10"
-            android:textColor="@color/gray" />
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:padding="@dimen/dp_12"
-            android:elevation="@dimen/dp_2"
-            android:background="@color/white"
-            android:id="@+id/show_recommend_flag"
-            android:layout_width="match_parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
-            android:layout_height="wrap_content"
-            android:text="@string/show_recommend_flag_on_article" />
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:padding="@dimen/dp_12"
-            android:elevation="@dimen/dp_2"
-            android:background="@color/white"
-            android:id="@+id/show_article_in_webview"
-            android:layout_width="match_parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
-            android:layout_height="wrap_content"
-            android:text="@string/open_article_in_webview" />
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:padding="@dimen/dp_12"
-            android:elevation="@dimen/dp_2"
-            android:background="@color/white"
-            android:id="@+id/article_handle_pre_tag"
-            android:layout_width="match_parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
-            android:layout_height="wrap_content"
-            android:text="@string/article_handle_pre_tag" />
-
-        <com.google.android.material.textview.MaterialTextView
-            android:layout_marginTop="20dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:background="@color/transparent"
-            android:text="@string/app_setting"
-            android:textSize="@dimen/sp_10"
-            android:textColor="@color/gray" />
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/check_update_btn"
-            android:padding="@dimen/dp_12"
-            android:elevation="@dimen/dp_2"
-            android:layout_width="match_parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="4dp"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            android:text="@string/check_app_update"
-            android:focusable="true"
-            android:textColor="@color/black"
-            android:background="@color/white" />
-
+                android:orientation="vertical">
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/keep_alive_switch"
-            android:padding="@dimen/dp_12"
-            android:elevation="@dimen/dp_2"
-            android:background="@color/white"
+                    android:id="@+id/auto_sign_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="@string/start_auto_sign_in"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginStart="16dp"
+                    android:background="#E0E0E0" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switch_show_sign_in_toast"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="签到结果显示提示"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ================= 收藏 ================= -->
+        <TextView
             android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="32dp"
+            android:text="@string/favorite_setting"
+            android:textColor="@color/gray"
+            android:textSize="12sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp"
-            android:layout_height="wrap_content"
-            android:text="@string/battery_keep_alive" />
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/sync_favorites_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="@string/sync_favorites"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ================= 搜索 ================= -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="32dp"
+            android:text="@string/search_setting"
+            android:textColor="@color/gray"
+            android:textSize="12sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:text="@string/search_engine_setting"
+                        android:textColor="@color/black"
+                        android:textSize="16sp" />
+
+                    <androidx.appcompat.widget.AppCompatSpinner
+                        android:id="@+id/search_engine_spinner"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:entries="@array/search_engine_array" />
+                </FrameLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginStart="16dp"
+                    android:background="#E0E0E0" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/show_search_result_in_webview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="@string/open_search_result_in_webview"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ================= 文章 ================= -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="32dp"
+            android:text="@string/article_setting"
+            android:textColor="@color/gray"
+            android:textSize="12sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/show_recommend_flag"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="@string/show_recommend_flag_on_article"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginStart="16dp"
+                    android:background="#E0E0E0" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/show_article_in_webview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="@string/open_article_in_webview"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginStart="16dp"
+                    android:background="#E0E0E0" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/article_handle_pre_tag"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="@string/article_handle_pre_tag"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ================= 系统与后台 ================= -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="32dp"
+            android:text="系统与后台"
+            android:textColor="@color/gray"
+            android:textSize="12sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/keep_alive_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="@string/battery_keep_alive"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ================= 应用 ================= -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="32dp"
+            android:text="@string/app_setting"
+            android:textColor="@color/gray"
+            android:textSize="12sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/check_update_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="16dp"
+                    android:text="@string/check_app_update"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ================= 退出账号 ================= -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/account_btn"
-            android:padding="@dimen/dp_12"
-            android:layout_marginTop="@dimen/dp_20"
-            android:background="@color/white"
-            android:elevation="@dimen/dp_2"
             android:layout_width="match_parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
             android:layout_height="wrap_content"
-            android:clickable="true"
-            android:text="@string/logout_confirm_message"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="@color/white"
+            android:fontFamily="sans-serif-medium"
             android:gravity="center"
-            android:focusable="true"
-            android:textStyle="normal"
-        android:fontFamily="sans-serif-medium"
+            android:padding="16dp"
+            android:text="@string/logout_confirm_message"
             android:textColor="@color/black"
-            app:backgroundTint="@color/white" />
-
+            android:textSize="16sp"
+            android:textStyle="normal"
+            app:cornerRadius="12dp"
+            app:elevation="0dp"
+            app:strokeWidth="0dp" />
 
     </LinearLayout>
 </ScrollView>
