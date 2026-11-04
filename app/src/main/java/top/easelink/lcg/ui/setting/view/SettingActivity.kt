@@ -108,9 +108,20 @@ class SettingActivity : TopActivity() {
             
             // 调试模式开关逻辑
             val logPrefs = getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
-            debugModeSwitch.isChecked = logPrefs.getBoolean("debug_mode_enabled", false)
+            val isDebugEnabled = logPrefs.getBoolean("debug_mode_enabled", false)
+            
+            // 初始化状态
+            debugModeSwitch.isChecked = isDebugEnabled
+            openLogPageBtn.visibility = if (isDebugEnabled) View.VISIBLE else View.GONE
+            logDivider.visibility = if (isDebugEnabled) View.VISIBLE else View.GONE
+
             debugModeSwitch.setOnCheckedChangeListener { _, isChecked ->
                 logPrefs.edit().putBoolean("debug_mode_enabled", isChecked).apply()
+                
+                // 联动控制日志入口和分割线的可见性
+                openLogPageBtn.visibility = if (isChecked) View.VISIBLE else View.GONE
+                logDivider.visibility = if (isChecked) View.VISIBLE else View.GONE
+
                 if (isChecked) {
                     Timber.plant(AppLogManager.LogTree())
                 } else {
