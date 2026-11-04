@@ -23,6 +23,7 @@ import top.easelink.lcg.utils.updateCookies
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 object JsoupClient : ApiRequest {
     private val clientScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -48,6 +49,11 @@ object JsoupClient : ApiRequest {
 
 
     private val sessionExpiredFiredOnce = AtomicBoolean(false)
+
+    // ================= 移植自 MTF 的防并发限流逻辑 =================
+    private const val MIN_INTERVAL_MS = 400L
+    private val lastRequestAt = AtomicLong(0L)
+    // ===============================================================
 
     @Throws(SocketTimeoutException::class, IOException::class)
     override fun sendGetRequestWithQuery(query: String): Document {
@@ -113,6 +119,14 @@ object JsoupClient : ApiRequest {
     }
 
     private fun getConnection(url: String): Connection {
+        // 核心防封机制：全局 400ms 强制限流，彻底杜绝瞬间并发请求
+        synchronized(this) {
+            val since = System.currentTimeMillis() - lastRequestAt.get()
+            if (since < MIN_INTERVAL_MS) {
+                Thread.sleep(MIN_INTERVAL_MS - since)
+            }
+            lastRequestAt.set(System.currentTimeMillis())
+        }
         return Jsoup.connect(url)
             .timeout(TIME_OUT_LIMIT)
             .ignoreHttpErrors(true)

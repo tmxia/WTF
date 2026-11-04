@@ -233,21 +233,92 @@ fun ArticleScreen(
                                     } else {
                                         val density = context.resources.displayMetrics.density
                                         val padding = (20 * density).toInt()
-                                        val input = android.widget.EditText(context).apply {
-                                            hint = "输入关键字"
-                                            setPadding(padding, padding / 2, padding, padding / 2)
+
+                                        // 1. 根布局
+                                        val rootLayout = android.widget.LinearLayout(context).apply {
+                                            orientation = android.widget.LinearLayout.VERTICAL
+                                            setPadding(padding, padding / 2, padding, (10 * density).toInt())
                                         }
-                                        com.google.android.material.dialog.MaterialAlertDialogBuilder(context)
-                                            .setTitle("搜索本贴内容")
-                                            .setView(input)
-                                            .setPositiveButton("搜索") { _, _ ->
-                                                val keyword = input.text.toString().trim()
-                                                if (keyword.isNotEmpty()) {
-                                                    searchKeyword = keyword
-                                                }
+
+                                        // 2. 标题
+                                        rootLayout.addView(android.widget.TextView(context).apply {
+                                            text = "搜索帖子内容"
+                                            textSize = 16f
+                                            setTypeface(null, android.graphics.Typeface.BOLD)
+                                            setTextColor(android.graphics.Color.BLACK)
+                                            setPadding(0, 0, 0, (16 * density).toInt())
+                                        })
+
+                                        // 3. 浅灰圆角输入框
+                                        val inputContainer = android.widget.FrameLayout(context).apply {
+                                            val bg = android.graphics.drawable.GradientDrawable().apply {
+                                                setColor(android.graphics.Color.parseColor("#F5F5F5"))
+                                                cornerRadius = 8f * density
                                             }
-                                            .setNegativeButton("取消", null)
-                                            .show()
+                                            background = bg
+                                        }
+                                        val input = android.widget.EditText(context).apply {
+                                            hint = "请输入关键字..."
+                                            setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                            setSingleLine(true)
+                                            val p = (12 * density).toInt()
+                                            setPadding(p, p, p, p)
+                                            setTextColor(android.graphics.Color.BLACK)
+                                        }
+                                        inputContainer.addView(input)
+                                        rootLayout.addView(inputContainer)
+
+                                        // 4. 底部按钮行
+                                        val btnLayout = android.widget.LinearLayout(context).apply {
+                                            orientation = android.widget.LinearLayout.HORIZONTAL
+                                            gravity = android.view.Gravity.END
+                                            setPadding(0, (16 * density).toInt(), 0, 0)
+                                        }
+
+                                        val btnCancel = android.widget.TextView(context).apply {
+                                            text = "取消"
+                                            textSize = 14f
+                                            setTextColor(android.graphics.Color.parseColor("#888888"))
+                                            setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
+                                        }
+                                        val btnSearch = android.widget.TextView(context).apply {
+                                            text = "搜索"
+                                            textSize = 14f
+                                            setTextColor(android.graphics.Color.parseColor("#E53935")) // 红色强调
+                                            setTypeface(null, android.graphics.Typeface.BOLD)
+                                            setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
+                                        }
+
+                                        btnLayout.addView(btnCancel)
+                                        btnLayout.addView(btnSearch)
+                                        rootLayout.addView(btnLayout)
+
+                                        // 5. 组装成 MaterialCardView (圆角白底)
+                                        val card = com.google.android.material.card.MaterialCardView(context).apply {
+                                            radius = 16f * density
+                                            setCardBackgroundColor(android.graphics.Color.WHITE)
+                                            strokeWidth = 0
+                                            elevation = 0f
+                                            addView(rootLayout)
+                                        }
+
+                                        // 6. 显示弹窗
+                                        val dialog = android.app.AlertDialog.Builder(context).create()
+                                        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+                                        dialog.setView(card)
+                                        dialog.show()
+                                        dialog.window?.setLayout((300 * density).toInt(), android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+
+                                        btnCancel.setOnClickListener { dialog.dismiss() }
+                                        btnSearch.setOnClickListener {
+                                            val keyword = input.text.toString().trim()
+                                            if (keyword.isNotEmpty()) {
+                                                searchKeyword = keyword
+                                                dialog.dismiss()
+                                            } else {
+                                                android.widget.Toast.makeText(context, "请输入关键字", android.widget.Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
                                     }
                                 }
                             )
