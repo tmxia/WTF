@@ -16,7 +16,9 @@ fun ComposeRecyclerViewBridge(
     modifier: Modifier = Modifier,
     viewModel: ArticleViewModel,
     fragment: Fragment,
-    isReverse: Boolean = false
+    isReverse: Boolean = false,
+    onScrollStateChanged: (Boolean) -> Unit = {},
+    onReady: (RecyclerView) -> Unit = {}
 ) {
     val posts by viewModel.posts.observeAsState(initial = emptyList<Post>())
     val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
@@ -31,6 +33,14 @@ fun ComposeRecyclerViewBridge(
                 clipToPadding = false
                 overScrollMode = RecyclerView.OVER_SCROLL_NEVER
                 adapter = ArticleAdapter(viewModel, fragment)
+            
+                addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+                        super.onScrolled(rv, dx, dy)
+                        onScrollStateChanged(rv.computeVerticalScrollOffset() > 500)
+                    }
+                })
+                onReady(this)
             }
         },
         update = { recyclerView ->

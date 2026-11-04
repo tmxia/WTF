@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -138,6 +139,8 @@ fun ArticleScreen(
     val shouldDisplayPosts by viewModel.shouldDisplayPosts.observeAsState(initial = true)
 
     var showMenu by remember { mutableStateOf(false) }
+    var showBackToTop by remember { mutableStateOf(false) }
+    var recyclerView by remember { mutableStateOf<androidx.recyclerview.widget.RecyclerView?>(null) }
     
     val prefs = remember { context.getSharedPreferences("article_settings", android.content.Context.MODE_PRIVATE) }
     var isReverse by remember { mutableStateOf(prefs.getBoolean("is_reverse", false)) }
@@ -256,23 +259,39 @@ fun ArticleScreen(
             )
         },
         floatingActionButton = {
-            val replyUrl = posts.firstOrNull()?.replyUrl
-            if (!isLoading && replyUrl != null && shouldDisplayPosts) {
-                FloatingActionButton(
-                    onClick = {
-                        if (fragment.isAdded) {
-                            CommentArticleDialog.newInstance(replyUrl)
-                                .show(fragment.parentFragmentManager, "CommentArticleDialog")
-                        }
-                    },
-                    containerColor = Color(0xFF2C2C2C),
-                    contentColor = Color.White,
-                    modifier = Modifier.size(40.dp)
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Icon(Icons.Filled.Edit, contentDescription = "Reply", modifier = Modifier.size(18.dp))
+                    if (showBackToTop) {
+                        FloatingActionButton(
+                            onClick = { recyclerView?.smoothScrollToPosition(0) },
+                            containerColor = Color.White,
+                            contentColor = Color.Gray,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "回到顶部", modifier = Modifier.size(20.dp))
+                        }
+                    }
+                    
+                    val replyUrl = posts.firstOrNull()?.replyUrl
+                    if (!isLoading && replyUrl != null && shouldDisplayPosts) {
+                        FloatingActionButton(
+                            onClick = {
+                                if (fragment.isAdded) {
+                                    CommentArticleDialog.newInstance(replyUrl)
+                                        .show(fragment.parentFragmentManager, "CommentArticleDialog")
+                                }
+                            },
+                            containerColor = Color(0xFF2C2C2C),
+                            contentColor = Color.White,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(Icons.Filled.Edit, contentDescription = "Reply", modifier = Modifier.size(18.dp))
+                        }
+                    }
                 }
             }
-        }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -294,11 +313,13 @@ fun ArticleScreen(
                 }
             } else if (shouldDisplayPosts) {
                 ComposeRecyclerViewBridge(
-                    modifier = Modifier.fillMaxSize(),
-                    viewModel = viewModel,
-                    fragment = fragment,
-                    isReverse = isReverse
-                )
+                            modifier = Modifier.fillMaxSize(),
+                            viewModel = viewModel,
+                            fragment = fragment,
+                            isReverse = isReverse,
+                            onScrollStateChanged = { show -> showBackToTop = show },
+                            onReady = { rv -> recyclerView = rv }
+                        )
             }
         }
     }
