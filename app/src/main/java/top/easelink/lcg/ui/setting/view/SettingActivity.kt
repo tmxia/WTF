@@ -1,36 +1,36 @@
 package top.easelink.lcg.ui.setting.view
 
-import android.os.Bundle
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
 import android.widget.CompoundButton
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.core.content.edit
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModelProvider
+import timber.log.Timber
 import top.easelink.framework.topbase.TopActivity
-import top.easelink.lcg.R
 import top.easelink.lcg.BuildConfig
+import top.easelink.lcg.R
 import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.databinding.ActivitySettingsBinding
 import top.easelink.lcg.ui.main.login.view.LoginHintDialog
 import top.easelink.lcg.ui.main.logout.view.LogoutHintDialog
 import top.easelink.lcg.ui.setting.viewmodel.SettingViewModel
+import top.easelink.lcg.utils.AppLogManager
+import top.easelink.lcg.utils.SignInManager
 import top.easelink.lcg.utils.setStatusBarPadding
 import top.easelink.lcg.utils.showMessage
-import top.easelink.lcg.utils.SignInManager
-import top.easelink.lcg.utils.AppLogManager
-import timber.log.Timber
-import android.widget.Toast
 
 class SettingActivity : TopActivity() {
 
@@ -43,7 +43,6 @@ class SettingActivity : TopActivity() {
         setContentView(binding.root)
         mViewModel = ViewModelProvider(this)[SettingViewModel::class.java]
 
-        
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 finish()
@@ -51,10 +50,6 @@ class SettingActivity : TopActivity() {
         })
 
         setUp()
-    }
-
-    override fun onResume() {
-        super.onResume()
     }
 
     private fun setUp() {
@@ -65,8 +60,6 @@ class SettingActivity : TopActivity() {
     }
 
     private fun setupToolBar() {
-        
-        
         binding.toolbar.setStatusBarPadding()
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -91,53 +84,24 @@ class SettingActivity : TopActivity() {
     }
 
     private fun setupComponents() {
-        
-        updateAccountButton(UserDataRepo.isLoggedIn)
-
+        // 使用 binding.apply 包裹所有控件，防止作用域丢失
         binding.apply {
+            updateAccountButton(UserDataRepo.isLoggedIn)
 
-            
-            val prefs = getSharedPreferences("battery_settings", Context.MODE_PRIVATE)
+            checkUpdateBtn.setOnClickListener {
+                showMessage(R.string.app_is_latest)
+            }
+
+            // 后台保活
+            val batteryPrefs = getSharedPreferences("battery_settings", Context.MODE_PRIVATE)
             val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-            keepAliveSwitch.isChecked = if (prefs.contains("battery_state")) {
-                prefs.getBoolean("battery_state", true)
+            keepAliveSwitch.isChecked = if (batteryPrefs.contains("battery_state")) {
+                batteryPrefs.getBoolean("battery_state", true)
             } else {
                 powerManager.isIgnoringBatteryOptimizations(packageName)
             }
-
-            
-            // 调试模式开关逻辑
-            val logPrefs = getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
-            val isDebugEnabled = logPrefs.getBoolean("debug_mode_enabled", false)
-            AppLogManager.isCollecting = isDebugEnabled
-            
-            // 初始化状态
-            debugModeSwitch.isChecked = isDebugEnabled
-            openLogPageBtn.visibility = if (isDebugEnabled) View.VISIBLE else View.GONE
-            logDivider.visibility = if (isDebugEnabled) View.VISIBLE else View.GONE
-
-            debugModeSwitch.setOnCheckedChangeListener { _, isChecked ->
-                logPrefs.edit().putBoolean("debug_mode_enabled", isChecked).apply()
-                
-                openLogPageBtn.visibility = if (isChecked) View.VISIBLE else View.GONE
-                logDivider.visibility = if (isChecked) View.VISIBLE else View.GONE
-
-                // 核心修复：直接控制内存收集器，绝对不调用 Timber.uprootAll()
-                AppLogManager.isCollecting = isChecked
-                if (isChecked) {
-                    AppLogManager.clearLogs()
-                    Timber.d("调试模式已开启，开始捕获日志")
-                }
-            }
-            }
-
-            // 进入日志页
-            openLogPageBtn.setOnClickListener {
-                startActivity(Intent(this@SettingActivity, top.easelink.lcg.ui.setting.view.LogActivity::class.java))
-            }
-    
             keepAliveSwitch.setOnCheckedChangeListener { _, isChecked ->
-                prefs.edit().putBoolean("battery_state", isChecked).apply()
+                batteryPrefs.edit().putBoolean("battery_state", isChecked).apply()
                 if (isChecked) {
                     if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
                         try {
@@ -155,36 +119,55 @@ class SettingActivity : TopActivity() {
                 }
             }
 
-            checkUpdateBtn.setOnClickListener {
-                showMessage(R.string.app_is_latest)
+            // 调试模式
+            val logPrefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+            val isDebugEnabled = logPrefs.getBoolean("debug_mode_enabled", false)
+            debugModeSwitch.isChecked = isDebugEnabled
+            openLogPageBtn.visibility = if (isDebugEnabled) View.VISIBLE else View.GONE
+            logDivider.visibility = if (isDebugEnabled) View.VISIBLE else View.GONE
+            AppLogManager.isCollecting = isDebugEnabled
+
+            debugModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+                logPrefs.edit().putBoolean("debug_mode_enabled", isChecked).apply()
+                openLogPageBtn.visibility = if (isChecked) View.VISIBLE else View.GONE
+                logDivider.visibility = if (isChecked) View.VISIBLE else View.GONE
+                AppLogManager.isCollecting = isChecked
+                if (isChecked) {
+                    AppLogManager.clearLogs()
+                    Timber.d("调试模式已开启，开始捕获日志")
+                }
             }
 
-            syncFavoritesSwitch.setOnCheckedChangeListener { _: CompoundButton, isChecked: Boolean ->
+            // 进入日志页
+            openLogPageBtn.setOnClickListener {
+                startActivity(Intent(this@SettingActivity, LogActivity::class.java))
+            }
+
+            // 自动签到
+            autoSignSwitch.setOnCheckedChangeListener { _: CompoundButton, isChecked: Boolean ->
                 mViewModel.scheduleJob(isChecked)
             }
 
-            
-            autoSignSwitch.setOnCheckedChangeListener { _: CompoundButton, isChecked: Boolean ->
-                mViewModel.scheduleJob(isChecked) 
-            }
-
-            
-            val signPrefs = getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
-            switchShowSignInToast.isChecked = signPrefs.getBoolean("show_sign_in_toast", true)
+            // 签到结果显示提示
+            switchShowSignInToast.isChecked = logPrefs.getBoolean("show_sign_in_toast", true)
             switchShowSignInToast.setOnCheckedChangeListener { _, isChecked ->
-                signPrefs.edit().putBoolean("show_sign_in_toast", isChecked).apply()
+                logPrefs.edit().putBoolean("show_sign_in_toast", isChecked).apply()
             }
 
-            
+            // 同步收藏
+            syncFavoritesSwitch.setOnCheckedChangeListener { _: CompoundButton, isChecked: Boolean ->
+                mViewModel.setSyncFavorite(isChecked)
+            }
 
+            // 搜索引擎
             searchEngineSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(parent: AdapterView<*>?) = Unit
-
                 override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                     AppConfig.defaultSearchEngine = position
                 }
             }
 
+            // 各种开关
             showSearchResultInWebview.setOnCheckedChangeListener { _, isChecked ->
                 AppConfig.searchResultShowInWebView = isChecked
             }
@@ -204,12 +187,10 @@ class SettingActivity : TopActivity() {
     }
 
     private fun setupObserver() {
-        
         top.easelink.lcg.account.AccountManager.isLoggedIn.observe(this) { isLoggedIn ->
             updateAccountButton(isLoggedIn)
         }
-        
-        
+
         mViewModel.apply {
             syncFavoriteEnable.observe(this@SettingActivity) { isEnabled ->
                 binding.syncFavoritesSwitch.isChecked = (UserDataRepo.isLoggedIn && isEnabled)
@@ -240,7 +221,7 @@ class SettingActivity : TopActivity() {
             }
         }
     }
-    
+
     private fun updateAccountButton(isLoggedIn: Boolean) {
         if (!isLoggedIn) {
             with(binding) {
@@ -252,8 +233,7 @@ class SettingActivity : TopActivity() {
                 }
             }
         } else {
-            binding.accountBtn.text =
-                String.format(getString(R.string.logout_confirm_message), UserDataRepo.username)
+            binding.accountBtn.text = String.format(getString(R.string.logout_confirm_message), UserDataRepo.username)
             binding.accountBtn.setOnClickListener {
                 tryLogout()
             }
