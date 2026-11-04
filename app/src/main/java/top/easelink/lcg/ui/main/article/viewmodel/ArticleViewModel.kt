@@ -60,7 +60,9 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
     }
 
     override fun fetchArticlePost(type: Int, callback: ((Boolean) -> Unit)?) {
+        Timber.d("【详情页】发起请求: type=$type, currentUrl=$mUrl, nextPageUrl=$nextPageUrl")
         if (fetching) {
+            Timber.w("【详情页】请求被忽略：已有任务正在 fetching 中")
             callback?.invoke(false)
             return
         }
@@ -89,6 +91,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                     return@launch
                 }
 
+                Timber.d("【详情页】请求成功: title=${response.articleTitle}, posts数量=${response.postList.size}, hasNextPage=${!response.nextPageUrl.isNullOrEmpty()}")
                 articleAbstract = response.articleAbstractResponse
                 response.articleTitle.takeIf { it.isNotBlank() }?.let {
                     safeUpdate(articleTitle, it)
@@ -126,6 +129,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
     }
 
     private fun handleFetchError(e: Exception) {
+        Timber.e("【详情页】处理请求错误，类型: ${e.javaClass.simpleName}, 信息: ${e.message}")
         when (e) {
             is BlockException -> {
                 if (posts.value?.isNotEmpty() == true) {

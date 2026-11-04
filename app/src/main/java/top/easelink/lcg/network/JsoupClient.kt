@@ -91,6 +91,7 @@ object JsoupClient : ApiRequest {
     }
 
     override fun sendGetRequestWithUrl(url: String): Document {
+        Timber.d("【网络层】发起 GET 请求: $url")
         return getConnection(url)
             .method(Connection.Method.GET)
             .followRedirects(FOLLOW_REDIRECTS_ENABLE)
@@ -98,6 +99,12 @@ object JsoupClient : ApiRequest {
             .let {
                 updateCookies(it.cookies())
                 it.parse().also { doc ->
+                    val htmlStr = doc.outerHtml()
+                    Timber.d("【网络层】请求响应完毕，状态码: ${it.statusCode()}, 长度: ${htmlStr.length}")
+                    // 检测 WAF 特征
+                    if (htmlStr.contains("wzws") || htmlStr.contains("acw_sc__v2") || htmlStr.contains("网宿") || htmlStr.contains("请开启JavaScript")) {
+                        Timber.e("【网络层】疑似触发 WAF 挑战拦截！URL: $url")
+                    }
                     checkResponse(doc)
                 }
             }
