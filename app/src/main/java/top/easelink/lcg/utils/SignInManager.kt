@@ -8,15 +8,15 @@ object SignInManager {
     private const val APPLY_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=apply&id=2"
     private const val DRAW_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=draw&id=2"
 
-    /**
-     * 纯 Jsoup 签到方案（底层已带持久化 Cookie 和 400ms 限流防封）
-     */
+    
+
+
     fun performSignIn(onResult: (String, String) -> Unit) {
         try {
-            // 1. 发起申请签到任务
+            
             val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL)
             
-            // 判断是否已经签过
+            
             val applyMessage = applyResponse.getElementsByClass("alert_info")
                 .first()?.selectFirst("p")?.text().orEmpty()
 
@@ -26,7 +26,7 @@ object SignInManager {
                 return
             }
 
-            // 2. 如果没签过，发起领取奖励任务
+            
             val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL)
             val drawText = drawResponse.getElementsByClass("alert_info")
                 .first()?.selectFirst("p")?.text().orEmpty()

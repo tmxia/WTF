@@ -234,13 +234,13 @@ fun ArticleScreen(
                                         val density = context.resources.displayMetrics.density
                                         val padding = (20 * density).toInt()
 
-                                        // 1. 根布局
+                                        
                                         val rootLayout = android.widget.LinearLayout(context).apply {
                                             orientation = android.widget.LinearLayout.VERTICAL
                                             setPadding(padding, padding / 2, padding, (10 * density).toInt())
                                         }
 
-                                        // 2. 标题
+                                        
                                         rootLayout.addView(android.widget.TextView(context).apply {
                                             text = "搜索帖子内容"
                                             textSize = 16f
@@ -249,7 +249,7 @@ fun ArticleScreen(
                                             setPadding(0, 0, 0, (16 * density).toInt())
                                         })
 
-                                        // 3. 浅灰圆角输入框
+                                        
                                         val inputContainer = android.widget.FrameLayout(context).apply {
                                             val bg = android.graphics.drawable.GradientDrawable().apply {
                                                 setColor(android.graphics.Color.parseColor("#F5F5F5"))
@@ -268,7 +268,7 @@ fun ArticleScreen(
                                         inputContainer.addView(input)
                                         rootLayout.addView(inputContainer)
 
-                                        // 4. 底部按钮行
+                                        
                                         val btnLayout = android.widget.LinearLayout(context).apply {
                                             orientation = android.widget.LinearLayout.HORIZONTAL
                                             gravity = android.view.Gravity.END
@@ -284,7 +284,7 @@ fun ArticleScreen(
                                         val btnSearch = android.widget.TextView(context).apply {
                                             text = "搜索"
                                             textSize = 14f
-                                            setTextColor(android.graphics.Color.parseColor("#E53935")) // 红色强调
+                                            setTextColor(android.graphics.Color.parseColor("#E53935")) 
                                             setTypeface(null, android.graphics.Typeface.BOLD)
                                             setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
                                         }
@@ -293,7 +293,7 @@ fun ArticleScreen(
                                         btnLayout.addView(btnSearch)
                                         rootLayout.addView(btnLayout)
 
-                                        // 5. 组装成 MaterialCardView (圆角白底)
+                                        
                                         val card = com.google.android.material.card.MaterialCardView(context).apply {
                                             radius = 16f * density
                                             setCardBackgroundColor(android.graphics.Color.WHITE)
@@ -302,7 +302,7 @@ fun ArticleScreen(
                                             addView(rootLayout)
                                         }
 
-                                        // 6. 显示弹窗
+                                        
                                         val dialog = android.app.AlertDialog.Builder(context).create()
                                         dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
                                         dialog.setView(card)
