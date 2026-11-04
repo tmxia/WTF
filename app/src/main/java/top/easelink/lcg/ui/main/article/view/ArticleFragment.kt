@@ -68,37 +68,22 @@ class ArticleFragment : Fragment(), ControllableFragment {
     }
 
     override fun onCreateView(
-        inflater: android.view.LayoutInflater, container: android.view.ViewGroup?,
+        inflater: android.view.LayoutInflater, 
+        container: android.view.ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         val context = requireContext()
         
-        val swipeRefreshLayout = SwipeRefreshLayout(context).apply {
-            
-            setDistanceToTriggerSync(300)
-            setSlingshotDistance(350)
-            
+        // 彻底废弃 SwipeRefreshLayout，直接使用纯 Compose 渲染
+        val composeView = ComposeView(context).apply {
             layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT, 
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         }
         
-        val composeView = ComposeView(context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        }
-
         composeView.setContent {
             val isLoading by viewModel.isLoading.observeAsState(initial = false)
-            
-            
-            LaunchedEffect(isLoading) {
-                swipeRefreshLayout.isRefreshing = isLoading
-            }
-
             ArticleScreen(
                 title = viewModel.articleTitle.observeAsState(title.ifEmpty { "帖子详情" }).value ?: "帖子详情",
                 articleUrl = url,
@@ -107,14 +92,8 @@ class ArticleFragment : Fragment(), ControllableFragment {
                 onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }
             )
         }
-
         
-        swipeRefreshLayout.setOnRefreshListener {
-            viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
-        }
-
-        swipeRefreshLayout.addView(composeView)
-        return swipeRefreshLayout
+        return composeView
     }
     
     

@@ -15,7 +15,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.RefreshDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,7 +48,7 @@ fun DiscoverScreenCompose(
     onMoreForumsClick: () -> Unit,
     onRankClick: (String) -> Unit,
     onRankLongClick: (String) -> Unit,
-    onScrollPositionChanged: (Boolean) -> Unit = {}
+    onRefresh: () -> Unit
 ) {
     if (models.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -56,11 +60,6 @@ fun DiscoverScreenCompose(
     val forumModel = models.filterIsInstance<ForumListModel>().firstOrNull()
     val rankModels = models.filterIsInstance<RankListModel>().flatMap { it.listModel }
 
-    val listState = rememberLazyListState()
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
-            .collect { atTop -> onScrollPositionChanged(atTop) }
-    }
 
     Column(
         modifier = Modifier
@@ -83,13 +82,25 @@ fun DiscoverScreenCompose(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Text(
-                    text = "今日热榜",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFFE65100),
-                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp, start = 4.dp)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp, start = 4.dp, end = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "今日热榜",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFFE65100)
+                    )
+                    IconButton(onClick = onRefresh, modifier = Modifier.size(24.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "刷新",
+                            tint = Color(0xFFE65100)
+                        )
+                    }
+                }
             }
             items(rankModels) { rank ->
                 RankItemCard(rank, onRankClick, onRankLongClick)
@@ -154,7 +165,7 @@ fun RankItemCard(
     rank: RankModel,
     onRankClick: (String) -> Unit,
     onRankLongClick: (String) -> Unit,
-    onScrollPositionChanged: (Boolean) -> Unit = {}
+    onRefresh: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),

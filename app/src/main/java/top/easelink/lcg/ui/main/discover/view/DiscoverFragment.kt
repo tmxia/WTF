@@ -30,65 +30,29 @@ class DiscoverFragment : Fragment(), ControllableFragment {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        val context = requireContext()
         
-        var isListAtTop = true
-        val swipeRefreshLayout = SwipeRefreshLayout(requireContext()).apply {
-            
-            setDistanceToTriggerSync(300)
-            
-            setSlingshotDistance(350)
-            setColorSchemeColors(
-                ContextCompat.getColor(requireContext(), R.color.colorPrimary),
-                ContextCompat.getColor(requireContext(), R.color.colorAccent),
-                ContextCompat.getColor(requireContext(), R.color.colorPrimaryDark)
-            )
-            
-            setOnChildScrollUpCallback { _, _ -> !isListAtTop }
-            setOnRefreshListener {
-                viewModel.refreshOptions(requireContext())
-            }
-        }
-
-        
-        val composeView = ComposeView(requireContext()).apply {
-            setContent {
-                val models by viewModel.aggregationModels.observeAsState(initial = emptyList())
-                
-                DiscoverScreenCompose(
-                    models = models,
-                    onForumClick = { title, url ->
-                        EventBus.getDefault().post(OpenForumEvent(title, url, true))
-                    },
-                    onMoreForumsClick = {
-                        EventBus.getDefault().post(ForumNavigationFragment::class.java)
-                    },
-                    onRankClick = { url ->
-                        EventBus.getDefault().post(OpenArticleEvent(url))
-                    }
-                ,
-                onRankLongClick = { url ->
-                    PostPreviewDialog.newInstance(url)
-                        .show(parentFragmentManager, PostPreviewDialog.TAG)
-                }
-            )
-            }
-        }
-
-        
-        swipeRefreshLayout.addView(
-            composeView,
-            ViewGroup.LayoutParams(
+        // 废弃 SwipeRefreshLayout，防止热榜快速滑动时误触
+        val composeView = ComposeView(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-        )
-
-        
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            swipeRefreshLayout.isRefreshing = isLoading
         }
-
-        return swipeRefreshLayout
+        
+        composeView.setContent {
+            val models by viewModel.aggregationModels.observeAsState(initial = emptyList())
+            DiscoverScreenCompose(
+                models = models,
+                onForumClick = { title, url -> EventBus.getDefault().post(OpenForumEvent(title, url, true)) },
+                onMoreForumsClick = { EventBus.getDefault().post(ForumNavigationFragment::class.java) },
+                onRankClick = { url -> EventBus.getDefault().post(OpenArticleEvent(url)) },
+                onRankLongClick = { url -> PostPreviewDialog.newInstance(url).show(parentFragmentManager, PostPreviewDialog.TAG) },
+                onRefresh = { viewModel.refreshOptions(context) } // 将刷新逻辑传给 Compose
+            )
+        }
+        
+        return composeView
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
