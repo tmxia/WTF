@@ -115,10 +115,10 @@ fun MeScreenContent(
     onSettingClick: () -> Unit,
     onNavigate: (Fragment) -> Unit
 ) {
-    // 使用绝对安全的 UserDataRepo 判断
+    // 核心修复：使用 observeAsState 监听数据变化，解决一直显示“加载中”的问题
+    val isLoggedInString by AccountManager.isLoggedIn.observeAsState(initial = "")
     val isLoggedIn = UserDataRepo.isLoggedIn
-    // 安全获取用户数据
-    val userInfo = AccountManager.userInfo.value
+    val userInfo by AccountManager.userInfo.observeAsState(initial = null)
     val context = LocalContext.current
 
     var signInText by remember { mutableStateOf("去签到") }
@@ -154,7 +154,7 @@ fun MeScreenContent(
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)
     ) {
         Card(
             shape = RoundedCornerShape(12.dp),
@@ -162,7 +162,7 @@ fun MeScreenContent(
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -269,7 +269,7 @@ fun MeScreenContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Card(
             shape = RoundedCornerShape(12.dp),

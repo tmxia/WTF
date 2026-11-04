@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/slight_light_light_gray"
+    android:fitsSystemWindows="true"
     android:scrollbars="none">
 
     <LinearLayout
@@ -54,7 +55,7 @@
                     android:id="@+id/auto_sign_switch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp"
+                    android:padding="14dp"
                     android:text="@string/start_auto_sign_in"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
@@ -69,7 +70,7 @@
                     android:id="@+id/switch_show_sign_in_toast"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp"
+                    android:padding="14dp"
                     android:text="签到结果显示提示"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
@@ -80,7 +81,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
             android:layout_marginStart="32dp"
             android:text="@string/favorite_setting"
             android:textColor="@color/gray"
@@ -106,7 +107,7 @@
                     android:id="@+id/sync_favorites_switch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp"
+                    android:padding="14dp"
                     android:text="@string/sync_favorites"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
@@ -117,7 +118,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
             android:layout_marginStart="32dp"
             android:text="@string/search_setting"
             android:textColor="@color/gray"
@@ -142,7 +143,7 @@
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp">
+                    android:padding="14dp">
 
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
@@ -170,7 +171,7 @@
                     android:id="@+id/show_search_result_in_webview"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp"
+                    android:padding="14dp"
                     android:text="@string/open_search_result_in_webview"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
@@ -181,7 +182,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
             android:layout_marginStart="32dp"
             android:text="@string/article_setting"
             android:textColor="@color/gray"
@@ -207,7 +208,7 @@
                     android:id="@+id/show_recommend_flag"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp"
+                    android:padding="14dp"
                     android:text="@string/show_recommend_flag_on_article"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
@@ -222,7 +223,7 @@
                     android:id="@+id/show_article_in_webview"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp"
+                    android:padding="14dp"
                     android:text="@string/open_article_in_webview"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
@@ -237,7 +238,7 @@
                     android:id="@+id/article_handle_pre_tag"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp"
+                    android:padding="14dp"
                     android:text="@string/article_handle_pre_tag"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
@@ -248,7 +249,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
             android:layout_marginStart="32dp"
             android:text="系统与后台"
             android:textColor="@color/gray"
@@ -274,7 +275,7 @@
                     android:id="@+id/keep_alive_switch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp"
+                    android:padding="14dp"
                     android:text="@string/battery_keep_alive"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
@@ -285,7 +286,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
             android:layout_marginStart="32dp"
             android:text="@string/app_setting"
             android:textColor="@color/gray"
@@ -314,7 +315,7 @@
                     android:background="?attr/selectableItemBackground"
                     android:clickable="true"
                     android:focusable="true"
-                    android:padding="16dp"
+                    android:padding="14dp"
                     android:text="@string/check_app_update"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
@@ -332,7 +333,7 @@
             android:backgroundTint="@color/white"
             android:fontFamily="sans-serif-medium"
             android:gravity="center"
-            android:padding="16dp"
+            android:padding="14dp"
             android:text="@string/logout_confirm_message"
             android:textColor="@color/black"
             android:textSize="16sp"
