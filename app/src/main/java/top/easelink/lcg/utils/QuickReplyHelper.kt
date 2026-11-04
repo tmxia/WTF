@@ -122,14 +122,16 @@ object QuickReplyHelper {
 
         val layout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding((24 * density).toInt(), (20 * density).toInt(), (24 * density).toInt(), (16 * density).toInt())
+            // 大幅缩小内边距
+            setPadding((20 * density).toInt(), (16 * density).toInt(), (20 * density).toInt(), (12 * density).toInt())
         }
 
         layout.addView(TextView(context).apply {
             text = titleStr
-            textSize = 16f
+            textSize = 15f
             setTextColor(Color.parseColor("#333333"))
             setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, (12 * density).toInt())
         })
 
         items.forEachIndexed { i, item ->
@@ -137,7 +139,8 @@ object QuickReplyHelper {
                 text = item
                 textSize = 14f
                 setTextColor(Color.parseColor("#666666"))
-                setPadding(0, (16 * density).toInt(), 0, (16 * density).toInt())
+                // 减小选项的上下间距
+                setPadding(0, (12 * density).toInt(), 0, (12 * density).toInt())
                 setOnClickListener {
                     dialog.dismiss()
                     if (index == -1 || i == 0) showInputDialog(context, index, phrase, onUpdated)
@@ -171,21 +174,23 @@ object QuickReplyHelper {
 
         val layout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding((24 * density).toInt(), (20 * density).toInt(), (24 * density).toInt(), (16 * density).toInt())
+            setPadding((20 * density).toInt(), (16 * density).toInt(), (20 * density).toInt(), (8 * density).toInt())
         }
 
         layout.addView(TextView(context).apply {
             text = if (index == -1) "新增短语" else "编辑短语"
-            textSize = 16f
+            textSize = 15f
             setTextColor(Color.parseColor("#333333"))
             setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, (12 * density).toInt())
         })
 
         val textInputLayout = TextInputLayout(context).apply {
             hint = "输入快捷短语"
             boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
             setBoxCornerRadii(8f * density, 8f * density, 8f * density, 8f * density)
-            setPadding(0, (16 * density).toInt(), 0, 0)
+            // 减小输入框上方的空白
+            setPadding(0, 0, 0, 0)
         }
 
         val input = EditText(context).apply {
@@ -193,7 +198,8 @@ object QuickReplyHelper {
             setSelection(text.length)
             setBackgroundColor(Color.TRANSPARENT)
             inputType = InputType.TYPE_CLASS_TEXT
-            val pad = (12 * density).toInt()
+            // 缩小输入框内部间距，降低高度
+            val pad = (10 * density).toInt()
             setPadding(pad, pad, pad, pad)
         }
         textInputLayout.addView(input)
@@ -202,7 +208,8 @@ object QuickReplyHelper {
         val btnLayout = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.END
-            setPadding(0, (16 * density).toInt(), 0, 0)
+            // 减小按钮栏的顶部间距
+            setPadding(0, (8 * density).toInt(), 0, 0)
         }
 
         btnLayout.addView(TextView(context).apply {
