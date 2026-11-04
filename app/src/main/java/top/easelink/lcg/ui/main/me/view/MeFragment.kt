@@ -1,6 +1,9 @@
 package top.easelink.lcg.ui.main.me.view
 
 import android.content.Intent
+import android.widget.Toast
+import top.easelink.lcg.utils.SharedPreferencesHelper
+import top.easelink.lcg.utils.SignInManager
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.LayoutInflater
@@ -72,6 +75,7 @@ class MeFragment : TopFragment(), ControllableFragment {
         binding.settingBtn.setOnClickListener {
             startActivity(Intent(context, SettingActivity::class.java))
         }
+        binding.btnSignInState.setOnClickListener { performManualSignIn() }
         updateIconButtons()
         registerObservers()
         setupSwipeRefresh()
@@ -84,6 +88,7 @@ class MeFragment : TopFragment(), ControllableFragment {
     private fun registerObservers() {
         AccountManager.isLoggedIn.observe(viewLifecycleOwner) { loggedIn ->
             updateViewState(loggedIn)
+            updateSignInButton()
             if (!loggedIn
                 && isAdded
                 && isVisible
@@ -100,25 +105,7 @@ class MeFragment : TopFragment(), ControllableFragment {
             binding.meAnwserRate.text = info.answerRate
             binding.meCredit.text = info.credit
             binding.meEnthusiastic.text = info.enthusiasticValue
-            info.signInStateUrl?.let { url ->
-                binding.meSignInState.visibility = View.VISIBLE
-                ImageRequest.Builder(binding.meSignInState.context)
-                    .data(url)
-                    .allowRgb565(true)
-                    .lifecycle(this@MeFragment)
-                    .target {
-                        binding.meSignInState.apply {
-                            layoutParams.width = it.intrinsicWidth / it.intrinsicHeight * height
-                            setImageDrawable(it)
-                        }
-                    }
-                    .build()
-                    .let { request ->
-                        Coil.imageLoader(binding.meSignInState.context).enqueue(request)
-                    }
-            } ?: run {
-                binding.meSignInState.visibility = View.GONE
-            }
+            // 论坛原生图片签到逻辑已屏蔽，改为右上角本地状态按钮
             info.avatarUrl?.let {
                 binding.meUserAvatar.load(it) {
                     placeholder(PlaceholderDrawable)
@@ -126,6 +113,51 @@ class MeFragment : TopFragment(), ControllableFragment {
                     transformations(RoundedCornersTransformation(4.dpToPx(binding.meUserAvatar.context)))
                     error(getDefaultAvatar(it))
                 }
+            }
+        }
+    }
+
+
+    private fun updateSignInButton() {
+        if (!AccountManager.isLoggedIn.value!!) {
+            binding.btnSignInState.text = "请先登录"
+            binding.btnSignInState.setTextColor(android.graphics.Color.parseColor("#999999"))
+            binding.btnSignInState.isEnabled = false
+            return
+        }
+
+        val sp = SharedPreferencesHelper.getUserSp()
+        val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)
+        
+        val todayStart = java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        
+        if (lastTime >= todayStart) {
+            binding.btnSignInState.text = "✅ 今日已签到"
+            binding.btnSignInState.setTextColor(android.graphics.Color.parseColor("#4CAF50")) // 绿色
+            binding.btnSignInState.isEnabled = false
+        } else {
+            binding.btnSignInState.text = "🔥 立即签到"
+            binding.btnSignInState.setTextColor(android.graphics.Color.parseColor("#E53935")) // 红色
+            binding.btnSignInState.isEnabled = true
+        }
+    }
+
+    private fun performManualSignIn() {
+        binding.btnSignInState.isEnabled = false
+        binding.btnSignInState.text = "签到中..."
+        SignInManager.performSignIn(requireContext()) { success, msg ->
+            requireActivity().runOnUiThread {
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                if (success) {
+                    val sp = SharedPreferencesHelper.getUserSp()
+                    sp.edit().putLong("sp_key_last_sign_in_at", System.currentTimeMillis()).apply()
+                }
+                updateSignInButton()
             }
         }
     }

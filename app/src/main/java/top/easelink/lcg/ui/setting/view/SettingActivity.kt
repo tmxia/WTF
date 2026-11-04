@@ -141,21 +141,7 @@ class SettingActivity : TopActivity() {
                 signPrefs.edit().putBoolean("show_sign_in_toast", isChecked).apply()
             }
 
-            // 绑定手动签到按钮
-            btnManualSignIn.setOnClickListener {
-                btnManualSignIn.isEnabled = false
-                btnManualSignIn.text = "正在签到..."
-                // 解决 this 上下文报错，显式指明为 Activity
-                SignInManager.performSignIn(this@SettingActivity) { success, msg ->
-                    runOnUiThread {
-                        btnManualSignIn.isEnabled = true
-                        btnManualSignIn.text = "立即手动签到"
-                        if (switchShowSignInToast.isChecked) {
-                            Toast.makeText(this@SettingActivity, msg, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-            }
+            
 
             searchEngineSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(parent: AdapterView<*>?) = Unit
