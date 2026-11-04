@@ -18,6 +18,7 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModelProvider
 import top.easelink.framework.topbase.TopActivity
 import top.easelink.lcg.R
+import top.easelink.lcg.BuildConfig
 import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.databinding.ActivitySettingsBinding
@@ -29,7 +30,6 @@ import top.easelink.lcg.utils.showMessage
 import top.easelink.lcg.utils.SignInManager
 import top.easelink.lcg.utils.AppLogManager
 import timber.log.Timber
-import android.content.Intent
 import android.widget.Toast
 
 class SettingActivity : TopActivity() {
