@@ -1,104 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<androidx.constraintlayout.widget.ConstraintLayout
+<com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/follow_list_container"
-    android:minHeight="@dimen/dp_50"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp"
     android:clickable="true"
     android:focusable="true"
-    android:paddingTop="@dimen/dp_10"
-    android:paddingStart="@dimen/dp_10"
-    android:paddingEnd="@dimen/dp_10"
-    android:descendantFocusability="blocksDescendants"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-    <ImageView
-        android:id="@+id/avatar"
-        android:layout_width="@dimen/dp_48"
-        android:layout_height="@dimen/dp_48"
-        android:layout_marginTop="@dimen/dp_6"
-        android:layout_marginStart="@dimen/dp_4"
-        android:clickable="false"
-        android:longClickable="false"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0"
-        tools:ignore="ContentDescription" />
-    
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/username"
-        android:layout_width="0dp"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/follow_list_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:lines="1"
-        android:textSize="@dimen/sp_14"
-        android:clickable="false"
-        android:longClickable="false"
-        android:textColor="@color/black_effective"
-        android:layout_marginStart="@dimen/dp_12"
-        app:layout_constraintStart_toEndOf="@id/avatar"
-        app:layout_constraintTop_toTopOf="@id/avatar"
-        app:layout_constraintVertical_chainStyle="spread_inside"
-        app:layout_constraintBottom_toTopOf="@id/last_action"
-        tools:text="Fabrice"/>
+        android:descendantFocusability="blocksDescendants"
+        android:padding="14dp">
 
-    <TextView
-        android:id="@+id/following_num"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/gray"
-        android:textSize="@dimen/sp_10"
-        android:layout_marginTop="@dimen/dp_6"
-        tools:text="收听 1 人"
-        app:layout_constraintTop_toBottomOf="@id/last_action"
-        app:layout_constraintStart_toStartOf="@id/last_action"
-        />
+        <ImageView
+            android:id="@+id/avatar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:clickable="false"
+            android:longClickable="false"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0"
+            tools:ignore="ContentDescription" />
 
-    <TextView
-        android:id="@+id/follower_num"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/gray"
-        android:textSize="@dimen/sp_10"
-        android:layout_marginStart="@dimen/dp_20"
-        tools:text="听众 1 人"
-        app:layout_constraintTop_toTopOf="@id/following_num"
-        app:layout_constraintBottom_toBottomOf="@id/following_num"
-        app:layout_constraintStart_toEndOf="@id/following_num"
-        />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/username"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:clickable="false"
+            android:ellipsize="end"
+            android:lines="1"
+            android:longClickable="false"
+            android:textColor="@color/black_effective"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/avatar"
+            app:layout_constraintTop_toTopOf="@id/avatar"
+            tools:text="longlonglong" />
 
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/last_action"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:textColor="@color/semi_gray"
-        android:textSize="@dimen/sp_12"
-        android:clickable="false"
-        android:longClickable="false"
-        android:textIsSelectable="false"
-        android:layout_marginBottom="@dimen/dp_2"
-        android:layout_marginEnd="@dimen/dp_4"
-        android:layout_marginTop="@dimen/dp_6"
-        android:ellipsize="end"
-        android:lines="1"
-        app:layout_constraintStart_toStartOf="@id/username"
-        app:layout_constraintTop_toBottomOf="@id/username"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:text="开源吾爱破解论坛App Android 1.5版本"/>
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/last_action"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_marginEnd="4dp"
+            android:clickable="false"
+            android:ellipsize="end"
+            android:lines="1"
+            android:longClickable="false"
+            android:textColor="@color/semi_gray"
+            android:textIsSelectable="false"
+            android:textSize="13sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/username"
+            app:layout_constraintTop_toBottomOf="@id/username"
+            tools:text="最近动作: 金色阳光集合竞价擒龙决策2507一种..." />
 
-    <View
-        android:id="@+id/line"
-        android:layout_marginTop="@dimen/dp_10"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/dp_1"
-        android:backgroundTint="@color/slight_light_gray"
-        android:background="@drawable/rectangle_bg"
-        app:layout_constraintWidth_percent="0.8"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/following_num"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        <TextView
+            android:id="@+id/following_num"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="@id/username"
+            app:layout_constraintTop_toBottomOf="@id/last_action"
+            tools:text="收听 0 人" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/follower_num"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="@id/following_num"
+            app:layout_constraintStart_toEndOf="@id/following_num"
+            app:layout_constraintTop_toTopOf="@id/following_num"
+            tools:text="听众 363 人" />
+
+        <!-- 移除了底部的 line 分割线，因为卡片本身就有间距 -->
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>
