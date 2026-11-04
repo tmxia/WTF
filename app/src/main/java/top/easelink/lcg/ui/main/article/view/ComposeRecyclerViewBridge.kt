@@ -18,6 +18,7 @@ fun ComposeRecyclerViewBridge(
     fragment: Fragment,
     isReverse: Boolean = false,
     showOpOnly: Boolean = false,
+    filterSpam: Boolean = false,
     onScrollStateChanged: (Boolean) -> Unit = {},
     onReady: (RecyclerView) -> Unit = {}
 ) {
@@ -49,11 +50,20 @@ fun ComposeRecyclerViewBridge(
         update = { recyclerView ->
             val adapter = recyclerView.adapter as? ArticleAdapter
             if (adapter != null) {
-                val filteredPosts = if (showOpOnly) {
+                var filteredPosts = if (showOpOnly) {
                     val opAuthor = posts.firstOrNull()?.author
                     posts.filter { it.author == opAuthor }
                 } else {
                     posts
+                }
+                
+                // 核心新增：过滤灌水/极短回复
+                if (filterSpam) {
+                    filteredPosts = filteredPosts.filter { post ->
+                        // 剥离 HTML 标签，只看纯文本
+                        val plainText = post.content?.replace(Regex("<[^>]*>"), "")?.trim() ?: ""
+                        plainText.length >= 5
+                    }
                 }
                 val displayPosts = if (isReverse && filteredPosts.size > 1) {
                     listOf(filteredPosts[0]) + filteredPosts.drop(1).reversed()

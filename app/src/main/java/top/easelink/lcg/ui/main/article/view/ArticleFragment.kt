@@ -145,6 +145,7 @@ fun ArticleScreen(
     var showMenu by remember { mutableStateOf(false) }
     var showBackToTop by remember { mutableStateOf(false) }
     var showOpOnly by remember { mutableStateOf(false) }
+    var filterSpam by remember { mutableStateOf(false) }
     var recyclerView by remember { mutableStateOf<androidx.recyclerview.widget.RecyclerView?>(null) }
     
     val prefs = remember { context.getSharedPreferences("article_settings", android.content.Context.MODE_PRIVATE) }
@@ -203,7 +204,15 @@ fun ArticleScreen(
                         ) {
                 DropdownMenuItem(
                     leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
-                    text = { Text(if (showOpOnly) "显示全部帖子" else "只看楼主", fontSize = 14.sp, color = Color.DarkGray) },
+                    text = { Text(if (showOpOnly) "显示全部帖子" else "只看楼主", fontSize = 14.sp, color = Color.DarkGray) }
+                DropdownMenuItem(
+                    leadingIcon = { Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                    text = { Text(if (filterSpam) "关闭灌水过滤" else "过滤灌水回复", fontSize = 14.sp, color = Color.DarkGray) },
+                    onClick = { 
+                        showMenu = false
+                        filterSpam = !filterSpam 
+                    }
+                ),
                     onClick = { 
                         showMenu = false
                         showOpOnly = !showOpOnly 
@@ -343,6 +352,7 @@ fun ArticleScreen(
                             fragment = fragment,
                             isReverse = isReverse,
                             showOpOnly = showOpOnly,
+                            filterSpam = filterSpam,
                             onScrollStateChanged = { show -> showBackToTop = show },
                             onReady = { rv -> recyclerView = rv }
                         )
