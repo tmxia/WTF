@@ -8,8 +8,8 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
-    android:layout_marginTop="6dp"
-    android:layout_marginBottom="6dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
@@ -21,51 +21,21 @@
         android:id="@+id/favorite_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingTop="14dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="14dp">
+        android:padding="14dp">
 
-        <TextView
-            android:id="@+id/title_text_view"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:ellipsize="end"
-            android:fontFamily="sans-serif-medium"
-            android:lineSpacingExtra="2dp"
-            android:maxLines="2"
-            android:textColor="@color/black_effective"
-            android:textSize="15sp"
-            app:layout_constraintEnd_toStartOf="@id/remove_button"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="去除升级、违规提示的迅雷 11.1.12.1692" />
-
-        <ImageButton
-            android:id="@+id/remove_button"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="删除"
-            android:src="@drawable/ic_close_black_24dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/title_text_view"
-            app:tint="#CCCCCC" />
-
+        <!-- 第一行：作者、时间、删除按钮 -->
         <TextView
             android:id="@+id/author_text_view"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#999999"
-            android:textSize="12sp"
+            android:textColor="#666666"
+            android:textSize="13sp"
             app:layout_constraintEnd_toStartOf="@id/date_text_view"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/title_text_view"
-            tools:text="映梓" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="yishunjian108" />
 
         <TextView
             android:id="@+id/date_text_view"
@@ -73,11 +43,44 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:textColor="#999999"
-            android:textSize="12sp"
+            android:textSize="11sp"
+            app:layout_constraintBottom_toBottomOf="@id/author_text_view"
+            app:layout_constraintEnd_toStartOf="@id/remove_button"
+            app:layout_constraintTop_toTopOf="@id/author_text_view"
+            tools:text="21 分钟前" />
+
+        <ImageButton
+            android:id="@+id/remove_button"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="12dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="删除"
+            android:padding="4dp"
+            android:src="@drawable/ic_close_black_24dp"
             app:layout_constraintBottom_toBottomOf="@id/author_text_view"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/author_text_view"
-            tools:text="13 分钟前" />
+            app:tint="#CCCCCC" />
+
+        <!-- 第二行：大标题 -->
+        <TextView
+            android:id="@+id/title_text_view"
+            style="@style/TextStyle.Heading"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="9dp"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:lineSpacingExtra="2dp"
+            android:maxLines="2"
+            android:textColor="@color/black_effective"
+            android:textSize="16sp"
+            android:textStyle="normal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/author_text_view"
+            tools:text="求大明嫡长子有声资源" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

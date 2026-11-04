@@ -14,8 +14,6 @@
         android:id="@+id/clRootView"
         android:background="@color/slight_light_gray"
         android:layout_width="match_parent"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
         android:clipToPadding="false"
         android:layout_height="match_parent"
         android:clipChildren="false"
