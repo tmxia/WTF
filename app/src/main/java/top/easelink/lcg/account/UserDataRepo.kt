@@ -47,7 +47,7 @@ object UserDataRepo {
         set(value) {
             put(SP_KEY_LOGGED_IN, value)
             AccountManager.isLoggedIn.postValue(value)
-            Timber.d("【状态层】登录状态变更: isLoggedIn=\$value")
+            Timber.d("【状态层】登录状态变更: isLoggedIn=$value")
         }
 
     fun updateUserInfo(userInfo: UserInfo) {

@@ -67,7 +67,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
             return
         }
         safeUpdate(isLoading, true)
-        Timber.d("【业务层】开始加载详情/帖子数据, Type=\$type, Query=\$query")
+        Timber.d("【业务层】开始加载详情/帖子数据, Type=$type, Query=$query")
 
         val query: String? = when (type) {
             FETCH_POST_INIT -> mUrl
@@ -103,13 +103,13 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                         FETCH_POST_INIT -> {
                             
                             safeUpdate(posts, response.postList.toMutableList())
-                                Timber.d("【业务层】初始化数据: 共 \${response.postList.size} 条")
+                                Timber.d("【业务层】初始化数据: 共 ${response.postList.size} 条")
                         }
                         else -> {
                             
                             val currentList = posts.value?.toMutableList() ?: mutableListOf()
                             currentList.addAll(response.postList)
-                                Timber.d("【业务层】追加数据: 新增 \${response.postList.size} 条, 当前总计 \${currentList.size} 条")
+                                Timber.d("【业务层】追加数据: 新增 ${response.postList.size} 条, 当前总计 ${currentList.size} 条")
                             safeUpdate(posts, currentList)
                             safeUpdate(newPostsAppended, response.postList)
                         }
