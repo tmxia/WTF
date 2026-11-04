@@ -113,6 +113,7 @@ android {
 }
 
 dependencies {
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
     // Compose 基础依赖
     val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
