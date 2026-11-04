@@ -75,7 +75,7 @@ class ArticleFragment : Fragment(), ControllableFragment {
     ): View {
         val context = requireContext()
         
-        // 彻底废弃 SwipeRefreshLayout，直接使用纯 Compose 渲染
+        
         val composeView = ComposeView(context).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 

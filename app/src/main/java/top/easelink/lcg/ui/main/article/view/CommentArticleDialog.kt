@@ -83,7 +83,7 @@ class CommentArticleDialog : TopDialog() {
         binding.replyContent.background = editBg
         binding.replyContent.setPadding(32, 32, 32, 32)
 
-        // 绑定快捷短语折叠状态
+        
         val prefs = requireContext().getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
         var isExpanded = prefs.getBoolean("quick_reply_expanded", false)
         
@@ -97,7 +97,7 @@ class CommentArticleDialog : TopDialog() {
             prefs.edit().putBoolean("quick_reply_expanded", isExpanded).apply()
         }
 
-        // 渲染快捷短语
+        
         QuickReplyHelper.renderQuickReplies(requireContext(), binding.quickReplyContainer) { phrase ->
             val current = binding.replyContent.text?.toString() ?: ""
             if (current.isEmpty()) {

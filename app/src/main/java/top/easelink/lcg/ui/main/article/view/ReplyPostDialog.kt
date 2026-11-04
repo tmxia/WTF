@@ -39,7 +39,7 @@ class ReplyPostDialog : DialogFragment() {
         replyPostViewModel = ViewModelProvider(this)[ReplyPostViewModel::class.java]
 
         
-        // 折叠快捷短语
+        
         val prefs = requireContext().getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
         var isExpanded = prefs.getBoolean("quick_reply_expanded", false)
         binding.quickReplyScroll.visibility = if (isExpanded) android.view.View.VISIBLE else android.view.View.GONE
@@ -52,7 +52,7 @@ class ReplyPostDialog : DialogFragment() {
             prefs.edit().putBoolean("quick_reply_expanded", isExpanded).apply()
         }
 
-        // 渲染快捷短语
+        
         QuickReplyHelper.renderQuickReplies(requireContext(), binding.quickReplyContainer) { phrase ->
             val current = binding.replyContent.text?.toString() ?: ""
             if (current.isEmpty()) binding.replyContent.setText(phrase)

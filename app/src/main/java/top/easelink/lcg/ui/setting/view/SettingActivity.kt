@@ -93,7 +93,7 @@ class SettingActivity : TopActivity() {
 
         binding.apply {
 
-            // 后台保活逻辑
+            
             val prefs = getSharedPreferences("battery_settings", Context.MODE_PRIVATE)
             val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
             keepAliveSwitch.isChecked = if (prefs.contains("battery_state")) {
@@ -129,12 +129,12 @@ class SettingActivity : TopActivity() {
                 mViewModel.scheduleJob(isChecked)
             }
 
-            // 修复原先错误的绑定（之前绑到了同步收藏）
+            
             autoSignSwitch.setOnCheckedChangeListener { _: CompoundButton, isChecked: Boolean ->
                 mViewModel.scheduleJob(isChecked) 
             }
 
-            // 读取是否显示提示的配置（解决变量名冲突）
+            
             val signPrefs = getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
             switchShowSignInToast.isChecked = signPrefs.getBoolean("show_sign_in_toast", true)
             switchShowSignInToast.setOnCheckedChangeListener { _, isChecked ->

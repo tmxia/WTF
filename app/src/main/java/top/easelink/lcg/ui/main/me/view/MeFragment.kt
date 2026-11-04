@@ -64,7 +64,7 @@ class MeFragment : TopFragment(), ControllableFragment {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val context = requireContext()
-        // 核心重构：彻底放弃 SwipeRefreshLayout 包裹，直接使用 ComposeView 充满，消除一切原生测量死锁
+        
         val composeView = ComposeView(context).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -90,12 +90,12 @@ class MeFragment : TopFragment(), ControllableFragment {
             try {
                 viewModel.fetchUserInfoDirect()
             } catch (e: Exception) {
-                // 容错处理
+                
             }
         }
 
         AccountManager.isLoggedIn.observe(viewLifecycleOwner) {
-            // 不管它是 String 还是 Boolean，我们只认底层的 UserDataRepo
+            
             if (!UserDataRepo.isLoggedIn && isAdded && isVisible && SystemClock.elapsedRealtime() - MINIMUM_HINT_SHOW_INTERVAL > lastShowLoginHintTime) {
                 lastShowLoginHintTime = SystemClock.elapsedRealtime()
                 Toast.makeText(requireContext(), R.string.login_hint_message, Toast.LENGTH_SHORT).show()
@@ -116,7 +116,7 @@ fun MeScreenContent(
     onSettingClick: () -> Unit,
     onNavigate: (Fragment) -> Unit
 ) {
-    // 核心修复：使用 observeAsState 监听数据变化，解决一直显示“加载中”的问题
+    
     val isLoggedInString by AccountManager.isLoggedIn.observeAsState(initial = "")
     val isLoggedIn = UserDataRepo.isLoggedIn
     val userInfo by AccountManager.userInfo.observeAsState(initial = null)
@@ -258,7 +258,7 @@ fun MeScreenContent(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            // 直接使用 API 返回的完整字符串，避免重复拼接
+                            
                             InfoRow(icon = R.drawable.ic_coin, text = userInfo?.wuaiCoin ?: "吾爱币 : 0")
                             InfoRow(icon = R.drawable.ic_anwser_rate, text = userInfo?.answerRate ?: "采纳率 : 0 %")
                         }

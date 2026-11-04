@@ -32,7 +32,7 @@ class DiscoverFragment : Fragment(), ControllableFragment {
     ): View {
         val context = requireContext()
         
-        // 废弃 SwipeRefreshLayout，防止热榜快速滑动时误触
+        
         val composeView = ComposeView(context).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -48,7 +48,7 @@ class DiscoverFragment : Fragment(), ControllableFragment {
                 onMoreForumsClick = { EventBus.getDefault().post(ForumNavigationFragment::class.java) },
                 onRankClick = { url -> EventBus.getDefault().post(OpenArticleEvent(url)) },
                 onRankLongClick = { url -> PostPreviewDialog.newInstance(url).show(parentFragmentManager, PostPreviewDialog.TAG) },
-                onRefresh = { viewModel.refreshOptions(context) } // 将刷新逻辑传给 Compose
+                onRefresh = { viewModel.refreshOptions(context) } 
             )
         }
         

@@ -92,8 +92,8 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // 初始化交由 Compose 内部 LaunchedEffect(Unit) 保证时序正确，避免重复请求
-        // viewModel.initUrlAndFetch(url, ArticleFetcher.FetchType.FETCH_INIT)
+        
+        
     }
 
     companion object {

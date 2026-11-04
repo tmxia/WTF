@@ -110,7 +110,7 @@ class SignInWorker(context: Context, workerParams: WorkerParameters) :
 
             return WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 TAG,
-                ExistingPeriodicWorkPolicy.UPDATE, // 改为 UPDATE 确保生效
+                ExistingPeriodicWorkPolicy.UPDATE, 
                 request
             )
         }

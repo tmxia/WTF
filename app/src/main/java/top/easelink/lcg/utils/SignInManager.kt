@@ -10,10 +10,10 @@ import android.webkit.WebViewClient
 
 object SignInManager {
 
-    /**
-     * 执行自动签到
-     * @param onResult 回调状态码 ("SUCCESS", "ALREADY_DONE", "LOGIN_REQUIRED", "FAILED") 和 提示信息
-     */
+    
+
+
+
     @SuppressLint("SetJavaScriptEnabled")
     fun performSignIn(context: Context, onResult: (String, String) -> Unit) {
         Handler(Looper.getMainLooper()).post {
@@ -55,7 +55,7 @@ object SignInManager {
                                     view.destroy()
                                 }
                                 "SUCCESS" -> {
-                                    // 延迟销毁，让签到请求飞一会儿
+                                    
                                     Handler(Looper.getMainLooper()).postDelayed({
                                         onResult("SUCCESS", "签到成功！")
                                         view.destroy()
