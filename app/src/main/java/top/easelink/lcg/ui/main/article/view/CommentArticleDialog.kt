@@ -1,6 +1,11 @@
 package top.easelink.lcg.ui.main.article.view
 
 import android.os.Bundle
+import androidx.core.view.setPadding
+import org.json.JSONArray
+import android.widget.FrameLayout
+import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
 import android.content.Context
 import android.widget.TextView
 import android.widget.LinearLayout
@@ -97,46 +102,9 @@ class CommentArticleDialog : TopDialog() {
             prefs.edit().putBoolean("quick_reply_expanded", isExpanded).apply()
         }
 
-        // 生成快捷回复短语
-        val quickPhrases = listOf("感谢分享", "支持楼主", "谢谢大佬", "看看是什么", "学习了")
-        val container = binding.quickReplyContainer
-        container.removeAllViews()
-        val density = resources.displayMetrics.density
+        // 渲染快捷回复短语
+        renderQuickReplies()
 
-        for (phrase in quickPhrases) {
-            val textView = TextView(requireContext()).apply {
-                text = phrase
-                setTextColor(android.graphics.Color.parseColor("#666666"))
-                textSize = 12f
-                val padH = (12 * density).toInt()
-                val padV = (6 * density).toInt()
-                setPadding(padH, padV, padH, padV)
-                
-                // 胶囊状圆角背景
-                background = android.graphics.drawable.GradientDrawable().apply {
-                    setColor(android.graphics.Color.parseColor("#F5F5F5"))
-                    cornerRadius = 16f * density
-                }
-                
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { marginEnd = (8 * density).toInt() }
-
-                setOnClickListener {
-                    val current = binding.replyContent.text?.toString() ?: ""
-                    if (current.isEmpty()) {
-                        binding.replyContent.setText(phrase)
-                    } else {
-                        // 如果已有内容，在末尾空格追加
-                        binding.replyContent.setText("$current $phrase")
-                    }
-                    // 将光标移到最末尾
-                    binding.replyContent.setSelection(binding.replyContent.text?.length ?: 0)
-                }
-            }
-            container.addView(textView)
-        }
  
 
         
@@ -196,7 +164,149 @@ class CommentArticleDialog : TopDialog() {
         null
     )
 
-    override fun onDestroyView() {
+    
+    private fun getQuickReplies(): MutableList<String> {
+        val prefs = requireContext().getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
+        val json = prefs.getString("quick_replies_json", null)
+        val list = mutableListOf<String>()
+        if (json != null) {
+            try {
+                val array = JSONArray(json)
+                for (i in 0 until array.length()) {
+                    list.add(array.getString(i))
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        if (list.isEmpty()) {
+            list.addAll(listOf("感谢分享", "支持楼主", "谢谢大佬", "看看是什么", "学习了"))
+        }
+        return list
+    }
+
+    private fun saveQuickReplies(list: List<String>) {
+        val array = JSONArray()
+        list.forEach { array.put(it) }
+        requireContext().getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
+            .edit().putString("quick_replies_json", array.toString()).apply()
+    }
+
+    private fun renderQuickReplies() {
+        val container = binding.quickReplyContainer
+        container.removeAllViews()
+        val density = resources.displayMetrics.density
+        val list = getQuickReplies()
+
+        // 渲染已有的短语
+        list.forEachIndexed { index, phrase ->
+            val textView = TextView(requireContext()).apply {
+                text = phrase
+                setTextColor(android.graphics.Color.parseColor("#666666"))
+                textSize = 12f
+                val padH = (12 * density).toInt()
+                val padV = (6 * density).toInt()
+                setPadding(padH, padV, padH, padV)
+                
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(android.graphics.Color.parseColor("#F5F5F5"))
+                    cornerRadius = 16f * density
+                }
+                
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { marginEnd = (8 * density).toInt() }
+
+                setOnClickListener {
+                    val current = binding.replyContent.text?.toString() ?: ""
+                    if (current.isEmpty()) binding.replyContent.setText(phrase)
+                    else binding.replyContent.setText("$current $phrase")
+                    binding.replyContent.setSelection(binding.replyContent.text?.length ?: 0)
+                }
+
+                setOnLongClickListener {
+                    showEditDeleteDialog(index, phrase)
+                    true
+                }
+            }
+            container.addView(textView)
+        }
+
+        // 添加一个“+ 添加”按钮
+        val addBtn = TextView(requireContext()).apply {
+            text = "+ 添加"
+            setTextColor(android.graphics.Color.parseColor("#888888"))
+            textSize = 12f
+            val padH = (12 * density).toInt()
+            val padV = (6 * density).toInt()
+            setPadding(padH, padV, padH, padV)
+            
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(android.graphics.Color.parseColor("#F5F5F5"))
+                cornerRadius = 16f * density
+            }
+            
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setOnClickListener { showEditDeleteDialog(-1, "") }
+        }
+        container.addView(addBtn)
+    }
+
+    private fun showEditDeleteDialog(index: Int, phrase: String) {
+        val options = if (index == -1) arrayOf("新增短语") else arrayOf("编辑短语", "删除短语")
+        AlertDialog.Builder(requireContext())
+            .setTitle(if (index == -1) "新增快捷短语" else "操作: $phrase")
+            .setItems(options) { _, which ->
+                if (index == -1 || which == 0) {
+                    showInputDialog(index, phrase)
+                } else {
+                    val list = getQuickReplies()
+                    if (index in list.indices) {
+                        list.removeAt(index)
+                        saveQuickReplies(list)
+                        renderQuickReplies()
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun showInputDialog(index: Int, phrase: String) {
+        val input = EditText(requireContext()).apply {
+            setText(phrase)
+            setSelection(text.length)
+            hint = "输入快捷短语"
+        }
+        val container = FrameLayout(requireContext()).apply {
+            setPadding((16 * resources.displayMetrics.density).toInt(), 0, (16 * resources.displayMetrics.density).toInt(), 0)
+            addView(input)
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(if (index == -1) "新增短语" else "编辑短语")
+            .setView(container)
+            .setPositiveButton("保存") { _, _ ->
+                val newText = input.text.toString().trim()
+                if (newText.isNotEmpty()) {
+                    val list = getQuickReplies()
+                    if (index == -1) {
+                        list.add(newText)
+                    } else if (index in list.indices) {
+                        list[index] = newText
+                    }
+                    saveQuickReplies(list)
+                    renderQuickReplies()
+                }
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
