@@ -18,16 +18,21 @@ import coil.transform.RoundedCornersTransformation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import top.easelink.framework.utils.dpToPx
 import top.easelink.lcg.R
+import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.databinding.DialogProfileBinding
 import top.easelink.lcg.network.JsoupClient
+import top.easelink.lcg.ui.main.model.SessionExpiredEvent
 import top.easelink.lcg.ui.main.source.parseExtraUserInfoProfilePage
 import top.easelink.lcg.ui.profile.model.PopUpProfileInfo
 import top.easelink.lcg.ui.webview.view.WebViewActivity
+import top.easelink.lcg.utils.BlacklistManager
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 import top.easelink.lcg.utils.showMessage
+import org.greenrobot.eventbus.EventBus
 
 class PopUpProfileDialog : DialogFragment() {
 
@@ -66,6 +71,7 @@ class PopUpProfileDialog : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         val popUpInfo = arguments?.getParcelableCompat<PopUpProfileInfo>(POPUP_INFO) ?: return
 
         binding.apply {
@@ -90,6 +96,88 @@ class PopUpProfileDialog : DialogFragment() {
                 WebViewActivity.startWebViewWith(SERVER_BASE_URL + popUpInfo.profileUrl, it.context)
             }
 
+            // ================= 黑名单核心逻辑 =================
+            val uidRegex = Regex("""uid[-=](\d+)""")
+            val match = uidRegex.find(popUpInfo.profileUrl ?: "")
+            val targetUid = match?.groupValues?.get(1)
+
+            fun updateBlacklistButton() {
+                if (targetUid == null) {
+                    blacklistBtn.isEnabled = false
+                    blacklistBtn.text = "无UID"
+                    return
+                }
+                val isBlack = BlacklistManager.isBlacklisted(targetUid)
+                if (isBlack) {
+                    blacklistBtn.text = "取消拉黑"
+                    blacklistBtn.setTextColor(Color.parseColor("#888888"))
+                } else {
+                    blacklistBtn.text = "加入黑名单"
+                    blacklistBtn.setTextColor(Color.parseColor("#E53935"))
+                }
+            }
+
+            updateBlacklistButton()
+
+            blacklistBtn.setOnClickListener {
+                if (targetUid == null) return@setOnClickListener
+                blacklistBtn.isEnabled = false
+                val originalText = blacklistBtn.text
+                blacklistBtn.text = "处理中..."
+                
+                ioScope.launch {
+                    val isCurrentlyBlack = BlacklistManager.isBlacklisted(targetUid)
+                    try {
+                        val op = if (isCurrentlyBlack) "del" else "add"
+                        val handlekey = if (isCurrentlyBlack) "delhk_$targetUid" else "addfriendhk_$targetUid"
+                        
+                        val postData = mutableMapOf(
+                            "formhash" to (JsoupClient.formHash ?: ""),
+                            "uid" to targetUid,
+                            "handlekey" to handlekey
+                        )
+                        
+                        val response = JsoupClient.sendPostRequestWithUrl(
+                            "https://www.52pojie.cn/home.php?mod=spacecp&ac=friend&op=$op",
+                            postData
+                        )
+
+                        val responseHtml = response.body()
+                        withContext(Dispatchers.Main) {
+                            blacklistBtn.isEnabled = true
+                            // 简单判断是否成功
+                            if (responseHtml.contains("成功") || responseHtml.contains("操作成功") || responseHtml.contains("添加") || responseHtml.contains("解除") || !responseHtml.contains("失败")) {
+                                if (isCurrentlyBlack) {
+                                    BlacklistManager.removeFromBlacklist(targetUid)
+                                    showMessage("已取消拉黑")
+                                } else {
+                                    BlacklistManager.addToBlacklist(targetUid)
+                                    showMessage("已加入黑名单")
+                                }
+                                updateBlacklistButton()
+                            } else {
+                                blacklistBtn.text = originalText
+                                if (responseHtml.contains("您需要先登录")) {
+                                    showMessage("登录已失效，请重新登录")
+                                    UserDataRepo.clearAll()
+                                    EventBus.getDefault().post(SessionExpiredEvent())
+                                } else {
+                                    showMessage("操作失败，请稍后再试")
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                        withContext(Dispatchers.Main) {
+                            blacklistBtn.isEnabled = true
+                            blacklistBtn.text = originalText
+                            showMessage("网络异常，操作失败")
+                        }
+                    }
+                }
+            }
+            // ====================================================
+
             profileAvatar.load(popUpInfo.imageUrl) {
                 transformations(RoundedCornersTransformation(4.dpToPx(mContext)))
             }
@@ -98,21 +186,16 @@ class PopUpProfileDialog : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
+
         val popUpInfo = arguments?.getParcelableCompat<PopUpProfileInfo>(POPUP_INFO) ?: return
 
         dialog?.apply {
             window?.apply {
-                
-             
-
-                
-                 setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
-
+                setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
                 setGravity(Gravity.START or Gravity.TOP)
                 attributes = attributes.apply {
                     val padding = 10.dpToPx(mContext).toInt()
                     val statusBarHeight = getCompatStatusBarHeight()
-
                     x = popUpInfo.imageX - padding
                     y = popUpInfo.imageY - statusBarHeight - padding
                     width = ViewGroup.LayoutParams.WRAP_CONTENT
