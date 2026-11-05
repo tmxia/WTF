@@ -236,7 +236,27 @@ class ArticleAdapter(
                                 WebViewActivity.startWebViewWith(url, c)
                             }
                         }
-                        setHtml(highlightKeywords(p.content, searchKeyword), htmlHttpImageGetter)
+                        // 核心修复：在搜索/过滤状态下，只提取纯文本摘要，避免复杂 HTML 导致测量塌陷不显示
+                        if (isFiltering) {
+                            val plainText = org.jsoup.Jsoup.parse(p.content ?: "").text()
+                            var snippet = plainText
+                            
+                            // 截取关键字附近的内容（前后各 40 字）
+                            if (searchKeyword.isNotBlank() && plainText.contains(searchKeyword, ignoreCase = true)) {
+                                val index = plainText.indexOf(searchKeyword, ignoreCase = true)
+                                val start = maxOf(0, index - 40)
+                                val end = minOf(plainText.length, index + searchKeyword.length + 40)
+                                snippet = plainText.substring(start, end)
+                                if (start > 0) snippet = "...$snippet"
+                                if (end < plainText.length) snippet = "$snippet..."
+                            } else if (plainText.length > 150) {
+                                snippet = plainText.substring(0, 150) + "..."
+                            }
+                            setHtml(highlightKeywords(snippet, searchKeyword), htmlHttpImageGetter)
+                        } else {
+                            // 正常状态下，渲染完整 HTML
+                            setHtml(highlightKeywords(p.content, searchKeyword), htmlHttpImageGetter)
+                        }
                     }
                     postBtnCapture.visibility = View.VISIBLE
                     postBtnCapture.setOnClickListener(this@PostViewHolder)
@@ -376,7 +396,27 @@ class ArticleAdapter(
                                     WebViewActivity.startWebViewWith(url, c)
                                 }
                             }
+                            // 核心修复：在搜索/过滤状态下，只提取纯文本摘要，避免复杂 HTML 导致测量塌陷不显示
+                        if (isFiltering) {
+                            val plainText = org.jsoup.Jsoup.parse(p.content ?: "").text()
+                            var snippet = plainText
+                            
+                            // 截取关键字附近的内容（前后各 40 字）
+                            if (searchKeyword.isNotBlank() && plainText.contains(searchKeyword, ignoreCase = true)) {
+                                val index = plainText.indexOf(searchKeyword, ignoreCase = true)
+                                val start = maxOf(0, index - 40)
+                                val end = minOf(plainText.length, index + searchKeyword.length + 40)
+                                snippet = plainText.substring(start, end)
+                                if (start > 0) snippet = "...$snippet"
+                                if (end < plainText.length) snippet = "$snippet..."
+                            } else if (plainText.length > 150) {
+                                snippet = plainText.substring(0, 150) + "..."
+                            }
+                            setHtml(highlightKeywords(snippet, searchKeyword), htmlHttpImageGetter)
+                        } else {
+                            // 正常状态下，渲染完整 HTML
                             setHtml(highlightKeywords(p.content, searchKeyword), htmlHttpImageGetter)
+                        }
                         }
                         if (isLoggedIn) {
                             replyBtnGroup.visibility = View.VISIBLE
