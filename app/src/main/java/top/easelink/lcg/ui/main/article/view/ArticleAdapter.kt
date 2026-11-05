@@ -192,7 +192,13 @@ class ArticleAdapter(
         override fun onBind(position: Int) {
             val p = mPostList.getOrNull(position) ?: return
             post = p
-            with(binding) {
+            itemView.isClickable = true
+                    itemView.setOnClickListener { onItemClick?.invoke(p) }
+                    binding.root.isClickable = true
+                    binding.root.setOnClickListener { onItemClick?.invoke(p) }
+                    binding.contentTextView.isClickable = true
+                    binding.contentTextView.setOnClickListener { onItemClick?.invoke(p) }
+                    with(binding) {
                 try {
                     authorTextView.text = p.author
                     dateTextView.text = getDateDiff(p.date)
@@ -342,6 +348,12 @@ class ArticleAdapter(
         override fun onBind(position: Int) {
             post = getRealPost(position)
             post?.let { p ->
+                        itemView.isClickable = true
+                        itemView.setOnClickListener { onItemClick?.invoke(p) }
+                        binding.root.isClickable = true
+                        binding.root.setOnClickListener { onItemClick?.invoke(p) }
+                        binding.replyContentTextView.isClickable = true
+                        binding.replyContentTextView.setOnClickListener { onItemClick?.invoke(p) }
                 with(binding) {
                     try {
                         
