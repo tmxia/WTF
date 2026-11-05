@@ -253,7 +253,7 @@ fun ArticleScreen(
                             onDismissRequest = { showMenu = false },
                             modifier = Modifier
                                 .background(Color.White)
-                                .width(160.dp) // 宽度极致收窄
+                                .wrapContentWidth() // 宽度自适应内容
                                 .padding(vertical = 4.dp)
                         ) {
                             // 定义一个高度极小的行组件，彻底摆脱原生限制
@@ -264,7 +264,7 @@ fun ArticleScreen(
                                         .fillMaxWidth()
                                         .height(38.dp) // 极低高度
                                         .clickable { onClick() }
-                                        .padding(horizontal = 12.dp),
+                                        .padding(horizontal = 10.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
