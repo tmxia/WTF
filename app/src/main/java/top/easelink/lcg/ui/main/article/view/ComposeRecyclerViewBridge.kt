@@ -50,9 +50,6 @@ fun ComposeRecyclerViewBridge(
             val adapter = recyclerView.adapter as? ArticleAdapter
             if (adapter == null) return@AndroidView
             
-            // 打印当前的过滤条件，排查是谁把数据变成了 0
-            Timber.d("【UI层】过滤参数: showOpOnly=$showOpOnly, filterSpam=$filterSpam, searchKeyword='$searchKeyword', posts=${posts.size}")
-            
             var filteredPosts = if (showOpOnly) {
                 val opAuthor = posts.firstOrNull()?.author
                 posts.filter { it.author == opAuthor }
@@ -81,13 +78,13 @@ fun ComposeRecyclerViewBridge(
 
             val isFiltering = showOpOnly || filterSpam || searchKeyword.isNotBlank()
             
-            // 核心兜底：如果用户明明没开过滤，却算出来是 0 条，强行拦住，不让界面变灰！
-            if (!isFiltering && displayPosts.isEmpty() && posts.isNotEmpty()) {
-                Timber.e("【UI层】拦截异常：无过滤条件但结果为空，强制回退使用原始数据 ${posts.size} 条")
-                adapter.setData(posts, hasMore)
-            } else {
-                adapter.setData(displayPosts, hasMore)
-            }
+            // 核心修复：如果正在过滤，且结果不足 10 条，强行切断 Adapter 的触底加载！
+            // 防止 RecyclerView 因为不满一屏而疯狂并发拉取所有页面，导致 WAF 封号
+            val safeHasMore = if (isFiltering && displayPosts.size < 10) false else hasMore
+            
+            Timber.d("【UI层】过滤参数: searchKeyword='$searchKeyword', 结果: ${displayPosts.size} 条, 允许加载更多: $safeHasMore")
+            
+            adapter.setData(displayPosts, safeHasMore)
         }
     )
 }
