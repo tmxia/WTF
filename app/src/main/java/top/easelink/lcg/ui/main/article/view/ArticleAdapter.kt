@@ -425,6 +425,9 @@ class ArticleAdapter(
                             } else {
                                 replyBtnThumbUp.visibility = View.VISIBLE
                                 replyBtnThumbUp.setOnClickListener(this@ReplyViewHolder)
+                            val isLikedColor = ContextCompat.getColor(root.context, R.color.colorAccent)
+                            val normalColor = ContextCompat.getColor(root.context, R.color.gray)
+                            replyBtnThumbUp.setColorFilter(if (p.isLiked) isLikedColor else normalColor)
                             }
                             replyBtnCopy.setOnClickListener(this@ReplyViewHolder)
                         } else {
