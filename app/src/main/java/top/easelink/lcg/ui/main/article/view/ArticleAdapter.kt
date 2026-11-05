@@ -63,6 +63,7 @@ class ArticleAdapter(
 
         private var hasMoreItem: Boolean = false
     var isFiltering: Boolean = false
+    var searchKeyword: String = ""
 
 
 
@@ -235,7 +236,7 @@ class ArticleAdapter(
                                 WebViewActivity.startWebViewWith(url, c)
                             }
                         }
-                        setHtml(p.content, htmlHttpImageGetter)
+                        setHtml(highlightKeywords(p.content, searchKeyword), htmlHttpImageGetter)
                     }
                     postBtnCapture.visibility = View.VISIBLE
                     postBtnCapture.setOnClickListener(this@PostViewHolder)
@@ -375,7 +376,7 @@ class ArticleAdapter(
                                     WebViewActivity.startWebViewWith(url, c)
                                 }
                             }
-                            setHtml(p.content, htmlHttpImageGetter)
+                            setHtml(highlightKeywords(p.content, searchKeyword), htmlHttpImageGetter)
                         }
                         if (isLoggedIn) {
                             replyBtnGroup.visibility = View.VISIBLE
@@ -474,4 +475,24 @@ class ArticleAdapter(
         private const val VIEW_TYPE_POST = 2
         private const val VIEW_TYPE_LOAD_MORE = 3
     }
+
+    /**
+     * 安全高亮关键字：只替换纯文本节点，不破坏 HTML 标签
+     */
+    private fun highlightKeywords(html: String?, keyword: String): String {
+        if (html.isNullOrBlank() || keyword.isBlank()) return html ?: ""
+        val safeKeyword = Regex.escape(keyword)
+        val tagRegex = Regex("(<[^>]+>)")
+        // 按标签拆分
+        val parts = html.split(tagRegex)
+        return parts.joinToString("") { part ->
+            if (part.startsWith("<") && part.endsWith(">")) {
+                part // 是 HTML 标签，原样返回
+            } else {
+                // 是纯文本，忽略大小写替换为红色加粗的 <font> 标签
+                part.replace(Regex(safeKeyword, RegexOption.IGNORE_CASE), "<font color='#E53935'><b>$0</b></font>")
+            }
+        }
+    }
+
 }

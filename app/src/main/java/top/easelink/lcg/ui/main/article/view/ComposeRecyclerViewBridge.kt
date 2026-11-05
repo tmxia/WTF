@@ -95,6 +95,7 @@ fun ComposeRecyclerViewBridge(
                     
                     // 核心修复：将过滤状态传递给 Adapter
                     adapter.isFiltering = isFiltering
+                    adapter.searchKeyword = searchKeyword
                     adapter.setData(displayPosts, safeHasMore)
                 }
             }
