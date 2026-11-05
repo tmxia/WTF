@@ -387,8 +387,7 @@ class ArticleAdapter(
                             error(getDefaultAvatar(p.avatar))
                         }
                         replyContentTextView.run {
-                        // 核心修复：点击正文文字直接触发跳转
-                        setOnClickListener { if (onItemClick != null) onItemClick.invoke(p) }
+                        setOnClickListener { onItemClick?.invoke(p) }
                             if (AppConfig.articleHandlePreTag) {
                                 setClickablePreCodeSpan(ClickablePreCodeSpanImpl())
                                 val drawTableLinkSpan = DrawPreCodeSpan()

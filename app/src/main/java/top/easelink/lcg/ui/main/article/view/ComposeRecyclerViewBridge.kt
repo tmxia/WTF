@@ -2,6 +2,7 @@ package top.easelink.lcg.ui.main.article.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,7 +41,6 @@ fun ComposeRecyclerViewBridge(
     val posts by viewModel.posts.observeAsState(initial = emptyList<Post>())
     val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
 
-    // 1. 计算过滤后的数据
     var filteredPosts = if (showOpOnly) {
         val opAuthor = posts.firstOrNull()?.author
         posts.filter { it.author == opAuthor }
@@ -69,23 +69,21 @@ fun ComposeRecyclerViewBridge(
 
     val isFiltering = showOpOnly || filterSpam || searchKeyword.isNotBlank()
 
-    // 2. 核心：全量自动深搜引擎
+    // 自动深搜
     LaunchedEffect(isFiltering, searchKeyword, posts.size, hasMore) {
         if (isFiltering && hasMore) {
-            // 延迟 1.5 秒，给底层 JsoupClient 留出安全缓冲，防止 WAF 封号
             delay(1500)
             Timber.d("【全量搜索】自动拉取下一页...")
             viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_MORE, null)
         }
     }
 
-    // 3. 渲染层
     Box(modifier = modifier) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
                 RecyclerView(context).apply {
-                    itemAnimator = null // 关闭动画，防止卡片闪烁
+                    itemAnimator = null
                     setBackgroundColor(android.graphics.Color.TRANSPARENT)
                     layoutManager = LinearLayoutManager(context)
                     setPadding(0, 0, 0, 0)
@@ -105,18 +103,31 @@ fun ComposeRecyclerViewBridge(
                 val adapter = recyclerView.adapter as? ArticleAdapter
                 if (adapter != null) {
                     Timber.d("【UI层】更新数据: 结果=${displayPosts.size} 条, hasMore=$hasMore")
-                    
-                    // 核心修复：只有过滤状态真正发生改变时，才赋值并强制刷新
-                    val forceRefresh = adapter.isFiltering != isFiltering || adapter.searchKeyword != searchKeyword
                     adapter.isFiltering = isFiltering
                     adapter.searchKeyword = searchKeyword
-                    
-                    adapter.setData(displayPosts, hasMore, forceRefresh)
+                    adapter.setData(displayPosts, hasMore)
                 }
             }
         )
 
-        // 4. 无结果覆盖层
+        // 搜索过程中（无结果且还有下一页）的覆盖层
+        if (isFiltering && displayPosts.isEmpty() && hasMore) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFF5F5F5))
+                    .zIndex(98f),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(color = Color(0xFFE65100), modifier = Modifier.size(32.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(text = "正在全量搜索，请稍候...", fontSize = 14.sp, color = Color.Gray)
+                }
+            }
+        }
+
+        // 彻底搜完（无结果且没有下一页）的覆盖层
         if (isFiltering && displayPosts.isEmpty() && !hasMore) {
             Box(
                 modifier = Modifier
@@ -126,18 +137,9 @@ fun ComposeRecyclerViewBridge(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "未找到相关内容",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.DarkGray
-                    )
+                    Text(text = "未找到相关内容", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = if (searchKeyword.isNotBlank()) "已搜索全文，未找到“$searchKeyword”" else "当前过滤条件下无内容",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
+                    Text(text = if (searchKeyword.isNotBlank()) "已搜索全文，未找到“$searchKeyword”" else "当前过滤条件下无内容", fontSize = 14.sp, color = Color.Gray)
                 }
             }
         }
