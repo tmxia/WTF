@@ -7,15 +7,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
 import top.easelink.framework.topbase.TopDialog
 import top.easelink.lcg.R
 import top.easelink.lcg.databinding.DialogDownloadLinkBinding
-import top.easelink.lcg.utils.showMessage
-import java.util.*
 
 class DownloadLinkDialog : TopDialog() {
 
@@ -31,30 +30,48 @@ class DownloadLinkDialog : TopDialog() {
         return binding.root
     }
 
-    override fun onViewCreated(
-        view: View,
-        savedInstanceState: Bundle?
-    ) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        arguments?.apply {
-            val linkList = getStringArrayList(KEY_LINK_LIST)
-            if (linkList != null && linkList.isNotEmpty()) {
-                binding.downloadLinkList.run {
-                    adapter = ArrayAdapter(
-                        mContext,
-                        R.layout.download_link_item_view,
-                        linkList
-                    )
-                    onItemClickListener =
-                        AdapterView.OnItemClickListener { _: AdapterView<*>?, itemView: View, position: Int, _: Long ->
-                            copy(linkList[position])
-                            itemView.setBackgroundColor(
-                                ContextCompat.getColor(requireContext(), R.color.colorAccent)
-                            )
+        
+        arguments?.getStringArrayList(KEY_LINK_LIST)?.let { linkList ->
+            if (linkList.isNotEmpty()) {
+                val density = resources.displayMetrics.density
+                val padding = (12 * density).toInt()
+                val marginBottom = (10 * density).toInt()
+
+                linkList.forEach { link ->
+                    val textView = TextView(requireContext()).apply {
+                        text = link
+                        textSize = 14f
+                        setTextColor(ContextCompat.getColor(context, R.color.black))
+                        setPadding(padding, padding, padding, padding)
+                        
+                        // 设置浅灰圆角背景
+                        background = android.graphics.drawable.GradientDrawable().apply {
+                            setColor(android.graphics.Color.parseColor("#F5F5F5"))
+                            cornerRadius = 8f * density
                         }
+                        
+                        val params = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            this.bottomMargin = marginBottom
+                        }
+                        layoutParams = params
+
+                        // 核心修复：点击或长按直接复制，无需额外按钮
+                        setOnClickListener { copy(link) }
+                        setOnLongClickListener { 
+                            copy(link)
+                            true 
+                        }
+                    }
+                    binding.linkContainer.addView(textView)
                 }
             }
         }
+
         binding.exit.setOnClickListener { dismissDialog() }
     }
 
@@ -68,10 +85,10 @@ class DownloadLinkDialog : TopDialog() {
     }
 
     private fun copy(clipString: String) {
-        val cm = mContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val mClipData = ClipData.newPlainText("DownloadLink", clipString)
         cm.setPrimaryClip(mClipData)
-        showMessage(R.string.copy_succeed)
+        Toast.makeText(requireContext(), "链接已复制", Toast.LENGTH_SHORT).show()
     }
 
     companion object {
