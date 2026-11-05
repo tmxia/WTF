@@ -51,7 +51,8 @@ import java.util.*
 
 class ArticleAdapter(
     private val mListener: ArticleAdapterListener,
-    private val mFragment: Fragment
+    private val mFragment: Fragment,
+    private val onItemClick: ((Post) -> Unit)? = null
 ) : RecyclerView.Adapter<BaseViewHolder>() {
 
     private val mPostList: MutableList<Post> = ArrayList()

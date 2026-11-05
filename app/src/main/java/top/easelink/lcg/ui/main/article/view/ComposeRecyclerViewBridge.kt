@@ -30,6 +30,7 @@ fun ComposeRecyclerViewBridge(
     showOpOnly: Boolean = false,
     filterSpam: Boolean = false,
     searchKeyword: String = "",
+    onPostClick: ((Post) -> Unit)? = null,
     onScrollStateChanged: (Boolean) -> Unit = {},
     onReady: (RecyclerView) -> Unit = {}
 ) {
@@ -77,7 +78,7 @@ fun ComposeRecyclerViewBridge(
                     setPadding(0, 0, 0, 0)
                     clipToPadding = false
                     overScrollMode = RecyclerView.OVER_SCROLL_NEVER
-                    adapter = ArticleAdapter(viewModel, fragment)
+                    adapter = ArticleAdapter(viewModel, fragment, onPostClick)
                     addOnScrollListener(object : RecyclerView.OnScrollListener() {
                         override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
                             super.onScrolled(rv, dx, dy)

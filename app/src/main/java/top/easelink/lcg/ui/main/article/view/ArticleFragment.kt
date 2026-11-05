@@ -33,6 +33,7 @@ import org.greenrobot.eventbus.ThreadMode
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener
+import top.easelink.lcg.ui.main.source.model.Post
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
 import top.easelink.lcg.ui.main.model.ReplyPostEvent
 import top.easelink.lcg.ui.main.model.ScreenCaptureEvent
@@ -144,6 +145,7 @@ fun ArticleScreen(
     val shouldDisplayPosts by viewModel.shouldDisplayPosts.observeAsState(initial = true)
 
     var showMenu by remember { mutableStateOf(false) }
+    var pendingScrollPost by remember { mutableStateOf<Post?>(null) }
     var showBackToTop by remember { mutableStateOf(false) }
     var showOpOnly by remember { mutableStateOf(false) }
     var filterSpam by remember { mutableStateOf(false) }
@@ -160,6 +162,20 @@ fun ArticleScreen(
     var recyclerView by remember { mutableStateOf<androidx.recyclerview.widget.RecyclerView?>(null) }
     
     val prefs = remember { context.getSharedPreferences("article_settings", android.content.Context.MODE_PRIVATE) }
+
+    // 核心跳转逻辑：当清空搜索且列表恢复全量数据后，滚动到目标楼层
+    LaunchedEffect(posts, pendingScrollPost) {
+        val target = pendingScrollPost ?: return@LaunchedEffect
+        // 确保当前不再处于搜索状态，且列表已经恢复
+        if (searchKeyword.isBlank() && !filterSpam && !showOpOnly) {
+            val index = posts.indexOfFirst { it === target || it.id == target.id } // 对比对象或ID
+            if (index != -1) {
+                Timber.d("【跳转】找到目标楼层，索引: $index，准备滚动")
+                recyclerView?.smoothScrollToPosition(index)
+                pendingScrollPost = null // 滚动完成后清空目标，防止重复触发
+            }
+        }
+    }
     var isReverse by remember { mutableStateOf(prefs.getBoolean("is_reverse", false)) }
 
     DisposableEffect(Unit) {
@@ -480,6 +496,14 @@ fun ArticleScreen(
                             filterSpam = filterSpam,
                             searchKeyword = searchKeyword,
                             onScrollStateChanged = { show -> showBackToTop = show },
+                            onPostClick = { post ->
+                                // 点击搜索卡片，立刻清空搜索和过滤条件
+                                searchKeyword = ""
+                                filterSpam = false
+                                showOpOnly = false
+                                // 记录目标楼层
+                                pendingScrollPost = post
+                            },
                             onReady = { rv -> recyclerView = rv }
                         )
             }
