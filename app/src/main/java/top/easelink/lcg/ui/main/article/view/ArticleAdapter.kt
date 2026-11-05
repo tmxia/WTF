@@ -87,11 +87,12 @@ class ArticleAdapter(
         else -> mPostList.size
     }
 
-    override fun getItemViewType(position: Int) = when {
+        override fun getItemViewType(position: Int) = when {
         mPostList.isEmpty() -> VIEW_TYPE_EMPTY
+        // 核心修复：必须优先判断是否到底部，否则搜索模式下底部的占位符会被当成空卡片渲染
+        position == mPostList.size -> VIEW_TYPE_LOAD_MORE
         isFiltering -> VIEW_TYPE_REPLY
         position == 0 -> VIEW_TYPE_POST
-        position == mPostList.size -> VIEW_TYPE_LOAD_MORE
         else -> VIEW_TYPE_REPLY
     }
 
