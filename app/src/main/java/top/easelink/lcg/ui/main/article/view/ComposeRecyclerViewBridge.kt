@@ -57,7 +57,10 @@ fun ComposeRecyclerViewBridge(
 
     if (searchKeyword.isNotBlank()) {
         filteredPosts = filteredPosts.filter { post ->
-            post.content?.contains(searchKeyword, ignoreCase = true) == true
+            // 核心修复：先剥离 HTML 标签提取纯文本，再进行匹配
+            // 这样可以避免匹配到 img 的 src 属性、a 的 href 属性或隐藏元素中的关键字
+            val plainText = org.jsoup.Jsoup.parse(post.content ?: "").text()
+            plainText.contains(searchKeyword, ignoreCase = true)
         }
     }
 
