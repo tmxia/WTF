@@ -3,6 +3,7 @@ package top.easelink.lcg.ui.main.article.view
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Canvas
 import android.graphics.Bitmap
 import android.text.Html
 import android.text.TextUtils
@@ -273,10 +274,21 @@ class ArticleAdapter(
                     R.id.post_btn_copy -> if (copyContent(p.content, p.author)) showMessage(R.string.copy_succeed) else showMessage(R.string.copy_failed)
                     R.id.post_btn_thumb_up -> p.replyAddUrl?.let { mListener.replyAdd(it) }
                     R.id.post_btn_capture -> {
-                        convertViewToBitmap(itemView, Bitmap.Config.ARGB_8888)?.let {
-                            val path = saveImageToGallery(it, System.currentTimeMillis().toString())
-                            EventBus.getDefault().post(ScreenCaptureEvent(path))
-                        } ?: showMessage(R.string.general_error)
+                        showMessage("正在生成截图，请稍候...")
+                        itemView.postDelayed({
+                            try {
+                                val bitmap = createBitmapFromView(itemView)
+                                if (bitmap != null) {
+                                    val path = saveImageToGallery(bitmap, System.currentTimeMillis().toString())
+                                    EventBus.getDefault().post(ScreenCaptureEvent(path))
+                                } else {
+                                    showMessage("截图失败，图片可能过大")
+                                }
+                            } catch (e: Exception) {
+                                showMessage("截图异常")
+                                Timber.e(e)
+                            }
+                        }, 800)
                     }
                 }
             }
@@ -458,4 +470,55 @@ class ArticleAdapter(
         private const val VIEW_TYPE_POST = 2
         private const val VIEW_TYPE_LOAD_MORE = 3
     }
+
+    private fun createBitmapFromView(view: View): Bitmap? {
+        try {
+            val widthSpec = View.MeasureSpec.makeMeasureSpec(view.width, View.MeasureSpec.EXACTLY)
+            val heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            view.measure(widthSpec, heightSpec)
+            
+            var width = view.measuredWidth
+            var height = view.measuredHeight
+            if (width <= 0 || height <= 0) return null
+
+            val maxHeight = 8000
+            var scale = 1.0f
+            
+            if (height > maxHeight) {
+                scale = maxHeight.toFloat() / height.toFloat()
+                height = maxHeight
+                width = (width * scale).toInt()
+            }
+
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            canvas.drawColor(android.graphics.Color.WHITE)
+            
+            if (scale < 1.0f) {
+                canvas.scale(scale, scale)
+                view.measure(
+                    View.MeasureSpec.makeMeasureSpec(view.measuredWidth, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(view.measuredHeight, View.MeasureSpec.UNSPECIFIED)
+                )
+            }
+
+            val oldWidth = view.width
+            val oldHeight = view.height
+            val oldLeft = view.left
+            val oldTop = view.top
+
+            view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+            view.draw(canvas)
+            view.layout(oldLeft, oldTop, oldLeft + oldWidth, oldTop + oldHeight)
+
+            return bitmap
+        } catch (e: OutOfMemoryError) {
+            Timber.e("OOM 内存溢出，长图生成失败")
+            return null
+        } catch (e: Exception) {
+            Timber.e(e)
+            return null
+        }
+    }
+
 }
