@@ -65,10 +65,10 @@ class ArticleAdapter(
 
 
     fun setData(posts: List<Post>, hasMore: Boolean = false) {
+        Timber.d("【Adapter】setData 被调用，收到 ${posts.size} 条数据，hasMore=$hasMore")
         mPostList.clear()
         mPostList.addAll(posts)
         this.hasMoreItem = hasMore
-        
         notifyDataSetChanged()
     }
 
