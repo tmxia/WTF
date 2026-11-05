@@ -166,13 +166,12 @@ fun ArticleScreen(
     // 核心跳转逻辑：当清空搜索且列表恢复全量数据后，滚动到目标楼层
     LaunchedEffect(posts, pendingScrollPost) {
         val target = pendingScrollPost ?: return@LaunchedEffect
-        // 确保当前不再处于搜索状态，且列表已经恢复
         if (searchKeyword.isBlank() && !filterSpam && !showOpOnly) {
-            val index = posts.indexOfFirst { it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl) } // 对比对象或ID
+            val index = posts.indexOfFirst { it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl) }
+            Timber.d("【跳转】执行定位，目标索引: $index, 总列表大小: ${posts.size}")
             if (index != -1) {
-                Timber.d("【跳转】找到目标楼层，索引: $index，准备滚动")
                 recyclerView?.smoothScrollToPosition(index)
-                pendingScrollPost = null // 滚动完成后清空目标，防止重复触发
+                pendingScrollPost = null
             }
         }
     }
@@ -497,11 +496,10 @@ fun ArticleScreen(
                             searchKeyword = searchKeyword,
                             onScrollStateChanged = { show -> showBackToTop = show },
                             onPostClick = { post ->
-                                // 点击搜索卡片，立刻清空搜索和过滤条件
+                                Timber.d("【跳转】卡片被点击，开始清空搜索条件并跳转")
                                 searchKeyword = ""
                                 filterSpam = false
                                 showOpOnly = false
-                                // 记录目标楼层
                                 pendingScrollPost = post
                             },
                             onReady = { rv -> recyclerView = rv }
