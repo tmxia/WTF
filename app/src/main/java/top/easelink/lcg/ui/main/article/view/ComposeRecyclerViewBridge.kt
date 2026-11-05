@@ -36,7 +36,7 @@ fun ComposeRecyclerViewBridge(
     val posts by viewModel.posts.observeAsState(initial = emptyList<Post>())
     val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
 
-    // 1. 在 Compose 顶层计算过滤后的数据
+    // 1. 数据过滤计算
     var filteredPosts = if (showOpOnly) {
         val opAuthor = posts.firstOrNull()?.author
         posts.filter { it.author == opAuthor }
@@ -67,46 +67,48 @@ fun ComposeRecyclerViewBridge(
 
     // 2. 渲染层
     Box(modifier = modifier) {
-        // 如果处于过滤状态且没找到任何结果，直接不渲染 RecyclerView，彻底杜绝骨架屏和无限翻页
-        if (!isFiltering || displayPosts.isNotEmpty()) {
-            AndroidView(
-                modifier = Modifier.fillMaxSize(),
-                factory = { context ->
-                    RecyclerView(context).apply {
-                        setBackgroundColor(android.graphics.Color.TRANSPARENT)
-                        layoutManager = LinearLayoutManager(context)
-                        setPadding(0, 0, 0, 0)
-                        clipToPadding = false
-                        overScrollMode = RecyclerView.OVER_SCROLL_NEVER
-                        adapter = ArticleAdapter(viewModel, fragment)
-                        addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
-                                super.onScrolled(rv, dx, dy)
-                                onScrollStateChanged(rv.computeVerticalScrollOffset() > 500)
-                            }
-                        })
-                        onReady(this)
-                    }
-                },
-                update = { recyclerView ->
-                    val adapter = recyclerView.adapter as? ArticleAdapter
-                    if (adapter != null) {
-                        // 核心防封：如果处于过滤状态，彻底禁止加载更多，防止瞬间触底疯狂发请求
-                        val safeHasMore = if (isFiltering) false else hasMore
-                        Timber.d("【UI层】更新数据: 结果=${displayPosts.size} 条, isFiltering=$isFiltering, safeHasMore=$safeHasMore")
-                        adapter.setData(displayPosts, safeHasMore)
-                    }
+        // 让 AndroidView 永远存在，防止产生幽灵视图
+        AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { context ->
+                RecyclerView(context).apply {
+                    setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                    layoutManager = LinearLayoutManager(context)
+                    setPadding(0, 0, 0, 0)
+                    clipToPadding = false
+                    overScrollMode = RecyclerView.OVER_SCROLL_NEVER
+                    adapter = ArticleAdapter(viewModel, fragment)
+                    addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                        override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+                            super.onScrolled(rv, dx, dy)
+                            onScrollStateChanged(rv.computeVerticalScrollOffset() > 500)
+                        }
+                    })
+                    onReady(this)
                 }
-            )
-        }
+            },
+            update = { recyclerView ->
+                val adapter = recyclerView.adapter as? ArticleAdapter
+                if (adapter != null) {
+                    // 核心逻辑：如果处于过滤状态，彻底禁止自动翻页
+                    val safeHasMore = if (isFiltering) false else hasMore
+                    
+                    // 核心逻辑：如果处于过滤且无结果，关闭骨架屏，让它彻底不渲染任何元素
+                    val showSkeleton = !(isFiltering && displayPosts.isEmpty())
+                    
+                    Timber.d("【UI层】更新数据: 结果=${displayPosts.size} 条, 允许加载更多=$safeHasMore, 显示骨架屏=$showSkeleton")
+                    adapter.setData(displayPosts, safeHasMore, showSkeleton)
+                }
+            }
+        )
 
-        // 3. 兜底提示层：如果处于过滤状态且没结果，显示极其明确的提示
+        // 3. 顶层提示：如果处于过滤状态且没搜到，直接盖上一层干净的白板与文字
         if (isFiltering && displayPosts.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFF5F5F5)) // 用纯色填满，掩盖一切底层的丑陋
-                    .zIndex(99f),
+                    .background(Color(0xFFF5F5F5))
+                    .zIndex(99f), // 永远在最顶层
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {

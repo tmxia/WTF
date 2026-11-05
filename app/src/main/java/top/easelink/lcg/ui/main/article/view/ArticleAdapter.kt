@@ -64,8 +64,10 @@ class ArticleAdapter(
 
 
 
-    fun setData(posts: List<Post>, hasMore: Boolean = false) {
-        Timber.d("【Adapter】setData 被调用，收到 ${posts.size} 条数据，hasMore=$hasMore")
+    var showSkeleton: Boolean = true
+
+    fun setData(posts: List<Post>, hasMore: Boolean = false, showSkeleton: Boolean = true) {
+        this.showSkeleton = showSkeleton
         mPostList.clear()
         mPostList.addAll(posts)
         this.hasMoreItem = hasMore
@@ -79,7 +81,7 @@ class ArticleAdapter(
     }
 
     override fun getItemCount() = when {
-        mPostList.isEmpty() -> 1 
+        mPostList.isEmpty() -> if (showSkeleton) 1 else 0 
         hasMoreItem -> mPostList.size + 1
         else -> mPostList.size
     }
