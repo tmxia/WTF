@@ -6,6 +6,15 @@ import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.foundation.layout.PaddingValues
@@ -237,211 +246,173 @@ fun ArticleScreen(
                 actions = {
                     Box {
                         IconButton(onClick = { showMenu = !showMenu }) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "More")
+                            Icon(Icons.Filled.MoreVert, contentDescription = "More", modifier = Modifier.size(20.dp))
                         }
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
                             modifier = Modifier
                                 .background(Color.White)
-                                .width(180.dp)
+                                .width(160.dp) // 宽度极致收窄
+                                .padding(vertical = 4.dp)
                         ) {
-                            // === 第一组：阅读与搜索 ===
-                            DropdownMenuItem(
-                                modifier = Modifier.height(42.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp),
-                                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (showOpOnly) Color(0xFFE53935) else Color.Gray) },
-                                text = { Text(if (showOpOnly) "显示全部" else "只看楼主", fontSize = 14.sp, color = if (showOpOnly) Color(0xFFE53935) else Color.DarkGray, fontWeight = if (showOpOnly) FontWeight.Bold else FontWeight.Normal) },
-                                onClick = {
-                                    showMenu = false
-                                    showOpOnly = !showOpOnly
+                            // 定义一个高度极小的行组件，彻底摆脱原生限制
+                            @Composable
+                            fun MiniMenuRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, isActive: Boolean = false, onClick: () -> Unit) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(38.dp) // 极低高度
+                                        .clickable { onClick() }
+                                        .padding(horizontal = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp), // 小图标
+                                        tint = if (isActive) Color(0xFFE53935) else Color.Gray
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = text,
+                                        fontSize = 13.sp, // 小字号
+                                        color = if (isActive) Color(0xFFE53935) else Color.DarkGray,
+                                        fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal
+                                    )
                                 }
-                            )
+                            }
 
-                            DropdownMenuItem(
-                                modifier = Modifier.height(42.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp),
-                                leadingIcon = { Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (filterSpam) Color(0xFFE53935) else Color.Gray) },
-                                text = { Text(if (filterSpam) "关闭灌水过滤" else "过滤灌水", fontSize = 14.sp, color = if (filterSpam) Color(0xFFE53935) else Color.DarkGray, fontWeight = if (filterSpam) FontWeight.Bold else FontWeight.Normal) },
-                                onClick = {
-                                    showMenu = false
-                                    filterSpam = !filterSpam
-                                }
-                            )
-
-                            DropdownMenuItem(
-                                modifier = Modifier.height(42.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp),
-                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (searchKeyword.isNotBlank()) Color(0xFFE53935) else Color.Gray) },
-                                text = { Text(if (searchKeyword.isNotBlank()) "清除搜索" else "搜索帖子", fontSize = 14.sp, color = if (searchKeyword.isNotBlank()) Color(0xFFE53935) else Color.DarkGray, fontWeight = if (searchKeyword.isNotBlank()) FontWeight.Bold else FontWeight.Normal) },
-                                onClick = {
-                                    showMenu = false
-                                    if (searchKeyword.isNotBlank()) {
-                                        searchKeyword = ""
-                                    } else {
-                                        val density = context.resources.displayMetrics.density
-                                        val padding = (20 * density).toInt()
-
-                                        val rootLayout = android.widget.LinearLayout(context).apply {
-                                            orientation = android.widget.LinearLayout.VERTICAL
-                                            setPadding(padding, padding / 2, padding, (10 * density).toInt())
+                            // === 第一组 ===
+                            MiniMenuRow(Icons.Default.Person, if (showOpOnly) "显示全部" else "只看楼主", showOpOnly) {
+                                showMenu = false
+                                showOpOnly = !showOpOnly
+                            }
+                            MiniMenuRow(Icons.Default.Star, if (filterSpam) "关闭灌水" else "过滤灌水", filterSpam) {
+                                showMenu = false
+                                filterSpam = !filterSpam
+                            }
+                            MiniMenuRow(Icons.Default.Search, if (searchKeyword.isNotBlank()) "清除搜索" else "搜索帖子", searchKeyword.isNotBlank()) {
+                                showMenu = false
+                                if (searchKeyword.isNotBlank()) {
+                                    searchKeyword = ""
+                                } else {
+                                    val density = context.resources.displayMetrics.density
+                                    val padding = (20 * density).toInt()
+                                    val rootLayout = android.widget.LinearLayout(context).apply {
+                                        orientation = android.widget.LinearLayout.VERTICAL
+                                        setPadding(padding, padding / 2, padding, (10 * density).toInt())
+                                    }
+                                    rootLayout.addView(android.widget.TextView(context).apply {
+                                        text = "搜索帖子内容"
+                                        textSize = 16f
+                                        setTypeface(null, android.graphics.Typeface.BOLD)
+                                        setTextColor(android.graphics.Color.BLACK)
+                                        setPadding(0, 0, 0, (16 * density).toInt())
+                                    })
+                                    val inputContainer = android.widget.FrameLayout(context).apply {
+                                        val bg = android.graphics.drawable.GradientDrawable().apply {
+                                            setColor(android.graphics.Color.parseColor("#F5F5F5"))
+                                            cornerRadius = 8f * density
                                         }
-                                        rootLayout.addView(android.widget.TextView(context).apply {
-                                            text = "搜索帖子内容"
-                                            textSize = 16f
-                                            setTypeface(null, android.graphics.Typeface.BOLD)
-                                            setTextColor(android.graphics.Color.BLACK)
-                                            setPadding(0, 0, 0, (16 * density).toInt())
-                                        })
-                                        val inputContainer = android.widget.FrameLayout(context).apply {
-                                            val bg = android.graphics.drawable.GradientDrawable().apply {
-                                                setColor(android.graphics.Color.parseColor("#F5F5F5"))
-                                                cornerRadius = 8f * density
-                                            }
-                                            background = bg
-                                        }
-                                        val input = android.widget.EditText(context).apply {
-                                            hint = "请输入关键字..."
-                                            setBackgroundColor(android.graphics.Color.TRANSPARENT)
-                                            setSingleLine(true)
-                                            val p = (12 * density).toInt()
-                                            setPadding(p, p, p, p)
-                                            setTextColor(android.graphics.Color.BLACK)
-                                        }
-                                        inputContainer.addView(input)
-                                        rootLayout.addView(inputContainer)
-
-                                        val btnLayout = android.widget.LinearLayout(context).apply {
-                                            orientation = android.widget.LinearLayout.HORIZONTAL
-                                            gravity = android.view.Gravity.END
-                                            setPadding(0, (16 * density).toInt(), 0, 0)
-                                        }
-                                        val btnCancel = android.widget.TextView(context).apply {
-                                            text = "取消"
-                                            textSize = 14f
-                                            setTextColor(android.graphics.Color.parseColor("#888888"))
-                                            setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
-                                        }
-                                        val btnSearch = android.widget.TextView(context).apply {
-                                            text = "搜索"
-                                            textSize = 14f
-                                            setTextColor(android.graphics.Color.parseColor("#E53935"))
-                                            setTypeface(null, android.graphics.Typeface.BOLD)
-                                            setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
-                                        }
-                                        btnLayout.addView(btnCancel)
-                                        btnLayout.addView(btnSearch)
-                                        rootLayout.addView(btnLayout)
-
-                                        val card = com.google.android.material.card.MaterialCardView(context).apply {
-                                            radius = 16f * density
-                                            setCardBackgroundColor(android.graphics.Color.WHITE)
-                                            strokeWidth = 0
-                                            elevation = 0f
-                                            addView(rootLayout)
-                                        }
-                                        val dialog = android.app.AlertDialog.Builder(context).create()
-                                        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
-                                        dialog.setView(card)
-                                        dialog.show()
-                                        dialog.window?.setLayout((300 * density).toInt(), android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
-
-                                        btnCancel.setOnClickListener { dialog.dismiss() }
-                                        btnSearch.setOnClickListener {
-                                            val keyword = input.text.toString().trim()
-                                            if (keyword.isNotEmpty()) {
-                                                searchKeyword = keyword
-                                                dialog.dismiss()
-                                            } else {
-                                                android.widget.Toast.makeText(context, "请输入关键字", android.widget.Toast.LENGTH_SHORT).show()
-                                            }
+                                        background = bg
+                                    }
+                                    val input = android.widget.EditText(context).apply {
+                                        hint = "请输入关键字..."
+                                        setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                        setSingleLine(true)
+                                        val p = (12 * density).toInt()
+                                        setPadding(p, p, p, p)
+                                        setTextColor(android.graphics.Color.BLACK)
+                                    }
+                                    inputContainer.addView(input)
+                                    rootLayout.addView(inputContainer)
+                                    val btnLayout = android.widget.LinearLayout(context).apply {
+                                        orientation = android.widget.LinearLayout.HORIZONTAL
+                                        gravity = android.view.Gravity.END
+                                        setPadding(0, (16 * density).toInt(), 0, 0)
+                                    }
+                                    val btnCancel = android.widget.TextView(context).apply {
+                                        text = "取消"
+                                        textSize = 14f
+                                        setTextColor(android.graphics.Color.parseColor("#888888"))
+                                        setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
+                                    }
+                                    val btnSearch = android.widget.TextView(context).apply {
+                                        text = "搜索"
+                                        textSize = 14f
+                                        setTextColor(android.graphics.Color.parseColor("#E53935"))
+                                        setTypeface(null, android.graphics.Typeface.BOLD)
+                                        setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
+                                    }
+                                    btnLayout.addView(btnCancel)
+                                    btnLayout.addView(btnSearch)
+                                    rootLayout.addView(btnLayout)
+                                    val card = com.google.android.material.card.MaterialCardView(context).apply {
+                                        radius = 16f * density
+                                        setCardBackgroundColor(android.graphics.Color.WHITE)
+                                        strokeWidth = 0
+                                        elevation = 0f
+                                        addView(rootLayout)
+                                    }
+                                    val dialog = android.app.AlertDialog.Builder(context).create()
+                                    dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+                                    dialog.setView(card)
+                                    dialog.show()
+                                    dialog.window?.setLayout((300 * density).toInt(), android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+                                    btnCancel.setOnClickListener { dialog.dismiss() }
+                                    btnSearch.setOnClickListener {
+                                        val keyword = input.text.toString().trim()
+                                        if (keyword.isNotEmpty()) {
+                                            searchKeyword = keyword
+                                            dialog.dismiss()
+                                        } else {
+                                            android.widget.Toast.makeText(context, "请输入关键字", android.widget.Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
-                            )
+                            }
+                            MiniMenuRow(Icons.Default.List, if (isReverse) "顺序显示" else "倒序显示", isReverse) {
+                                showMenu = false
+                                isReverse = !isReverse
+                                prefs.edit().putBoolean("is_reverse", isReverse).apply()
+                            }
 
-                            DropdownMenuItem(
-                                modifier = Modifier.height(42.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp),
-                                leadingIcon = { Icon(Icons.Default.List, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (isReverse) Color(0xFFE53935) else Color.Gray) },
-                                text = { Text(if (isReverse) "顺序显示" else "倒序显示", fontSize = 14.sp, color = if (isReverse) Color(0xFFE53935) else Color.DarkGray, fontWeight = if (isReverse) FontWeight.Bold else FontWeight.Normal) },
-                                onClick = {
-                                    showMenu = false
-                                    isReverse = !isReverse
-                                    prefs.edit().putBoolean("is_reverse", isReverse).apply()
-                                }
-                            )
-
-                            // === 分割线 ===
                             HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 12.dp),
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                                 thickness = 0.5.dp,
                                 color = Color.LightGray.copy(alpha = 0.5f)
                             )
 
-                            // === 第二组：快捷操作 ===
-                            DropdownMenuItem(
-                                modifier = Modifier.height(42.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp),
-                                leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.Gray) },
-                                text = { Text("刷新帖子", fontSize = 14.sp, color = Color.DarkGray) },
-                                onClick = {
-                                    showMenu = false
-                                    viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
+                            // === 第二组 ===
+                            MiniMenuRow(Icons.Default.Refresh, "刷新帖子") {
+                                showMenu = false
+                                viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
+                            }
+                            MiniMenuRow(Icons.Default.Share, "复制链接") {
+                                showMenu = false
+                                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                val clip = android.content.ClipData.newPlainText("Post Link", top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL + articleUrl)
+                                clipboard.setPrimaryClip(clip)
+                                android.widget.Toast.makeText(context, "链接已复制", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                            MiniMenuRow(Icons.Default.Search, "在浏览器打开") {
+                                showMenu = false
+                                WebViewActivity.startWebViewWith(WebsiteConstant.SERVER_BASE_URL + articleUrl, context)
+                            }
+                            MiniMenuRow(Icons.Default.KeyboardArrowDown, "提取下载链接") {
+                                showMenu = false
+                                val urls = viewModel.extractDownloadUrl()
+                                if (!urls.isNullOrEmpty() && fragment.isAdded) {
+                                    newDownloadLinkDialog(urls).show(fragment.parentFragmentManager, "DownloadLinkDialog")
+                                } else {
+                                    android.widget.Toast.makeText(context, R.string.download_link_not_found, android.widget.Toast.LENGTH_SHORT).show()
                                 }
-                            )
-
-                            DropdownMenuItem(
-                                modifier = Modifier.height(42.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp),
-                                leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.Gray) },
-                                text = { Text("复制链接", fontSize = 14.sp, color = Color.DarkGray) },
-                                onClick = {
-                                    showMenu = false
-                                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                    val clip = android.content.ClipData.newPlainText("Post Link", top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL + articleUrl)
-                                    clipboard.setPrimaryClip(clip)
-                                    android.widget.Toast.makeText(context, "链接已复制", android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            )
-
-                            DropdownMenuItem(
-                                modifier = Modifier.height(42.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp),
-                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.Gray) },
-                                text = { Text("在浏览器打开", fontSize = 14.sp, color = Color.DarkGray) },
-                                onClick = {
-                                    showMenu = false
-                                    WebViewActivity.startWebViewWith(WebsiteConstant.SERVER_BASE_URL + articleUrl, context)
-                                }
-                            )
-
-                            DropdownMenuItem(
-                                modifier = Modifier.height(42.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp),
-                                leadingIcon = { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.Gray) },
-                                text = { Text("提取下载链接", fontSize = 14.sp, color = Color.DarkGray) },
-                                onClick = {
-                                    showMenu = false
-                                    val urls = viewModel.extractDownloadUrl()
-                                    if (!urls.isNullOrEmpty() && fragment.isAdded) {
-                                        newDownloadLinkDialog(urls).show(fragment.parentFragmentManager, "DownloadLinkDialog")
-                                    } else {
-                                        android.widget.Toast.makeText(context, R.string.download_link_not_found, android.widget.Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            )
-
-                            DropdownMenuItem(
-                                modifier = Modifier.height(42.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp),
-                                leadingIcon = { Icon(if (isFavorited) Icons.Filled.Favorite else Icons.Default.FavoriteBorder, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (isFavorited) Color(0xFFE53935) else Color.Gray) },
-                                text = { Text(if (isFavorited) "取消收藏" else "添加收藏", fontSize = 14.sp, color = if (isFavorited) Color(0xFFE53935) else Color.DarkGray, fontWeight = if (isFavorited) FontWeight.Bold else FontWeight.Normal) },
-                                onClick = {
-                                    showMenu = false
-                                    viewModel.toggleFavorite()
-                                }
-                            )
+                            }
+                            MiniMenuRow(if (isFavorited) Icons.Filled.Favorite else Icons.Default.FavoriteBorder, if (isFavorited) "取消收藏" else "添加收藏", isFavorited) {
+                                showMenu = false
+                                viewModel.toggleFavorite()
+                            }
                         }
                     }
                 },
