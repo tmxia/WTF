@@ -436,6 +436,11 @@ fun ArticleScreen(
             )
         },
         floatingActionButton = {
+                // 核心修复：在搜索或过滤状态下，彻底隐藏所有悬浮按钮（包括回复按钮）
+                if (searchKeyword.isNotBlank() || filterSpam || showOpOnly) {
+                    return@Scaffold
+                }
+
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
