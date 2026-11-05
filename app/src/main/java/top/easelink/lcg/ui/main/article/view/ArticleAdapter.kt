@@ -65,10 +65,8 @@ class ArticleAdapter(
 
 
 
-    var showSkeleton: Boolean = true
-
-    fun setData(posts: List<Post>, hasMore: Boolean = false, showSkeleton: Boolean = true) {
-        this.showSkeleton = showSkeleton
+    
+    fun setData(posts: List<Post>, hasMore: Boolean = false) {
         mPostList.clear()
         mPostList.addAll(posts)
         this.hasMoreItem = hasMore
@@ -82,7 +80,7 @@ class ArticleAdapter(
     }
 
     override fun getItemCount() = when {
-        mPostList.isEmpty() -> if (showSkeleton) 1 else 0 
+        mPostList.isEmpty() -> 0 
         hasMoreItem -> mPostList.size + 1
         else -> mPostList.size
     }
