@@ -1,10 +1,19 @@
 package top.easelink.lcg.ui.main.article.view
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.fragment.app.Fragment
@@ -27,64 +36,100 @@ fun ComposeRecyclerViewBridge(
     val posts by viewModel.posts.observeAsState(initial = emptyList<Post>())
     val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
 
-    AndroidView(
-        modifier = modifier,
-        factory = { context ->
-            RecyclerView(context).apply {
-                setBackgroundColor(android.graphics.Color.TRANSPARENT)
-                layoutManager = LinearLayoutManager(context)
-                setPadding(0, 0, 0, 0)
-                clipToPadding = false
-                overScrollMode = RecyclerView.OVER_SCROLL_NEVER
-                adapter = ArticleAdapter(viewModel, fragment)
-                addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                    override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
-                        super.onScrolled(rv, dx, dy)
-                        onScrollStateChanged(rv.computeVerticalScrollOffset() > 500)
-                    }
-                })
-                onReady(this)
-            }
-        },
-        update = { recyclerView ->
-            val adapter = recyclerView.adapter as? ArticleAdapter
-            if (adapter == null) return@AndroidView
-            
-            var filteredPosts = if (showOpOnly) {
-                val opAuthor = posts.firstOrNull()?.author
-                posts.filter { it.author == opAuthor }
-            } else {
-                posts
-            }
+    // 1. 在 Compose 顶层计算过滤后的数据
+    var filteredPosts = if (showOpOnly) {
+        val opAuthor = posts.firstOrNull()?.author
+        posts.filter { it.author == opAuthor }
+    } else {
+        posts
+    }
 
-            if (filterSpam) {
-                filteredPosts = filteredPosts.filter { post ->
-                    val plainText = post.content?.replace(Regex("<[^>]*>"), "")?.trim() ?: ""
-                    plainText.length >= 5
-                }
-            }
-
-            if (searchKeyword.isNotBlank()) {
-                filteredPosts = filteredPosts.filter { post ->
-                    post.content?.contains(searchKeyword, ignoreCase = true) == true
-                }
-            }
-
-            val displayPosts = if (isReverse && filteredPosts.size > 1) {
-                listOf(filteredPosts[0]) + filteredPosts.drop(1).reversed()
-            } else {
-                filteredPosts
-            }
-
-            val isFiltering = showOpOnly || filterSpam || searchKeyword.isNotBlank()
-            
-            // 核心修复：如果正在过滤，且结果不足 10 条，强行切断 Adapter 的触底加载！
-            // 防止 RecyclerView 因为不满一屏而疯狂并发拉取所有页面，导致 WAF 封号
-            val safeHasMore = if (isFiltering && displayPosts.size < 10) false else hasMore
-            
-            Timber.d("【UI层】过滤参数: searchKeyword='$searchKeyword', 结果: ${displayPosts.size} 条, 允许加载更多: $safeHasMore")
-            
-            adapter.setData(displayPosts, safeHasMore)
+    if (filterSpam) {
+        filteredPosts = filteredPosts.filter { post ->
+            val plainText = post.content?.replace(Regex("<[^>]*>"), "")?.trim() ?: ""
+            plainText.length >= 5
         }
-    )
+    }
+
+    if (searchKeyword.isNotBlank()) {
+        filteredPosts = filteredPosts.filter { post ->
+            post.content?.contains(searchKeyword, ignoreCase = true) == true
+        }
+    }
+
+    val displayPosts = if (isReverse && filteredPosts.size > 1) {
+        listOf(filteredPosts[0]) + filteredPosts.drop(1).reversed()
+    } else {
+        filteredPosts
+    }
+
+    val isFiltering = showOpOnly || filterSpam || searchKeyword.isNotBlank()
+
+    // 2. 渲染层
+    Box(modifier = modifier) {
+        // 如果处于过滤状态且没找到任何结果，直接不渲染 RecyclerView，彻底杜绝骨架屏和无限翻页
+        if (!isFiltering || displayPosts.isNotEmpty()) {
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = { context ->
+                    RecyclerView(context).apply {
+                        setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                        layoutManager = LinearLayoutManager(context)
+                        setPadding(0, 0, 0, 0)
+                        clipToPadding = false
+                        overScrollMode = RecyclerView.OVER_SCROLL_NEVER
+                        adapter = ArticleAdapter(viewModel, fragment)
+                        addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+                                super.onScrolled(rv, dx, dy)
+                                onScrollStateChanged(rv.computeVerticalScrollOffset() > 500)
+                            }
+                        })
+                        onReady(this)
+                    }
+                },
+                update = { recyclerView ->
+                    val adapter = recyclerView.adapter as? ArticleAdapter
+                    if (adapter != null) {
+                        // 核心防封：如果处于过滤状态，彻底禁止加载更多，防止瞬间触底疯狂发请求
+                        val safeHasMore = if (isFiltering) false else hasMore
+                        Timber.d("【UI层】更新数据: 结果=${displayPosts.size} 条, isFiltering=$isFiltering, safeHasMore=$safeHasMore")
+                        adapter.setData(displayPosts, safeHasMore)
+                    }
+                }
+            )
+        }
+
+        // 3. 兜底提示层：如果处于过滤状态且没结果，显示极其明确的提示
+        if (isFiltering && displayPosts.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFF5F5F5)) // 用纯色填满，掩盖一切底层的丑陋
+                    .zIndex(99f),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "未找到相关内容",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.DarkGray
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (searchKeyword.isNotBlank()) "未找到包含“$searchKeyword”的楼层" else "当前过滤条件下无内容",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "请尝试更换关键字或取消过滤",
+                        fontSize = 13.sp,
+                        color = Color.LightGray
+                    )
+                }
+            }
+        }
+    }
 }
