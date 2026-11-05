@@ -171,19 +171,47 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
     }
 
     fun extractDownloadUrl(): ArrayList<String>? {
-        val patterns = listOf(
-            "https://[a-zA-Z0-9.]{0,20}lanzou[a-z]{1}.com/[a-zA-Z0-9]{4,12}",
-            "https://pan.baidu.com/s/.{23}",
-            "http://t.cn/[a-zA-Z0-9]{8}",
-            "https://cloud.189.cn/t/[a-zA-Z0-9]{4,12}",
-            "https://pan.xunlei.com/s/[a-zA-Z0-9_]{1,20}"
-        )
+        val content = posts.value?.firstOrNull()?.content ?: return null
+        
+        // 剥离 HTML 标签，只保留纯文本，防止提取失败
+        val plainText = org.jsoup.Jsoup.parse(content).text()
+        
+        // 1. 提取常见的网盘链接
+        val linkRegex = Regex("""https?://(?:pan\.baidu\.com/s/|pan\.quark\.cn/s/|www\.aliyundrive\.com/s/|aliyundrive\.com/s/|cloud\.189\.cn/t/|pan\.xunlei\.com/s/|(?:[a-zA-Z0-9.]{0,20})lanzou[a-z]{1}\.com/)[^\s<>"']+""")
+        val linkMatches = linkRegex.findAll(plainText).toList()
 
-        return posts.value?.firstOrNull()?.content?.let { content ->
-            patterns.flatMap { RegexUtils.extractInfoFrom(content, it) }
-                .takeIf { it.isNotEmpty() }
-                ?.let { ArrayList(it) }
+        // 2. 提取提取码（支持“密码: xxxx”, “提取码：xxxx”, “访问码：xxxx”等格式）
+        val codeRegex = Regex("""(?:提取码|密码|访问码|口令)[\s:：]*([a-zA-Z0-9]{4})""")
+        val codeMatches = codeRegex.findAll(plainText).toList()
+
+        if (linkMatches.isEmpty() && codeMatches.isEmpty()) {
+            return null
         }
+
+        val resultList = ArrayList<String>()
+
+        // 3. 将链接和提取码智能配对并拼装
+        val maxCount = maxOf(linkMatches.size, codeMatches.size)
+        for (i in 0 until maxCount) {
+            val link = linkMatches.getOrNull(i)?.value?.trim() ?: ""
+            val code = codeMatches.getOrNull(i)?.groupValues?.get(1)?.trim() ?: ""
+
+            var combined = ""
+            if (link.isNotEmpty() && code.isNotEmpty()) {
+                combined = "$link 提取码: $code"
+            } else if (link.isNotEmpty()) {
+                combined = link
+            } else if (code.isNotEmpty()) {
+                combined = "提取码: $code"
+            }
+
+            // 去重处理
+            if (combined.isNotEmpty() && !resultList.contains(combined)) {
+                resultList.add(combined)
+            }
+        }
+
+        return if (resultList.isNotEmpty()) resultList else null
     }
 
     fun checkIsFavorited() {
