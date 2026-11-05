@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -17,7 +18,9 @@ import androidx.compose.ui.zIndex
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.fragment.app.Fragment
+import kotlinx.coroutines.delay
 import timber.log.Timber
+import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
 import top.easelink.lcg.ui.main.source.model.Post
 
@@ -37,6 +40,7 @@ fun ComposeRecyclerViewBridge(
     val posts by viewModel.posts.observeAsState(initial = emptyList<Post>())
     val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
 
+    // 1. 计算过滤后的数据
     var filteredPosts = if (showOpOnly) {
         val opAuthor = posts.firstOrNull()?.author
         posts.filter { it.author == opAuthor }
@@ -65,13 +69,23 @@ fun ComposeRecyclerViewBridge(
 
     val isFiltering = showOpOnly || filterSpam || searchKeyword.isNotBlank()
 
+    // 2. 核心：全量自动深搜引擎
+    LaunchedEffect(isFiltering, searchKeyword, posts.size, hasMore) {
+        if (isFiltering && hasMore) {
+            // 延迟 1.5 秒，给底层 JsoupClient 留出安全缓冲，防止 WAF 封号
+            delay(1500)
+            Timber.d("【全量搜索】自动拉取下一页...")
+            viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_MORE, null)
+        }
+    }
+
+    // 3. 渲染层
     Box(modifier = modifier) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
                 RecyclerView(context).apply {
-                    // 核心修复：强行关闭 ItemAnimator，彻底干掉数据量剧变导致的卡片消失和卡死！
-                    itemAnimator = null
+                    itemAnimator = null // 关闭动画，防止卡片闪烁
                     setBackgroundColor(android.graphics.Color.TRANSPARENT)
                     layoutManager = LinearLayoutManager(context)
                     setPadding(0, 0, 0, 0)
@@ -90,19 +104,17 @@ fun ComposeRecyclerViewBridge(
             update = { recyclerView ->
                 val adapter = recyclerView.adapter as? ArticleAdapter
                 if (adapter != null) {
-                    val safeHasMore = if (isFiltering) false else hasMore
-                    Timber.d("【UI层】更新数据: 结果=${displayPosts.size} 条, safeHasMore=$safeHasMore")
-                    
-                    // 核心修复：将过滤状态传递给 Adapter
+                    Timber.d("【UI层】更新数据: 结果=${displayPosts.size} 条, hasMore=$hasMore")
                     adapter.isFiltering = isFiltering
                     adapter.searchKeyword = searchKeyword
-                    adapter.setData(displayPosts, safeHasMore)
+                    // 直接把原始的 hasMore 塞进去，让深搜引擎能继续跑
+                    adapter.setData(displayPosts, hasMore)
                 }
             }
         )
 
-        // 干净利落的无结果覆盖层
-        if (isFiltering && displayPosts.isEmpty()) {
+        // 4. 无结果覆盖层
+        if (isFiltering && displayPosts.isEmpty() && !hasMore) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -119,7 +131,7 @@ fun ComposeRecyclerViewBridge(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = if (searchKeyword.isNotBlank()) "未找到包含“$searchKeyword”的楼层" else "当前过滤条件下无内容",
+                        text = if (searchKeyword.isNotBlank()) "已搜索全文，未找到“$searchKeyword”" else "当前过滤条件下无内容",
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
