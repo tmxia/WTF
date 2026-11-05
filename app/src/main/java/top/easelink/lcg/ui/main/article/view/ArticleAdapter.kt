@@ -235,8 +235,10 @@ class ArticleAdapter(
                     }
                     contentTextView.run {
                         requestFocus()
-                        // 核心修复：点击正文文字直接触发跳转
-                        setOnClickListener { if (onItemClick != null) onItemClick.invoke(p) }
+                        setOnClickListener { onItemClick?.invoke(p) }
+                        // 核心防塌陷：强制设置最小高度
+                        minHeight = (60 * context.resources.displayMetrics.density).toInt()
+                        
                         if (AppConfig.articleHandlePreTag) {
                             setClickablePreCodeSpan(ClickablePreCodeSpanImpl())
                             setDrawPreCodeSpan(DrawPreCodeSpan().apply {
@@ -259,10 +261,10 @@ class ArticleAdapter(
                         }
                         // 核心修复：在搜索/过滤状态下，只提取纯文本摘要，避免复杂 HTML 导致测量塌陷不显示
                         if (isFiltering) {
+                            // 搜索模式：提取纯文本，高亮后渲染，彻底杜绝复杂 HTML 破坏渲染
                             val plainText = org.jsoup.Jsoup.parse(p.content ?: "").text()
                             var snippet = plainText
                             
-                            // 截取关键字附近的内容（前后各 40 字）
                             if (searchKeyword.isNotBlank() && plainText.contains(searchKeyword, ignoreCase = true)) {
                                 val index = plainText.indexOf(searchKeyword, ignoreCase = true)
                                 val start = maxOf(0, index - 40)
@@ -273,10 +275,14 @@ class ArticleAdapter(
                             } else if (plainText.length > 150) {
                                 snippet = plainText.substring(0, 150) + "..."
                             }
+                            
+                            // 如果纯文本为空（例如只有图片），强行塞入提示
+                            if (snippet.isBlank()) snippet = "[图片或代码，无文字内容]"
+                            
                             setHtml(highlightKeywords(snippet, searchKeyword), htmlHttpImageGetter)
                         } else {
-                            // 正常状态下，渲染完整 HTML
-                            setHtml(highlightKeywords(p.content, searchKeyword), htmlHttpImageGetter)
+                            // 正常模式：原汁原味渲染完整 HTML（不再高亮）
+                            setHtml(p.content, htmlHttpImageGetter)
                         }
                     }
                     postBtnCapture.visibility = View.VISIBLE
@@ -425,10 +431,10 @@ class ArticleAdapter(
                             }
                             // 核心修复：在搜索/过滤状态下，只提取纯文本摘要，避免复杂 HTML 导致测量塌陷不显示
                         if (isFiltering) {
+                            // 搜索模式：提取纯文本，高亮后渲染，彻底杜绝复杂 HTML 破坏渲染
                             val plainText = org.jsoup.Jsoup.parse(p.content ?: "").text()
                             var snippet = plainText
                             
-                            // 截取关键字附近的内容（前后各 40 字）
                             if (searchKeyword.isNotBlank() && plainText.contains(searchKeyword, ignoreCase = true)) {
                                 val index = plainText.indexOf(searchKeyword, ignoreCase = true)
                                 val start = maxOf(0, index - 40)
@@ -439,10 +445,14 @@ class ArticleAdapter(
                             } else if (plainText.length > 150) {
                                 snippet = plainText.substring(0, 150) + "..."
                             }
+                            
+                            // 如果纯文本为空（例如只有图片），强行塞入提示
+                            if (snippet.isBlank()) snippet = "[图片或代码，无文字内容]"
+                            
                             setHtml(highlightKeywords(snippet, searchKeyword), htmlHttpImageGetter)
                         } else {
-                            // 正常状态下，渲染完整 HTML
-                            setHtml(highlightKeywords(p.content, searchKeyword), htmlHttpImageGetter)
+                            // 正常模式：原汁原味渲染完整 HTML（不再高亮）
+                            setHtml(p.content, htmlHttpImageGetter)
                         }
                         }
                         if (isLoggedIn) {
@@ -546,16 +556,12 @@ class ArticleAdapter(
     /**
      * 安全高亮关键字：只替换纯文本节点，不破坏 HTML 标签
      */
-    private fun highlightKeywords(html: String?, keyword: String): String {
-        if (html.isNullOrBlank() || keyword.isBlank()) return html ?: ""
+    private fun highlightKeywords(text: String, keyword: String): String {
+        if (text.isBlank() || keyword.isBlank()) return text
         val safeKeyword = Regex.escape(keyword)
-        val tagRegex = Regex("(<[^>]+>)")
-        // 按标签拆分
-        val parts = html.split(tagRegex)
-        return parts.joinToString("") { part ->
-            if (part.startsWith("<") && part.endsWith(">")) {
-                part // 是 HTML 标签，原样返回
-            } else {
+        // 纯文本替换，转义后直接替换为带颜色的 HTML 标签
+        return text.replace(Regex(safeKeyword, RegexOption.IGNORE_CASE), "<font color='#E53935'><b>$0</b></font>")
+    } else {
                 // 是纯文本，忽略大小写替换为红色加粗的 <font> 标签
                 part.replace(Regex(safeKeyword, RegexOption.IGNORE_CASE), "<font color='#E53935'><b>$0</b></font>")
             }
