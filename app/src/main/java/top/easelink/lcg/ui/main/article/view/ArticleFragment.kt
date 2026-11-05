@@ -164,12 +164,15 @@ fun ArticleScreen(
     val prefs = remember { context.getSharedPreferences("article_settings", android.content.Context.MODE_PRIVATE) }
 
     // 核心跳转逻辑：当清空搜索且列表恢复全量数据后，滚动到目标楼层
-    LaunchedEffect(posts, pendingScrollPost) {
+    LaunchedEffect(posts, pendingScrollPost, searchKeyword) {
         val target = pendingScrollPost ?: return@LaunchedEffect
+        // 只有当搜索条件和过滤条件全部清空后，才执行滚动
         if (searchKeyword.isBlank() && !filterSpam && !showOpOnly) {
             val index = posts.indexOfFirst { it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl) }
-            Timber.d("【跳转】执行定位，目标索引: $index, 总列表大小: ${posts.size}")
+            Timber.d("【跳转】触发定位，目标索引: $index, 总列表大小: ${posts.size}")
             if (index != -1) {
+                // 由于 RecyclerView 渲染需要时间，我们稍微延迟 100ms 滚动，确保视图已刷新
+                kotlinx.coroutines.delay(100)
                 recyclerView?.smoothScrollToPosition(index)
                 pendingScrollPost = null
             }
