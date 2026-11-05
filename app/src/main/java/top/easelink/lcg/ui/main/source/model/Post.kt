@@ -25,5 +25,6 @@ class Post
     val replyAddUrl: String?,
     val profileUrl: String? = null,
     val extraInfo: String? = null,
-    val followInfo: Pair<String, String>? = null
+    val followInfo: Pair<String, String>? = null,
+    var isLiked: Boolean = false
 ) : Parcelable

@@ -158,8 +158,14 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
             throw IllegalStateException()
         }
         currentJob = viewModelScope.launch(IOPool) {
-            ArticlesRemoteDataSource.replyAdd(url).also {
-                showMessage(it)
+            Timber.d("【点赞】发起请求: $url")
+            try {
+                val response = ArticlesRemoteDataSource.replyAdd(url)
+                Timber.d("【点赞】收到响应: $response")
+                showMessage(response)
+            } catch (e: Exception) {
+                Timber.e(e, "【点赞】发生异常")
+                showMessage("点赞异常，请稍后重试")
             }
         }
     }

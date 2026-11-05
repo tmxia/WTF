@@ -255,6 +255,10 @@ class ArticleAdapter(
                         } else {
                             postBtnThumbUp.visibility = View.VISIBLE
                             postBtnThumbUp.setOnClickListener(this@PostViewHolder)
+                            // 核心修复：绑定颜色状态
+                            val isLikedColor = ContextCompat.getColor(root.context, R.color.colorAccent)
+                            val normalColor = ContextCompat.getColor(root.context, R.color.gray)
+                            postBtnThumbUp.setColorFilter(if (p.isLiked) isLikedColor else normalColor)
                         }
                         postBtnCopy.setOnClickListener(this@PostViewHolder)
                     } else {
@@ -272,7 +276,24 @@ class ArticleAdapter(
                 when (v.id) {
                     R.id.post_btn_reply -> p.replyUrl?.let { EventBus.getDefault().post(ReplyPostEvent(it, p.author)) }
                     R.id.post_btn_copy -> if (copyContent(p.content, p.author)) showMessage(R.string.copy_succeed) else showMessage(R.string.copy_failed)
-                    R.id.post_btn_thumb_up -> p.replyAddUrl?.let { mListener.replyAdd(it) }
+                    R.id.post_btn_thumb_up -> {
+                        if (p.isLiked) {
+                            showMessage("您已经赞过该楼层了")
+                            return
+                        }
+                        if (p.replyAddUrl.isNullOrBlank()) {
+                            showMessage("无法获取点赞地址")
+                            return
+                        }
+                        p.replyAddUrl?.let { url ->
+                            // 乐观更新：立即变红
+                            p.isLiked = true
+                            val isLikedColor = ContextCompat.getColor(itemView.context, R.color.colorAccent)
+                            binding.postBtnThumbUp.setColorFilter(isLikedColor)
+                            // 发起请求
+                            mListener.replyAdd(url)
+                        }
+                    }
                     R.id.post_btn_capture -> {
                         showMessage("正在生成截图，请稍候...")
                         itemView.postDelayed({
