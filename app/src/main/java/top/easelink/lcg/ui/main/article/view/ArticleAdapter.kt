@@ -69,6 +69,20 @@ class ArticleAdapter(
 
     
     fun setData(posts: List<Post>, hasMore: Boolean = false) {
+        // 核心修复：防闪烁拦截。如果数据完全没变，直接返回，绝不触发 UI 重绘
+        if (mPostList.size == posts.size && this.hasMoreItem == hasMore && mPostList.isNotEmpty()) {
+            var isSame = true
+            for (i in posts.indices) {
+                if (mPostList[i].content != posts[i].content || mPostList[i].replyUrl != posts[i].replyUrl) {
+                    isSame = false
+                    break
+                }
+            }
+            if (isSame) {
+                return
+            }
+        }
+        
         mPostList.clear()
         mPostList.addAll(posts)
         this.hasMoreItem = hasMore
