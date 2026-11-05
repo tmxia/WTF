@@ -6,6 +6,9 @@ import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -239,31 +242,38 @@ fun ArticleScreen(
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
-                            modifier = Modifier.background(Color.White)
+                            modifier = Modifier
+                                .background(Color.White)
+                                .width(180.dp)
                         ) {
-                            
+                            // === 第一组：阅读与搜索 ===
                             DropdownMenuItem(
-                                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
-                                text = { Text(if (showOpOnly) "显示全部帖子" else "只看楼主", fontSize = 14.sp, color = Color.DarkGray) },
+                                modifier = Modifier.height(42.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp),
+                                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (showOpOnly) Color(0xFFE53935) else Color.Gray) },
+                                text = { Text(if (showOpOnly) "显示全部" else "只看楼主", fontSize = 14.sp, color = if (showOpOnly) Color(0xFFE53935) else Color.DarkGray, fontWeight = if (showOpOnly) FontWeight.Bold else FontWeight.Normal) },
                                 onClick = {
                                     showMenu = false
                                     showOpOnly = !showOpOnly
                                 }
                             )
-                            
-                            
+
                             DropdownMenuItem(
-                                leadingIcon = { Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
-                                text = { Text(if (filterSpam) "关闭灌水过滤" else "过滤灌水回复", fontSize = 14.sp, color = Color.DarkGray) },
+                                modifier = Modifier.height(42.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp),
+                                leadingIcon = { Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (filterSpam) Color(0xFFE53935) else Color.Gray) },
+                                text = { Text(if (filterSpam) "关闭灌水过滤" else "过滤灌水", fontSize = 14.sp, color = if (filterSpam) Color(0xFFE53935) else Color.DarkGray, fontWeight = if (filterSpam) FontWeight.Bold else FontWeight.Normal) },
                                 onClick = {
                                     showMenu = false
                                     filterSpam = !filterSpam
                                 }
                             )
-                            
+
                             DropdownMenuItem(
-                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
-                                text = { Text(if (searchKeyword.isNotBlank()) "清除搜索: $searchKeyword" else "搜索帖子内容", fontSize = 14.sp, color = Color.DarkGray) },
+                                modifier = Modifier.height(42.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp),
+                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (searchKeyword.isNotBlank()) Color(0xFFE53935) else Color.Gray) },
+                                text = { Text(if (searchKeyword.isNotBlank()) "清除搜索" else "搜索帖子", fontSize = 14.sp, color = if (searchKeyword.isNotBlank()) Color(0xFFE53935) else Color.DarkGray, fontWeight = if (searchKeyword.isNotBlank()) FontWeight.Bold else FontWeight.Normal) },
                                 onClick = {
                                     showMenu = false
                                     if (searchKeyword.isNotBlank()) {
@@ -272,13 +282,10 @@ fun ArticleScreen(
                                         val density = context.resources.displayMetrics.density
                                         val padding = (20 * density).toInt()
 
-                                        
                                         val rootLayout = android.widget.LinearLayout(context).apply {
                                             orientation = android.widget.LinearLayout.VERTICAL
                                             setPadding(padding, padding / 2, padding, (10 * density).toInt())
                                         }
-
-                                        
                                         rootLayout.addView(android.widget.TextView(context).apply {
                                             text = "搜索帖子内容"
                                             textSize = 16f
@@ -286,8 +293,6 @@ fun ArticleScreen(
                                             setTextColor(android.graphics.Color.BLACK)
                                             setPadding(0, 0, 0, (16 * density).toInt())
                                         })
-
-                                        
                                         val inputContainer = android.widget.FrameLayout(context).apply {
                                             val bg = android.graphics.drawable.GradientDrawable().apply {
                                                 setColor(android.graphics.Color.parseColor("#F5F5F5"))
@@ -306,13 +311,11 @@ fun ArticleScreen(
                                         inputContainer.addView(input)
                                         rootLayout.addView(inputContainer)
 
-                                        
                                         val btnLayout = android.widget.LinearLayout(context).apply {
                                             orientation = android.widget.LinearLayout.HORIZONTAL
                                             gravity = android.view.Gravity.END
                                             setPadding(0, (16 * density).toInt(), 0, 0)
                                         }
-
                                         val btnCancel = android.widget.TextView(context).apply {
                                             text = "取消"
                                             textSize = 14f
@@ -322,16 +325,14 @@ fun ArticleScreen(
                                         val btnSearch = android.widget.TextView(context).apply {
                                             text = "搜索"
                                             textSize = 14f
-                                            setTextColor(android.graphics.Color.parseColor("#E53935")) 
+                                            setTextColor(android.graphics.Color.parseColor("#E53935"))
                                             setTypeface(null, android.graphics.Typeface.BOLD)
                                             setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
                                         }
-
                                         btnLayout.addView(btnCancel)
                                         btnLayout.addView(btnSearch)
                                         rootLayout.addView(btnLayout)
 
-                                        
                                         val card = com.google.android.material.card.MaterialCardView(context).apply {
                                             radius = 16f * density
                                             setCardBackgroundColor(android.graphics.Color.WHITE)
@@ -339,8 +340,6 @@ fun ArticleScreen(
                                             elevation = 0f
                                             addView(rootLayout)
                                         }
-
-                                        
                                         val dialog = android.app.AlertDialog.Builder(context).create()
                                         dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
                                         dialog.setView(card)
@@ -361,9 +360,41 @@ fun ArticleScreen(
                                 }
                             )
 
-                            
                             DropdownMenuItem(
-                                leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                modifier = Modifier.height(42.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp),
+                                leadingIcon = { Icon(Icons.Default.List, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (isReverse) Color(0xFFE53935) else Color.Gray) },
+                                text = { Text(if (isReverse) "顺序显示" else "倒序显示", fontSize = 14.sp, color = if (isReverse) Color(0xFFE53935) else Color.DarkGray, fontWeight = if (isReverse) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = {
+                                    showMenu = false
+                                    isReverse = !isReverse
+                                    prefs.edit().putBoolean("is_reverse", isReverse).apply()
+                                }
+                            )
+
+                            // === 分割线 ===
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                                thickness = 0.5.dp,
+                                color = Color.LightGray.copy(alpha = 0.5f)
+                            )
+
+                            // === 第二组：快捷操作 ===
+                            DropdownMenuItem(
+                                modifier = Modifier.height(42.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp),
+                                leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.Gray) },
+                                text = { Text("刷新帖子", fontSize = 14.sp, color = Color.DarkGray) },
+                                onClick = {
+                                    showMenu = false
+                                    viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                modifier = Modifier.height(42.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp),
+                                leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.Gray) },
                                 text = { Text("复制链接", fontSize = 14.sp, color = Color.DarkGray) },
                                 onClick = {
                                     showMenu = false
@@ -374,30 +405,10 @@ fun ArticleScreen(
                                 }
                             )
 
-                            
                             DropdownMenuItem(
-                                leadingIcon = { Icon(Icons.Default.List, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
-                                text = { Text(if (isReverse) "顺序显示" else "倒序显示", fontSize = 14.sp, color = Color.DarkGray) },
-                                onClick = {
-                                    showMenu = false
-                                    isReverse = !isReverse
-                                    prefs.edit().putBoolean("is_reverse", isReverse).apply()
-                                }
-                            )
-
-                            
-                            DropdownMenuItem(
-                                leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
-                                text = { Text("刷新", fontSize = 14.sp, color = Color.DarkGray) },
-                                onClick = {
-                                    showMenu = false
-                                    viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
-                                }
-                            )
-
-                            
-                            DropdownMenuItem(
-                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                modifier = Modifier.height(42.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp),
+                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.Gray) },
                                 text = { Text("在浏览器打开", fontSize = 14.sp, color = Color.DarkGray) },
                                 onClick = {
                                     showMenu = false
@@ -405,9 +416,10 @@ fun ArticleScreen(
                                 }
                             )
 
-                            
                             DropdownMenuItem(
-                                leadingIcon = { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray) },
+                                modifier = Modifier.height(42.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp),
+                                leadingIcon = { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.Gray) },
                                 text = { Text("提取下载链接", fontSize = 14.sp, color = Color.DarkGray) },
                                 onClick = {
                                     showMenu = false
@@ -420,17 +432,11 @@ fun ArticleScreen(
                                 }
                             )
 
-                            
                             DropdownMenuItem(
-                                leadingIcon = {
-                                    Icon(
-                                        if (isFavorited) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(20.dp),
-                                        tint = if (isFavorited) Color.Red else Color.DarkGray
-                                    )
-                                },
-                                text = { Text(if (isFavorited) "取消收藏" else "添加收藏", fontSize = 14.sp, color = Color.DarkGray) },
+                                modifier = Modifier.height(42.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp),
+                                leadingIcon = { Icon(if (isFavorited) Icons.Filled.Favorite else Icons.Default.FavoriteBorder, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (isFavorited) Color(0xFFE53935) else Color.Gray) },
+                                text = { Text(if (isFavorited) "取消收藏" else "添加收藏", fontSize = 14.sp, color = if (isFavorited) Color(0xFFE53935) else Color.DarkGray, fontWeight = if (isFavorited) FontWeight.Bold else FontWeight.Normal) },
                                 onClick = {
                                     showMenu = false
                                     viewModel.toggleFavorite()
