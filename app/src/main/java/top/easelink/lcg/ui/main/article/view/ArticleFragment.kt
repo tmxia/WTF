@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import timber.log.Timber
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -147,6 +148,15 @@ fun ArticleScreen(
     var showOpOnly by remember { mutableStateOf(false) }
     var filterSpam by remember { mutableStateOf(false) }
     var searchKeyword by remember { mutableStateOf("") }
+
+    // 核心修复：只要进入新的帖子（URL 变化），立刻强制清空所有搜索和过滤状态，防止状态污染
+    LaunchedEffect(articleUrl) {
+        searchKeyword = ""
+        showOpOnly = false
+        filterSpam = false
+        Timber.d("【详情页】切换到新帖子，已重置所有过滤条件")
+    }
+
     var recyclerView by remember { mutableStateOf<androidx.recyclerview.widget.RecyclerView?>(null) }
     
     val prefs = remember { context.getSharedPreferences("article_settings", android.content.Context.MODE_PRIVATE) }
