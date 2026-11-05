@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import coil.transform.RoundedCornersTransformation
@@ -56,32 +55,20 @@ class ArticleAdapter(
 ) : RecyclerView.Adapter<BaseViewHolder>() {
 
     private val mPostList: MutableList<Post> = ArrayList()
-
-    
-
-
-
-        private var hasMoreItem: Boolean = false
+    private var hasMoreItem: Boolean = false
     var isFiltering: Boolean = false
     var searchKeyword: String = ""
 
-
-
-    
-        fun setData(posts: List<Post>, hasMore: Boolean = false, forceRefresh: Boolean = false) {
-        // 核心双重防闪：如果长度一致、状态一致，且没有被强制要求刷新
+    fun setData(posts: List<Post>, hasMore: Boolean = false, forceRefresh: Boolean = false) {
         if (!forceRefresh && mPostList.size == posts.size && this.hasMoreItem == hasMore) {
             var isSame = true
             for (i in posts.indices) {
-                // 只要 URL 没变，我们就认为楼层没变，哪怕时间或内容有微小变化也不刷新
                 if (mPostList[i].replyUrl != posts[i].replyUrl) {
                     isSame = false
                     break
                 }
             }
-            if (isSame) {
-                return
-            }
+            if (isSame) return
         }
         
         mPostList.clear()
@@ -90,21 +77,18 @@ class ArticleAdapter(
         notifyDataSetChanged()
     }
 
-    
     private fun getRealPost(position: Int): Post? {
-        
         return mPostList.getOrNull(position)
     }
 
     override fun getItemCount() = when {
-        mPostList.isEmpty() -> 0 
+        mPostList.isEmpty() -> 0
         hasMoreItem -> mPostList.size + 1
         else -> mPostList.size
     }
 
     override fun getItemViewType(position: Int) = when {
         mPostList.isEmpty() -> VIEW_TYPE_EMPTY
-        // 核心修复：如果处于过滤状态，全部用回复卡片渲染，防止首条被当成楼主导致高度坍塌或崩溃
         isFiltering -> VIEW_TYPE_REPLY
         position == 0 -> VIEW_TYPE_POST
         position == mPostList.size -> VIEW_TYPE_LOAD_MORE
@@ -115,32 +99,16 @@ class ArticleAdapter(
         holder.onBind(position)
     }
 
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): BaseViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
-            VIEW_TYPE_POST -> {
-                val binding = ItemPostViewBinding.inflate(inflater, parent, false)
-                PostViewHolder(binding)
-            }
-            VIEW_TYPE_REPLY -> {
-                val binding = ItemReplyViewBinding.inflate(inflater, parent, false)
-                ReplyViewHolder(binding)
-            }
-            VIEW_TYPE_LOAD_MORE -> {
-                val binding = ItemLoadMoreViewBinding.inflate(inflater, parent, false)
-                LoadMoreViewHolder(binding)
-            }
-            else -> {
-                val binding = LayoutSkeltonArticleBinding.inflate(inflater, parent, false)
-                PostEmptyViewHolder(binding.root)
-            }
+            VIEW_TYPE_POST -> PostViewHolder(ItemPostViewBinding.inflate(inflater, parent, false))
+            VIEW_TYPE_REPLY -> ReplyViewHolder(ItemReplyViewBinding.inflate(inflater, parent, false))
+            VIEW_TYPE_LOAD_MORE -> LoadMoreViewHolder(ItemLoadMoreViewBinding.inflate(inflater, parent, false))
+            else -> PostEmptyViewHolder(LayoutSkeltonArticleBinding.inflate(inflater, parent, false).root)
         }
     }
 
-    
     @SuppressLint("NotifyDataSetChanged")
     fun setItems(postList: List<Post>) {
         mPostList.clear()
@@ -148,7 +116,6 @@ class ArticleAdapter(
         notifyDataSetChanged()
     }
 
-    
     fun appendItems(newPosts: List<Post>) {
         if (newPosts.isEmpty()) return
         val start = mPostList.size
@@ -156,19 +123,16 @@ class ArticleAdapter(
         notifyItemRangeInserted(start, newPosts.size)
     }
 
-    
     fun insertItem(position: Int, post: Post) {
         val safePos = position.coerceIn(0, mPostList.size)
         mPostList.add(safePos, post)
         notifyItemInserted(safePos)
     }
 
-    
     fun setHasMore(hasMore: Boolean) {
         if (hasMoreItem == hasMore) return
         val wasShowing = hasMoreItem
         hasMoreItem = hasMore
-        
         when {
             hasMore && !wasShowing && mPostList.isNotEmpty() -> notifyItemInserted(mPostList.size)
             !hasMore && wasShowing && mPostList.isNotEmpty() -> notifyItemRemoved(mPostList.size)
@@ -182,6 +146,12 @@ class ArticleAdapter(
         notifyDataSetChanged()
     }
 
+    private fun highlightKeywords(text: String, keyword: String): String {
+        if (text.isBlank() || keyword.isBlank()) return text
+        val safeKeyword = Regex.escape(keyword)
+        return text.replace(Regex(safeKeyword, RegexOption.IGNORE_CASE), "<font color='#E53935'><b>$0</b></font>")
+    }
+
     inner class PostViewHolder internal constructor(
         private val binding: ItemPostViewBinding
     ) : BaseViewHolder(binding.root), View.OnClickListener {
@@ -192,40 +162,31 @@ class ArticleAdapter(
         override fun onBind(position: Int) {
             val p = mPostList.getOrNull(position) ?: return
             post = p
+            
             itemView.isClickable = true
-                    itemView.setOnClickListener { onItemClick?.invoke(p) }
-                    binding.root.isClickable = true
-                    binding.root.setOnClickListener { onItemClick?.invoke(p) }
-                    binding.contentTextView.isClickable = true
-                    binding.contentTextView.setOnClickListener { onItemClick?.invoke(p) }
-                    with(binding) {
+            itemView.setOnClickListener { onItemClick?.invoke(p) }
+            binding.root.isClickable = true
+            binding.root.setOnClickListener { onItemClick?.invoke(p) }
+            binding.contentTextView.isClickable = true
+            binding.contentTextView.setOnClickListener { onItemClick?.invoke(p) }
+
+            with(binding) {
                 try {
                     authorTextView.text = p.author
                     dateTextView.text = getDateDiff(p.date)
                     postAvatar.setOnClickListener { _ ->
-                        mFragment.runCatching { parentFragmentManager }
-                            .getOrNull()
-                            ?.let {
-                                val location = IntArray(2)
-                                postAvatar.getLocationInWindow(location)
-                                val popUpInfo = PopUpProfileInfo(
-                                    location[0],
-                                    location[1],
-                                    p.avatar,
-                                    p.author,
-                                    p.extraInfo,
-                                    p.followInfo,
-                                    p.profileUrl
-                                )
-                                PopUpProfileDialog.newInstance(popUpInfo).show(
-                                    it,
-                                    PopUpProfileDialog::class.java.simpleName
-                                )
+                        mFragment.runCatching { parentFragmentManager }.getOrNull()?.let {
+                            val location = IntArray(2)
+                            postAvatar.getLocationInWindow(location)
+                            val popUpInfo = PopUpProfileInfo(
+                                location[0], location[1], p.avatar, p.author, p.extraInfo, p.followInfo, p.profileUrl
+                            )
+                            PopUpProfileDialog.newInstance(popUpInfo).show(it, PopUpProfileDialog::class.java.simpleName)
+                        } ?: root.context.startActivity(
+                            Intent(root.context, ProfileActivity::class.java).also {
+                                it.putExtra(KEY_PROFILE_URL, p.profileUrl)
                             }
-                            ?: root.context.startActivity(
-                                Intent(root.context, ProfileActivity::class.java).also {
-                                    it.putExtra(KEY_PROFILE_URL, p.profileUrl)
-                                })
+                        )
                     }
                     postAvatar.load(p.avatar) {
                         crossfade(false)
@@ -236,7 +197,6 @@ class ArticleAdapter(
                     contentTextView.run {
                         requestFocus()
                         setOnClickListener { onItemClick?.invoke(p) }
-                        // 核心防塌陷：强制设置最小高度
                         minHeight = (60 * context.resources.displayMetrics.density).toInt()
                         
                         if (AppConfig.articleHandlePreTag) {
@@ -253,18 +213,15 @@ class ArticleAdapter(
                         }
                         setOnLinkTagClickListener { c: Context?, url: String ->
                             if (url.startsWith(SERVER_BASE_URL + "thread")) {
-                                EventBus.getDefault()
-                                    .post(OpenArticleEvent(url.substring(SERVER_BASE_URL.length)))
+                                EventBus.getDefault().post(OpenArticleEvent(url.substring(SERVER_BASE_URL.length)))
                             } else {
                                 WebViewActivity.startWebViewWith(url, c)
                             }
                         }
-                        // 核心修复：在搜索/过滤状态下，只提取纯文本摘要，避免复杂 HTML 导致测量塌陷不显示
+                        
                         if (isFiltering) {
-                            // 搜索模式：提取纯文本，高亮后渲染，彻底杜绝复杂 HTML 破坏渲染
                             val plainText = org.jsoup.Jsoup.parse(p.content ?: "").text()
                             var snippet = plainText
-                            
                             if (searchKeyword.isNotBlank() && plainText.contains(searchKeyword, ignoreCase = true)) {
                                 val index = plainText.indexOf(searchKeyword, ignoreCase = true)
                                 val start = maxOf(0, index - 40)
@@ -275,13 +232,9 @@ class ArticleAdapter(
                             } else if (plainText.length > 150) {
                                 snippet = plainText.substring(0, 150) + "..."
                             }
-                            
-                            // 如果纯文本为空（例如只有图片），强行塞入提示
                             if (snippet.isBlank()) snippet = "[图片或代码，无文字内容]"
-                            
                             setHtml(highlightKeywords(snippet, searchKeyword), htmlHttpImageGetter)
                         } else {
-                            // 正常模式：原汁原味渲染完整 HTML（不再高亮）
                             setHtml(p.content, htmlHttpImageGetter)
                         }
                     }
@@ -305,7 +258,6 @@ class ArticleAdapter(
                     } else {
                         postBtnGroup.visibility = View.GONE
                     }
-                    
                     contentTextView.setOnLongClickListener { true }
                 } catch (e: Exception) {
                     Timber.e(e)
@@ -316,25 +268,14 @@ class ArticleAdapter(
         override fun onClick(v: View) {
             post?.let { p ->
                 when (v.id) {
-                    R.id.post_btn_reply -> p.replyUrl?.let {
-                        EventBus.getDefault().post(ReplyPostEvent(it, p.author))
-                    }
-                    R.id.post_btn_copy -> if (copyContent(p.content, p.author)) {
-                        showMessage(R.string.copy_succeed)
-                    } else {
-                        showMessage(R.string.copy_failed)
-                    }
-                    R.id.post_btn_thumb_up -> p.replyAddUrl?.let {
-                        mListener.replyAdd(it)
-                    }
+                    R.id.post_btn_reply -> p.replyUrl?.let { EventBus.getDefault().post(ReplyPostEvent(it, p.author)) }
+                    R.id.post_btn_copy -> if (copyContent(p.content, p.author)) showMessage(R.string.copy_succeed) else showMessage(R.string.copy_failed)
+                    R.id.post_btn_thumb_up -> p.replyAddUrl?.let { mListener.replyAdd(it) }
                     R.id.post_btn_capture -> {
                         convertViewToBitmap(itemView, Bitmap.Config.ARGB_8888)?.let {
                             val path = saveImageToGallery(it, System.currentTimeMillis().toString())
                             EventBus.getDefault().post(ScreenCaptureEvent(path))
                         } ?: showMessage(R.string.general_error)
-                    }
-                    else -> {
-                        
                     }
                 }
             }
@@ -354,16 +295,15 @@ class ArticleAdapter(
         override fun onBind(position: Int) {
             post = getRealPost(position)
             post?.let { p ->
-                        itemView.isClickable = true
-                        itemView.setOnClickListener { onItemClick?.invoke(p) }
-                        binding.root.isClickable = true
-                        binding.root.setOnClickListener { onItemClick?.invoke(p) }
-                        binding.replyContentTextView.isClickable = true
-                        binding.replyContentTextView.setOnClickListener { onItemClick?.invoke(p) }
+                itemView.isClickable = true
+                itemView.setOnClickListener { onItemClick?.invoke(p) }
+                binding.root.isClickable = true
+                binding.root.setOnClickListener { onItemClick?.invoke(p) }
+                binding.replyContentTextView.isClickable = true
+                binding.replyContentTextView.setOnClickListener { onItemClick?.invoke(p) }
+
                 with(binding) {
                     try {
-                        
-                        
                         if (isLoggedIn && username.isNotEmpty() && p.author == username) {
                             replyCard.strokeColor = ContextCompat.getColor(root.context, R.color.orange)
                             replyCard.strokeWidth = dp2px(root.context, 1f).toInt()
@@ -371,32 +311,21 @@ class ArticleAdapter(
                             replyCard.strokeWidth = 0
                         }
                         replyPosition.text = "#$position"
-                        replyCard.minimumHeight = (60 * binding.root.context.resources.displayMetrics.density).toInt()
-                    replyAuthorTextView.text = p.author
+                        replyAuthorTextView.text = p.author
                         replyDateTextView.text = getDateDiff(p.date)
                         replyAvatar.setOnClickListener { _ ->
-                            mFragment.runCatching { parentFragmentManager }
-                                .getOrNull()
-                                ?.let {
-                                    val location = IntArray(2)
-                                    replyAvatar.getLocationInWindow(location)
-                                    val popUpInfo = PopUpProfileInfo(
-                                        location[0],
-                                        location[1],
-                                        p.avatar,
-                                        p.author,
-                                        p.extraInfo,
-                                        p.followInfo,
-                                        p.profileUrl
-                                    )
-                                    PopUpProfileDialog.newInstance(popUpInfo).show(
-                                        it,
-                                        PopUpProfileDialog::class.java.simpleName
-                                    )
-                                } ?: root.context.startActivity(
+                            mFragment.runCatching { parentFragmentManager }.getOrNull()?.let {
+                                val location = IntArray(2)
+                                replyAvatar.getLocationInWindow(location)
+                                val popUpInfo = PopUpProfileInfo(
+                                    location[0], location[1], p.avatar, p.author, p.extraInfo, p.followInfo, p.profileUrl
+                                )
+                                PopUpProfileDialog.newInstance(popUpInfo).show(it, PopUpProfileDialog::class.java.simpleName)
+                            } ?: root.context.startActivity(
                                 Intent(root.context, ProfileActivity::class.java).also {
                                     it.putExtra(KEY_PROFILE_URL, p.profileUrl)
-                                })
+                                }
+                            )
                         }
                         replyAvatar.setImageDrawable(null)
                         replyAvatar.load(p.avatar) {
@@ -406,13 +335,14 @@ class ArticleAdapter(
                             error(getDefaultAvatar(p.avatar))
                         }
                         replyContentTextView.run {
-                        setOnClickListener { onItemClick?.invoke(p) }
+                            setOnClickListener { onItemClick?.invoke(p) }
+                            minHeight = (60 * context.resources.displayMetrics.density).toInt()
+                            
                             if (AppConfig.articleHandlePreTag) {
                                 setClickablePreCodeSpan(ClickablePreCodeSpanImpl())
-                                val drawTableLinkSpan = DrawPreCodeSpan()
-                                    .also {
-                                        it.tableLinkText = context.getString(R.string.tap_for_code)
-                                    }
+                                val drawTableLinkSpan = DrawPreCodeSpan().also {
+                                    it.tableLinkText = context.getString(R.string.tap_for_code)
+                                }
                                 setDrawPreCodeSpan(drawTableLinkSpan)
                             } else {
                                 setClickablePreCodeSpan(null)
@@ -423,37 +353,30 @@ class ArticleAdapter(
                             }
                             setOnLinkTagClickListener { c: Context?, url: String ->
                                 if (url.startsWith(SERVER_BASE_URL + "thread")) {
-                                    EventBus.getDefault()
-                                        .post(OpenArticleEvent(url.substring(SERVER_BASE_URL.length)))
+                                    EventBus.getDefault().post(OpenArticleEvent(url.substring(SERVER_BASE_URL.length)))
                                 } else {
                                     WebViewActivity.startWebViewWith(url, c)
                                 }
                             }
-                            // 核心修复：在搜索/过滤状态下，只提取纯文本摘要，避免复杂 HTML 导致测量塌陷不显示
-                        if (isFiltering) {
-                            // 搜索模式：提取纯文本，高亮后渲染，彻底杜绝复杂 HTML 破坏渲染
-                            val plainText = org.jsoup.Jsoup.parse(p.content ?: "").text()
-                            var snippet = plainText
                             
-                            if (searchKeyword.isNotBlank() && plainText.contains(searchKeyword, ignoreCase = true)) {
-                                val index = plainText.indexOf(searchKeyword, ignoreCase = true)
-                                val start = maxOf(0, index - 40)
-                                val end = minOf(plainText.length, index + searchKeyword.length + 40)
-                                snippet = plainText.substring(start, end)
-                                if (start > 0) snippet = "...$snippet"
-                                if (end < plainText.length) snippet = "$snippet..."
-                            } else if (plainText.length > 150) {
-                                snippet = plainText.substring(0, 150) + "..."
+                            if (isFiltering) {
+                                val plainText = org.jsoup.Jsoup.parse(p.content ?: "").text()
+                                var snippet = plainText
+                                if (searchKeyword.isNotBlank() && plainText.contains(searchKeyword, ignoreCase = true)) {
+                                    val index = plainText.indexOf(searchKeyword, ignoreCase = true)
+                                    val start = maxOf(0, index - 40)
+                                    val end = minOf(plainText.length, index + searchKeyword.length + 40)
+                                    snippet = plainText.substring(start, end)
+                                    if (start > 0) snippet = "...$snippet"
+                                    if (end < plainText.length) snippet = "$snippet..."
+                                } else if (plainText.length > 150) {
+                                    snippet = plainText.substring(0, 150) + "..."
+                                }
+                                if (snippet.isBlank()) snippet = "[图片或代码，无文字内容]"
+                                setHtml(highlightKeywords(snippet, searchKeyword), htmlHttpImageGetter)
+                            } else {
+                                setHtml(p.content, htmlHttpImageGetter)
                             }
-                            
-                            // 如果纯文本为空（例如只有图片），强行塞入提示
-                            if (snippet.isBlank()) snippet = "[图片或代码，无文字内容]"
-                            
-                            setHtml(highlightKeywords(snippet, searchKeyword), htmlHttpImageGetter)
-                        } else {
-                            // 正常模式：原汁原味渲染完整 HTML（不再高亮）
-                            setHtml(p.content, htmlHttpImageGetter)
-                        }
                         }
                         if (isLoggedIn) {
                             replyBtnGroup.visibility = View.VISIBLE
@@ -473,7 +396,6 @@ class ArticleAdapter(
                         } else {
                             replyBtnGroup.visibility = View.GONE
                         }
-                        
                         replyContentTextView.setOnLongClickListener { true }
                     } catch (e: Exception) {
                         Timber.e(e)
@@ -485,20 +407,9 @@ class ArticleAdapter(
         override fun onClick(v: View) {
             post?.let { p ->
                 when (v.id) {
-                    R.id.reply_btn_reply -> p.replyUrl?.let {
-                        EventBus.getDefault().post(ReplyPostEvent(it, p.author))
-                    }
-                    R.id.reply_btn_copy -> if (copyContent(p.content, p.author)) {
-                        showMessage(R.string.copy_succeed)
-                    } else {
-                        showMessage(R.string.copy_failed)
-                    }
-                    R.id.reply_btn_thumb_up -> p.replyAddUrl?.let {
-                        mListener.replyAdd(it)
-                    }
-                    else -> {
-                        
-                    }
+                    R.id.reply_btn_reply -> p.replyUrl?.let { EventBus.getDefault().post(ReplyPostEvent(it, p.author)) }
+                    R.id.reply_btn_copy -> if (copyContent(p.content, p.author)) showMessage(R.string.copy_succeed) else showMessage(R.string.copy_failed)
+                    R.id.reply_btn_thumb_up -> p.replyAddUrl?.let { mListener.replyAdd(it) }
                 }
             }
         }
@@ -519,24 +430,18 @@ class ArticleAdapter(
                     val dayDiff = diff / 1000 / 60 / 60 / 24
                     return "${tips}${dayDiff} 天前"
                 }
-                else -> {
-                    date
-                }
+                else -> date
             }
         } ?: date
     }
 
-    class PostEmptyViewHolder internal constructor(view: View?) :
-        BaseViewHolder(view) {
+    class PostEmptyViewHolder internal constructor(view: View?) : BaseViewHolder(view) {
         override fun onBind(position: Int) {}
     }
 
     inner class LoadMoreViewHolder internal constructor(private val binding: ItemLoadMoreViewBinding) :
         BaseViewHolder(binding.root) {
-
         override fun onBind(position: Int) {
-            
-            
             binding.root.visibility = View.VISIBLE
             mListener.fetchArticlePost(ArticleAdapterListener.FETCH_POST_MORE, null)
         }
@@ -552,20 +457,4 @@ class ArticleAdapter(
         private const val VIEW_TYPE_POST = 2
         private const val VIEW_TYPE_LOAD_MORE = 3
     }
-
-    /**
-     * 安全高亮关键字：只替换纯文本节点，不破坏 HTML 标签
-     */
-    private fun highlightKeywords(text: String, keyword: String): String {
-        if (text.isBlank() || keyword.isBlank()) return text
-        val safeKeyword = Regex.escape(keyword)
-        // 纯文本替换，转义后直接替换为带颜色的 HTML 标签
-        return text.replace(Regex(safeKeyword, RegexOption.IGNORE_CASE), "<font color='#E53935'><b>$0</b></font>")
-    } else {
-                // 是纯文本，忽略大小写替换为红色加粗的 <font> 标签
-                part.replace(Regex(safeKeyword, RegexOption.IGNORE_CASE), "<font color='#E53935'><b>$0</b></font>")
-            }
-        }
-    }
-
 }
