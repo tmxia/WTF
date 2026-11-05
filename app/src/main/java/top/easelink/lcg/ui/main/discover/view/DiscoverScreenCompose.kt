@@ -37,7 +37,8 @@ fun DiscoverScreenCompose(
     onMoreForumsClick: () -> Unit,
     onRankClick: (String) -> Unit,
     onRankLongClick: (String) -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    isLoading: Boolean = false
 ) {
     val forumModel = models.filterIsInstance<ForumListModel>().firstOrNull()
     val rankModels = models.filterIsInstance<RankListModel>().flatMap { it.listModel }
@@ -54,7 +55,7 @@ fun DiscoverScreenCompose(
             }
         }
 
-        if (models.isEmpty()) {
+        if (models.isEmpty() && !isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(text = "暂无数据，请点击刷新", color = Color.Gray)
             }
@@ -82,13 +83,22 @@ fun DiscoverScreenCompose(
                         )
                         IconButton(
                             onClick = onRefresh,
+                            enabled = !isLoading,
                             modifier = Modifier.size(24.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "刷新",
-                                tint = Color(0xFFE65100)
-                            )
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = Color(0xFFE65100),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "刷新",
+                                    tint = Color(0xFFE65100)
+                                )
+                            }
                         }
                     }
                 }

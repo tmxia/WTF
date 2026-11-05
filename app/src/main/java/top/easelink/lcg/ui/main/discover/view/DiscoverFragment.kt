@@ -7,13 +7,10 @@ import android.view.ViewGroup
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.topbase.ControllableFragment
-import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.discover.viewmodel.DiscoverViewModel
 import top.easelink.lcg.ui.main.article.view.PostPreviewDialog
 import top.easelink.lcg.ui.main.model.OpenArticleEvent
@@ -31,33 +28,34 @@ class DiscoverFragment : Fragment(), ControllableFragment {
         savedInstanceState: Bundle?
     ): View {
         val context = requireContext()
-        
-        
+
         val composeView = ComposeView(context).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         }
-        
+
         composeView.setContent {
             val models by viewModel.aggregationModels.observeAsState(initial = emptyList())
+            val isLoading by viewModel.isLoading.observeAsState(initial = false)
+            
             DiscoverScreenCompose(
                 models = models,
                 onForumClick = { title, url -> EventBus.getDefault().post(OpenForumEvent(title, url, true)) },
                 onMoreForumsClick = { EventBus.getDefault().post(ForumNavigationFragment::class.java) },
                 onRankClick = { url -> EventBus.getDefault().post(OpenArticleEvent(url)) },
                 onRankLongClick = { url -> PostPreviewDialog.newInstance(url).show(parentFragmentManager, PostPreviewDialog.TAG) },
-                onRefresh = { viewModel.refreshOptions(context) } 
+                onRefresh = { viewModel.refreshOptions(context) },
+                isLoading = isLoading
             )
         }
-        
+
         return composeView
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
         viewModel.initOptions(requireContext())
     }
 }
