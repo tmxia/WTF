@@ -5,6 +5,7 @@ import android.text.TextUtils
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
@@ -54,6 +55,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
 
     
     private var fetching = false
+    private var currentJob: Job? = null
 
     fun setUrl(url: String) {
         mUrl = url
@@ -83,7 +85,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         }
 
         fetching = true
-        viewModelScope.launch(IOPool) {
+        currentJob = viewModelScope.launch(IOPool) {
             try {
                 val response = ArticlesRemoteDataSource.getArticleDetail(
                     query, type == FETCH_POST_INIT
@@ -155,7 +157,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
             safeUpdate(isLoading, false)
             throw IllegalStateException()
         }
-        viewModelScope.launch(IOPool) {
+        currentJob = viewModelScope.launch(IOPool) {
             ArticlesRemoteDataSource.replyAdd(url).also {
                 showMessage(it)
             }
@@ -180,7 +182,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
 
     fun checkIsFavorited() {
         val url = mUrl ?: return
-        viewModelScope.launch(IOPool) {
+        currentJob = viewModelScope.launch(IOPool) {
             val isFav = ArticlesLocalDataSource.isArticleInFavorites(url)
             safeUpdate(isFavorited, isFav)
         }
@@ -201,7 +203,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
             return
         }
 
-        viewModelScope.launch(IOPool) {
+        currentJob = viewModelScope.launch(IOPool) {
             try {
                 val title = articleTitle.value ?: articleAbstract?.title ?: "未知标题"
                 val author = currentPosts.firstOrNull()?.author ?: ""
@@ -245,7 +247,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
 
     fun removeFromFavorite() {
         val url = mUrl ?: return
-        viewModelScope.launch(IOPool) {
+        currentJob = viewModelScope.launch(IOPool) {
             try {
                 
                 if (AppConfig.syncFavorites && UserDataRepo.isLoggedIn) {

@@ -365,7 +365,8 @@ class ArticleAdapter(
                             replyCard.strokeWidth = 0
                         }
                         replyPosition.text = "#$position"
-                        replyAuthorTextView.text = p.author
+                        replyCard.minimumHeight = (60 * binding.root.context.resources.displayMetrics.density).toInt()
+                    replyAuthorTextView.text = p.author
                         replyDateTextView.text = getDateDiff(p.date)
                         replyAvatar.setOnClickListener { _ ->
                             mFragment.runCatching { parentFragmentManager }

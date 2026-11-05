@@ -73,8 +73,13 @@ fun ComposeRecyclerViewBridge(
     LaunchedEffect(isFiltering, searchKeyword, posts.size, hasMore) {
         if (isFiltering && hasMore) {
             delay(1500)
-            Timber.d("【全量搜索】自动拉取下一页...")
-            viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_MORE, null)
+            // 核心修复：等待 1.5 秒后，再次确认用户没有清空搜索，确认没有离开页面
+            if (isFiltering && hasMore) {
+                Timber.d("【全量搜索】自动拉取下一页...")
+                viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_MORE, null)
+            } else {
+                Timber.d("【全量搜索】状态已变更，终止后续拉取")
+            }
         }
     }
 
