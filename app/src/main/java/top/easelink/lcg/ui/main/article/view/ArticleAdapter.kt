@@ -62,6 +62,7 @@ class ArticleAdapter(
 
 
         private var hasMoreItem: Boolean = false
+    var isFiltering: Boolean = false
 
 
 
@@ -87,6 +88,8 @@ class ArticleAdapter(
 
     override fun getItemViewType(position: Int) = when {
         mPostList.isEmpty() -> VIEW_TYPE_EMPTY
+        // 核心修复：如果处于过滤状态，全部用回复卡片渲染，防止首条被当成楼主导致高度坍塌或崩溃
+        isFiltering -> VIEW_TYPE_REPLY
         position == 0 -> VIEW_TYPE_POST
         position == mPostList.size -> VIEW_TYPE_LOAD_MORE
         else -> VIEW_TYPE_REPLY

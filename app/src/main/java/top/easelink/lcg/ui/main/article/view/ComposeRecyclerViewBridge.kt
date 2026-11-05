@@ -92,6 +92,9 @@ fun ComposeRecyclerViewBridge(
                 if (adapter != null) {
                     val safeHasMore = if (isFiltering) false else hasMore
                     Timber.d("【UI层】更新数据: 结果=${displayPosts.size} 条, safeHasMore=$safeHasMore")
+                    
+                    // 核心修复：将过滤状态传递给 Adapter
+                    adapter.isFiltering = isFiltering
                     adapter.setData(displayPosts, safeHasMore)
                 }
             }
