@@ -27,13 +27,9 @@ fun ComposeRecyclerViewBridge(
     val posts by viewModel.posts.observeAsState(initial = emptyList<Post>())
     val hasMore by viewModel.hasMorePages.observeAsState(initial = false)
 
-    // 探针 1：Compose 层收到的原始数据
-    Timber.d("【UI层】Compose 重组，收到 ViewModel posts 大小: ${posts.size}, hasMore: $hasMore")
-
     AndroidView(
         modifier = modifier,
         factory = { context ->
-            Timber.d("【UI层】创建 RecyclerView 实例")
             RecyclerView(context).apply {
                 setBackgroundColor(android.graphics.Color.TRANSPARENT)
                 layoutManager = LinearLayoutManager(context)
@@ -52,12 +48,10 @@ fun ComposeRecyclerViewBridge(
         },
         update = { recyclerView ->
             val adapter = recyclerView.adapter as? ArticleAdapter
-            if (adapter == null) {
-                Timber.e("【UI层】严重错误：adapter 为 null 或类型不匹配！")
-                return@AndroidView
-            }
+            if (adapter == null) return@AndroidView
             
-            Timber.d("【UI层】Bridge update 触发，开始计算过滤数据")
+            // 打印当前的过滤条件，排查是谁把数据变成了 0
+            Timber.d("【UI层】过滤参数: showOpOnly=$showOpOnly, filterSpam=$filterSpam, searchKeyword='$searchKeyword', posts=${posts.size}")
             
             var filteredPosts = if (showOpOnly) {
                 val opAuthor = posts.firstOrNull()?.author
@@ -85,9 +79,15 @@ fun ComposeRecyclerViewBridge(
                 filteredPosts
             }
 
-            // 探针 2：过滤后，准备推给 Adapter 的数据
-            Timber.d("【UI层】计算完毕，准备推给 Adapter 的数据量: ${displayPosts.size}")
-            adapter.setData(displayPosts, hasMore)
+            val isFiltering = showOpOnly || filterSpam || searchKeyword.isNotBlank()
+            
+            // 核心兜底：如果用户明明没开过滤，却算出来是 0 条，强行拦住，不让界面变灰！
+            if (!isFiltering && displayPosts.isEmpty() && posts.isNotEmpty()) {
+                Timber.e("【UI层】拦截异常：无过滤条件但结果为空，强制回退使用原始数据 ${posts.size} 条")
+                adapter.setData(posts, hasMore)
+            } else {
+                adapter.setData(displayPosts, hasMore)
+            }
         }
     )
 }
