@@ -542,4 +542,13 @@ class ArticleAdapter(
         }
     }
 
+
+    fun markAsLiked(url: String) {
+        val index = mPostList.indexOfFirst { it.replyAddUrl == url }
+        if (index != -1) {
+            mPostList[index].isLiked = true
+            notifyItemChanged(index, "like_status_changed")
+        }
+    }
+
 }

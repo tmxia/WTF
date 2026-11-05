@@ -36,6 +36,7 @@ import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener
 import top.easelink.lcg.ui.main.source.model.Post
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
 import top.easelink.lcg.ui.main.model.ReplyPostEvent
+import top.easelink.lcg.ui.main.model.LikeSuccessEvent
 import top.easelink.lcg.ui.main.model.ScreenCaptureEvent
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant
@@ -189,6 +190,15 @@ fun ArticleScreen(
                         .show(fragment.parentFragmentManager, "ReplyPostDialog")
                 }
             }
+            @Subscribe(threadMode = ThreadMode.MAIN)
+            fun onLikeSuccess(event: LikeSuccessEvent) {
+                recyclerView?.adapter?.let { adapter ->
+                    if (adapter is ArticleAdapter) {
+                        adapter.markAsLiked(event.url)
+                    }
+                }
+            }
+
             @Subscribe(threadMode = ThreadMode.MAIN)
             fun onCaptureEvent(event: ScreenCaptureEvent) {
                 if (fragment.isAdded) {
