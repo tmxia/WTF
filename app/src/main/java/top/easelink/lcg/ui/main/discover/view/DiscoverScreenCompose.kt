@@ -1,6 +1,7 @@
 package top.easelink.lcg.ui.main.discover.view
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import timber.log.Timber
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -42,6 +43,11 @@ fun DiscoverScreenCompose(
 ) {
     val forumModel = models.filterIsInstance<ForumListModel>().firstOrNull()
     val rankModels = models.filterIsInstance<RankListModel>().flatMap { it.listModel }
+
+    // 核心探针：只要界面重组，就打印当前第一条数据的状态
+    if (rankModels.isNotEmpty()) {
+        Timber.d("【发现页-UI】界面刷新，第一条热榜: ${rankModels.first().title} (热度: ${rankModels.first().num})")
+    }
 
     Column(
         modifier = Modifier
@@ -102,7 +108,7 @@ fun DiscoverScreenCompose(
                         }
                     }
                 }
-                items(rankModels) { rank ->
+                items(rankModels, key = { it.url }) { rank ->
                     RankItemCard(rank, onRankClick, onRankLongClick)
                 }
             }

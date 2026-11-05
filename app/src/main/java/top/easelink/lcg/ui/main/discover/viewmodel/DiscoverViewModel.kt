@@ -51,6 +51,8 @@ class DiscoverViewModel : ViewModel() {
                     else -> showMessage(R.string.error)
                 }
             }.also {
+                // 核心修复：强制转圈动画至少执行 800 毫秒，给用户明确的刷新反馈
+                kotlinx.coroutines.delay(800)
                 isLoading.postValue(false)
             }
         }
