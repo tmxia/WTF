@@ -20,6 +20,8 @@ import android.content.Context;
 import android.text.Html;
 import android.text.Selection;
 import android.text.Spannable;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
@@ -31,6 +33,8 @@ import com.google.android.material.textview.MaterialTextView;
 
 import java.io.InputStream;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import timber.log.Timber;
 import top.easelink.framework.R;
@@ -44,11 +48,9 @@ public class HtmlTextView extends MaterialTextView {
     private ClickablePreCodeSpan clickablePreCodeSpan;
     @Nullable
     private DrawPreCodeSpan drawPreCodeSpan;
-
     private OnImgTagClickListener onImgTagClickListener;
     private OnLinkTagClickListener onLinkTagClickListener;
     private float indent = 24.0f; // Default to 24px.
-
     private boolean removeTrailingWhiteSpace = true;
 
     public HtmlTextView(Context context, AttributeSet attrs, int defStyle) {
@@ -71,33 +73,14 @@ public class HtmlTextView extends MaterialTextView {
         setHtml(html, null);
     }
 
-    /**
-     * Loads HTML from a raw resource, i.e., a HTML file in res/raw/.
-     * This allows translatable resource (e.g., res/raw-de/ for german).
-     * The containing HTML is parsed to Android's Spannable format and then displayed.
-     *
-     * @param resId       for example: R.raw.help
-     * @param imageGetter for fetching images. Possible ImageGetter provided by this library:
-     *                    HtmlLocalImageGetter and HtmlRemoteImageGetter
-     */
     public void setHtml(@RawRes int resId, @Nullable Html.ImageGetter imageGetter) {
         InputStream inputStreamText = getContext().getResources().openRawResource(resId);
-
         setHtml(convertStreamToString(inputStreamText), imageGetter);
     }
 
-    /**
-     * Parses String containing HTML to Android's Spannable format and displays it in this TextView.
-     * Using the implementation of Html.ImageGetter provided.
-     *
-     * @param html        String containing HTML, for example: "<b>Hello world!</b>"
-     * @param imageGetter for fetching images. Possible ImageGetter provided by this library:
-     *                    HtmlLocalImageGetter and HtmlRemoteImageGetter
-     */
     public void setHtml(@NonNull String html, @Nullable Html.ImageGetter imageGetter) {
         try {
-            setText(
-                HtmlFormatter.formatHtml(
+            CharSequence text = HtmlFormatter.formatHtml(
                     html,
                     imageGetter,
                     clickablePreCodeSpan,
@@ -106,40 +89,96 @@ public class HtmlTextView extends MaterialTextView {
                     removeTrailingWhiteSpace,
                     getContext(),
                     onImgTagClickListener,
-                    onLinkTagClickListener)
-            );
+                    onLinkTagClickListener);
 
+            setText(text);
+            
             // make links work
             setMovementMethod(LocalLinkMovementMethod.getInstance());
+
+            // ================= 新增：原生代码语法高亮 =================
+            if (text instanceof Spannable) {
+                highlightCode((Spannable) text);
+            }
+            // =========================================================
+
         } catch (Exception e) {
-            // log exception and show error message
             Timber.e(e);
             setText(R.string.html_general_error);
         }
     }
 
-    /**
-     * The Html.fromHtml method has the behavior of adding extra whitespace at the bottom
-     * of the parsed HTML displayed in for example a TextView. In order to remove this
-     * whitespace call this method before setting the text with setHtml on this TextView.
-     *
-     * @param removeTrailingWhiteSpace true if the whitespace rendered at the bottom of a TextView
-     *                                 after setting HTML should be removed.
-     */
+    // ================= 核心高亮实现 =================
+    private void highlightCode(Spannable spannable) {
+        ClickablePreCodeSpan[] spans = spannable.getSpans(0, spannable.length(), ClickablePreCodeSpan.class);
+        for (ClickablePreCodeSpan span : spans) {
+            int start = spannable.getSpanStart(span);
+            int end = spannable.getSpanEnd(span);
+            if (start >= 0 && end <= spannable.length()) {
+                String code = spannable.subSequence(start, end).toString();
+                applyHighlight(spannable, start, code);
+            }
+        }
+    }
+
+    private void applyHighlight(Spannable spannable, int start, String code) {
+        // 现代 IDE 配色方案（类似 VSCode 深色主题）
+        int keywordColor = android.graphics.Color.parseColor("#569CD6"); // 蓝色
+        int stringColor = android.graphics.Color.parseColor("#CE9178"); // 橙红色
+        int commentColor = android.graphics.Color.parseColor("#6A9955"); // 绿色
+        int numberColor = android.graphics.Color.parseColor("#B5CEA8"); // 浅绿色
+
+        // 1. 匹配关键字
+        String[] keywords = {"abstract","actual","annotation","as","assert","associate","async","await","break","by","catch","class","companion","const","constructor","continue","crossinline","data","delegate","delete","do","dynamic","else","enum","expect","external","false","field","file","final","finally","fixed","for","fun","get","if","import","in","infix","init","inline","inner","instanceof","interface","internal","is","lambda","lateinit","let","local","null","object","open","operator","out","override","package","param","private","property","protected","public","receiver","reified","return","sealed","set","super","suspend","tailrec","this","throw","true","try","typealias","typeof","val","value","var","vararg","when","where","while","with",
+                "void","int","char","float","double","boolean","long","short","byte","String","new","static","final"};
+        StringBuilder kwRegex = new StringBuilder("\\b(");
+        for (int i = 0; i < keywords.length; i++) {
+            kwRegex.append(keywords[i]);
+            if (i < keywords.length - 1) kwRegex.append("|");
+        }
+        kwRegex.append(")\\b");
+
+        Pattern kwPattern = Pattern.compile(kwRegex.toString());
+        Matcher kwMatcher = kwPattern.matcher(code);
+        while (kwMatcher.find()) {
+            spannable.setSpan(new ForegroundColorSpan(keywordColor),
+                    start + kwMatcher.start(), start + kwMatcher.end(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        // 2. 匹配字符串
+        Pattern strPattern = Pattern.compile("(\".*?\"|'.*?')");
+        Matcher strMatcher = strPattern.matcher(code);
+        while (strMatcher.find()) {
+            spannable.setSpan(new ForegroundColorSpan(stringColor),
+                    start + strMatcher.start(), start + strMatcher.end(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        // 3. 匹配注释 (覆盖前面可能的高亮)
+        Pattern commentPattern = Pattern.compile("(//.*|/\\*[\\s\\S]*?\\*/)");
+        Matcher commentMatcher = commentPattern.matcher(code);
+        while (commentMatcher.find()) {
+            spannable.setSpan(new ForegroundColorSpan(commentColor),
+                    start + commentMatcher.start(), start + commentMatcher.end(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        // 4. 匹配数字
+        Pattern numPattern = Pattern.compile("\\b\\d+(\\.\\d+)?\\b");
+        Matcher numMatcher = numPattern.matcher(code);
+        while (numMatcher.find()) {
+            spannable.setSpan(new ForegroundColorSpan(numberColor),
+                    start + numMatcher.start(), start + numMatcher.end(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+    }
+    // ===============================================
+
     public void setRemoveTrailingWhiteSpace(boolean removeTrailingWhiteSpace) {
         this.removeTrailingWhiteSpace = removeTrailingWhiteSpace;
     }
 
-    /**
-     * The Html.fromHtml method has the behavior of adding extra whitespace at the bottom
-     * of the parsed HTML displayed in for example a TextView. In order to remove this
-     * whitespace call this method before setting the text with setHtml on this TextView.
-     * <p>
-     * This method is deprecated, use setRemoveTrailingWhiteSpace instead.
-     *
-     * @param removeFromHtmlSpace true if the whitespace rendered at the bottom of a TextView
-     *                            after setting HTML should be removed.
-     */
     @Deprecated()
     public void setRemoveFromHtmlSpace(boolean removeFromHtmlSpace) {
         this.removeTrailingWhiteSpace = removeFromHtmlSpace;
@@ -161,19 +200,10 @@ public class HtmlTextView extends MaterialTextView {
         this.onLinkTagClickListener = onLinkTagClickListener;
     }
 
-    /**
-     * Add ability to increase list item spacing. Useful for configuring spacing based on device
-     * screen size. This applies to ordered and unordered lists.
-     *
-     * @param px pixels to indent.
-     */
     public void setListIndentPx(float px) {
         this.indent = px;
     }
 
-    /**
-     * http://stackoverflow.com/questions/309424/read-convert-an-inputstream-to-a-string
-     */
     @NonNull
     private static String convertStreamToString(@NonNull InputStream is) {
         Scanner s = new Scanner(is).useDelimiter("\\A");
@@ -182,10 +212,9 @@ public class HtmlTextView extends MaterialTextView {
 
     @Override
     public boolean dispatchTouchEvent(final MotionEvent event) {
-        // FIXME simple workaround to https://code.google.com/p/android/issues/detail?id=191430
         int startSelection = getSelectionStart();
         int endSelection = getSelectionEnd();
-        if (startSelection < 0 || endSelection < 0){
+        if (startSelection < 0 || endSelection < 0) {
             Selection.setSelection((Spannable) getText(), getText().length());
         } else if (startSelection != endSelection) {
             if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
@@ -199,14 +228,11 @@ public class HtmlTextView extends MaterialTextView {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        // 禁止内容滑动，只允许点击链接
         if (getMovementMethod() instanceof LocalLinkMovementMethod) {
-            // 只处理点击事件，不处理滚动
             if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_DOWN) {
                 return ((LocalLinkMovementMethod) getMovementMethod()).onTouchEvent(this, (Spannable) getText(), event);
             }
         }
-        // 禁止其他触摸事件，防止滚动
         return false;
     }
 }
