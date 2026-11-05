@@ -105,10 +105,13 @@ fun ComposeRecyclerViewBridge(
                 val adapter = recyclerView.adapter as? ArticleAdapter
                 if (adapter != null) {
                     Timber.d("【UI层】更新数据: 结果=${displayPosts.size} 条, hasMore=$hasMore")
+                    
+                    // 核心修复：只有过滤状态真正发生改变时，才赋值并强制刷新
+                    val forceRefresh = adapter.isFiltering != isFiltering || adapter.searchKeyword != searchKeyword
                     adapter.isFiltering = isFiltering
                     adapter.searchKeyword = searchKeyword
-                    // 直接把原始的 hasMore 塞进去，让深搜引擎能继续跑
-                    adapter.setData(displayPosts, hasMore)
+                    
+                    adapter.setData(displayPosts, hasMore, forceRefresh)
                 }
             }
         )

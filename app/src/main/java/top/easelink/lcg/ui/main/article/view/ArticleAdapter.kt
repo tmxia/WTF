@@ -68,12 +68,13 @@ class ArticleAdapter(
 
 
     
-    fun setData(posts: List<Post>, hasMore: Boolean = false) {
-        // 核心修复：防闪烁拦截。如果数据完全没变，直接返回，绝不触发 UI 重绘
-        if (mPostList.size == posts.size && this.hasMoreItem == hasMore && mPostList.isNotEmpty()) {
+        fun setData(posts: List<Post>, hasMore: Boolean = false, forceRefresh: Boolean = false) {
+        // 核心双重防闪：如果长度一致、状态一致，且没有被强制要求刷新
+        if (!forceRefresh && mPostList.size == posts.size && this.hasMoreItem == hasMore) {
             var isSame = true
             for (i in posts.indices) {
-                if (mPostList[i].content != posts[i].content || mPostList[i].replyUrl != posts[i].replyUrl) {
+                // 只要 URL 没变，我们就认为楼层没变，哪怕时间或内容有微小变化也不刷新
+                if (mPostList[i].replyUrl != posts[i].replyUrl) {
                     isSame = false
                     break
                 }
