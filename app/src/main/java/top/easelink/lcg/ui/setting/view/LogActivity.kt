@@ -47,8 +47,9 @@ class LogActivity : AppCompatActivity() {
 
         findViewById<com.google.android.material.chip.ChipGroup>(R.id.log_filter_group).setOnCheckedStateChangeListener { _, checkedIds ->
             currentFilter = when (checkedIds.firstOrNull()) {
-                R.id.chip_info -> 1
-                R.id.chip_error -> 2
+                R.id.chip_net -> 1
+                R.id.chip_biz -> 2
+                R.id.chip_error -> 3
                 else -> 0
             }
             applyFilter()
@@ -100,8 +101,13 @@ class LogActivity : AppCompatActivity() {
     private fun applyFilter() {
         val filtered = allLogs.filter {
             when (currentFilter) {
-                1 -> it.level >= Log.INFO
-                2 -> it.level >= Log.WARN
+                1 -> // 网络
+                    it.tag.contains("网络层") || it.tag.contains("详情页") || it.message.contains("【网络层】") || it.message.contains("【详情页】")
+                2 -> // 业务
+                    it.tag.contains("业务层") || it.tag.contains("UI层") || it.tag.contains("Adapter") || it.tag.contains("状态层") || it.tag.contains("任务层") ||
+                    it.message.contains("【业务层】") || it.message.contains("【UI层】") || it.message.contains("【Adapter】") || it.message.contains("【状态层】") || it.message.contains("【任务层】")
+                3 -> // 报错
+                    it.level >= Log.WARN
                 else -> true
             }
         }

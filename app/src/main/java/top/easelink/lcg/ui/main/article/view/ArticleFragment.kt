@@ -168,7 +168,7 @@ fun ArticleScreen(
         val target = pendingScrollPost ?: return@LaunchedEffect
         // 确保当前不再处于搜索状态，且列表已经恢复
         if (searchKeyword.isBlank() && !filterSpam && !showOpOnly) {
-            val index = posts.indexOfFirst { it === target || it.id == target.id } // 对比对象或ID
+            val index = posts.indexOfFirst { it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl) } // 对比对象或ID
             if (index != -1) {
                 Timber.d("【跳转】找到目标楼层，索引: $index，准备滚动")
                 recyclerView?.smoothScrollToPosition(index)

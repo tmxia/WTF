@@ -38,30 +38,39 @@
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_all"
                 style="@style/Widget.MaterialComponents.Chip.Filter"
-                app:checkedIconVisible="false"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
                 android:textSize="13sp"
+                app:checkedIconVisible="false"
                 android:text="全部" />
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chip_info"
+                android:id="@+id/chip_net"
                 style="@style/Widget.MaterialComponents.Chip.Filter"
-                app:checkedIconVisible="false"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="13sp"
-                android:text="Info" />
+                app:checkedIconVisible="false"
+                android:text="网络" />
                 
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_biz"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                app:checkedIconVisible="false"
+                android:text="业务" />
+
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_error"
                 style="@style/Widget.MaterialComponents.Chip.Filter"
-                app:checkedIconVisible="false"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="13sp"
-                android:text="Error" />
+                app:checkedIconVisible="false"
+                android:text="报错" />
         </com.google.android.material.chip.ChipGroup>
 
         <!-- 改用纯文本按钮，更符合极简设计 -->
