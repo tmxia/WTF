@@ -440,7 +440,7 @@ fun ArticleScreen(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (showBackToTop) {
+                    if (showBackToTop && searchKeyword.isBlank() && !filterSpam && !showOpOnly) {
                         FloatingActionButton(
                             onClick = { recyclerView?.smoothScrollToPosition(0) },
                             containerColor = Color.White,
