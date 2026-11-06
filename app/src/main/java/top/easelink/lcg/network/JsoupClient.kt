@@ -31,19 +31,22 @@ import java.util.concurrent.atomic.AtomicLong
 object JsoupClient : ApiRequest {
     private val clientScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private const val FOLLOW_REDIRECTS_ENABLE = true
-
     var formHash: String? = null
         set(value) { Timber.d("formHash = $value"); field = value }
 
     private var lastTime = 0L
     private val CHECK_INTERVAL = if (BuildConfig.DEBUG) 60 * 1000 else 30 * 1000
+
     private const val TIME_OUT_LIMIT = 30 * 1000
     private const val BASE_URL = SERVER_BASE_URL
     private const val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
     private val sessionExpiredFiredOnce = AtomicBoolean(false)
+
     private const val MIN_INTERVAL_MS = 400L
     private val lastRequestAt = AtomicLong(0L)
+    private val BACKOFF_CODES = setOf(403, 429, 514)
+    @Volatile private var blockedUntil = 0L
 
     @Throws(SocketTimeoutException::class, IOException::class)
     override fun sendGetRequestWithQuery(query: String): Document = sendGetRequestWithUrl("$BASE_URL$query")
@@ -65,16 +68,20 @@ object JsoupClient : ApiRequest {
             .execute()
 
         if (WafSolver.isWafPage(response.body())) {
-            Timber.w("网络层：命中 WAF 盾，自动启动纯算法求解...")
-            if (bypassWaf(url, response.body())) {
+            Timber.w("网络层：命中 WAF 盾，自动启动算法求解...")
+            val bypassSuccess = bypassWaf(url, response.body())
+            if (bypassSuccess) {
                 response = getConnection(url)
                     .method(Connection.Method.GET)
                     .followRedirects(FOLLOW_REDIRECTS_ENABLE)
                     .execute()
+            } else {
+                Timber.e("网络层：WAF 破盾失败")
             }
         }
 
         updateCookies(response.cookies())
+        if (response.statusCode() in BACKOFF_CODES) blockedUntil = System.currentTimeMillis() + 3000
         return response.parse().also { checkResponse(it) }
     }
 
@@ -86,7 +93,7 @@ object JsoupClient : ApiRequest {
             .execute()
 
         if (WafSolver.isWafPage(response.body())) {
-            Timber.w("网络层：POST 命中 WAF 盾，自动启动纯算法求解...")
+            Timber.w("网络层：POST 命中 WAF 盾，自动启动算法求解...")
             if (bypassWaf(url, response.body())) {
                 response = getConnection(url)
                     .apply { if (form != null) data(form) }
@@ -97,12 +104,16 @@ object JsoupClient : ApiRequest {
         }
 
         updateCookies(response.cookies())
+        if (response.statusCode() in BACKOFF_CODES) blockedUntil = System.currentTimeMillis() + 3000
         return response
     }
 
     fun resetSessionExpiredFlag() { sessionExpiredFiredOnce.set(false) }
 
     private fun getConnection(url: String): Connection {
+        val waitForBlock = blockedUntil - System.currentTimeMillis()
+        if (waitForBlock > 0) Thread.sleep(waitForBlock)
+
         synchronized(this) {
             val since = System.currentTimeMillis() - lastRequestAt.get()
             if (since < MIN_INTERVAL_MS) Thread.sleep(MIN_INTERVAL_MS - since)
@@ -142,14 +153,10 @@ object JsoupClient : ApiRequest {
                 conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
                 conn.setRequestProperty("Referer", currentUrl)
                 conn.setRequestProperty("Origin", BASE_URL.removeSuffix("/"))
-                conn.setRequestProperty("Accept", "*/*")
-                conn.setRequestProperty("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
+                conn.setRequestProperty("X-Requested-With", "XMLHttpRequest")
                 conn.setRequestProperty("Sec-Fetch-Dest", "empty")
                 conn.setRequestProperty("Sec-Fetch-Mode", "cors")
                 conn.setRequestProperty("Sec-Fetch-Site", "same-origin")
-                conn.setRequestProperty("X-Requested-With", "XMLHttpRequest")
-                conn.setRequestProperty("sec-ch-ua-mobile", "?0")
-                conn.setRequestProperty("sec-ch-ua-platform", "Windows")
 
                 val cookieStr = getCookiesFor(BASE_URL).entries.joinToString("; ") { "${it.key}=${it.value}" }
                 if (cookieStr.isNotEmpty()) conn.setRequestProperty("Cookie", cookieStr)
@@ -158,15 +165,21 @@ object JsoupClient : ApiRequest {
                 conn.outputStream.use { it.write(encodedData.toByteArray(Charsets.UTF_8)) }
 
                 val responseCode = conn.responseCode
-                val responseBody = conn.inputStream.bufferedReader().use { it.readText() }
+                val responseBody = if (responseCode in 200..299) {
+                    conn.inputStream.bufferedReader().use { it.readText() }
+                } else {
+                    conn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
+                }
 
-                Timber.d("算法破盾响应 (第${attempt}次)：code=$responseCode, body=${responseBody.take(80)}")
+                Timber.d("算法破盾响应 (第${attempt}次)：code=$responseCode, body=${responseBody.take(100)}")
 
                 if (responseCode == 200) {
                     if (responseBody.contains("waf_zw_verify") || responseBody.contains("Please enable JavaScript")) {
+                        Timber.w("破盾返回 200 但仍为挑战页，重试中...")
                         Thread.sleep(1000)
                         continue
                     }
+                    
                     val setCookieHeaders = conn.headerFields["Set-Cookie"]
                     if (setCookieHeaders != null) {
                         val newCookies = mutableMapOf<String, String>()
@@ -176,10 +189,15 @@ object JsoupClient : ApiRequest {
                         }
                         if (newCookies.isNotEmpty()) {
                             updateCookies(newCookies)
-                            Timber.d("算法破盾：成功同步新 Cookie")
+                            Timber.d("算法破盾：成功同步新 Cookie (${newCookies.keys})")
                             return true
                         }
                     }
+                    // 即使没有 Cookie 但返回了 200，也算破盾成功（有时候直接放行）
+                    return true
+                } else {
+                    Timber.w("HTTP 异常: $responseCode, 等待重试")
+                    Thread.sleep(1500L * attempt)
                 }
             } catch (e: Exception) {
                 Timber.e(e, "算法破盾第 ${attempt} 次尝试异常")
@@ -208,6 +226,7 @@ object JsoupClient : ApiRequest {
             sessionExpiredFiredOnce.compareAndSet(true, false)
             return
         }
+        
         if (sessionExpiredFiredOnce.compareAndSet(false, true)) {
             EventBus.getDefault().post(SessionExpiredEvent())
         }

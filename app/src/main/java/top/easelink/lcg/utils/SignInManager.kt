@@ -45,13 +45,24 @@ object SignInManager {
                 val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL)
                 val drawMessage = drawResponse.getElementsByClass("alert_info")
                     .first()?.selectFirst("p")?.text().orEmpty()
+                val drawHtml = drawResponse.outerHtml()
+
+                // 核心修复：如果拿到的文本是空的，且还是 WAF 页面，直接判失败，绝不能当成功
+                if (drawMessage.isBlank()) {
+                    if (WafSolver.isWafPage(drawHtml)) {
+                        withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：WAF 盾未能绕过") }
+                    } else {
+                        withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：返回空内容") }
+                    }
+                    return@launch
+                }
 
                 markSignInDoneAndNotify()
                 withContext(Dispatchers.Main) {
                     if (drawMessage.contains("成功") || drawMessage.contains("恭喜")) {
                         onResult("SUCCESS", "签到成功！")
                     } else {
-                        onResult("SUCCESS", "签到完成：${drawMessage.take(20)}")
+                        onResult("SUCCESS", "签到完成：$drawMessage")
                     }
                 }
             } catch (e: Exception) {
