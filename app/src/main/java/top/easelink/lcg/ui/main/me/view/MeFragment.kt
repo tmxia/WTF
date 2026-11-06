@@ -32,6 +32,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import kotlinx.coroutines.delay
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -41,6 +42,7 @@ import top.easelink.framework.utils.addFragmentInActivity
 import top.easelink.lcg.R
 import top.easelink.lcg.account.AccountManager
 import top.easelink.lcg.account.UserDataRepo
+import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.ui.main.articles.view.FavoriteArticlesFragment
 import top.easelink.lcg.ui.main.follow.view.FollowFragment
 import top.easelink.lcg.ui.main.history.view.HistoryArticlesFragment
@@ -112,7 +114,9 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
     var signInText by remember { mutableStateOf("去签到") }
     var signInColor by remember { mutableStateOf(Color(0xFFE53935)) }
     var isSigningIn by remember { mutableStateOf(false) }
+    var tick by remember { mutableStateOf(System.currentTimeMillis()) }
 
+    // 监听签到成功事件，刷新 UI 状态
     DisposableEffect(Unit) {
         val subscriber = object {
             @Subscribe(threadMode = ThreadMode.MAIN)
@@ -125,24 +129,48 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
         onDispose { EventBus.getDefault().unregister(subscriber) }
     }
 
-    LaunchedEffect(isLoggedIn) {
+    // 核心修复：每分钟刷新一次 tick，强制重组，跨天后自动更新 UI
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60_000)
+            tick = System.currentTimeMillis()
+        }
+    }
+
+    LaunchedEffect(isLoggedIn, tick) {
         if (!isLoggedIn) {
             signInText = "请先登录"
             signInColor = Color(0xFF999999)
             return@LaunchedEffect
         }
+        
         val sp = SharedPreferencesHelper.getUserSp()
         val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)
         val todayStart = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
         }.timeInMillis
-        
+
         if (lastTime >= todayStart) {
             signInText = "✅ 已签到"
             signInColor = Color(0xFF4CAF50)
         } else {
             signInText = "🔥 未签到，点我"
             signInColor = Color(0xFFE53935)
+            
+            // 自动补签逻辑：如果跨天且在设置中开启了自动签到，这里直接触发静默补签
+            if (AppConfig.autoSignEnable && !isSigningIn) {
+                isSigningIn = true
+                signInText = "自动签到中..."
+                SignInManager.performSignIn { status, msg ->
+                    isSigningIn = false
+                    if (status == "SUCCESS" || status == "ALREADY_DONE") {
+                        signInText = "✅ 已签到"
+                        signInColor = Color(0xFF4CAF50)
+                    } else {
+                        signInText = "🔥 未签到，点我"
+                    }
+                }
+            }
         }
     }
 
