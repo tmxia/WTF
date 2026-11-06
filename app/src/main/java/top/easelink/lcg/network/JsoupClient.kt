@@ -159,50 +159,44 @@ object JsoupClient : ApiRequest {
                         cookieManager.setCookie(BASE_URL, cookieStr)
                     }
 
-                    // 核心修复：在 WebView 创建时立刻注入接口，确保 JS 能随时调用
-                    addJavascriptInterface(object {
-                        @android.webkit.JavascriptInterface
-                        fun fetchResult(base64Str: String) {
-                            try {
-                                finalHtml = String(Base64.decode(base64Str, Base64.DEFAULT), Charsets.UTF_8)
-                                Timber.d("WebView fetch 成功获取数据，Base64 解码完毕")
-                            } catch (e: Exception) {
-                                Timber.e(e, "解析 Base64 异常")
-                            }
-                            CookieManager.getInstance().flush()
-                            updateLatestCookies()
-                            post { destroy() }
-                            latch.countDown()
-                        }
-
-                        @android.webkit.JavascriptInterface
-                        fun fetchError(error: String) {
-                            Timber.e("WebView fetch 失败: $error")
-                            post { destroy() }
-                            latch.countDown()
-                        }
-                    }, "hook")
-                    
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
-                            // 页面加载完，延迟 2.5 秒确保 WAF 盾执行完并刷新 Cookie
+                            
+                            // 延迟 2.5 秒等待 JS 跳转或重定向完成
                             Handler(Looper.getMainLooper()).postDelayed({
-                                // 使用 fetch 请求目标 URL
-                                val js = """
-                                    (function() {
-                                        fetch('$targetUrl', { credentials: 'include' })
-                                        .then(response => response.text())
-                                        .then(text => btoa(unescape(encodeURIComponent(text))))
-                                        .then(b64 => window.hook.fetchResult(b64))
-                                        .catch(e => window.hook.fetchError(e.toString()));
-                                    })()
-                                """.trimIndent()
-                                view?.evaluateJavascript(js, null)
+                                // 核心修复：用 JS 检查当前页面是否还是 WAF 盾
+                                val checkJs = "(function() { return document.documentElement.outerHTML.indexOf('wzwsquestion') > -1 || document.documentElement.outerHTML.indexOf('waf_zw_verify') > -1 ? 'WAF' : 'OK'; })()"
+                                view?.evaluateJavascript(checkJs) { result ->
+                                    if (result == "\"OK\"") {
+                                        // 页面已干净，提取完整反馈 HTML
+                                        val js = "(function() { return btoa(unescape(encodeURIComponent(document.documentElement.outerHTML))); })()"
+                                        view.evaluateJavascript(js) { value ->
+                                            try {
+                                                if (!value.isNullOrBlank() && value != "null") {
+                                                    val base64Str = value.replace("\"", "")
+                                                    finalHtml = String(Base64.decode(base64Str, Base64.DEFAULT), Charsets.UTF_8)
+                                                    Timber.d("WebView 已提取干净的反馈 HTML，长度: ${finalHtml?.length}")
+                                                }
+                                            } catch (e: Exception) {
+                                                Timber.e(e, "解析 Base64 异常")
+                                            }
+                                            CookieManager.getInstance().flush()
+                                            updateLatestCookies()
+                                            post { destroy() }
+                                            latch.countDown()
+                                        }
+                                    } else {
+                                        // 如果还是 WAF 盾，说明 JS 跳转没完成，重试或继续等
+                                        Timber.w("当前页面仍是 WAF 盾，等待页面再次跳转...")
+                                        // 这里不做 latch.countDown()，继续在后台等，直到页面变干净或超时
+                                    }
+                                }
                             }, 2500L)
                         }
                     }
-                    loadUrl(BASE_URL)
+                    // 直接加载目标 URL，让浏览器去处理重定向
+                    loadUrl(targetUrl)
                 }
             } catch (e: Exception) {
                 Timber.e(e, "静默 WebView 发生异常")

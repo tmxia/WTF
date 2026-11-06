@@ -43,9 +43,11 @@ object SignInManager {
                 }
 
                 val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL)
+                val drawHtml = drawResponse.outerHtml()
+                Timber.d("签到反馈 HTML 前 500 字符: ${drawHtml.take(500)}")
+                
                 val drawMessage = drawResponse.getElementsByClass("alert_info")
                     .first()?.selectFirst("p")?.text().orEmpty()
-                val drawHtml = drawResponse.outerHtml()
 
                 // 核心修复：只要没拿到 alert_info 的提示，就根据关键字判定，不再强制拦截
                 if (drawMessage.isBlank()) {
