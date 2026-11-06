@@ -54,7 +54,7 @@ fun ForumArticlesScreen(
     onArticleClick: (String) -> Unit,
     onLoadMore: () -> Unit,
     onArticleLongClick: (String) -> Unit
-) {
+, onScrollPositionChanged: (Boolean) -> Unit = {}) {
     val displayTabs = remember(tabs) {
         val list = mutableListOf("全部")
         tabs.filter { it.threadName != "全部" }.forEach { list.add(it.threadName) }
@@ -145,6 +145,10 @@ fun ForumArticlesScreen(
             ) { page ->
                 
                 val pageListState = rememberLazyListState()
+                    LaunchedEffect(pageListState) {
+                        snapshotFlow { pageListState.firstVisibleItemIndex == 0 && pageListState.firstVisibleItemScrollOffset == 0 }
+                            .collect { isAtTop -> onScrollPositionChanged(isAtTop) }
+                    }
                 
                 
                 LaunchedEffect(pageListState, articles.size, isLoading) {
