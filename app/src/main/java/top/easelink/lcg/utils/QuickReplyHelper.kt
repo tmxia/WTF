@@ -186,27 +186,24 @@ object QuickReplyHelper {
             setPadding(0, 0, 0, (12 * density).toInt())
         })
 
-        val textInputLayout = TextInputLayout(context).apply {
-            hint = "输入快捷短语"
-            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
-            setBoxCornerRadii(8f * density, 8f * density, 8f * density, 8f * density)
-            // 核心修复：增加浅灰背景与极细的浅色描边
-            boxBackgroundColor = android.graphics.Color.parseColor("#F5F5F5")
-            boxStrokeColor = android.graphics.Color.parseColor("#E0E0E0")
-            boxStrokeWidth = (1 * density).toInt()
-            setPadding(0, 0, 0, 0)
+        val inputCard = com.google.android.material.card.MaterialCardView(context).apply {
+            radius = 8f * density
+            setCardBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
+            strokeWidth = (1 * density).toInt()
+            strokeColor = android.graphics.Color.parseColor("#E0E0E0")
+            elevation = 0f
         }
-
         val input = EditText(context).apply {
             setText(phrase)
             setSelection(text.length)
-            setBackgroundColor(Color.TRANSPARENT)
+            setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            hint = "输入快捷短语"
             inputType = InputType.TYPE_CLASS_TEXT
-            val pad = (10 * density).toInt()
+            val pad = (12 * density).toInt()
             setPadding(pad, pad, pad, pad)
         }
-        textInputLayout.addView(input)
-        layout.addView(textInputLayout)
+        inputCard.addView(input)
+        layout.addView(inputCard)
 
         val btnLayout = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
