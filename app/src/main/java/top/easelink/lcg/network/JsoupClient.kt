@@ -133,6 +133,7 @@ object JsoupClient : ApiRequest {
             .header("sec-ch-ua-platform", "Windows")
     }
 
+        @Synchronized
     private fun bypassWaf(currentUrl: String, html: String): Boolean {
         val params = WafSolver.extractWafParams(html) ?: return false
         val (question, factorStr, base64Chars, api) = params
@@ -147,53 +148,41 @@ object JsoupClient : ApiRequest {
 
         for (attempt in 1..3) {
             try {
-                val conn = URL(apiUrl).openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("User-Agent", DESKTOP_UA)
-                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-                conn.setRequestProperty("Referer", currentUrl)
-                conn.setRequestProperty("Origin", BASE_URL.removeSuffix("/"))
-                conn.setRequestProperty("X-Requested-With", "XMLHttpRequest")
-                conn.setRequestProperty("Sec-Fetch-Dest", "empty")
-                conn.setRequestProperty("Sec-Fetch-Mode", "cors")
-                conn.setRequestProperty("Sec-Fetch-Site", "same-origin")
+                // 核心修复：使用 Jsoup 发送请求，自动合并全套 Cookie
+                val response = Jsoup.connect(apiUrl)
+                    .ignoreContentType(true)
+                    .ignoreHttpErrors(true)
+                    .cookies(getCookiesFor(apiUrl))
+                    .userAgent(DESKTOP_UA)
+                    .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                    .header("Referer", currentUrl)
+                    .header("Origin", BASE_URL.removeSuffix("/"))
+                    .header("X-Requested-With", "XMLHttpRequest")
+                    .header("Sec-Fetch-Dest", "empty")
+                    .header("Sec-Fetch-Mode", "cors")
+                    .header("Sec-Fetch-Site", "same-origin")
+                    .requestBody(encodedData)
+                    .method(Connection.Method.POST)
+                    .timeout(10000)
+                    .execute()
 
-                val cookieStr = getCookiesFor(BASE_URL).entries.joinToString("; ") { "${it.key}=${it.value}" }
-                if (cookieStr.isNotEmpty()) conn.setRequestProperty("Cookie", cookieStr)
-
-                conn.doOutput = true
-                conn.outputStream.use { it.write(encodedData.toByteArray(Charsets.UTF_8)) }
-
-                val responseCode = conn.responseCode
-                val responseBody = if (responseCode in 200..299) {
-                    conn.inputStream.bufferedReader().use { it.readText() }
-                } else {
-                    conn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
-                }
+                val responseCode = response.statusCode()
+                val responseBody = response.body()
 
                 Timber.d("算法破盾响应 (第${attempt}次)：code=$responseCode, body=${responseBody.take(100)}")
 
                 if (responseCode == 200) {
                     if (responseBody.contains("waf_zw_verify") || responseBody.contains("Please enable JavaScript")) {
-                        Timber.w("破盾返回 200 但仍为挑战页，重试中...")
-                        Thread.sleep(1000)
+                        Timber.w("破盾返回 200 但仍为挑战页，等待重试...")
+                        Thread.sleep(1500)
                         continue
                     }
-                    
-                    val setCookieHeaders = conn.headerFields["Set-Cookie"]
-                    if (setCookieHeaders != null) {
-                        val newCookies = mutableMapOf<String, String>()
-                        for (cookie in setCookieHeaders) {
-                            val parts = cookie.split(";")[0].split("=", limit = 2)
-                            if (parts.size == 2) newCookies[parts[0]] = parts[1]
-                        }
-                        if (newCookies.isNotEmpty()) {
-                            updateCookies(newCookies)
-                            Timber.d("算法破盾：成功同步新 Cookie (${newCookies.keys})")
-                            return true
-                        }
+                    // 直接通过 Jsoup 返回的 Cookie 字典更新本地持久化
+                    updateCookies(response.cookies())
+                    val newCookies = response.cookies()
+                    if (newCookies.isNotEmpty()) {
+                        Timber.d("算法破盾：成功同步新 Cookie (${newCookies.keys})")
                     }
-                    // 即使没有 Cookie 但返回了 200，也算破盾成功（有时候直接放行）
                     return true
                 } else {
                     Timber.w("HTTP 异常: $responseCode, 等待重试")
