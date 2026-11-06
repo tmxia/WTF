@@ -1,16 +1,12 @@
 package top.easelink.lcg.network
 
-import android.annotation.SuppressLint
-import android.os.Handler
-import android.os.Looper
-import android.util.Base64
-import android.webkit.CookieManager
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import org.greenrobot.eventbus.EventBus
 import org.jsoup.Connection
 import org.jsoup.Jsoup
@@ -18,8 +14,8 @@ import org.jsoup.nodes.Document
 import timber.log.Timber
 import top.easelink.lcg.BuildConfig
 import top.easelink.lcg.account.UserDataRepo
-import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.ui.main.model.SessionExpiredEvent
+import top.easelink.lcg.ui.main.model.WafVerificationEvent
 import top.easelink.lcg.ui.main.source.checkMessages
 import top.easelink.lcg.ui.main.source.extractFormHash
 import top.easelink.lcg.utils.WebsiteConstant
@@ -28,8 +24,6 @@ import top.easelink.lcg.utils.getCookiesFor
 import top.easelink.lcg.utils.updateCookies
 import java.io.IOException
 import java.net.SocketTimeoutException
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -47,10 +41,34 @@ object JsoupClient : ApiRequest {
     private const val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
     private val sessionExpiredFiredOnce = AtomicBoolean(false)
-    private const val MIN_INTERVAL_MS = 400L
+    private const val MIN_INTERVAL_MS = 300L
     private val lastRequestAt = AtomicLong(0L)
     private val BACKOFF_CODES = setOf(403, 429, 514)
     @Volatile private var blockedUntil = 0L
+
+    private var pendingVerification: CompletableDeferred<String?>? = null
+    private const val VERIFY_TIMEOUT_MS = 3 * 60 * 1000L
+
+    fun completeVerification(cookieHeader: String?) {
+        val deferred = synchronized(this) { pendingVerification }
+        if (cookieHeader.isNullOrBlank()) {
+            deferred?.complete(null)
+            Timber.w("用户取消了人机验证")
+        } else {
+            val cookies = mutableMapOf<String, String>()
+            for (pair in cookieHeader.split(";")) {
+                val eq = pair.indexOf('=')
+                if (eq > 0) {
+                    val name = pair.substring(0, eq).trim()
+                    val value = pair.substring(eq + 1).trim()
+                    if (name.isNotEmpty() && value.isNotEmpty()) cookies[name] = value
+                }
+            }
+            updateCookies(cookies)
+            deferred?.complete(cookieHeader)
+            Timber.d("真人验证完成，Cookie 已回灌并唤醒网络层")
+        }
+    }
 
     @Throws(SocketTimeoutException::class, IOException::class)
     override fun sendGetRequestWithQuery(query: String): Document = sendGetRequestWithUrl("$BASE_URL$query")
@@ -71,24 +89,31 @@ object JsoupClient : ApiRequest {
             .followRedirects(FOLLOW_REDIRECTS_ENABLE)
             .execute()
 
+        updateCookies(response.cookies())
+
         if (isWafPage(response.body())) {
-            Timber.w("网络层：命中高级 JS WAF 盾，启动后台 WebView 刷新 Cookie...")
-            val bypassSuccess = silentWebViewBypass()
+            Timber.w("网络层：命中高级 JS WAF 盾，挂起请求等待真人验证...")
+            EventBus.getDefault().post(WafVerificationEvent(url))
             
-            if (bypassSuccess) {
-                Timber.d("静默过盾成功，重新发起接口请求...")
-                // 核心修复：用新刷新的 Cookie 重新发起 Jsoup 请求
+            val deferred = CompletableDeferred<String?>()
+            synchronized(this) { pendingVerification = deferred }
+            
+            val verifiedCookie = runBlocking { withTimeoutOrNull(VERIFY_TIMEOUT_MS) { deferred.await() } }
+            synchronized(this) { pendingVerification = null }
+
+            if (verifiedCookie != null) {
+                Timber.d("真人验证通过，重新发起业务请求...")
                 response = getConnection(url)
                     .method(Connection.Method.GET)
                     .followRedirects(FOLLOW_REDIRECTS_ENABLE)
                     .execute()
+                updateCookies(response.cookies())
             } else {
-                Timber.e("网络层：WebView 过盾失败")
-                throw IOException("WAF 盾未能成功绕过，请稍后再试")
+                Timber.e("网络层：真人验证超时或取消")
+                throw IOException("验证超时或被取消，无法绕过 WAF")
             }
         }
 
-        updateCookies(response.cookies())
         if (response.statusCode() in BACKOFF_CODES) blockedUntil = System.currentTimeMillis() + 3000
         return response.parse().also { checkResponse(it) }
     }
@@ -100,11 +125,30 @@ object JsoupClient : ApiRequest {
             .method(Connection.Method.POST)
             .execute()
 
+        updateCookies(response.cookies())
+
         if (isWafPage(response.body())) {
-            throw IOException("WAF 盾未能成功绕过 (POST 暂不支持自动过盾)")
+            Timber.w("网络层：POST 命中 WAF 盾，挂起请求等待真人验证...")
+            EventBus.getDefault().post(WafVerificationEvent(url))
+            
+            val deferred = CompletableDeferred<String?>()
+            synchronized(this) { pendingVerification = deferred }
+            
+            val verifiedCookie = runBlocking { withTimeoutOrNull(VERIFY_TIMEOUT_MS) { deferred.await() } }
+            synchronized(this) { pendingVerification = null }
+
+            if (verifiedCookie != null) {
+                response = getConnection(url)
+                    .apply { if (form != null) data(form) }
+                    .postDataCharset("gbk")
+                    .method(Connection.Method.POST)
+                    .execute()
+                updateCookies(response.cookies())
+            } else {
+                throw IOException("验证超时或被取消，无法绕过 WAF")
+            }
         }
 
-        updateCookies(response.cookies())
         if (response.statusCode() in BACKOFF_CODES) blockedUntil = System.currentTimeMillis() + 3000
         return response
     }
@@ -135,71 +179,6 @@ object JsoupClient : ApiRequest {
             .header("Upgrade-Insecure-Requests", "1")
             .header("sec-ch-ua-mobile", "?0")
             .header("sec-ch-ua-platform", "Windows")
-    }
-
-    /**
-     * 终极方案：让 WebView 去访问首页，过盾后直接提取最新 Cookie
-     */
-    @SuppressLint("SetJavaScriptEnabled")
-    private fun silentWebViewBypass(): Boolean {
-        val latch = CountDownLatch(1)
-        var success = false
-
-        Handler(Looper.getMainLooper()).post {
-            try {
-                val webView = WebView(LCGApp.context).apply {
-                    settings.javaScriptEnabled = true
-                    settings.domStorageEnabled = true
-                    settings.userAgentString = DESKTOP_UA
-                    
-                    val cookieManager = CookieManager.getInstance()
-                    cookieManager.setAcceptCookie(true)
-                    cookieManager.setAcceptThirdPartyCookies(this, true)
-                    
-                    val currentCookies = getCookiesFor(BASE_URL)
-                    val cookieStr = currentCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
-                    if (cookieStr.isNotEmpty()) {
-                        cookieManager.setCookie(BASE_URL, cookieStr)
-                    }
-
-                    webViewClient = object : WebViewClient() {
-                        override fun onPageFinished(view: WebView?, url: String?) {
-                            super.onPageFinished(view, url)
-                            
-                            // 给 WAF 盾 2.5 秒执行时间，然后直接提取 Cookie 走人，不要和它的重定向纠缠
-                            Handler(Looper.getMainLooper()).postDelayed({
-                                CookieManager.getInstance().flush()
-                                val latestCookie = CookieManager.getInstance().getCookie(BASE_URL)
-                                if (!latestCookie.isNullOrEmpty()) {
-                                    val cookies = mutableMapOf<String, String>()
-                                    for (pair in latestCookie.split(";")) {
-                                        val eq = pair.indexOf('=')
-                                        if (eq > 0) cookies[pair.substring(0, eq).trim()] = pair.substring(eq + 1).trim()
-                                    }
-                                    updateCookies(cookies)
-                                    success = true
-                                    Timber.d("静默过盾：WebView 验证完成，最新 Cookie 已同步至网络层")
-                                }
-                                post { destroy() }
-                                latch.countDown()
-                            }, 2500L)
-                        }
-                    }
-                    // 访问首页是最容易过盾的
-                    loadUrl(BASE_URL)
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "静默 WebView 发生异常")
-                latch.countDown()
-            }
-        }
-
-        try {
-            latch.await(15, TimeUnit.SECONDS)
-        } catch (e: InterruptedException) {
-            Timber.e(e, "静默 WebView 等待超时")
-        }
-        return success
     }
 
     fun resetSessionExpiredFlag() { sessionExpiredFiredOnce.set(false) }
