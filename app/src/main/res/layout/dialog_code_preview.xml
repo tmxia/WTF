@@ -5,12 +5,15 @@
     android:layout_height="match_parent"
     android:padding="12dp">
 
+    <!-- 核心修复：elevation=0dp 彻底消灭黑影，用 stroke 描边勾勒轮廓 -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:cardBackgroundColor="@color/white"
+        app:cardBackgroundColor="#FFFFFF"
         app:cardCornerRadius="16dp"
-        app:cardElevation="10dp">
+        app:cardElevation="0dp"
+        app:strokeColor="#E0E0E0"
+        app:strokeWidth="1dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -35,12 +38,13 @@
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
+                <!-- 核心修复：使用专属的 bg_ripple_circle -->
                 <ImageView
                     android:id="@+id/btn_close"
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:layout_alignParentEnd="true"
-                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:background="@drawable/bg_ripple_circle"
                     android:clickable="true"
                     android:focusable="true"
                     android:padding="6dp"
@@ -48,14 +52,15 @@
                     app:tint="#666666" />
             </RelativeLayout>
 
-            <!-- 代码区 -->
+            <!-- 代码区：加大色差 -->
             <WebView
                 android:id="@+id/webview_code"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:layout_marginHorizontal="12dp"
-                android:background="#F6F8FA" />
+                android:background="#F2F4F8"
+                android:scrollbars="none" />
 
             <!-- 底部按钮 -->
             <LinearLayout
@@ -72,7 +77,8 @@
                     android:layout_height="wrap_content"
                     android:text="复制全部代码"
                     android:textColor="@color/pojie_logo"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    app:rippleColor="#33E53935" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

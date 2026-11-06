@@ -43,6 +43,8 @@ class CodePreviewDialog : DialogFragment() {
     override fun onStart() {
         super.onStart()
         dialog?.window?.apply {
+            // 加深背景遮罩，让悬浮卡片更加立体
+            setDimAmount(0.6f)
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             
             val displayMetrics = resources.displayMetrics
@@ -84,7 +86,7 @@ class CodePreviewDialog : DialogFragment() {
 
         val webView = view.findViewById<WebView>(R.id.webview_code)
         webView.settings.javaScriptEnabled = true
-        webView.setBackgroundColor(Color.parseColor("#F6F8FA"))
+        webView.setBackgroundColor(Color.parseColor("#F8F9FA"))
 
         val safeCode = rawCode.replace("<", "&lt;").replace(">", "&gt;")
 
@@ -99,7 +101,7 @@ class CodePreviewDialog : DialogFragment() {
                     body {
                         margin: 0;
                         padding: 0;
-                        background-color: #F6F8FA;
+                        background-color: #F8F9FA;
                     }
                     .code-container {
                         padding: 12px;
@@ -117,13 +119,12 @@ class CodePreviewDialog : DialogFragment() {
                         background: transparent !important;
                         padding: 0 !important;
                     }
+                    /* 彻底隐藏所有滚动条 */
                     ::-webkit-scrollbar {
-                        width: 4px;
-                        height: 4px;
-                    }
-                    ::-webkit-scrollbar-thumb {
-                        background-color: rgba(0,0,0,0.15);
-                        border-radius: 4px;
+                        display: none;
+                        width: 0;
+                        height: 0;
+                        color: transparent;
                     }
                 </style>
             </head>
