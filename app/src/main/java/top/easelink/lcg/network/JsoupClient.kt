@@ -141,7 +141,9 @@ object JsoupClient : ApiRequest {
         Timber.d("WAF 挑战参数：question=$question, factor=$factorStr, base64CharsLen=${base64Chars.length}, api=$api")
         if (api == "/waf_zw_verify") {
             Timber.w("注意：api 使用了默认回退值，可能提取正则未能匹配到 dynamicapi 字段！")
-            Timber.w("挑战页面片段: ${html.take(300)}")
+            val scriptPart = html.substringAfter("<script type=", missingDelimiterValue = "")
+            Timber.w("挑战页面脚本片段: ${scriptPart.take(4000)}")
+            Timber.w("完整挑战片段: ${html.take(1000)}")
         }
         
         val factor = factorStr.toInt()
