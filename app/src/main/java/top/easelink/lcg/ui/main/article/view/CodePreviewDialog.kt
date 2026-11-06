@@ -1,27 +1,26 @@
 package top.easelink.lcg.ui.main.article.view
 
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.webkit.WebView
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import top.easelink.lcg.R
-import java.util.regex.Pattern
 
 class CodePreviewDialog : DialogFragment() {
 
+    private var rawCode: String = ""
+
     companion object {
         private const val EXTRA_CODE = "extra_code"
+
         fun newInstance(code: String): CodePreviewDialog {
             val d = CodePreviewDialog()
             d.arguments = Bundle().apply { putString(EXTRA_CODE, code) }
@@ -38,17 +37,14 @@ class CodePreviewDialog : DialogFragment() {
         return inflater.inflate(R.layout.dialog_code_preview, container, false)
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val rawHtml = arguments?.getString(EXTRA_CODE) ?: return
-        
-        val toolbar = view.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.code_toolbar)
-        // 修复：使用系统自带的标准返回箭头
-        toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
-        toolbar.setNavigationOnClickListener { dismiss() }
 
-        // 1. 清理 HTML 标签并提取纯代码
-        var cleanCode = rawHtml.replace(Regex("<br\\s*/?>"), "\n")
+        val rawHtml = arguments?.getString(EXTRA_CODE) ?: return
+
+        // 1. 剥离原有的 HTML 标签，还原纯文本代码
+        rawCode = rawHtml.replace(Regex("<br\\s*/?>"), "\n")
             .replace(Regex("<[^>]*>"), "")
             .replace("&nbsp;", " ")
             .replace("&lt;", "<")
@@ -57,53 +53,85 @@ class CodePreviewDialog : DialogFragment() {
             .replace("&quot;", "\"")
             .trim()
 
-        // 2. 语法高亮处理
-        val spannable = SpannableStringBuilder(cleanCode)
-        applyHighlight(spannable, 0, cleanCode)
-
-        val tvCode = view.findViewById<TextView>(R.id.tv_code_content)
-        tvCode.text = spannable
-
-        // 3. 复制按钮
-        view.findViewById<View>(R.id.btn_copy_code).setOnClickListener {
-            val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(ClipData.newPlainText("Code", cleanCode))
-            Toast.makeText(requireContext(), "代码已复制到剪贴板", Toast.LENGTH_SHORT).show()
+        // 2. 初始化 Toolbar 与右上角复制按钮
+        val toolbar = view.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.code_toolbar)
+        toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
+        toolbar.setNavigationOnClickListener { dismiss() }
+        
+        // 动态添加右上角“复制”按钮
+        toolbar.menu.add(0, 1, 0, "复制").apply {
+            setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
         }
-    }
-
-    private fun applyHighlight(spannable: SpannableStringBuilder, start: Int, code: String) {
-        val keywordColor = Color.parseColor("#0000FF")
-        val stringColor = Color.parseColor("#A31515")
-        val commentColor = Color.parseColor("#008000")
-        val numberColor = Color.parseColor("#098658")
-
-        val keywords = arrayOf("abstract","actual","annotation","as","assert","associate","async","await","break","by","catch","class","companion","const","constructor","continue","crossinline","data","delegate","delete","do","dynamic","else","enum","expect","external","false","field","file","final","finally","fixed","for","fun","get","if","import","in","infix","init","inline","inner","instanceof","interface","internal","is","lambda","lateinit","let","local","null","object","open","operator","out","override","package","param","private","property","protected","public","receiver","reified","return","sealed","set","super","suspend","tailrec","this","throw","true","try","typealias","typeof","val","value","var","vararg","when","where","while","with","void","int","char","float","double","boolean","long","short","byte","String","new","static","final","def","from")
-        val kwRegex = StringBuilder("\\b(")
-        keywords.forEachIndexed { index, s ->
-            kwRegex.append(s)
-            if (index < keywords.size - 1) kwRegex.append("|")
-        }
-        kwRegex.append(")\\b")
-
-        val kwMatcher = Pattern.compile(kwRegex.toString()).matcher(code)
-        while (kwMatcher.find()) {
-            spannable.setSpan(ForegroundColorSpan(keywordColor), start + kwMatcher.start(), start + kwMatcher.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        toolbar.setOnMenuItemClickListener { item ->
+            if (item.itemId == 1) {
+                val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("Code", rawCode))
+                Toast.makeText(requireContext(), "代码已复制到剪贴板", Toast.LENGTH_SHORT).show()
+                true
+            } else false
         }
 
-        val strMatcher = Pattern.compile("(\".*?\"|'.*?')").matcher(code)
-        while (strMatcher.find()) {
-            spannable.setSpan(ForegroundColorSpan(stringColor), start + strMatcher.start(), start + strMatcher.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
+        // 3. WebView 渲染高亮
+        val webView = view.findViewById<WebView>(R.id.webview_code)
+        webView.settings.javaScriptEnabled = true
+        webView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        
+        // 4. 拼接高亮 HTML 模板 (利用 CDN 引入 highlight.js 和优雅的样式)
+        // 为了防止 HTML 注入破坏渲染，需要将代码中的 < 和 > 进行转义
+        val safeCode = rawCode.replace("<", "&lt;").replace(">", "&gt;")
+        
+        val htmlTemplate = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <!-- 引入 highlight.js 的浅色主题 -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+                <style>
+                    body {
+                        margin: 0;
+                        padding: 16px;
+                        background-color: #F5F5F5; /* 整体页面背景灰 */
+                    }
+                    .code-container {
+                        background-color: #FFFFFF; /* 代码块背景白 */
+                        padding: 16px;
+                        border-radius: 12px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                        overflow-x: auto; /* 支持横向滚动 */
+                    }
+                    pre {
+                        margin: 0;
+                        font-family: Consolas, "Courier New", monospace;
+                        font-size: 14px;
+                        line-height: 1.5;
+                        white-space: pre-wrap; /* 自动换行 */
+                        word-wrap: break-word;
+                    }
+                    /* 取消 hljs 默认的背景，避免出现突兀的色块 */
+                    .hljs {
+                        background: transparent !important;
+                        padding: 0 !important;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="code-container">
+                    <pre><code class="hljs">$safeCode</code></pre>
+                </div>
+                <script>
+                    // 自动识别语言并高亮
+                    document.addEventListener('DOMContentLoaded', (event) => {
+                        document.querySelectorAll('pre code').forEach((el) => {
+                            hljs.highlightElement(el);
+                        });
+                    });
+                </script>
+            </body>
+            </html>
+        """.trimIndent()
 
-        val commentMatcher = Pattern.compile("(//.*|/\\*[\\s\\S]*?\\*/|#.*)").matcher(code)
-        while (commentMatcher.find()) {
-            spannable.setSpan(ForegroundColorSpan(commentColor), start + commentMatcher.start(), start + commentMatcher.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-
-        val numMatcher = Pattern.compile("\\b\\d+(\\.\\d+)?\\b").matcher(code)
-        while (numMatcher.find()) {
-            spannable.setSpan(ForegroundColorSpan(numberColor), start + numMatcher.start(), start + numMatcher.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
+        webView.loadDataWithBaseURL(null, htmlTemplate, "text/html", "UTF-8", null)
     }
 }
