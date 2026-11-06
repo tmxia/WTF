@@ -4,10 +4,13 @@ import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.WebView
 import android.widget.ImageView
 import android.widget.Toast
@@ -30,7 +33,6 @@ class CodePreviewDialog : DialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 使用透明主题，让卡片自己掌控视觉
         setStyle(STYLE_NORMAL, android.R.style.Theme_Translucent_NoTitleBar)
     }
 
@@ -40,13 +42,19 @@ class CodePreviewDialog : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        // 配置悬浮窗样式：居中，宽度占屏 85%，点击外部关闭
         dialog?.window?.apply {
-            setBackgroundDrawableResource(android.R.color.transparent)
-            setLayout(
-                (resources.displayMetrics.widthPixels * 0.85).toInt(),
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            
+            val displayMetrics = resources.displayMetrics
+            
+            // 核心修复：给定一个确定的宽高比例，避免内部 weight 撑不开
+            // 宽度占 90%，高度固定占屏幕 65%
+            val params = attributes
+            params.width = (displayMetrics.widthPixels * 0.9).toInt()
+            params.height = (displayMetrics.heightPixels * 0.65).toInt()
+            attributes = params
+            
+            setGravity(android.view.Gravity.CENTER)
         }
         dialog?.setCanceledOnTouchOutside(true)
     }
@@ -57,7 +65,6 @@ class CodePreviewDialog : DialogFragment() {
 
         val rawHtml = arguments?.getString(EXTRA_CODE) ?: return
 
-        // 剥离 HTML 标签提取纯代码
         rawCode = rawHtml.replace(Regex("<br\\s*/?>"), "\n")
             .replace(Regex("<[^>]*>"), "")
             .replace("&nbsp;", " ")
@@ -77,50 +84,46 @@ class CodePreviewDialog : DialogFragment() {
 
         val webView = view.findViewById<WebView>(R.id.webview_code)
         webView.settings.javaScriptEnabled = true
-        webView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        webView.setBackgroundColor(Color.parseColor("#F6F8FA"))
 
         val safeCode = rawCode.replace("<", "&lt;").replace(">", "&gt;")
 
-        // 核心重构：引入现代 IDE 风格的深色高亮主题
         val htmlTemplate = """
             <!DOCTYPE html>
             <html>
             <head>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-                <!-- 引入 Atom One Dark 高亮主题 -->
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
                 <style>
                     body {
                         margin: 0;
                         padding: 0;
-                        background-color: transparent;
+                        background-color: #F6F8FA;
                     }
                     .code-container {
-                        /* 移除背景，融入卡片颜色 */
-                        padding: 0 16px 16px 16px;
+                        padding: 12px;
                         overflow-x: auto;
                         -webkit-overflow-scrolling: touch;
                     }
                     pre {
                         margin: 0;
-                        font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+                        font-family: 'JetBrains Mono', Consolas, monospace;
                         font-size: 13px;
                         line-height: 1.5;
                         white-space: pre;
                     }
-                    /* 消除 hljs 背景 */
                     .hljs {
                         background: transparent !important;
                         padding: 0 !important;
                     }
-                    /* 自定义滚动条样式 */
                     ::-webkit-scrollbar {
-                        height: 6px;
+                        width: 4px;
+                        height: 4px;
                     }
                     ::-webkit-scrollbar-thumb {
-                        background-color: rgba(255,255,255,0.2);
-                        border-radius: 3px;
+                        background-color: rgba(0,0,0,0.15);
+                        border-radius: 4px;
                     }
                 </style>
             </head>

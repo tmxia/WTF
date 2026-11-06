@@ -2,20 +2,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="8dp">
+    android:layout_height="match_parent"
+    android:padding="12dp">
 
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardBackgroundColor="#282C34"
+        android:layout_height="match_parent"
+        app:cardBackgroundColor="@color/white"
         app:cardCornerRadius="16dp"
-        app:cardElevation="12dp">
+        app:cardElevation="10dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical">
 
             <!-- 顶部标题栏 -->
@@ -24,18 +23,18 @@
                 android:layout_height="wrap_content"
                 android:paddingStart="16dp"
                 android:paddingTop="12dp"
-                android:paddingEnd="16dp">
+                android:paddingEnd="12dp"
+                android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
                     android:text="代码详情"
-                    android:textColor="#E5E5E5"
+                    android:textColor="#333333"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
-                <!-- 右上角关闭按钮（带水波纹） -->
                 <ImageView
                     android:id="@+id/btn_close"
                     android:layout_width="32dp"
@@ -46,18 +45,19 @@
                     android:focusable="true"
                     android:padding="6dp"
                     android:src="@drawable/ic_close_black_24dp"
-                    app:tint="#999999" />
+                    app:tint="#666666" />
             </RelativeLayout>
 
-            <!-- 代码显示区 -->
+            <!-- 代码区 -->
             <WebView
                 android:id="@+id/webview_code"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="@android:color/transparent" />
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="12dp"
+                android:background="#F6F8FA" />
 
-            <!-- 底部操作栏 -->
+            <!-- 底部按钮 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -65,22 +65,14 @@
                 android:orientation="horizontal"
                 android:padding="12dp">
 
-                <!-- 极简的复制按钮 -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_copy_code"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:minHeight="0dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingTop="6dp"
-                    android:paddingEnd="16dp"
-                    android:paddingBottom="6dp"
-                    android:text="复制全部"
-                    android:textColor="#61AFEF"
-                    android:textSize="13sp"
-                    app:rippleColor="#3361AFEF" />
+                    android:text="复制全部代码"
+                    android:textColor="@color/pojie_logo"
+                    android:textSize="13sp" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
