@@ -52,9 +52,6 @@ class LCGApp : Application() {
             try {
                 SignInManager.performSignIn { status, msg ->
                     Timber.d("App 启动静默签到结果: status=$status, msg=$msg")
-                    if (status == "SUCCESS" || status == "ALREADY_DONE") {
-                        SharedPreferencesHelper.getUserSp().edit { putLong("sp_key_last_sign_in_at", System.currentTimeMillis()) }
-                    }
                 }
             } catch (e: Exception) {
                 Timber.e(e)
