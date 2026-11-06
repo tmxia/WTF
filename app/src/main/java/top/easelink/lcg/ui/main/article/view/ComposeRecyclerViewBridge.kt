@@ -33,6 +33,7 @@ fun ComposeRecyclerViewBridge(
     isReverse: Boolean = false,
     showOpOnly: Boolean = false,
     filterSpam: Boolean = false,
+    customSpamKeywords: List<String> = emptyList(),
     searchKeyword: String = "",
     onPostClick: ((Post) -> Unit)? = null,
     onScrollStateChanged: (Boolean) -> Unit = {},
@@ -51,7 +52,13 @@ fun ComposeRecyclerViewBridge(
     if (filterSpam) {
         filteredPosts = filteredPosts.filter { post ->
             val plainText = post.content?.replace(Regex("<[^>]*>"), "")?.trim() ?: ""
-            plainText.length >= 5
+            if (plainText.length < 5) return@filter false
+            for (keyword in customSpamKeywords) {
+                if (plainText.contains(keyword, ignoreCase = true)) {
+                    return@filter false
+                }
+            }
+            true
         }
     }
 

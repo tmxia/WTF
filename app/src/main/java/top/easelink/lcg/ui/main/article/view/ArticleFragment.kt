@@ -1,5 +1,11 @@
 package top.easelink.lcg.ui.main.article.view
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import top.easelink.lcg.utils.SharedPreferencesHelper
+import androidx.core.content.edit
+
+
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -162,6 +168,8 @@ fun ArticleScreen(
     var showBackToTop by remember { mutableStateOf(false) }
     var showOpOnly by remember { mutableStateOf(false) }
     var filterSpam by remember { mutableStateOf(false) }
+    val sp = remember { SharedPreferencesHelper.getUserSp() }
+    var customSpamKeywords by remember { mutableStateOf(sp.getStringSet("custom_spam_keywords", emptySet())?.toList() ?: emptyList()) }
     var searchKeyword by remember { mutableStateOf("") }
 
     // 核心修复：只要进入新的帖子（URL 变化），立刻强制清空所有搜索和过滤状态，防止状态污染
@@ -266,12 +274,13 @@ fun ArticleScreen(
                         ) {
                             // 定义一个高度极小的行组件，彻底摆脱原生限制
                             @Composable
-                            fun MiniMenuRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, isActive: Boolean = false, onClick: () -> Unit) {
+                            @OptIn(ExperimentalFoundationApi::class)
+                            fun MiniMenuRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, isActive: Boolean = false, onLongClick: (() -> Unit)? = null, onClick: () -> Unit) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(38.dp) // 极低高度
-                                        .clickable { onClick() }
+                                        .height(38.dp)
+                                        .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                                         .padding(horizontal = 10.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -296,10 +305,50 @@ fun ArticleScreen(
                                 showMenu = false
                                 showOpOnly = !showOpOnly
                             }
-                            MiniMenuRow(Icons.Default.Star, if (filterSpam) "关闭灌水" else "过滤灌水", filterSpam) {
-                                showMenu = false
-                                filterSpam = !filterSpam
-                            }
+                            MiniMenuRow(Icons.Default.Star, if (filterSpam) "关闭灌水" else "过滤灌水", filterSpam, 
+                                onLongClick = {
+                                    showMenu = false
+                                    val density = context.resources.displayMetrics.density
+                                    val padding = (20 * density).toInt()
+                                    val rootLayout = android.widget.LinearLayout(context).apply {
+                                        orientation = android.widget.LinearLayout.VERTICAL
+                                        setPadding(padding, padding / 2, padding, (10 * density).toInt())
+                                    }
+                                    
+                                    rootLayout.addView(android.widget.TextView(context).apply {
+                                        text = "自定义过滤词"
+                                        textSize = 16f
+                                        setTypeface(null, android.graphics.Typeface.BOLD)
+                                        setTextColor(android.graphics.Color.BLACK)
+                                        setPadding(0, 0, 0, (16 * density).toInt())
+                                    })
+                                    
+                                    val input = android.widget.EditText(context).apply {
+                                        hint = "输入过滤词（多个用逗号隔开）"
+                                        setText(customSpamKeywords.joinToString(","))
+                                        setSingleLine(true)
+                                        val p = (8 * density).toInt()
+                                        setPadding(p, p, p, p)
+                                    }
+                                    rootLayout.addView(input)
+                                    
+                                    android.app.AlertDialog.Builder(context)
+                                        .setView(rootLayout)
+                                        .setPositiveButton("保存") { _, _ ->
+                                            val text = input.text.toString().trim()
+                                            val keywords = if (text.isEmpty()) emptyList() else text.split(",", "，").map { it.trim() }.filter { it.isNotEmpty() }
+                                            sp.edit().putStringSet("custom_spam_keywords", keywords.toSet()).apply()
+                                            customSpamKeywords = keywords
+                                        }
+                                        .setNegativeButton("取消", null)
+                                        .create()
+                                        .show()
+                                }, 
+                                onClick = {
+                                    showMenu = false
+                                    filterSpam = !filterSpam
+                                }
+                            )
                             MiniMenuRow(Icons.Default.Search, if (searchKeyword.isNotBlank()) "清除搜索" else "搜索帖子", searchKeyword.isNotBlank()) {
                                 showMenu = false
                                 if (searchKeyword.isNotBlank()) {
@@ -496,6 +545,7 @@ fun ArticleScreen(
                             isReverse = isReverse,
                             showOpOnly = showOpOnly,
                             filterSpam = filterSpam,
+                            customSpamKeywords = customSpamKeywords,
                             searchKeyword = searchKeyword,
                             onScrollStateChanged = { show -> showBackToTop = show },
                             onPostClick = { post ->
