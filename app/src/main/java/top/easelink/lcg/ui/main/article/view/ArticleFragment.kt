@@ -309,40 +309,81 @@ fun ArticleScreen(
                                 onLongClick = {
                                     showMenu = false
                                     val density = context.resources.displayMetrics.density
-                                    val padding = (20 * density).toInt()
-                                    val rootLayout = android.widget.LinearLayout(context).apply {
+                                    val dialog = android.app.AlertDialog.Builder(context).create()
+                                    dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+
+                                    val card = com.google.android.material.card.MaterialCardView(context).apply {
+                                        radius = 16f * density
+                                        setCardBackgroundColor(android.graphics.Color.WHITE)
+                                        strokeWidth = 0
+                                        elevation = 0f
+                                    }
+
+                                    val layout = android.widget.LinearLayout(context).apply {
                                         orientation = android.widget.LinearLayout.VERTICAL
-                                        setPadding(padding, padding / 2, padding, (10 * density).toInt())
+                                        setPadding((20 * density).toInt(), (16 * density).toInt(), (20 * density).toInt(), (8 * density).toInt())
                                     }
-                                    
-                                    rootLayout.addView(android.widget.TextView(context).apply {
+
+                                    layout.addView(android.widget.TextView(context).apply {
                                         text = "自定义过滤词"
-                                        textSize = 16f
+                                        textSize = 15f
+                                        setTextColor(android.graphics.Color.parseColor("#333333"))
                                         setTypeface(null, android.graphics.Typeface.BOLD)
-                                        setTextColor(android.graphics.Color.BLACK)
-                                        setPadding(0, 0, 0, (16 * density).toInt())
+                                        setPadding(0, 0, 0, (12 * density).toInt())
                                     })
-                                    
-                                    val input = android.widget.EditText(context).apply {
+
+                                    val textInputLayout = com.google.android.material.textfield.TextInputLayout(context).apply {
                                         hint = "输入过滤词（多个用逗号隔开）"
-                                        setText(customSpamKeywords.joinToString(","))
-                                        setSingleLine(true)
-                                        val p = (8 * density).toInt()
-                                        setPadding(p, p, p, p)
+                                        boxBackgroundMode = com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE
+                                        setBoxCornerRadii(8f * density, 8f * density, 8f * density, 8f * density)
+                                        setPadding(0, 0, 0, 0)
                                     }
-                                    rootLayout.addView(input)
-                                    
-                                    android.app.AlertDialog.Builder(context)
-                                        .setView(rootLayout)
-                                        .setPositiveButton("保存") { _, _ ->
+
+                                    val input = android.widget.EditText(context).apply {
+                                        setText(customSpamKeywords.joinToString(","))
+                                        setSelection(text.length)
+                                        setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                        inputType = android.text.InputType.TYPE_CLASS_TEXT
+                                        val pad = (10 * density).toInt()
+                                        setPadding(pad, pad, pad, pad)
+                                    }
+                                    textInputLayout.addView(input)
+                                    layout.addView(textInputLayout)
+
+                                    val btnLayout = android.widget.LinearLayout(context).apply {
+                                        orientation = android.widget.LinearLayout.HORIZONTAL
+                                        gravity = android.view.Gravity.END
+                                        setPadding(0, (8 * density).toInt(), 0, 0)
+                                    }
+
+                                    btnLayout.addView(android.widget.TextView(context).apply {
+                                        text = "取消"
+                                        textSize = 14f
+                                        setTextColor(android.graphics.Color.parseColor("#888888"))
+                                        setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
+                                        setOnClickListener { dialog.dismiss() }
+                                    })
+
+                                    btnLayout.addView(android.widget.TextView(context).apply {
+                                        text = "保存"
+                                        textSize = 14f
+                                        setTextColor(android.graphics.Color.parseColor("#E53935"))
+                                        setTypeface(null, android.graphics.Typeface.BOLD)
+                                        setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
+                                        setOnClickListener {
                                             val text = input.text.toString().trim()
                                             val keywords = if (text.isEmpty()) emptyList() else text.split(",", "，").map { it.trim() }.filter { it.isNotEmpty() }
                                             sp.edit().putStringSet("custom_spam_keywords", keywords.toSet()).apply()
                                             customSpamKeywords = keywords
+                                            dialog.dismiss()
                                         }
-                                        .setNegativeButton("取消", null)
-                                        .create()
-                                        .show()
+                                    })
+
+                                    layout.addView(btnLayout)
+                                    card.addView(layout)
+                                    dialog.setView(card)
+                                    dialog.show()
+                                    dialog.window?.setLayout((300 * density).toInt(), android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
                                 }, 
                                 onClick = {
                                     showMenu = false
