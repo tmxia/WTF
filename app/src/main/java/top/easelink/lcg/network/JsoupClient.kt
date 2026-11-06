@@ -71,16 +71,19 @@ object JsoupClient : ApiRequest {
             .followRedirects(FOLLOW_REDIRECTS_ENABLE)
             .execute()
 
-        // 核心终极修复：如果命中盾，不要用 WebView 渲染，而是用 WebView Fetch 获取原始 HTML
         if (isWafPage(response.body())) {
-            Timber.w("网络层：命中高级 JS WAF 盾，启动后台 WebView Fetch 获取数据...")
-            val rawHtml = silentWebViewFetch(url)
+            Timber.w("网络层：命中高级 JS WAF 盾，启动后台 WebView 刷新 Cookie...")
+            val bypassSuccess = silentWebViewBypass()
             
-            if (rawHtml != null) {
-                Timber.d("网络层：WebView Fetch 成功，返回原始 HTML 长度: ${rawHtml.length}")
-                return Jsoup.parse(rawHtml, url).also { checkResponse(it) }
+            if (bypassSuccess) {
+                Timber.d("静默过盾成功，重新发起接口请求...")
+                // 核心修复：用新刷新的 Cookie 重新发起 Jsoup 请求
+                response = getConnection(url)
+                    .method(Connection.Method.GET)
+                    .followRedirects(FOLLOW_REDIRECTS_ENABLE)
+                    .execute()
             } else {
-                Timber.e("网络层：WebView Fetch 失败")
+                Timber.e("网络层：WebView 过盾失败")
                 throw IOException("WAF 盾未能成功绕过，请稍后再试")
             }
         }
@@ -135,12 +138,12 @@ object JsoupClient : ApiRequest {
     }
 
     /**
-     * 终极必杀技：在 WebView 内直接发起 fetch 请求，彻底免疫 WAF
+     * 终极方案：让 WebView 去访问首页，过盾后直接提取最新 Cookie
      */
     @SuppressLint("SetJavaScriptEnabled")
-    private fun silentWebViewFetch(targetUrl: String): String? {
+    private fun silentWebViewBypass(): Boolean {
         val latch = CountDownLatch(1)
-        var finalHtml: String? = null
+        var success = false
 
         Handler(Looper.getMainLooper()).post {
             try {
@@ -163,40 +166,27 @@ object JsoupClient : ApiRequest {
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
                             
-                            // 延迟 2.5 秒等待 JS 跳转或重定向完成
+                            // 给 WAF 盾 2.5 秒执行时间，然后直接提取 Cookie 走人，不要和它的重定向纠缠
                             Handler(Looper.getMainLooper()).postDelayed({
-                                // 核心修复：用 JS 检查当前页面是否还是 WAF 盾
-                                val checkJs = "(function() { return document.documentElement.outerHTML.indexOf('wzwsquestion') > -1 || document.documentElement.outerHTML.indexOf('waf_zw_verify') > -1 ? 'WAF' : 'OK'; })()"
-                                view?.evaluateJavascript(checkJs) { result ->
-                                    if (result == "\"OK\"") {
-                                        // 页面已干净，提取完整反馈 HTML
-                                        val js = "(function() { return btoa(unescape(encodeURIComponent(document.documentElement.outerHTML))); })()"
-                                        view.evaluateJavascript(js) { value ->
-                                            try {
-                                                if (!value.isNullOrBlank() && value != "null") {
-                                                    val base64Str = value.replace("\"", "")
-                                                    finalHtml = String(Base64.decode(base64Str, Base64.DEFAULT), Charsets.UTF_8)
-                                                    Timber.d("WebView 已提取干净的反馈 HTML，长度: ${finalHtml?.length}")
-                                                }
-                                            } catch (e: Exception) {
-                                                Timber.e(e, "解析 Base64 异常")
-                                            }
-                                            CookieManager.getInstance().flush()
-                                            updateLatestCookies()
-                                            post { destroy() }
-                                            latch.countDown()
-                                        }
-                                    } else {
-                                        // 如果还是 WAF 盾，说明 JS 跳转没完成，重试或继续等
-                                        Timber.w("当前页面仍是 WAF 盾，等待页面再次跳转...")
-                                        // 这里不做 latch.countDown()，继续在后台等，直到页面变干净或超时
+                                CookieManager.getInstance().flush()
+                                val latestCookie = CookieManager.getInstance().getCookie(BASE_URL)
+                                if (!latestCookie.isNullOrEmpty()) {
+                                    val cookies = mutableMapOf<String, String>()
+                                    for (pair in latestCookie.split(";")) {
+                                        val eq = pair.indexOf('=')
+                                        if (eq > 0) cookies[pair.substring(0, eq).trim()] = pair.substring(eq + 1).trim()
                                     }
+                                    updateCookies(cookies)
+                                    success = true
+                                    Timber.d("静默过盾：WebView 验证完成，最新 Cookie 已同步至网络层")
                                 }
+                                post { destroy() }
+                                latch.countDown()
                             }, 2500L)
                         }
                     }
-                    // 直接加载目标 URL，让浏览器去处理重定向
-                    loadUrl(targetUrl)
+                    // 访问首页是最容易过盾的
+                    loadUrl(BASE_URL)
                 }
             } catch (e: Exception) {
                 Timber.e(e, "静默 WebView 发生异常")
@@ -205,23 +195,11 @@ object JsoupClient : ApiRequest {
         }
 
         try {
-            latch.await(20, TimeUnit.SECONDS)
+            latch.await(15, TimeUnit.SECONDS)
         } catch (e: InterruptedException) {
             Timber.e(e, "静默 WebView 等待超时")
         }
-        return finalHtml
-    }
-
-    private fun updateLatestCookies() {
-        val latestCookie = CookieManager.getInstance().getCookie(BASE_URL)
-        if (!latestCookie.isNullOrEmpty()) {
-            val cookies = mutableMapOf<String, String>()
-            for (pair in latestCookie.split(";")) {
-                val eq = pair.indexOf('=')
-                if (eq > 0) cookies[pair.substring(0, eq).trim()] = pair.substring(eq + 1).trim()
-            }
-            updateCookies(cookies)
-        }
+        return success
     }
 
     fun resetSessionExpiredFlag() { sessionExpiredFiredOnce.set(false) }
