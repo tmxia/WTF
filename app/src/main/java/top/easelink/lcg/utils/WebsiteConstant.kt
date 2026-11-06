@@ -24,6 +24,7 @@ object WebsiteConstant {
     const val FORUM_URL_QUERY = "forum.php?mod=forumdisplay&fid=%s"
 
     const val ORIGINAL_RELEASE_QUERY = "forum-2-%d.html"
+    const val UNPACK_QUERY = "forum-5-%d.html"
     const val PROGRAM_LANGUAGE_QUERY = "forum-24-%d.html"
     const val ANIMATION_RELEASE_QUERY = "forum-6-%d.html"
     const val REVERSE_RESOURCE_QUERY = "forum-4-%d.html"
