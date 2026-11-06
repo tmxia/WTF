@@ -81,7 +81,7 @@ class CodePreviewDialog : DialogFragment() {
         view.findViewById<View>(R.id.btn_copy_code).setOnClickListener {
             val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.setPrimaryClip(ClipData.newPlainText("Code", rawCode))
-            Toast.makeText(requireContext(), "已复制到剪贴板", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "代码已复制", Toast.LENGTH_SHORT).show()
         }
 
         val webView = view.findViewById<WebView>(R.id.webview_code)
