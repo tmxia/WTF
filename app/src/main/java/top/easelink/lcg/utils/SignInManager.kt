@@ -47,12 +47,12 @@ object SignInManager {
                     .first()?.selectFirst("p")?.text().orEmpty()
                 val drawHtml = drawResponse.outerHtml()
 
-                // 核心修复：如果拿到的文本是空的，且还是 WAF 页面，直接判失败，绝不能当成功
+                // 核心修复：只要没拿到 alert_info 的提示，就根据关键字判定，不再强制拦截
                 if (drawMessage.isBlank()) {
-                    if (WafSolver.isWafPage(drawHtml)) {
-                        withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：WAF 盾未能绕过") }
+                    if (drawHtml.contains("您需要先登录")) {
+                         withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：登录失效") }
                     } else {
-                        withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：返回空内容") }
+                         withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：未获取到签到提示，请检查网络") }
                     }
                     return@launch
                 }

@@ -158,13 +158,37 @@ object JsoupClient : ApiRequest {
                     if (cookieStr.isNotEmpty()) {
                         cookieManager.setCookie(BASE_URL, cookieStr)
                     }
+
+                    // 核心修复：在 WebView 创建时立刻注入接口，确保 JS 能随时调用
+                    addJavascriptInterface(object {
+                        @android.webkit.JavascriptInterface
+                        fun fetchResult(base64Str: String) {
+                            try {
+                                finalHtml = String(Base64.decode(base64Str, Base64.DEFAULT), Charsets.UTF_8)
+                                Timber.d("WebView fetch 成功获取数据，Base64 解码完毕")
+                            } catch (e: Exception) {
+                                Timber.e(e, "解析 Base64 异常")
+                            }
+                            CookieManager.getInstance().flush()
+                            updateLatestCookies()
+                            post { destroy() }
+                            latch.countDown()
+                        }
+
+                        @android.webkit.JavascriptInterface
+                        fun fetchError(error: String) {
+                            Timber.e("WebView fetch 失败: $error")
+                            post { destroy() }
+                            latch.countDown()
+                        }
+                    }, "hook")
                     
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
-                            // 页面加载完，先等 2 秒让 WAF 盾跑完并刷新 Cookie
+                            // 页面加载完，延迟 2.5 秒确保 WAF 盾执行完并刷新 Cookie
                             Handler(Looper.getMainLooper()).postDelayed({
-                                // 核心：利用浏览器环境内的 fetch，去请求真正的接口
+                                // 使用 fetch 请求目标 URL
                                 val js = """
                                     (function() {
                                         fetch('$targetUrl', { credentials: 'include' })
@@ -174,36 +198,10 @@ object JsoupClient : ApiRequest {
                                         .catch(e => window.hook.fetchError(e.toString()));
                                     })()
                                 """.trimIndent()
-                                
-                                // 注入回调接口（注意：需在 SDK 17+ 使用 addJavascriptInterface）
-                                view?.addJavascriptInterface(object {
-                                    @android.webkit.JavascriptInterface
-                                    fun fetchResult(base64Str: String) {
-                                        try {
-                                            finalHtml = String(Base64.decode(base64Str, Base64.DEFAULT), Charsets.UTF_8)
-                                            Timber.d("WebView fetch 成功获取数据，Base64 解码完毕")
-                                        } catch (e: Exception) {
-                                            Timber.e(e, "解析 Base64 异常")
-                                        }
-                                        CookieManager.getInstance().flush()
-                                        updateLatestCookies()
-                                        view?.destroy()
-                                        latch.countDown()
-                                    }
-
-                                    @android.webkit.JavascriptInterface
-                                    fun fetchError(error: String) {
-                                        Timber.e("WebView fetch 失败: $error")
-                                        view?.destroy()
-                                        latch.countDown()
-                                    }
-                                }, "hook")
-                                
                                 view?.evaluateJavascript(js, null)
-                            }, 2000L)
+                            }, 2500L)
                         }
                     }
-                    // 必须先加载主页，让浏览器环境完成 JS 挑战和 Cookie 写入
                     loadUrl(BASE_URL)
                 }
             } catch (e: Exception) {
@@ -213,7 +211,7 @@ object JsoupClient : ApiRequest {
         }
 
         try {
-            latch.await(15, TimeUnit.SECONDS)
+            latch.await(20, TimeUnit.SECONDS)
         } catch (e: InterruptedException) {
             Timber.e(e, "静默 WebView 等待超时")
         }
