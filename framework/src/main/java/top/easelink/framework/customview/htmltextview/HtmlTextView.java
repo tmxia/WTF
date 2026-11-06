@@ -6,7 +6,9 @@ import android.text.Selection;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.style.URLSpan;
+import android.text.style.BackgroundColorSpan;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.UnderlineSpan;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
@@ -17,7 +19,11 @@ import androidx.annotation.RawRes;
 import com.google.android.material.textview.MaterialTextView;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import timber.log.Timber;
 import top.easelink.framework.R;
@@ -34,6 +40,9 @@ public class HtmlTextView extends MaterialTextView {
     private float indent = 24.0f;
     private boolean removeTrailingWhiteSpace = true;
 
+    // 固定占位符，非常醒目
+    private static final String CODE_PLACEHOLDER = "👉 [点击查看代码] 👈";
+
     public HtmlTextView(Context context, AttributeSet attrs, int defStyle) { super(context, attrs, defStyle); }
     public HtmlTextView(Context context, AttributeSet attrs) { super(context, attrs); }
     public HtmlTextView(Context context) { super(context); }
@@ -47,19 +56,62 @@ public class HtmlTextView extends MaterialTextView {
 
     public void setHtml(@NonNull String html, @Nullable Html.ImageGetter imageGetter) {
         try {
-            // 1. 在解析前，把 <a> 标签全部干掉，保留纯文本，防止代码里的 http 变成红色下划线
-            String sanitizedHtml = html.replaceAll("(?i)<a[^>]*>(.*?)</a>", "$1");
+            List<String> codeBlocks = new ArrayList<>();
+            
+            // 1. 匹配并提取代码块
+            Pattern pattern = Pattern.compile("(<pre[^>]*>([\\s\\S]*?)</pre>)|(<div[^>]*class=\"[^\"]*(?:blockcode|code)[^\"]*\"[^>]*>([\\s\\S]*?)</div>(?:\\s*</div>)?)", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(html);
+            StringBuffer sb = new StringBuffer();
+            int index = 0;
 
-            // 2. 正常交给 HtmlFormatter 解析，内部的 HtmlTagHandler 会自动把代码块抽出来变成“点击显示代码”占位符
+            while (matcher.find()) {
+                String rawCode = matcher.group(2) != null ? matcher.group(2) : matcher.group(4);
+                if (rawCode == null) rawCode = "";
+
+                // 提取并清理代码内容（用于弹窗展示）
+                rawCode = rawCode.replaceAll("(?i)<br\\s*/?>", "\n");
+                rawCode = rawCode.replaceAll("(?i)<li[^>]*>", "\n");
+                rawCode = rawCode.replaceAll("(?i)</li>", "");
+                rawCode = rawCode.replaceAll("<[^>]*>", "");
+                rawCode = rawCode.replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
+                rawCode = rawCode.trim();
+
+                codeBlocks.add(rawCode);
+                // 在正文中原位替换为一段醒目的文本
+                matcher.appendReplacement(sb, Matcher.quoteReplacement("\n" + CODE_PLACEHOLDER + "\n"));
+                index++;
+            }
+            matcher.appendTail(sb);
+
+            // 2. 交给原生解析
+            String sanitizedHtml = sb.toString().replaceAll("(?i)<a[^>]*>(.*?)</a>", "$1");
             CharSequence text = HtmlFormatter.formatHtml(
                     sanitizedHtml, imageGetter, clickablePreCodeSpan, drawPreCodeSpan, indent, removeTrailingWhiteSpace, getContext(), onImgTagClickListener, onLinkTagClickListener);
 
             SpannableStringBuilder builder = new SpannableStringBuilder(text);
 
-            // 3. 终极兜底：把任何可能漏网的超链接下划线给物理粉碎
-            URLSpan[] urlSpans = builder.getSpans(0, builder.length(), URLSpan.class);
-            for (URLSpan urlSpan : urlSpans) {
-                builder.removeSpan(urlSpan);
+            // 3. 给占位符挂载点击事件
+            int searchIndex = 0;
+            int blockIndex = 0;
+            while (true) {
+                int start = builder.toString().indexOf(CODE_PLACEHOLDER, searchIndex);
+                if (start == -1) break;
+                int end = start + CODE_PLACEHOLDER.length();
+
+                // 样式设计：浅蓝背景 + 蓝色文字 + 下划线
+                builder.setSpan(new BackgroundColorSpan(android.graphics.Color.parseColor("#E6F2FF")), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                builder.setSpan(new ForegroundColorSpan(android.graphics.Color.parseColor("#007AFF")), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                builder.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                // 挂载点击事件（触发弹窗）
+                if (clickablePreCodeSpan != null && blockIndex < codeBlocks.size()) {
+                    ClickablePreCodeSpan copySpan = clickablePreCodeSpan.newInstance();
+                    copySpan.setHtml(codeBlocks.get(blockIndex));
+                    builder.setSpan(copySpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+
+                searchIndex = end;
+                blockIndex++;
             }
 
             setText(builder);

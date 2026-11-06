@@ -38,7 +38,6 @@ public class HtmlTagHandler implements Html.TagHandler {
     private static class Code {}
     private static class Center {}
     private static class Strike {}
-    private static class Pre {}
     private static class Tr {}
     private static class Th {}
     private static class Td {}
@@ -56,6 +55,8 @@ public class HtmlTagHandler implements Html.TagHandler {
 
     @Override
     public void handleTag(final boolean opening, final String tag, Editable output, final XMLReader xmlReader) {
+        if (tag.equalsIgnoreCase("pre")) return; // pre 已在外层处理
+
         if (opening) {
             if (tag.equalsIgnoreCase(UNORDERED_LIST)) {
                 lists.push(tag);
@@ -85,8 +86,6 @@ public class HtmlTagHandler implements Html.TagHandler {
                 start(output, new Th());
             } else if (tag.equalsIgnoreCase("td")) {
                 start(output, new Td());
-            } else if (tag.equalsIgnoreCase("pre")) {
-                start(output, new Pre());
             }
         } else {
             if (tag.equalsIgnoreCase(UNORDERED_LIST)) {
@@ -129,20 +128,6 @@ public class HtmlTagHandler implements Html.TagHandler {
                 end(output, Th.class, false);
             } else if (tag.equalsIgnoreCase("td")) {
                 end(output, Td.class, false);
-            } else if (tag.equalsIgnoreCase("pre")) {
-                ClickablePreCodeSpan myClickablePreCodeSpan = null;
-                if (clickablePreCodeSpan != null) {
-                    myClickablePreCodeSpan = clickablePreCodeSpan.newInstance();
-                    final CharSequence extractedSpanText = extractSpanText(output, Pre.class);
-                    if (extractedSpanText != null) {
-                        myClickablePreCodeSpan.setHtml(extractedSpanText.toString());
-                    }
-                }
-                DrawPreCodeSpan myDrawPreCodeSpan = null;
-                if (drawPreCodeSpan != null) {
-                    myDrawPreCodeSpan = drawPreCodeSpan.newInstance();
-                }
-                end(output, Pre.class, false, myDrawPreCodeSpan, myClickablePreCodeSpan);
             }
         }
     }
@@ -171,17 +156,6 @@ public class HtmlTagHandler implements Html.TagHandler {
                 }
             }
         }
-    }
-
-    private CharSequence extractSpanText(Editable output, Class kind) {
-        final Object obj = getLast(output, kind);
-        if (obj == null) return null;
-        final int where = output.getSpanStart(obj);
-        final int len = output.length();
-        if (where < 0 || where > len) return null;
-        final CharSequence extractedSpanText = output.subSequence(where, len);
-        output.delete(where, len);
-        return extractedSpanText;
     }
 
     private static Object getLast(Editable text, Class kind) {
