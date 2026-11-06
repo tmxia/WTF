@@ -1,21 +1,22 @@
 package top.easelink.lcg.ui.main.article.view
 
 import android.annotation.SuppressLint
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updatePadding
+import android.widget.ImageView
 import top.easelink.framework.topbase.TopDialog
 import top.easelink.lcg.databinding.DialogWafVerifyBinding
 import top.easelink.lcg.network.JsoupClient
 import top.easelink.lcg.utils.WebsiteConstant
-import top.easelink.lcg.utils.setStatusBarPadding
 
 class WafVerificationDialog : TopDialog() {
 
@@ -36,16 +37,26 @@ class WafVerificationDialog : TopDialog() {
         return binding.root
     }
 
+    override fun onStart() {
+        super.onStart()
+        // 核心修复：设置悬浮窗口大小和居中
+        dialog?.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            val displayMetrics = resources.displayMetrics
+            // 宽度 90%，高度 75%
+            val width = (displayMetrics.widthPixels * 0.9).toInt()
+            val height = (displayMetrics.heightPixels * 0.75).toInt()
+            setLayout(width, height)
+            setGravity(Gravity.CENTER)
+        }
+        // 支持点击外部关闭
+        dialog?.setCanceledOnTouchOutside(true)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.toolbar.setStatusBarPadding()
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.updatePadding(bottom = bars.bottom)
-            insets
-        }
 
-        binding.toolbar.setNavigationOnClickListener {
+        binding.btnClose.setOnClickListener {
             JsoupClient.completeVerification(null)
             dismissDialog()
         }
