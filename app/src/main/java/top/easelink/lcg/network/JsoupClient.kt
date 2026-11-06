@@ -3,6 +3,7 @@ package top.easelink.lcg.network
 import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
+import android.util.Base64
 import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -70,29 +71,18 @@ object JsoupClient : ApiRequest {
             .followRedirects(FOLLOW_REDIRECTS_ENABLE)
             .execute()
 
-        var retryCount = 0
-        while (isWafPage(response.body()) && retryCount < 2) {
-            retryCount++
-            Timber.w("网络层：命中高级 WAF 盾 (重试: $retryCount/2)，启动后台 WebView 更新验证凭据...")
-            
-            // 这里直接返回 true/false，不再返回错误的 HTML
-            val bypassSuccess = silentWebViewBypass(url)
-            
-            if (bypassSuccess) {
-                Timber.d("静默过盾成功，WebView 已刷新 Cookie，重新发起接口请求...")
-                // 用最新的 Cookie 重新发起 Jsoup 请求
-                response = getConnection(url)
-                    .method(Connection.Method.GET)
-                    .followRedirects(FOLLOW_REDIRECTS_ENABLE)
-                    .execute()
-            } else {
-                Timber.e("网络层：WebView 过盾失败")
-                break
-            }
-        }
-
+        // 核心终极修复：命中盾后，用 WebView 直接渲染出最终页面
         if (isWafPage(response.body())) {
-            throw IOException("WAF 盾未能成功绕过，请检查网络或稍后再试")
+            Timber.w("网络层：命中高级 JS WAF 盾，启动后台 WebView 直接渲染页面...")
+            val bypassedHtml = silentWebViewGetHtml(url)
+            
+            if (bypassedHtml != null) {
+                Timber.d("网络层：WebView 渲染页面成功，返回解析后的 Document，HTML长度: ${bypassedHtml.length}")
+                return Jsoup.parse(bypassedHtml, url).also { checkResponse(it) }
+            } else {
+                Timber.e("网络层：WebView 渲染页面失败")
+                throw IOException("WAF 盾未能成功绕过，请稍后再试")
+            }
         }
 
         updateCookies(response.cookies())
@@ -107,13 +97,13 @@ object JsoupClient : ApiRequest {
             .method(Connection.Method.POST)
             .execute()
 
+        // 如果 POST 被拦截，启用 WebView 去刷新 Cookie（注意：目前 POST 无法直接用 WebView 渲染提交）
         var postRetry = 0
         while (isWafPage(response.body()) && postRetry < 2) {
             postRetry++
-            Timber.w("网络层：POST 命中 WAF 盾 (重试: $postRetry/2)，启动 WebView 刷新验证...")
-            val bypassSuccess = silentWebViewBypass(url)
-            
-            if (bypassSuccess) {
+            Timber.w("网络层：POST 命中 WAF 盾 (重试: $postRetry/2)，启动 WebView 刷新凭据...")
+            // WebView 访问主页去刷新 Cookie
+            if (silentWebViewGetHtml(BASE_URL) != null) {
                 response = getConnection(url)
                     .apply { if (form != null) data(form) }
                     .postDataCharset("gbk")
@@ -162,12 +152,12 @@ object JsoupClient : ApiRequest {
     }
 
     /**
-     * 终极防封方案：后台静默 WebView 刷新验证 Cookie，不干涉返回值
+     * 终极方案：后台静默 WebView 获取最终的 HTML
      */
     @SuppressLint("SetJavaScriptEnabled")
-    private fun silentWebViewBypass(targetUrl: String): Boolean {
+    private fun silentWebViewGetHtml(targetUrl: String): String? {
         val latch = CountDownLatch(1)
-        var success = false
+        var finalHtml: String? = null
 
         Handler(Looper.getMainLooper()).post {
             try {
@@ -191,28 +181,37 @@ object JsoupClient : ApiRequest {
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
                             
-                            // 延迟 2.5 秒，给 WAF 的 JS 充分的执行和跳转时间
+                            // 延迟 2.5 秒给 WAF 执行 JS 和跳转
                             Handler(Looper.getMainLooper()).postDelayed({
-                                CookieManager.getInstance().flush()
-                                val latestCookie = CookieManager.getInstance().getCookie(BASE_URL)
-                                
-                                if (!latestCookie.isNullOrEmpty()) {
-                                    // 将最新的 Cookie 写入到本地的 PersistentCookieJar
-                                    val cookies = mutableMapOf<String, String>()
-                                    for (pair in latestCookie.split(";")) {
-                                        val eq = pair.indexOf('=')
-                                        if (eq > 0) cookies[pair.substring(0, eq).trim()] = pair.substring(eq + 1).trim()
+                                // 利用 Base64 彻底规避转义问题
+                                val js = "(function() { return btoa(unescape(encodeURIComponent(document.documentElement.outerHTML))); })()"
+                                view?.evaluateJavascript(js) { value ->
+                                    try {
+                                        if (!value.isNullOrBlank() && value != "null") {
+                                            val base64Str = value.replace("\"", "")
+                                            finalHtml = String(Base64.decode(base64Str, Base64.DEFAULT), Charsets.UTF_8)
+                                            Timber.d("WebView 成功提取页面，Base64 解码完毕")
+                                        }
+                                    } catch (e: Exception) {
+                                        Timber.e(e, "解析 Base64 HTML 异常")
                                     }
-                                    updateCookies(cookies)
-                                    success = true
-                                    Timber.d("静默过盾：WebView 验证通过，最新 Cookie 已同步至网络层")
+                                    // 更新最终 Cookie 并 flush
+                                    CookieManager.getInstance().flush()
+                                    val latestCookie = CookieManager.getInstance().getCookie(BASE_URL)
+                                    if (!latestCookie.isNullOrEmpty()) {
+                                        val cookies = mutableMapOf<String, String>()
+                                        for (pair in latestCookie.split(";")) {
+                                            val eq = pair.indexOf('=')
+                                            if (eq > 0) cookies[pair.substring(0, eq).trim()] = pair.substring(eq + 1).trim()
+                                        }
+                                        updateCookies(cookies)
+                                    }
+                                    view.destroy()
+                                    latch.countDown()
                                 }
-                                view?.destroy()
-                                latch.countDown()
                             }, 2500L)
                         }
                     }
-                    // 直接加载一个相对轻量的页面即可触发盾
                     loadUrl(targetUrl)
                 }
             } catch (e: Exception) {
@@ -222,11 +221,11 @@ object JsoupClient : ApiRequest {
         }
 
         try {
-            latch.await(12, TimeUnit.SECONDS)
+            latch.await(15, TimeUnit.SECONDS)
         } catch (e: InterruptedException) {
-            Timber.e(e, "静默过盾等待超时")
+            Timber.e(e, "静默 WebView 等待超时")
         }
-        return success
+        return finalHtml
     }
 
     fun resetSessionExpiredFlag() { sessionExpiredFiredOnce.set(false) }
