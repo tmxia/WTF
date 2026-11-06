@@ -56,6 +56,16 @@ class ArticleAdapter(
 ) : RecyclerView.Adapter<BaseViewHolder>() {
 
     private val mPostList: MutableList<Post> = ArrayList()
+
+    /**
+     * 核心修复：获取目标 Post 在当前 UI 列表中的真实 position
+     * 兼容倒序、过滤、楼主置顶等所有复杂情况
+     */
+    fun getPositionForPost(target: Post): Int {
+        return mPostList.indexOfFirst { 
+            it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl) 
+        }
+    }
     private var hasMoreItem: Boolean = false
     var isFiltering: Boolean = false
     var searchKeyword: String = ""

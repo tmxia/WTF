@@ -181,12 +181,20 @@ fun ArticleScreen(
         val target = pendingScrollPost ?: return@LaunchedEffect
         // 只有当搜索条件和过滤条件全部清空后，才执行滚动
         if (searchKeyword.isBlank() && !filterSpam && !showOpOnly) {
-            val index = posts.indexOfFirst { it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl) }
-            Timber.d("【跳转】触发定位，目标索引: $index, 总列表大小: ${posts.size}")
+            
+            // 延迟 150ms，确保 Compose 已经把全量数据 setData 给了 Adapter
+            kotlinx.coroutines.delay(150)
+            
+            val adapter = recyclerView?.adapter as? ArticleAdapter
+            // 核心修复：使用 Adapter 内部的当前真实列表来计算位置，彻底免疫倒序和过滤偏移
+            val index = adapter?.getPositionForPost(target) ?: -1
+            
+            Timber.d("【跳转】触发定位，目标真实索引: $index")
             if (index != -1) {
-                // 由于 RecyclerView 渲染需要时间，我们稍微延迟 100ms 滚动，确保视图已刷新
-                kotlinx.coroutines.delay(100)
-                recyclerView?.smoothScrollToPosition(index)
+                // 使用 post 方法，确保下一帧渲染时再执行滚动
+                recyclerView?.post {
+                    recyclerView?.smoothScrollToPosition(index)
+                }
                 pendingScrollPost = null
             }
         }
