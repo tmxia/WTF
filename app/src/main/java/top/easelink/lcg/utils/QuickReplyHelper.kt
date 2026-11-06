@@ -190,6 +190,10 @@ object QuickReplyHelper {
             hint = "输入快捷短语"
             boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
             setBoxCornerRadii(8f * density, 8f * density, 8f * density, 8f * density)
+            // 核心修复：增加浅灰背景与极细的浅色描边
+            boxBackgroundColor = android.graphics.Color.parseColor("#F5F5F5")
+            boxStrokeColor = android.graphics.Color.parseColor("#E0E0E0")
+            boxStrokeWidth = (1 * density).toInt()
             setPadding(0, 0, 0, 0)
         }
 

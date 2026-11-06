@@ -336,6 +336,9 @@ fun ArticleScreen(
                                         hint = "输入过滤词（多个用逗号隔开）"
                                         boxBackgroundMode = com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE
                                         setBoxCornerRadii(8f * density, 8f * density, 8f * density, 8f * density)
+                                    boxBackgroundColor = android.graphics.Color.parseColor("#F5F5F5")
+                                    boxStrokeColor = android.graphics.Color.parseColor("#E0E0E0")
+                                    boxStrokeWidth = (1 * density).toInt()
                                         setPadding(0, 0, 0, 0)
                                     }
 
