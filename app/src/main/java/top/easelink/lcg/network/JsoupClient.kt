@@ -137,6 +137,13 @@ object JsoupClient : ApiRequest {
     private fun bypassWaf(currentUrl: String, html: String): Boolean {
         val params = WafSolver.extractWafParams(html) ?: return false
         val (question, factorStr, base64Chars, api) = params
+        // 核心排查日志：打印提取到的参数
+        Timber.d("WAF 挑战参数：question=$question, factor=$factorStr, base64CharsLen=${base64Chars.length}, api=$api")
+        if (api == "/waf_zw_verify") {
+            Timber.w("注意：api 使用了默认回退值，可能提取正则未能匹配到 dynamicapi 字段！")
+            Timber.w("挑战页面片段: ${html.take(300)}")
+        }
+        
         val factor = factorStr.toInt()
         val timestamp = System.currentTimeMillis()
         val answer = WafSolver.calcAnswer(question, factor)
