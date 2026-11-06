@@ -76,9 +76,11 @@ object JsoupClient : ApiRequest {
             .followRedirects(FOLLOW_REDIRECTS_ENABLE)
             .execute()
 
-        // 核心修复：遭遇 WAF 盾，直接静默拉起 WebView 穿透
-        if (isWafPage(response.body())) {
-            Timber.w("网络层：命中高级 JS WAF 盾，启动后台静默 WebView 过盾...")
+        // 核心修复：遭遇 WAF 盾，加入防死循环机制
+        var retryCount = 0
+        while (isWafPage(response.body()) && retryCount < 2) {
+            retryCount++
+            Timber.w("网络层：命中高级 JS WAF 盾 (重试: $retryCount/2)，启动后台静默 WebView 过盾...")
             val bypassSuccess = silentWebViewBypass(url)
             if (bypassSuccess) {
                 Timber.d("静默过盾成功，重新发起业务请求...")
@@ -87,8 +89,14 @@ object JsoupClient : ApiRequest {
                     .followRedirects(FOLLOW_REDIRECTS_ENABLE)
                     .execute()
             } else {
-                Timber.e("网络层：静默过盾失败，可能 WebView 被系统限制")
+                Timber.e("网络层：静默过盾失败")
+                break
             }
+        }
+
+        if (isWafPage(response.body())) {
+            Timber.e("网络层：过盾重试已达上限，放弃此次请求并抛出异常")
+            throw IOException("WAF 盾未能成功绕过，请稍后再试")
         }
 
         updateCookies(response.cookies())
@@ -103,15 +111,23 @@ object JsoupClient : ApiRequest {
             .method(Connection.Method.POST)
             .execute()
 
-        if (isWafPage(response.body())) {
-            Timber.w("网络层：POST 命中高级 JS WAF 盾，启动静默 WebView 过盾...")
+        var postRetry = 0
+        while (isWafPage(response.body()) && postRetry < 2) {
+            postRetry++
+            Timber.w("网络层：POST 命中高级 JS WAF 盾 (重试: $postRetry/2)，启动过盾...")
             if (silentWebViewBypass(url)) {
                 response = getConnection(url)
                     .apply { if (form != null) data(form) }
                     .postDataCharset("gbk")
                     .method(Connection.Method.POST)
                     .execute()
+            } else {
+                break
             }
+        }
+        
+        if (isWafPage(response.body())) {
+            throw IOException("WAF 盾未能成功绕过")
         }
 
         updateCookies(response.cookies())
@@ -161,9 +177,20 @@ object JsoupClient : ApiRequest {
                 val webView = WebView(LCGApp.context).apply {
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
+                    settings.javaScriptCanOpenWindowsAutomatically = true
+                    // 核心修复：必须与 Jsoup 的 UA 完全一致，否则 WAF 下发的 Cookie 无效
                     settings.userAgentString = DESKTOP_UA
                     
-                    CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                    val cookieManager = CookieManager.getInstance()
+                    cookieManager.setAcceptCookie(true)
+                    cookieManager.setAcceptThirdPartyCookies(this, true)
+                    
+                    // 核心修复：把旧的 Cookie 注入给 WebView，让它带着身份去挑战
+                    val currentCookies = getCookiesFor(BASE_URL)
+                    val cookieStr = currentCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
+                    if (cookieStr.isNotEmpty()) {
+                        cookieManager.setCookie(BASE_URL, cookieStr)
+                    }
                     
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView?, url: String?) {
@@ -172,6 +199,7 @@ object JsoupClient : ApiRequest {
                             Handler(Looper.getMainLooper()).postDelayed({
                                 if (url?.contains(WebsiteConstant.SERVER_HOST) == true) {
                                     // 提取 WebView 解出来的最新 Cookie
+                                    CookieManager.getInstance().flush()
                                     val cookieHeader = CookieManager.getInstance().getCookie(BASE_URL)
                                     if (!cookieHeader.isNullOrEmpty()) {
                                         // 解析并同步到 JsoupClient 的 CookieJar
