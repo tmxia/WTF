@@ -6,10 +6,10 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import top.easelink.lcg.R
@@ -53,63 +53,60 @@ class CodePreviewDialog : DialogFragment() {
             .replace("&quot;", "\"")
             .trim()
 
-        // 2. 初始化 Toolbar 与右上角复制按钮
+        // 2. 初始化 Toolbar
         val toolbar = view.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.code_toolbar)
         toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
         toolbar.setNavigationOnClickListener { dismiss() }
-        
-        // 动态添加右上角“复制”按钮
-        toolbar.menu.add(0, 1, 0, "复制").apply {
-            setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-        }
-        toolbar.setOnMenuItemClickListener { item ->
-            if (item.itemId == 1) {
-                val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("Code", rawCode))
-                Toast.makeText(requireContext(), "代码已复制到剪贴板", Toast.LENGTH_SHORT).show()
-                true
-            } else false
+
+        // 3. 绑定右上角的带水波纹复制按钮
+        val btnCopy = view.findViewById<ImageView>(R.id.btn_copy_code)
+        btnCopy.setOnClickListener {
+            val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("Code", rawCode))
+            Toast.makeText(requireContext(), "代码已复制", Toast.LENGTH_SHORT).show()
         }
 
-        // 3. WebView 渲染高亮
+        // 4. WebView 渲染高亮
         val webView = view.findViewById<WebView>(R.id.webview_code)
         webView.settings.javaScriptEnabled = true
         webView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
         
-        // 4. 拼接高亮 HTML 模板 (利用 CDN 引入 highlight.js 和优雅的样式)
-        // 为了防止 HTML 注入破坏渲染，需要将代码中的 < 和 > 进行转义
+        // 转义防止 HTML 注入破坏渲染
         val safeCode = rawCode.replace("<", "&lt;").replace(">", "&gt;")
         
+        // 5. 完全重写的现代化 CSS 模板
         val htmlTemplate = """
             <!DOCTYPE html>
             <html>
             <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <!-- 引入 highlight.js 的浅色主题 -->
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                <!-- 引入 GitHub 风格的浅色主题 -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
                 <style>
                     body {
                         margin: 0;
-                        padding: 16px;
-                        background-color: #F5F5F5; /* 整体页面背景灰 */
+                        padding: 12px;
+                        background-color: #F5F5F5;
                     }
                     .code-container {
-                        background-color: #FFFFFF; /* 代码块背景白 */
-                        padding: 16px;
+                        background-color: #FFFFFF;
+                        padding: 12px;
                         border-radius: 12px;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-                        overflow-x: auto; /* 支持横向滚动 */
+                        /* 关键修复：允许横向滚动，绝不强制换行 */
+                        overflow-x: auto;
+                        -webkit-overflow-scrolling: touch;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
                     }
                     pre {
                         margin: 0;
-                        font-family: Consolas, "Courier New", monospace;
-                        font-size: 14px;
+                        font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+                        font-size: 13px;
                         line-height: 1.5;
-                        white-space: pre-wrap; /* 自动换行 */
-                        word-wrap: break-word;
+                        /* 强制保持代码原始排版，不自动折行 */
+                        white-space: pre;
                     }
-                    /* 取消 hljs 默认的背景，避免出现突兀的色块 */
+                    /* 移除 hljs 默认背景，让白色卡片背景生效 */
                     .hljs {
                         background: transparent !important;
                         padding: 0 !important;
@@ -121,7 +118,6 @@ class CodePreviewDialog : DialogFragment() {
                     <pre><code class="hljs">$safeCode</code></pre>
                 </div>
                 <script>
-                    // 自动识别语言并高亮
                     document.addEventListener('DOMContentLoaded', (event) => {
                         document.querySelectorAll('pre code').forEach((el) => {
                             hljs.highlightElement(el);
