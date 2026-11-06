@@ -71,16 +71,16 @@ object JsoupClient : ApiRequest {
             .followRedirects(FOLLOW_REDIRECTS_ENABLE)
             .execute()
 
-        // 核心终极修复：命中盾后，用 WebView 直接渲染出最终页面
+        // 核心终极修复：如果命中盾，不要用 WebView 渲染，而是用 WebView Fetch 获取原始 HTML
         if (isWafPage(response.body())) {
-            Timber.w("网络层：命中高级 JS WAF 盾，启动后台 WebView 直接渲染页面...")
-            val bypassedHtml = silentWebViewGetHtml(url)
+            Timber.w("网络层：命中高级 JS WAF 盾，启动后台 WebView Fetch 获取数据...")
+            val rawHtml = silentWebViewFetch(url)
             
-            if (bypassedHtml != null) {
-                Timber.d("网络层：WebView 渲染页面成功，返回解析后的 Document，HTML长度: ${bypassedHtml.length}")
-                return Jsoup.parse(bypassedHtml, url).also { checkResponse(it) }
+            if (rawHtml != null) {
+                Timber.d("网络层：WebView Fetch 成功，返回原始 HTML 长度: ${rawHtml.length}")
+                return Jsoup.parse(rawHtml, url).also { checkResponse(it) }
             } else {
-                Timber.e("网络层：WebView 渲染页面失败")
+                Timber.e("网络层：WebView Fetch 失败")
                 throw IOException("WAF 盾未能成功绕过，请稍后再试")
             }
         }
@@ -97,25 +97,8 @@ object JsoupClient : ApiRequest {
             .method(Connection.Method.POST)
             .execute()
 
-        // 如果 POST 被拦截，启用 WebView 去刷新 Cookie（注意：目前 POST 无法直接用 WebView 渲染提交）
-        var postRetry = 0
-        while (isWafPage(response.body()) && postRetry < 2) {
-            postRetry++
-            Timber.w("网络层：POST 命中 WAF 盾 (重试: $postRetry/2)，启动 WebView 刷新凭据...")
-            // WebView 访问主页去刷新 Cookie
-            if (silentWebViewGetHtml(BASE_URL) != null) {
-                response = getConnection(url)
-                    .apply { if (form != null) data(form) }
-                    .postDataCharset("gbk")
-                    .method(Connection.Method.POST)
-                    .execute()
-            } else {
-                break
-            }
-        }
-
         if (isWafPage(response.body())) {
-            throw IOException("WAF 盾未能成功绕过")
+            throw IOException("WAF 盾未能成功绕过 (POST 暂不支持自动过盾)")
         }
 
         updateCookies(response.cookies())
@@ -152,10 +135,10 @@ object JsoupClient : ApiRequest {
     }
 
     /**
-     * 终极方案：后台静默 WebView 获取最终的 HTML
+     * 终极必杀技：在 WebView 内直接发起 fetch 请求，彻底免疫 WAF
      */
     @SuppressLint("SetJavaScriptEnabled")
-    private fun silentWebViewGetHtml(targetUrl: String): String? {
+    private fun silentWebViewFetch(targetUrl: String): String? {
         val latch = CountDownLatch(1)
         var finalHtml: String? = null
 
@@ -170,7 +153,6 @@ object JsoupClient : ApiRequest {
                     cookieManager.setAcceptCookie(true)
                     cookieManager.setAcceptThirdPartyCookies(this, true)
                     
-                    // 注入现有的 Cookie
                     val currentCookies = getCookiesFor(BASE_URL)
                     val cookieStr = currentCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
                     if (cookieStr.isNotEmpty()) {
@@ -180,39 +162,49 @@ object JsoupClient : ApiRequest {
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
-                            
-                            // 延迟 2.5 秒给 WAF 执行 JS 和跳转
+                            // 页面加载完，先等 2 秒让 WAF 盾跑完并刷新 Cookie
                             Handler(Looper.getMainLooper()).postDelayed({
-                                // 利用 Base64 彻底规避转义问题
-                                val js = "(function() { return btoa(unescape(encodeURIComponent(document.documentElement.outerHTML))); })()"
-                                view?.evaluateJavascript(js) { value ->
-                                    try {
-                                        if (!value.isNullOrBlank() && value != "null") {
-                                            val base64Str = value.replace("\"", "")
+                                // 核心：利用浏览器环境内的 fetch，去请求真正的接口
+                                val js = """
+                                    (function() {
+                                        fetch('$targetUrl', { credentials: 'include' })
+                                        .then(response => response.text())
+                                        .then(text => btoa(unescape(encodeURIComponent(text))))
+                                        .then(b64 => window.hook.fetchResult(b64))
+                                        .catch(e => window.hook.fetchError(e.toString()));
+                                    })()
+                                """.trimIndent()
+                                
+                                // 注入回调接口（注意：需在 SDK 17+ 使用 addJavascriptInterface）
+                                view?.addJavascriptInterface(object {
+                                    @android.webkit.JavascriptInterface
+                                    fun fetchResult(base64Str: String) {
+                                        try {
                                             finalHtml = String(Base64.decode(base64Str, Base64.DEFAULT), Charsets.UTF_8)
-                                            Timber.d("WebView 成功提取页面，Base64 解码完毕")
+                                            Timber.d("WebView fetch 成功获取数据，Base64 解码完毕")
+                                        } catch (e: Exception) {
+                                            Timber.e(e, "解析 Base64 异常")
                                         }
-                                    } catch (e: Exception) {
-                                        Timber.e(e, "解析 Base64 HTML 异常")
+                                        CookieManager.getInstance().flush()
+                                        updateLatestCookies()
+                                        view?.destroy()
+                                        latch.countDown()
                                     }
-                                    // 更新最终 Cookie 并 flush
-                                    CookieManager.getInstance().flush()
-                                    val latestCookie = CookieManager.getInstance().getCookie(BASE_URL)
-                                    if (!latestCookie.isNullOrEmpty()) {
-                                        val cookies = mutableMapOf<String, String>()
-                                        for (pair in latestCookie.split(";")) {
-                                            val eq = pair.indexOf('=')
-                                            if (eq > 0) cookies[pair.substring(0, eq).trim()] = pair.substring(eq + 1).trim()
-                                        }
-                                        updateCookies(cookies)
+
+                                    @android.webkit.JavascriptInterface
+                                    fun fetchError(error: String) {
+                                        Timber.e("WebView fetch 失败: $error")
+                                        view?.destroy()
+                                        latch.countDown()
                                     }
-                                    view.destroy()
-                                    latch.countDown()
-                                }
-                            }, 2500L)
+                                }, "hook")
+                                
+                                view?.evaluateJavascript(js, null)
+                            }, 2000L)
                         }
                     }
-                    loadUrl(targetUrl)
+                    // 必须先加载主页，让浏览器环境完成 JS 挑战和 Cookie 写入
+                    loadUrl(BASE_URL)
                 }
             } catch (e: Exception) {
                 Timber.e(e, "静默 WebView 发生异常")
@@ -226,6 +218,18 @@ object JsoupClient : ApiRequest {
             Timber.e(e, "静默 WebView 等待超时")
         }
         return finalHtml
+    }
+
+    private fun updateLatestCookies() {
+        val latestCookie = CookieManager.getInstance().getCookie(BASE_URL)
+        if (!latestCookie.isNullOrEmpty()) {
+            val cookies = mutableMapOf<String, String>()
+            for (pair in latestCookie.split(";")) {
+                val eq = pair.indexOf('=')
+                if (eq > 0) cookies[pair.substring(0, eq).trim()] = pair.substring(eq + 1).trim()
+            }
+            updateCookies(cookies)
+        }
     }
 
     fun resetSessionExpiredFlag() { sessionExpiredFiredOnce.set(false) }
