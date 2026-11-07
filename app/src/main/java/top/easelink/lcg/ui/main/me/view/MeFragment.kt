@@ -102,7 +102,13 @@ class MeFragment : TopFragment(), ControllableFragment {
     }
 
     private fun showFragment(fragment: Fragment) {
-        activity?.supportFragmentManager?.let { addFragmentInActivity(it, fragment, R.id.clRootView) }
+        activity?.let {
+            if (it is top.easelink.lcg.ui.main.MainActivity) {
+                it.showFragment(fragment) // 调用全局的 showFragment，打开真正的全屏新页面
+            } else {
+                top.easelink.framework.utils.addFragmentInActivity(it.supportFragmentManager, fragment, R.id.clRootView)
+            }
+        }
     }
 }
 
@@ -217,7 +223,7 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
         Spacer(modifier = Modifier.height(8.dp))
         Card(shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), modifier = Modifier.fillMaxWidth()) {
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                ActionIcon(R.drawable.ic_comment, "我的信息", isLoggedIn) { onNavigate(MessageFragment()) }
+                ActionIcon(R.drawable.ic_comment_outline, "我的信息", isLoggedIn) { onNavigate(MessageFragment()) }
                 ActionIcon(R.drawable.ic_my_articles, "我的帖子", isLoggedIn) { EventBus.getDefault().post(OpenForumEvent(context.getString(R.string.ic_my_articles), MY_ARTICLES_QUERY, false)) }
                 ActionIcon(R.drawable.ic_follow, "我的收听", isLoggedIn) { onNavigate(FollowFragment()) }
                 ActionIcon(R.drawable.ic_favorite, "我的收藏", true) { onNavigate(FavoriteArticlesFragment()) }

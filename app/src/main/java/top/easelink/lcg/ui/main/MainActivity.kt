@@ -241,7 +241,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         updateFragmentTags(tag)
     }
 
-    private fun showFragment(fragment: Fragment) {
+    fun showFragment(fragment: Fragment) {
         val tag = fragment.javaClass.simpleName
         supportFragmentManager.commit {
             supportFragmentManager.fragments.forEach {
