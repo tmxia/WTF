@@ -2,16 +2,18 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/slight_light_gray">
 
+    <!-- 严格克隆“我的帖子”的 AppBarLayout -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/slight_light_gray"
+        android:background="@color/white"
         android:elevation="0dp"
         app:elevation="0dp">
 
@@ -20,7 +22,8 @@
             style="@style/Toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/slight_light_gray"
+            android:background="@color/white"
+            android:paddingStart="6dp"
             app:contentInsetStart="0dp"
             app:contentInsetStartWithNavigation="0dp"
             app:navigationIcon="?attr/homeAsUpIndicator"
@@ -30,15 +33,21 @@
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/message_tab"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:background="@color/slight_light_gray"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/dp_40"
+            android:background="@color/white"
             app:tabIndicatorColor="@color/colorAccent"
-            app:tabIndicatorHeight="3dp"
+            app:tabIndicatorHeight="@dimen/dp_3"
             app:tabMode="fixed"
+            app:tabRippleColor="@null"
+            app:tabPaddingStart="12dp"
+            app:tabPaddingEnd="12dp"
+            app:tabTextAppearance="@style/AppTab.TextAppearance"
             app:tabTextColor="@color/gray"
             app:tabSelectedTextColor="@color/colorAccent" />
     </com.google.android.material.appbar.AppBarLayout>
 
+    <!-- 内容区保留浅灰底色 -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/message_view_pager"
         android:layout_width="match_parent"
