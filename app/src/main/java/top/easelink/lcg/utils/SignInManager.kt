@@ -27,30 +27,65 @@ object SignInManager {
 
     fun performSignIn(onResult: (String, String) -> Unit) {
         try {
+            // 1. 检查任务申请状态
             val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL)
+            val applyHtml = applyResponse.outerHtml()
+            
+            if (applyHtml.contains("您需要先登录")) {
+                Timber.tag("SignIn").e("签到失败：Cookie 已失效")
+                onResult("FAILED", "签到失败：登录已失效")
+                return
+            }
+            if (applyHtml.contains("wzwsquestion") || applyHtml.contains("waf_zw_verify")) {
+                Timber.tag("SignIn").e("签到失败：触发 WAF 拦截")
+                onResult("FAILED", "签到失败：触发安全风控")
+                return
+            }
+
             val applyMessage = applyResponse.getElementsByClass("alert_info")
                 .first()?.selectFirst("p")?.text().orEmpty()
 
-            if (applyMessage.contains("已申请") || applyMessage.contains("已完成")) {
-                Timber.d("今日已签到: $applyMessage")
-                // 核心修复：接口返回已签到，强制同步本地时间戳
+            if (applyMessage.contains("已申请") || applyMessage.contains("已完成") || applyMessage.contains("已签到")) {
+                Timber.tag("SignIn").d("签到结果：今日已签到")
                 updateLocalSignInTime()
                 onResult("ALREADY_DONE", "今日已签到")
                 return
             }
 
+            // 2. 领取奖励
             val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL)
+            val drawHtml = drawResponse.outerHtml()
+            
+            if (drawHtml.contains("您需要先登录")) {
+                Timber.tag("SignIn").e("签到失败：Cookie 已失效")
+                onResult("FAILED", "签到失败：登录已失效")
+                return
+            }
+
             val drawText = drawResponse.getElementsByClass("alert_info")
                 .first()?.selectFirst("p")?.text().orEmpty()
 
-            Timber.d("签到成功结果: $drawText")
-            // 核心修复：签到成功，强制同步本地时间戳
+            // 3. 精准判定成功与失败
+            if (drawText.isBlank()) {
+                Timber.tag("SignIn").e("签到失败：未获取到反馈信息（可能被 WAF 拦截）")
+                onResult("FAILED", "签到失败：未获取到反馈信息")
+                return
+            }
+
+            if (drawText.contains("失败") || drawText.contains("错误") || drawText.contains("异常")) {
+                Timber.tag("SignIn").e("签到结果：$drawText")
+                onResult("FAILED", drawText)
+                return
+            }
+
+            // 4. 成功
+            Timber.tag("SignIn").d("签到结果：$drawText")
             updateLocalSignInTime()
             onResult("SUCCESS", "签到成功！")
 
         } catch (e: Exception) {
-            Timber.e(e, "Jsoup 签到请求异常")
-            onResult("FAILED", "签到失败，请检查网络或登录状态")
+            Timber.tag("SignIn").e("签到异常：${e.message}")
+            onResult("FAILED", "签到失败：网络异常或登录状态失效")
         }
     }
 }
