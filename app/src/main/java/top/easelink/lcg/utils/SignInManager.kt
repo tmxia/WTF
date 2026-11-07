@@ -1,5 +1,6 @@
 package top.easelink.lcg.utils
 
+import androidx.core.content.edit
 import timber.log.Timber
 import top.easelink.lcg.network.JsoupClient
 
@@ -7,7 +8,6 @@ object SignInManager {
 
     private const val APPLY_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=apply&id=2"
     private const val DRAW_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=draw&id=2"
-
 
     fun updateLocalSignInTime() {
         SharedPreferencesHelper.getUserSp().edit {
@@ -33,7 +33,7 @@ object SignInManager {
 
             if (applyMessage.contains("已申请") || applyMessage.contains("已完成")) {
                 Timber.d("今日已签到: $applyMessage")
-                // 核心修复：服务端已签到，强制同步本地时间戳
+                // 核心修复：接口返回已签到，强制同步本地时间戳
                 updateLocalSignInTime()
                 onResult("ALREADY_DONE", "今日已签到")
                 return
