@@ -192,7 +192,7 @@ class SettingActivity : TopActivity() {
     }
 
     private fun tryLocalCookieLoginFirst() {
-        // 只有在用户点击登录时，才会触发这个校验流程
+        
         val cookies = LCGCookieJar.cookiesForUrl("https://www.52pojie.cn")
         if (cookies.isEmpty()) {
             showLoginOptionsDialog()
@@ -210,7 +210,7 @@ class SettingActivity : TopActivity() {
                         showMessage("本地登录成功！欢迎回来，${userInfo.userName}")
                         updateAccountButton(true)
                     } else {
-                        // 校验失败不要清 CK，弹窗让用户重登
+                        
                         showMessage("本地登录已失效，请重新登录")
                         showLoginOptionsDialog()
                     }

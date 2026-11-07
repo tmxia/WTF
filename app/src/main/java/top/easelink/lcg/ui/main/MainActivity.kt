@@ -38,7 +38,7 @@ import top.easelink.lcg.ui.main.discover.view.DiscoverFragment
 import top.easelink.lcg.ui.main.forumnav.view.ForumNavigationFragment
 import top.easelink.lcg.ui.main.largeimg.view.LargeImageDialog
 import top.easelink.lcg.ui.main.me.view.MeFragment
-import top.easelink.lcg.ui.main.message.view.MessageFragment
+import top.easelink.lcg.ui.search.view.SearchFragment
 import top.easelink.lcg.ui.main.recommand.view.RecommendFragment
 import top.easelink.lcg.ui.main.model.*
 import top.easelink.lcg.ui.setting.view.SettingActivity
@@ -406,8 +406,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     fun onNewMessageEvent(event: NewMessageEvent) {
         if (event.notificationInfo.isNotEmpty()) {
             showMessage(getString(R.string.notification_arrival))
-            binding.bottomNavigation.getOrCreateBadge(R.id.action_message).isVisible = true
-        }
+            // 信息红点逻辑已随底栏迁移移除
     }
 
     @Suppress("unused")

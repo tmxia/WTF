@@ -42,7 +42,7 @@ class LCGApp : Application() {
             LCGCookieJar.syncToWebView()
             
             
-            // 取消启动静默校验，避免后台发请求触发风控
+            
         }
         
         trySignIn()

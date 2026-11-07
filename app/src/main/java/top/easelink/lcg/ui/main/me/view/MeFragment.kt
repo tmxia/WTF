@@ -46,6 +46,7 @@ import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.ui.main.articles.view.FavoriteArticlesFragment
 import top.easelink.lcg.ui.main.follow.view.FollowFragment
 import top.easelink.lcg.ui.main.history.view.HistoryArticlesFragment
+import top.easelink.lcg.ui.main.message.view.MessageFragment
 import top.easelink.lcg.ui.main.me.viewmodel.MeViewModel
 import top.easelink.lcg.ui.main.model.OpenForumEvent
 import top.easelink.lcg.ui.main.model.SignInSuccessEvent
@@ -144,7 +145,7 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
             return@LaunchedEffect
         }
 
-        // 纯本地读取，绝不发网络请求
+        
         val sp = SharedPreferencesHelper.getUserSp()
         val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)
         val todayStart = Calendar.getInstance().apply {
@@ -216,6 +217,7 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
         Spacer(modifier = Modifier.height(8.dp))
         Card(shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), modifier = Modifier.fillMaxWidth()) {
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                ActionIcon(R.drawable.ic_comment, "我的信息", isLoggedIn) { onNavigate(MessageFragment()) }
                 ActionIcon(R.drawable.ic_my_articles, "我的帖子", isLoggedIn) { EventBus.getDefault().post(OpenForumEvent(context.getString(R.string.ic_my_articles), MY_ARTICLES_QUERY, false)) }
                 ActionIcon(R.drawable.ic_follow, "我的收听", isLoggedIn) { onNavigate(FollowFragment()) }
                 ActionIcon(R.drawable.ic_favorite, "我的收藏", true) { onNavigate(FavoriteArticlesFragment()) }

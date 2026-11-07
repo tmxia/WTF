@@ -13,9 +13,9 @@
         android:title="@string/discover_tab"
         app:showAsAction="ifRoom"/>
     <item
-        android:id="@+id/action_message"
-        android:icon="@drawable/ic_comment"
-        android:title="@string/message"
+        android:id="@+id/action_search"
+        android:icon="@drawable/ic_find"
+        android:title="搜索"
         app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/action_about_me"
