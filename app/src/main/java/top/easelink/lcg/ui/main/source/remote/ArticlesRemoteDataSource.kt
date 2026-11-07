@@ -315,6 +315,12 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             val articleList: List<Article> = elements.mapNotNull { element ->
                 var article: Article? = null
                 try {
+                    // 核心修复：过滤掉置顶公告。如果当前节点包含 stickthread 特征，直接抛弃
+                    val outerHtml = element.outerHtml()
+                    if (outerHtml.contains("stickthread_") || outerHtml.contains("class=\"stickthread\"")) {
+                        return@mapNotNull null
+                    }
+
                     // 极宽提取器：只要有回复数就抓，没有就默认0
                     val reply = element.selectFirst("a.xi2")?.text()?.toIntOrNull() ?: 0
                     val view = element.selectFirst("em")?.text()?.toIntOrNull() ?: 0
