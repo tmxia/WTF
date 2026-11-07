@@ -172,7 +172,7 @@ fun ArticleScreen(
     var customSpamKeywords by remember { mutableStateOf(sp.getStringSet("custom_spam_keywords", emptySet())?.toList() ?: emptyList()) }
     var searchKeyword by remember { mutableStateOf("") }
 
-    // 核心修复：只要进入新的帖子（URL 变化），立刻强制清空所有搜索和过滤状态，防止状态污染
+    
     LaunchedEffect(articleUrl) {
         searchKeyword = ""
         showOpOnly = false
@@ -184,22 +184,22 @@ fun ArticleScreen(
     
     val prefs = remember { context.getSharedPreferences("article_settings", android.content.Context.MODE_PRIVATE) }
 
-    // 核心跳转逻辑：当清空搜索且列表恢复全量数据后，滚动到目标楼层
+    
     LaunchedEffect(posts, pendingScrollPost, searchKeyword) {
         val target = pendingScrollPost ?: return@LaunchedEffect
-        // 只有当搜索条件和过滤条件全部清空后，才执行滚动
+        
         if (searchKeyword.isBlank() && !filterSpam && !showOpOnly) {
             
-            // 延迟 150ms，确保 Compose 已经把全量数据 setData 给了 Adapter
+            
             kotlinx.coroutines.delay(150)
             
             val adapter = recyclerView?.adapter as? ArticleAdapter
-            // 核心修复：使用 Adapter 内部的当前真实列表来计算位置，彻底免疫倒序和过滤偏移
+            
             val index = adapter?.getPositionForPost(target) ?: -1
             
             Timber.d("【跳转】触发定位，目标真实索引: $index")
             if (index != -1) {
-                // 使用 post 方法，确保下一帧渲染时再执行滚动
+                
                 recyclerView?.post {
                     recyclerView?.smoothScrollToPosition(index)
                 }
@@ -269,10 +269,10 @@ fun ArticleScreen(
                             onDismissRequest = { showMenu = false },
                             modifier = Modifier
                                 .background(Color.White)
-                                .wrapContentWidth() // 宽度自适应内容
+                                .wrapContentWidth() 
                                 .padding(vertical = 4.dp)
                         ) {
-                            // 定义一个高度极小的行组件，彻底摆脱原生限制
+                            
                             @Composable
                             @OptIn(ExperimentalFoundationApi::class)
                             fun MiniMenuRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, isActive: Boolean = false, onLongClick: (() -> Unit)? = null, onClick: () -> Unit) {
@@ -287,20 +287,20 @@ fun ArticleScreen(
                                     Icon(
                                         imageVector = icon,
                                         contentDescription = null,
-                                        modifier = Modifier.size(16.dp), // 小图标
+                                        modifier = Modifier.size(16.dp), 
                                         tint = if (isActive) Color(0xFFE53935) else Color.Gray
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = text,
-                                        fontSize = 13.sp, // 小字号
+                                        fontSize = 13.sp, 
                                         color = if (isActive) Color(0xFFE53935) else Color.DarkGray,
                                         fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal
                                     )
                                 }
                             }
 
-                            // === 第一组 ===
+                            
                             MiniMenuRow(Icons.Default.Person, if (showOpOnly) "显示全部" else "只看楼主", showOpOnly) {
                                 showMenu = false
                                 showOpOnly = !showOpOnly
@@ -483,7 +483,7 @@ fun ArticleScreen(
                                 color = Color.LightGray.copy(alpha = 0.5f)
                             )
 
-                            // === 第二组 ===
+                            
                             MiniMenuRow(Icons.Default.Refresh, "刷新帖子") {
                                 showMenu = false
                                 viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
@@ -522,7 +522,7 @@ fun ArticleScreen(
             )
         },
         floatingActionButton = {
-                // 核心修复：在搜索或过滤状态下，彻底隐藏所有悬浮按钮（包括回复按钮）
+                
                 if (searchKeyword.isNotBlank() || filterSpam || showOpOnly) {
                     return@Scaffold
                 }

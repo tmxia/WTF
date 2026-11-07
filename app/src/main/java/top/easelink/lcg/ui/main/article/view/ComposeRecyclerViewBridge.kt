@@ -64,8 +64,8 @@ fun ComposeRecyclerViewBridge(
 
     if (searchKeyword.isNotBlank()) {
         filteredPosts = filteredPosts.filter { post ->
-            // 核心修复：先剥离 HTML 标签提取纯文本，再进行匹配
-            // 这样可以避免匹配到 img 的 src 属性、a 的 href 属性或隐藏元素中的关键字
+            
+            
             val plainText = org.jsoup.Jsoup.parse(post.content ?: "").text()
             plainText.contains(searchKeyword, ignoreCase = true)
         }
@@ -79,11 +79,11 @@ fun ComposeRecyclerViewBridge(
 
     val isFiltering = showOpOnly || filterSpam || searchKeyword.isNotBlank()
 
-    // 自动深搜
+    
     LaunchedEffect(isFiltering, searchKeyword, posts.size, hasMore) {
         if (isFiltering && hasMore) {
             delay(1500)
-            // 核心修复：等待 1.5 秒后，再次确认用户没有清空搜索，确认没有离开页面
+            
             if (isFiltering && hasMore) {
                 Timber.d("【全量搜索】自动拉取下一页...")
                 viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_MORE, null)
@@ -125,7 +125,7 @@ fun ComposeRecyclerViewBridge(
             }
         )
 
-        // 搜索过程中（无结果且还有下一页）的覆盖层
+        
         if (isFiltering && displayPosts.isEmpty() && hasMore) {
             Box(
                 modifier = Modifier
@@ -142,7 +142,7 @@ fun ComposeRecyclerViewBridge(
             }
         }
 
-        // 彻底搜完（无结果且没有下一页）的覆盖层
+        
         if (isFiltering && displayPosts.isEmpty() && !hasMore) {
             Box(
                 modifier = Modifier

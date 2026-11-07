@@ -43,7 +43,7 @@ object AppLogManager {
     fun getLogs(): List<LogItem> = logs.toList()
     fun clearLogs() = logs.clear()
     
-    // 新增：删除单条日志
+    
     fun removeLog(time: String) {
         logs.removeAll { it.time == time }
     }

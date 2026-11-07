@@ -147,11 +147,11 @@ object WafSolver {
     }
 
     fun extractWafParams(html: String): List<String>? {
-        // 兼容各种引号、空格，甚至包含 HTML 混淆的情况
+        
         val qMatch = Regex("""wzwsquestion\s*=\s*['"]?(\d+)['"]?""").find(html) ?: Regex("""LZ\s*=\s*['"]?(\d+)['"]?""").find(html)
         val fMatch = Regex("""wzwsfactor\s*=\s*['"]?(\d+)['"]?""").find(html) ?: Regex("""LJ\s*=\s*['"]?(\d+)['"]?""").find(html)
         val bMatch = Regex("""base64_chars\s*=\s*['"]?([^'"]+)['"]?""").find(html) ?: Regex("""LE\s*=\s*['"]?([^'"]+)['"]?""").find(html)
-        // 重点修复：兼容 dynamicapi 各种花式写法，甚至支持带路径后缀的
+        
         val apiMatch = Regex("""dynamicapi\s*=\s*['"]?([^'"]+)['"]?""").find(html)
 
         if (qMatch != null && fMatch != null && bMatch != null) {

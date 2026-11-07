@@ -57,10 +57,10 @@ class ArticleAdapter(
 
     private val mPostList: MutableList<Post> = ArrayList()
 
-    /**
-     * 核心修复：获取目标 Post 在当前 UI 列表中的真实 position
-     * 兼容倒序、过滤、楼主置顶等所有复杂情况
-     */
+    
+
+
+
     fun getPositionForPost(target: Post): Int {
         return mPostList.indexOfFirst { 
             it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl) 
@@ -100,7 +100,7 @@ class ArticleAdapter(
 
         override fun getItemViewType(position: Int) = when {
         mPostList.isEmpty() -> VIEW_TYPE_EMPTY
-        // 核心修复：必须优先判断是否到底部，否则搜索模式下底部的占位符会被当成空卡片渲染
+        
         position == mPostList.size -> VIEW_TYPE_LOAD_MORE
         isFiltering -> VIEW_TYPE_REPLY
         position == 0 -> VIEW_TYPE_POST
@@ -265,7 +265,7 @@ class ArticleAdapter(
                         } else {
                             postBtnThumbUp.visibility = View.VISIBLE
                             postBtnThumbUp.setOnClickListener(this@PostViewHolder)
-                            // 核心修复：绑定颜色状态
+                            
                             val isLikedColor = ContextCompat.getColor(root.context, R.color.colorAccent)
                             val normalColor = ContextCompat.getColor(root.context, R.color.gray)
                             postBtnThumbUp.setColorFilter(if (p.isLiked) isLikedColor else normalColor)
@@ -296,11 +296,11 @@ class ArticleAdapter(
                             return
                         }
                         p.replyAddUrl?.let { url ->
-                            // 乐观更新：立即变红
+                            
                             p.isLiked = true
                             val isLikedColor = ContextCompat.getColor(itemView.context, R.color.colorAccent)
                             binding.postBtnThumbUp.setColorFilter(isLikedColor)
-                            // 发起请求
+                            
                             mListener.replyAdd(url)
                         }
                     }

@@ -30,7 +30,7 @@ object ForumNetworkSource {
                 val standardUrl = if (href.startsWith("http")) href else href
                 if (uniqueUrls.add(standardUrl)) {
                     val isSub = link.parents().any { it.tagName() == "dd" }
-                    // 尝试获取父版块的名字用于折叠
+                    
                     val parentTitle = link.parent()?.parent()?.previousElementSibling()?.selectFirst("dt a")?.text()?.let { cleanTitle(it) }
                     
                     list.add(
@@ -78,15 +78,15 @@ object ForumNetworkSource {
 
     private fun getIconByFid(fid: Int?, title: String): Int {
         return when (fid) {
-            2 -> R.drawable.ic_creator      // 原创发布区
-            16 -> R.drawable.ic_software    // 精品软件区
-            65 -> R.drawable.ic_sercurite   // 移动安全区
-            5 -> R.drawable.ic_sercurite    // 脱壳破解区
-            4 -> R.drawable.ic_creator      // 逆向资源区
-            24 -> R.drawable.ic_message_black_24dp // 编程语言
-            6 -> R.drawable.ic_message_black_24dp  // 动画发布区
-            10 -> R.drawable.ic_water       // 水漫金山
-            66 -> R.drawable.ic_welfare     // 福利经验
+            2 -> R.drawable.ic_creator      
+            16 -> R.drawable.ic_software    
+            65 -> R.drawable.ic_sercurite   
+            5 -> R.drawable.ic_sercurite    
+            4 -> R.drawable.ic_creator      
+            24 -> R.drawable.ic_message_black_24dp 
+            6 -> R.drawable.ic_message_black_24dp  
+            10 -> R.drawable.ic_water       
+            66 -> R.drawable.ic_welfare     
             else -> when {
                 title.contains("安全") || title.contains("逆向") || title.contains("病毒") || title.contains("破解") -> R.drawable.ic_sercurite
                 title.contains("软件") || title.contains("程序") || title.contains("工具") || title.contains("资源") || title.contains("原创") -> R.drawable.ic_software

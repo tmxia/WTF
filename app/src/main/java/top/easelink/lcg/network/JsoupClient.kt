@@ -50,7 +50,7 @@ object JsoupClient : ApiRequest {
 
     private val sessionExpiredFiredOnce = AtomicBoolean(false)
 
-    // 核心防封：400ms 强制冷却锁
+    
     private const val MIN_INTERVAL_MS = 400L
     private val lastRequestAt = AtomicLong(0L)
 
@@ -156,7 +156,7 @@ object JsoupClient : ApiRequest {
     private fun checkLoginState(doc: Document) {
         if (!UserDataRepo.isLoggedIn) return
         
-        // 核心修复：严格判定是否真的掉登录。绝不能被隐藏的弹窗模板骗了！
+        
         val loginElement = doc.getElementById("messagelogin")
         val hasMessageLogin = loginElement != null && 
                               !loginElement.attr("style").contains("display: none") && 
@@ -173,7 +173,7 @@ object JsoupClient : ApiRequest {
         Timber.w("检测到风控拦截，hasMessageLogin=%s, explicitExpired=%s", hasMessageLogin, explicitExpired)
 
         if (sessionExpiredFiredOnce.compareAndSet(false, true)) {
-            // 核心防御：触发静默刷新，绝不直接清空 CK 或发送 SessionExpiredEvent 踢人下线
+            
             Timber.w("启动静默 WebView 刷新 Cookie...")
             refreshCookieSilently {
                 resetSessionExpiredFlag()

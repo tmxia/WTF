@@ -43,14 +43,14 @@ class CodePreviewDialog : DialogFragment() {
     override fun onStart() {
         super.onStart()
         dialog?.window?.apply {
-            // 加深背景遮罩，让悬浮卡片更加立体
+            
             setDimAmount(0.6f)
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             
             val displayMetrics = resources.displayMetrics
             
-            // 核心修复：给定一个确定的宽高比例，避免内部 weight 撑不开
-            // 宽度占 90%，高度固定占屏幕 65%
+            
+            
             val params = attributes
             params.width = (displayMetrics.widthPixels * 0.9).toInt()
             params.height = (displayMetrics.heightPixels * 0.65).toInt()
@@ -65,7 +65,7 @@ class CodePreviewDialog : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // 核心修复：使用 findViewById 监听根布局点击，避免 binding 报错
+        
         view.findViewById<View>(R.id.dialog_root).setOnClickListener {
             dismiss()
         }

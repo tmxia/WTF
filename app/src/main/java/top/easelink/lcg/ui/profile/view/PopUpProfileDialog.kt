@@ -96,7 +96,7 @@ class PopUpProfileDialog : DialogFragment() {
                 WebViewActivity.startWebViewWith(SERVER_BASE_URL + popUpInfo.profileUrl, it.context)
             }
 
-            // ================= 黑名单核心逻辑 =================
+            
             val uidRegex = Regex("""uid[-=](\d+)""")
             val match = uidRegex.find(popUpInfo.profileUrl ?: "")
             val targetUid = match?.groupValues?.get(1)
@@ -145,7 +145,7 @@ class PopUpProfileDialog : DialogFragment() {
                         val responseHtml = response.body()
                         withContext(Dispatchers.Main) {
                             blacklistBtn.isEnabled = true
-                            // 简单判断是否成功
+                            
                             if (responseHtml.contains("成功") || responseHtml.contains("操作成功") || responseHtml.contains("添加") || responseHtml.contains("解除") || !responseHtml.contains("失败")) {
                                 if (isCurrentlyBlack) {
                                     BlacklistManager.removeFromBlacklist(targetUid)
@@ -176,7 +176,7 @@ class PopUpProfileDialog : DialogFragment() {
                     }
                 }
             }
-            // ====================================================
+            
 
             profileAvatar.load(popUpInfo.imageUrl) {
                 transformations(RoundedCornersTransformation(4.dpToPx(mContext)))

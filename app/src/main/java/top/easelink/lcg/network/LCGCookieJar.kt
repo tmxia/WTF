@@ -38,9 +38,9 @@ object LCGCookieJar {
 
     
 
-    /**
-     * 核心修复：检测本地是否有有效的登录 Cookie (htVC_2132_auth)
-     */
+    
+
+
     fun hasLoginCookie(): Boolean {
         return cookiesForUrl(SERVER_BASE_URL).keys.any { it.contains("auth") }
     }

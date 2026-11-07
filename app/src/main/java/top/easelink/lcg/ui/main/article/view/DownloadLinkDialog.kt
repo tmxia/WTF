@@ -46,7 +46,7 @@ class DownloadLinkDialog : TopDialog() {
                         setTextColor(ContextCompat.getColor(context, R.color.black))
                         setPadding(padding, padding, padding, padding)
                         
-                        // 设置浅灰圆角背景
+                        
                         background = android.graphics.drawable.GradientDrawable().apply {
                             setColor(android.graphics.Color.parseColor("#F5F5F5"))
                             cornerRadius = 8f * density
@@ -60,7 +60,7 @@ class DownloadLinkDialog : TopDialog() {
                         }
                         layoutParams = params
 
-                        // 核心修复：点击或长按直接复制，无需额外按钮
+                        
                         setOnClickListener { copy(link) }
                         setOnLongClickListener { 
                             copy(link)

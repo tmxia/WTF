@@ -285,7 +285,7 @@ fun ForumCustomizeDialog(
             tonalElevation = 0.dp
         ) {
             Column(modifier = Modifier.wrapContentHeight()) {
-                // 顶部标题栏
+                
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -304,7 +304,7 @@ fun ForumCustomizeDialog(
                     )
                 }
 
-                // 列表区域
+                
                 Column(
                     modifier = Modifier
                         .wrapContentHeight()
@@ -312,7 +312,7 @@ fun ForumCustomizeDialog(
                 ) {
                     Text("已选板块", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 6.dp))
                     
-                    // 已选区最大高度 110dp
+                    
                     LazyColumn(modifier = Modifier.heightIn(max = 110.dp).fillMaxWidth()) {
                         items(selectedUrls) { url ->
                             val forum = allForums.find { it.url == url }
@@ -368,7 +368,7 @@ fun ForumCustomizeDialog(
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.LightGray)
                     Text("点击添加板块", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 6.dp))
                     
-                    // 添加区最大高度 180dp
+                    
                     LazyColumn(modifier = Modifier.heightIn(max = 180.dp).fillMaxWidth()) {
                         val unselected = allForums.filter { it.url !in selectedUrls }
                         val mainForums = unselected.filter { !it.isSubForum }
@@ -445,7 +445,7 @@ fun ForumCustomizeDialog(
                             Spacer(modifier = Modifier.height(4.dp))
                         }
                         
-                        // 野子版块兜底
+                        
                         val orphanSubs = subForums.filter { sub -> mainForums.none { it.title == sub.parentTitle } }
                         items(orphanSubs) { child ->
                             Row(
@@ -467,7 +467,7 @@ fun ForumCustomizeDialog(
                     }
                 }
 
-                // 底部按钮区域
+                
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -485,7 +485,7 @@ fun ForumCustomizeDialog(
                         onClick = { onSave(selectedUrls.toList()) },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
                         shape = RoundedCornerShape(8.dp),
-                        elevation = ButtonDefaults.buttonElevation(0.dp) // 底部按钮取消阴影
+                        elevation = ButtonDefaults.buttonElevation(0.dp) 
                     ) {
                         Text("保存", color = Color.White, fontSize = 14.sp)
                     }

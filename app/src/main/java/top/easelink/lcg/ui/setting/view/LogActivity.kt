@@ -25,7 +25,7 @@ class LogActivity : AppCompatActivity() {
     private lateinit var adapter: LogAdapter
     private lateinit var tvEmpty: TextView
     private var allLogs: List<LogItem> = emptyList()
-    private var currentFilter = 0 // 0=全部, 1=Info, 2=Error
+    private var currentFilter = 0 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +71,7 @@ class LogActivity : AppCompatActivity() {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.setPrimaryClip(ClipData.newPlainText("AppLogs", logText))
             
-            // 核心修复：导出到系统的 Download 公共目录
+            
             try {
                 val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
                 if (!downloadsDir.exists()) {
@@ -82,7 +82,7 @@ class LogActivity : AppCompatActivity() {
                 file.writeText(logText)
                 Toast.makeText(this, "已复制到剪贴板\n并保存至：Download/$fileName", Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
-                // 兜底（比如某些系统权限问题）
+                
                 val fallbackFile = File(getExternalFilesDir(null), "wtf_debug_log.txt")
                 fallbackFile.writeText(logText)
                 Toast.makeText(this, "系统目录不可写，已保存至：\n${fallbackFile.absolutePath}", Toast.LENGTH_LONG).show()
@@ -101,12 +101,12 @@ class LogActivity : AppCompatActivity() {
     private fun applyFilter() {
         val filtered = allLogs.filter {
             when (currentFilter) {
-                1 -> // 网络
+                1 -> 
                     it.tag.contains("网络层") || it.tag.contains("详情页") || it.message.contains("【网络层】") || it.message.contains("【详情页】")
-                2 -> // 业务
+                2 -> 
                     it.tag.contains("业务层") || it.tag.contains("UI层") || it.tag.contains("Adapter") || it.tag.contains("状态层") || it.tag.contains("任务层") ||
                     it.message.contains("【业务层】") || it.message.contains("【UI层】") || it.message.contains("【Adapter】") || it.message.contains("【状态层】") || it.message.contains("【任务层】")
-                3 -> // 报错
+                3 -> 
                     it.level >= Log.WARN
                 else -> true
             }

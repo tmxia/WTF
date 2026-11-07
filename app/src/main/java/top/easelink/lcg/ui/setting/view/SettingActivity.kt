@@ -93,7 +93,7 @@ class SettingActivity : TopActivity() {
 
             checkUpdateBtn.setOnClickListener { showMessage(R.string.app_is_latest) }
 
-            // 核心修复：使用 this@SettingActivity 防止上下文丢失
+            
             btnViewCookie.setOnClickListener {
                 val cookies = top.easelink.lcg.network.LCGCookieJar.cookiesForUrl(top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL)
                 if (cookies.isEmpty()) {
@@ -192,6 +192,7 @@ class SettingActivity : TopActivity() {
     }
 
     private fun tryLocalCookieLoginFirst() {
+        // 只有在用户点击登录时，才会触发这个校验流程
         val cookies = LCGCookieJar.cookiesForUrl("https://www.52pojie.cn")
         if (cookies.isEmpty()) {
             showLoginOptionsDialog()
@@ -199,7 +200,6 @@ class SettingActivity : TopActivity() {
         }
 
         showMessage("正在验证本地登录凭证...")
-        // 核心修复：使用 lifecycleScope 防止页面销毁后崩溃
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val userInfo = UserInfoRepo.requestUserInfo()
@@ -210,14 +210,13 @@ class SettingActivity : TopActivity() {
                         showMessage("本地登录成功！欢迎回来，${userInfo.userName}")
                         updateAccountButton(true)
                     } else {
-                        // 核心修复：验证失败时绝对不能 LCGCookieJar.clearAll()，否则会被风控误杀彻底掉线
+                        // 校验失败不要清 CK，弹窗让用户重登
                         showMessage("本地登录已失效，请重新登录")
                         showLoginOptionsDialog()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    // 网络异常也绝不清理本地 CK，只提示失败
                     showMessage("网络异常，无法验证凭证")
                 }
             }

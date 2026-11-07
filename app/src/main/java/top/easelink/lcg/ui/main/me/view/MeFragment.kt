@@ -116,7 +116,7 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
     var isSigningIn by remember { mutableStateOf(false) }
     var tick by remember { mutableStateOf(System.currentTimeMillis()) }
 
-    // 监听签到成功事件，刷新 UI 状态
+    
     DisposableEffect(Unit) {
         val subscriber = object {
             @Subscribe(threadMode = ThreadMode.MAIN)
@@ -129,7 +129,7 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
         onDispose { EventBus.getDefault().unregister(subscriber) }
     }
 
-    // 核心修复：每分钟刷新一次 tick，强制重组，跨天后自动更新 UI
+    
     LaunchedEffect(Unit) {
         while (true) {
             delay(60_000)
@@ -144,29 +144,22 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
             return@LaunchedEffect
         }
 
-        // 核心修复 1：直接判断接口返回的签到状态！不再盲目发签到请求触发风控
-        val isSignedInFromApi = !userInfo?.signInStateUrl.isNullOrBlank()
+        // 纯本地读取，绝不发网络请求
+        val sp = SharedPreferencesHelper.getUserSp()
+        val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)
+        val todayStart = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
         
-        if (isSignedInFromApi) {
+        if (lastTime >= todayStart) {
             signInText = "✅ 已签到"
             signInColor = Color(0xFF4CAF50)
-            
-            // 如果接口显示已签到，但本地没有记录，顺手补全本地时间戳（为了防重复触发）
-            val sp = SharedPreferencesHelper.getUserSp()
-            val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)
-            val todayStart = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
-            
-            if (lastTime < todayStart) {
-                sp.edit().putLong("sp_key_last_sign_in_at", System.currentTimeMillis()).apply()
-            }
         } else {
-            // 本地没记录，接口也明确显示未签到
             signInText = "🔥 未签到，点我"
             signInColor = Color(0xFFE53935)
         }
     }
+
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5)).verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)) {
         Card(shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), modifier = Modifier.fillMaxWidth()) {

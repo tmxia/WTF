@@ -293,21 +293,21 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         processThreadList: Boolean
     ): ForumPage? {
         try {
-            // 完全复用首页的选择器，并兼容部分分类页的 normalthread 结构
+            
             var elements = doc.select("tbody[id^=normal]")
             if (elements.isEmpty()) {
                 elements = doc.select("tbody[id^=normalthread]")
             }
 
-            // 如果啥都没有，说明可能没帖子或掉登录
+            
             if (elements.isEmpty()) {
-                // 核心防御：遇到异常或者空页面，绝不抛异常，只返回空数据
+                
                 return ForumPage(emptyList(), emptyList())
             }
 
             val articleList: List<Article> = elements.mapNotNull { e ->
                 try {
-                    // === 直接抄首页的完美校验逻辑 ===
+                    
                     val reply = extractFrom(e, "td.num", "a.xi2")
                         .ifBlank { "0" }
                         .filter { it.isDigit() }
@@ -318,13 +318,13 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                         .filter { it.isDigit() }
                         .toIntOrNull() ?: 0
                         
-                    // 兼容 th.common（首页）和 th.new（分类页）
+                    
                     val title = e.selectFirst("th.common > .xst")?.text().orEmpty()
                         .ifBlank { e.selectFirst("th.new > .xst")?.text().orEmpty() }
                         .ifBlank { e.selectFirst("a.xst")?.text().orEmpty() }
                         
                     val author = extractFrom(e, "td.by", "a[href*=uid]")
-                        .ifBlank { "匿名" } // 极端情况下没作者也不抛弃
+                        .ifBlank { "匿名" } 
                         
                     val date = extractFrom(e, "td.by", "span")
                     
@@ -334,7 +334,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                         
                     val origin = e.selectFirst("td.by > a[target]")?.text().orEmpty()
                     
-                    // 只要标题和 URL 存在，就当做有效帖子
+                    
                     if (title.isNotBlank() && url.isNotBlank()) {
                         Article(title, author, date, url, view, reply, origin)
                     } else {
@@ -350,7 +350,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                 return ForumPage(emptyList(), emptyList())
             }
 
-            // 解析子版块 Tab
+            
             var threadList: List<ForumThread>? = null
             if (processThreadList) {
                 doc.getElementById("thread_types")?.let { threadTypes ->

@@ -40,7 +40,7 @@ class LogDetailActivity : AppCompatActivity() {
         val tvStackTitle = findViewById<TextView>(R.id.tv_stack_title)
         val tvStack = findViewById<TextView>(R.id.tv_stack)
 
-        // 渲染等级和颜色
+        
         when (level) {
             Log.ERROR -> { tvLevel.text = "E"; tvLevel.setTextColor(android.graphics.Color.parseColor("#F44336")) }
             Log.WARN -> { tvLevel.text = "W"; tvLevel.setTextColor(android.graphics.Color.parseColor("#FF9800")) }
@@ -58,7 +58,7 @@ class LogDetailActivity : AppCompatActivity() {
         tvTime.text = timeStr
         tvMessage.text = message
 
-        // 处理堆栈
+        
         if (!stack.isNullOrBlank()) {
             tvStackTitle.visibility = View.VISIBLE
             tvStack.visibility = View.VISIBLE
@@ -68,7 +68,7 @@ class LogDetailActivity : AppCompatActivity() {
             tvStack.visibility = View.GONE
         }
 
-        // 复制按钮
+        
         findViewById<View>(R.id.btn_copy).setOnClickListener {
             val fullText = "$levelName · $tag\n$timeStr\n\n$message\n\n${stack ?: ""}"
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

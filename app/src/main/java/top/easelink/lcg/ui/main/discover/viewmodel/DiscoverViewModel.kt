@@ -34,15 +34,15 @@ class DiscoverViewModel : ViewModel() {
         Timber.d("【发现页】开始刷新热榜与板块数据...")
         viewModelScope.launch(IOPool) {
             runCatching {
-                // 1. 尝试请求实时板块 API
+                
                 Timber.d("【发现页】开始拉取板块数据...")
                 val apiForums = ForumNetworkSource.fetchAllForumsFromApi()
                 
-                // 2. 拉取热榜数据
+                
                 val ranks = fetchRank(RankType.HEAT, DateType.TODAY)
                 Timber.d("【发现页】热榜请求成功，获取到 ${ranks.listModel.size} 条热榜")
 
-                // 3. 组装数据
+                
                 val newList = mutableListOf<DiscoverModel>()
                 if (apiForums.isNotEmpty()) {
                     Timber.d("【发现页】使用 API 返回的 ${apiForums.size} 个板块")
@@ -61,7 +61,7 @@ class DiscoverViewModel : ViewModel() {
                     else -> showMessage(R.string.error)
                 }
             }.also {
-                // 保证转圈动画至少执行 800 毫秒
+                
                 kotlinx.coroutines.delay(800)
                 isLoading.postValue(false)
             }

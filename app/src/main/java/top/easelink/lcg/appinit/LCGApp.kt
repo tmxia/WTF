@@ -38,39 +38,21 @@ class LCGApp : Application() {
         ShiplyInitialization.init(this@LCGApp)
         
         applicationScope.launch {
-            // 1. 同步本地 CK 到 WebView
+            
             LCGCookieJar.syncToWebView()
             
-            // 2. 核心修复：启动时静默校验 CK 是否有效
-            attemptSilentLogin()
+            
+            // 取消启动静默校验，避免后台发请求触发风控
         }
         
         trySignIn()
         CacheCleanerTask.clearCachesIfNeeded()
     }
 
-    /**
-     * 尝试使用本地 CK 静默登录
-     */
-    private fun attemptSilentLogin() {
-        // 如果本地有 auth CK，无论 isLoggedIn 是否是 false，我们都强行试一次
-        if (LCGCookieJar.hasLoginCookie()) {
-            Timber.d("【静默登录】检测到本地存在登录 CK，正在尝试自动校验...")
-            val userInfo = UserInfoRepo.requestUserInfo()
-            
-            if (userInfo != null && !userInfo.userName.isNullOrBlank()) {
-                Timber.d("【静默登录】校验成功！当前登录账号: ${userInfo.userName}")
-                UserDataRepo.updateUserInfo(userInfo)
-                UserDataRepo.isLoggedIn = true
-            } else {
-                Timber.w("【静默登录】校验失败，本地 CK 已彻底过期或被风控拦截，需要用户手动登录")
-                UserDataRepo.isLoggedIn = false
-            }
-        } else {
-            Timber.w("【静默登录】本地没有任何登录凭证，跳过校验")
-            UserDataRepo.isLoggedIn = false
-        }
-    }
+    
+
+
+    
 
     private fun trySignIn() {
         applicationScope.launch {

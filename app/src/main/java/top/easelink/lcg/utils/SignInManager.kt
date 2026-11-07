@@ -27,7 +27,7 @@ object SignInManager {
 
     fun performSignIn(onResult: (String, String) -> Unit) {
         try {
-            // 1. 检查任务申请状态
+            
             val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL)
             val applyHtml = applyResponse.outerHtml()
             
@@ -52,7 +52,7 @@ object SignInManager {
                 return
             }
 
-            // 2. 领取奖励
+            
             val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL)
             val drawHtml = drawResponse.outerHtml()
             
@@ -65,7 +65,7 @@ object SignInManager {
             val drawText = drawResponse.getElementsByClass("alert_info")
                 .first()?.selectFirst("p")?.text().orEmpty()
 
-            // 3. 精准判定成功与失败
+            
             if (drawText.isBlank()) {
                 Timber.tag("SignIn").e("签到失败：未获取到反馈信息（可能被 WAF 拦截）")
                 onResult("FAILED", "签到失败：未获取到反馈信息")
@@ -78,7 +78,7 @@ object SignInManager {
                 return
             }
 
-            // 4. 成功
+            
             Timber.tag("SignIn").d("签到结果：$drawText")
             updateLocalSignInTime()
             onResult("SUCCESS", "签到成功！")
