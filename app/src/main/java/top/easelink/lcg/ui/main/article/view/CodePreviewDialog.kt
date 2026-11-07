@@ -64,6 +64,11 @@ class CodePreviewDialog : DialogFragment() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // 核心修复：使用 findViewById 监听根布局点击，避免 binding 报错
+        view.findViewById<View>(R.id.dialog_root).setOnClickListener {
+            dismiss()
+        }
 
         val rawHtml = arguments?.getString(EXTRA_CODE) ?: return
 
