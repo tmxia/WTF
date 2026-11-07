@@ -32,7 +32,7 @@ object SignInManager {
             try {
                 Timber.d("开始签到：底层网络请求（自带算法破盾）...")
                 
-                val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL)
+                val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL, enableWafPopup = false)
                 val applyMessage = applyResponse.getElementsByClass("alert_info")
                     .first()?.selectFirst("p")?.text().orEmpty()
 
@@ -42,7 +42,7 @@ object SignInManager {
                     return@launch
                 }
 
-                val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL)
+                val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL, enableWafPopup = false)
                 val drawHtml = drawResponse.outerHtml()
                 Timber.d("签到反馈 HTML 前 500 字符: ${drawHtml.take(500)}")
                 

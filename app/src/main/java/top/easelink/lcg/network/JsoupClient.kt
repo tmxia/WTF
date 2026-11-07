@@ -84,6 +84,11 @@ object JsoupClient : ApiRequest {
 
     @Throws(SocketTimeoutException::class, IOException::class)
     override fun sendGetRequestWithUrl(url: String): Document {
+        return sendGetRequestWithUrl(url, true)
+    }
+
+    @Throws(SocketTimeoutException::class, IOException::class)
+    fun sendGetRequestWithUrl(url: String, enableWafPopup: Boolean): Document {
         var response = getConnection(url)
             .method(Connection.Method.GET)
             .followRedirects(FOLLOW_REDIRECTS_ENABLE)
@@ -92,6 +97,9 @@ object JsoupClient : ApiRequest {
         updateCookies(response.cookies())
 
         if (isWafPage(response.body())) {
+            if (!enableWafPopup) {
+                throw IOException("WAF_VERIFICATION_REQUIRED")
+            }
             Timber.w("网络层：命中高级 JS WAF 盾，挂起请求等待真人验证...")
             EventBus.getDefault().post(WafVerificationEvent(url))
             
@@ -119,6 +127,10 @@ object JsoupClient : ApiRequest {
     }
 
     override fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?): Connection.Response {
+        return sendPostRequestWithUrl(url, form, true)
+    }
+
+    fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?, enableWafPopup: Boolean): Connection.Response {
         var response = getConnection(url)
             .apply { if (form != null) data(form) }
             .postDataCharset("gbk")
@@ -128,6 +140,9 @@ object JsoupClient : ApiRequest {
         updateCookies(response.cookies())
 
         if (isWafPage(response.body())) {
+            if (!enableWafPopup) {
+                throw IOException("WAF_VERIFICATION_REQUIRED")
+            }
             Timber.w("网络层：POST 命中 WAF 盾，挂起请求等待真人验证...")
             EventBus.getDefault().post(WafVerificationEvent(url))
             
