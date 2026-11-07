@@ -229,7 +229,11 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 show(fragment)
             } else {
                 add(R.id.fragment_container, fragment, tag)
-                if (fragment is ForumArticlesFragment || fragment is ForumNavigationFragment) {
+                // 核心修复：排除四大主页面，其余所有二级页面均入栈以支持系统手势回退
+                if (fragment !is RecommendFragment && 
+                    fragment !is SearchFragment && 
+                    fragment !is DiscoverFragment && 
+                    fragment !is MeFragment) {
                     addToBackStack(tag)
                 }
             }
@@ -252,7 +256,11 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 show(fragment)
             } else {
                 add(R.id.fragment_container, fragment, tag)
-                if (fragment is ForumArticlesFragment || fragment is ForumNavigationFragment) {
+                // 核心修复：排除四大主页面，其余所有二级页面均入栈以支持系统手势回退
+                if (fragment !is RecommendFragment && 
+                    fragment !is SearchFragment && 
+                    fragment !is DiscoverFragment && 
+                    fragment !is MeFragment) {
                     addToBackStack(tag)
                 }
             }
