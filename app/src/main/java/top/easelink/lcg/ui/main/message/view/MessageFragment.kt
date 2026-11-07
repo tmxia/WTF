@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -92,22 +93,46 @@ class MessageFragment : TopFragment(), ControllableFragment {
                         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
                     )
 
-                    // Tab 栏 (使用最标准的 TabRow 和自带的指示器)
-                    TabRow(
+                    // Tab 栏 (完美复刻“我的帖子”的 ScrollableTabRow)
+                    ScrollableTabRow(
                         selectedTabIndex = selectedTab,
+                        edgePadding = 16.dp,
                         containerColor = Color.White,
                         contentColor = Color(0xFFE53935),
-                        divider = { HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp) }
+                        divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) },
+                        indicator = { tabPositions ->
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier
+                                    .tabIndicatorOffset(tabPositions[selectedTab])
+                                    .fillMaxWidth(),
+                                height = 3.dp,
+                                color = Color(0xFFE53935) // 使用与你主题一致的红色
+                            )
+                        }
                     ) {
                         Tab(
                             selected = selectedTab == 0,
                             onClick = { selectedTab = 0 },
-                            text = { Text("通知", fontWeight = if (selectedTab == 0) FontWeight.Medium else FontWeight.Normal, color = if (selectedTab == 0) Color(0xFFE53935) else Color.Gray) }
+                            text = { 
+                                Text(
+                                    text = "通知",
+                                    fontSize = 15.sp,
+                                    color = if (selectedTab == 0) Color(0xFFE53935) else Color(0xFF888888),
+                                    fontWeight = if (selectedTab == 0) FontWeight.Medium else FontWeight.Normal
+                                ) 
+                            }
                         )
                         Tab(
                             selected = selectedTab == 1,
                             onClick = { selectedTab = 1 },
-                            text = { Text("私信", fontWeight = if (selectedTab == 1) FontWeight.Medium else FontWeight.Normal, color = if (selectedTab == 1) Color(0xFFE53935) else Color.Gray) }
+                            text = { 
+                                Text(
+                                    text = "私信",
+                                    fontSize = 15.sp,
+                                    color = if (selectedTab == 1) Color(0xFFE53935) else Color(0xFF888888),
+                                    fontWeight = if (selectedTab == 1) FontWeight.Medium else FontWeight.Normal
+                                ) 
+                            }
                         )
                     }
 
