@@ -1,26 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/white">
+    android:background="@color/slight_light_gray">
 
-    <!-- 固定高度 48dp，移除所有的 tabTextAppearance，颜色在代码中强制指定 -->
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/message_tab"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="@color/white"
-        app:tabIndicatorColor="#E53935"
-        app:tabIndicatorHeight="3dp"
-        app:tabMode="fixed" />
+        android:layout_height="wrap_content"
+        android:background="@color/slight_light_gray"
+        android:elevation="0dp"
+        app:elevation="0dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            style="@style/Toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/slight_light_gray"
+            app:contentInsetStart="0dp"
+            app:contentInsetStartWithNavigation="0dp"
+            app:navigationIcon="?attr/homeAsUpIndicator"
+            app:title="我的信息"
+            app:titleTextColor="@color/black" />
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/message_tab"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@color/slight_light_gray"
+            app:tabIndicatorColor="@color/colorAccent"
+            app:tabIndicatorHeight="3dp"
+            app:tabMode="fixed"
+            app:tabTextColor="@color/gray"
+            app:tabSelectedTextColor="@color/colorAccent" />
+    </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/message_view_pager"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-</LinearLayout>
+        android:layout_height="match_parent"
+        android:background="@color/slight_light_gray"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

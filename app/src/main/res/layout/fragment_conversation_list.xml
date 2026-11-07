@@ -10,7 +10,7 @@
     android:focusable="true"
     android:clickable="true"
     android:gravity="center"
-    android:background="@color/white">
+    android:background="@color/slight_light_gray">
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/conversation_swipe_refresh"
         android:layout_width="match_parent"

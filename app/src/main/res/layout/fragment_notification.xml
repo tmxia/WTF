@@ -12,7 +12,7 @@
     android:focusable="true"
     android:clickable="true"
     android:gravity="center"
-    android:background="@color/white">
+    android:background="@color/slight_light_gray">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/notification_swipe_refresh"
@@ -22,7 +22,9 @@
             android:padding="@dimen/dp_3"
             android:id="@+id/notification_recycler_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="80dp" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <com.airbnb.lottie.LottieAnimationView

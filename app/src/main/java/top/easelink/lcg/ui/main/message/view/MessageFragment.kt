@@ -13,6 +13,7 @@ import top.easelink.lcg.R
 import top.easelink.lcg.account.AccountManager
 import top.easelink.lcg.databinding.FragmentMessageBinding
 import top.easelink.lcg.ui.main.login.view.LoginHintFragment
+import top.easelink.lcg.utils.setStatusBarPadding
 
 class MessageFragment : TopFragment(), ControllableFragment {
 
@@ -32,7 +33,13 @@ class MessageFragment : TopFragment(), ControllableFragment {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
+        // 核心适配 1：像“我的帖子”一样处理沉浸式状态栏
+        binding.toolbar.setStatusBarPadding()
+        binding.toolbar.setNavigationOnClickListener {
+            requireActivity().onBackPressedDispatcher.onBackPressed()
+        }
+
         AccountManager.isLoggedIn.observe(viewLifecycleOwner) { isLoggedIn ->
             if (isLoggedIn) {
                 val loginHintFragment = childFragmentManager.findFragmentByTag(LoginHintFragment::class.java.simpleName)
@@ -43,7 +50,7 @@ class MessageFragment : TopFragment(), ControllableFragment {
                 binding.messageTab.visibility = View.VISIBLE
                 binding.messageViewPager.visibility = View.VISIBLE
 
-                // 核心修复：在代码层强制设置文字颜色，无视一切主题
+                // 强制文字颜色
                 binding.messageTab.setTabTextColors(Color.parseColor("#666666"), Color.parseColor("#000000"))
                 binding.messageTab.setSelectedTabIndicatorColor(Color.parseColor("#E53935"))
 
