@@ -293,24 +293,13 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         processThreadList: Boolean
     ): ForumPage? {
         try {
-            // 1. 核心选择器：优先使用首页最标准的 tbody
+            // 完全复用首页的选择器，并兼容部分分类页的 normalthread 结构
             var elements = doc.select("tbody[id^=normal]")
-            
-            // 2. 兼容部分分类页特有的 normalthread
             if (elements.isEmpty()) {
                 elements = doc.select("tbody[id^=normalthread]")
             }
 
-            // 3. 极限兜底：如果连 tbody 都没有，抓取包含 a.xst 的 table，但过滤掉置顶
-            if (elements.isEmpty()) {
-                elements = Elements()
-                doc.select("tbody:has(a.xst)").forEach { el ->
-                    if (!el.outerHtml().contains("stickthread_")) {
-                        elements.add(el)
-                    }
-                }
-            }
-
+            // 如果啥都没有，说明可能没帖子或掉登录
             if (elements.isEmpty()) {
                 val loginElement = doc.getElementById("messagelogin")
                 if (loginElement != null && loginElement.text().contains("登录")) {
@@ -319,51 +308,43 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                 return ForumPage(emptyList(), emptyList())
             }
 
-            val articleList: List<Article> = elements.mapNotNull { element ->
+            val articleList: List<Article> = elements.mapNotNull { e ->
                 try {
-                    // ================= 核心：直接抄首页的精准校验 =================
-                    // 如果 td.num 里没东西，直接判定为非帖子行，抛弃！
-                    val replyStr = extractFrom(element, "td.num", "a.xi2")
-                    val viewStr = extractFrom(element, "td.num", "em")
+                    // === 直接抄首页的完美校验逻辑 ===
+                    val reply = extractFrom(e, "td.num", "a.xi2")
+                        .ifBlank { "0" }
+                        .filter { it.isDigit() }
+                        .toIntOrNull() ?: 0
+                        
+                    val view = extractFrom(e, "td.num", "em")
+                        .ifBlank { "0" }
+                        .filter { it.isDigit() }
+                        .toIntOrNull() ?: 0
+                        
+                    // 兼容 th.common（首页）和 th.new（分类页）
+                    val title = e.selectFirst("th.common > .xst")?.text().orEmpty()
+                        .ifBlank { e.selectFirst("th.new > .xst")?.text().orEmpty() }
+                        .ifBlank { e.selectFirst("a.xst")?.text().orEmpty() }
+                        
+                    val author = extractFrom(e, "td.by", "a[href*=uid]")
+                        .ifBlank { "匿名" } // 极端情况下没作者也不抛弃
+                        
+                    val date = extractFrom(e, "td.by", "span")
                     
-                    var reply = 0
-                    var view = 0
+                    val url = extractAttrFrom(e, "href", "th.common", "a.xst")
+                        .ifBlank { extractAttrFrom(e, "href", "th.new", "a.xst") }
+                        .ifBlank { e.selectFirst("a.xst")?.attr("href").orEmpty() }
+                        
+                    val origin = e.selectFirst("td.by > a[target]")?.text().orEmpty()
                     
-                    if (replyStr.isNotBlank()) reply = replyStr.toIntOrNull() ?: 0
-                    if (viewStr.isNotBlank()) view = viewStr.toIntOrNull() ?: 0
-                    
-                    // 如果精准提取失败（比如分类页结构变了），用正则从 td.num 里硬抠数字
-                    if (reply == 0 || view == 0) {
-                        val numTd = element.selectFirst("td.num")
-                        if (numTd != null) {
-                            val numbers = Regex("""\d+""").findAll(numTd.text()).map { it.value.toInt() }.toList()
-                            if (numbers.isNotEmpty()) {
-                                reply = numbers.getOrNull(0) ?: 0
-                                view = numbers.getOrNull(1) ?: 0
-                            }
-                        } else {
-                            // 连 td.num 都没有，绝对是误抓的（比如公告框），直接跳过
-                            return@mapNotNull null
-                        }
-                    }
-                    
-                    val title = extractFrom(element, "th.new", ".xst").let {
-                        it.ifBlank { extractFrom(element, "th.common", ".xst") }
-                    }
-                    val author = extractFrom(element, "td.by", "a[href*=uid]")
-                    val date = extractFrom(element, "td.by", "span")
-                    val url = extractAttrFrom(element, "href", "th.new", "a.xst").let {
-                        it.ifBlank { extractAttrFrom(element, "href", "th.common", "a.xst") }
-                    }
-                    val origin = extractFrom(element, "td.by", "a[target]")
-                    
-                    if (!TextUtils.isEmpty(title) && !TextUtils.isEmpty(author)) {
+                    // 只要标题和 URL 存在，就当做有效帖子
+                    if (title.isNotBlank() && url.isNotBlank()) {
                         Article(title, author, date, url, view, reply, origin)
                     } else {
                         null
                     }
-                } catch (e: Exception) {
-                    Timber.e(e)
+                } catch (ex: Exception) {
+                    Timber.e(ex)
                     null
                 }
             }
@@ -372,6 +353,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                 return ForumPage(emptyList(), emptyList())
             }
 
+            // 解析子版块 Tab
             var threadList: List<ForumThread>? = null
             if (processThreadList) {
                 doc.getElementById("thread_types")?.let { threadTypes ->
