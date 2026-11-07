@@ -1,45 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  阅读记录页：
-  - 顶部用真正的 MaterialToolbar 替代原来"光秃秃的清空按钮浮在 FrameLayout 里"
-  - 标题"阅读记录" + 右侧菜单"全部删除"图标
-  - 背景统一为 slight_light_gray，让卡片视觉浮起
--->
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/clRootView"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-        android:clipToPadding="false"
     android:layout_height="match_parent"
-    android:background="@color/slight_light_gray">
-
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        style="@style/Toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize"
-        app:title="@string/ic_history"
-        app:titleTextAppearance="@style/Toolbar.TitleText"
-        app:titleTextColor="@color/black"
-        android:background="@color/slight_light_gray"
-        app:menu="@menu/history_articles"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="@dimen/dp_8"
-        android:clipToPadding="false"
-        android:background="@color/slight_light_gray"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintBottom_toBottomOf="parent"
-        tools:visibility="visible" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    android:background="@color/slight_light_gray" />

@@ -1,65 +1,111 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
 package top.easelink.lcg.ui.main.follow.view
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.framework.topbase.TopFragment
-import top.easelink.lcg.R
-import top.easelink.lcg.databinding.FragmentFollowBinding
-import top.easelink.lcg.utils.setStatusBarPadding
 
 class FollowFragment : TopFragment(), ControllableFragment {
 
-    private var _binding: FragmentFollowBinding? = null
-    private val binding get() = _binding!!
-    private lateinit var tabMediator: TabLayoutMediator
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentFollowBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+    private var pager: ViewPager2? = null
+    private var tabLayout: TabLayout? = null
 
     override fun isControllable(): Boolean = true
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        binding.followViewPager.adapter = FollowViewPagerAdapter(
-            requireActivity(),
-            requireContext()
-        ).apply {
-            binding.followViewPager.offscreenPageLimit = 1
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        return ComposeView(requireContext()).apply {
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
-
-        tabMediator = TabLayoutMediator(
-            binding.followTab,
-            binding.followViewPager
-        ) { tab, position ->
-            tab.text = when (position) {
-                0 -> getString(R.string.tab_title_following_feed)
-                1 -> getString(R.string.tab_title_following)
-                2 -> getString(R.string.tab_title_subscriber)
-                else -> ""
-            }
-        }.apply { attach() }
-
-        binding.followViewPager.registerOnPageChangeCallback(object : androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                (activity as? top.easelink.lcg.ui.main.MainActivity)?.showBottomNavigation()
-            }
-        })
     }
 
-    override fun onDestroyView() {
-        tabMediator.detach()
-        _binding = null
-        super.onDestroyView()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        
+        (view as ComposeView).setContent {
+            var selectedTab by remember { mutableIntStateOf(0) }
+
+            Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
+                Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
+                    TopAppBar(
+                        title = { Text("我的收听", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black) },
+                        navigationIcon = {
+                            IconButton(onClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }) {
+                                Icon(Icons.Filled.ArrowBack, contentDescription = "返回", tint = Color.Black)
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
+                        windowInsets = WindowInsets(0, 0, 0, 0)
+                    )
+                    
+                    ScrollableTabRow(
+                        selectedTabIndex = selectedTab,
+                        edgePadding = 16.dp,
+                        containerColor = Color.White,
+                        contentColor = Color(0xFFE53935),
+                        divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) },
+                        indicator = { tabPositions ->
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]).fillMaxWidth(),
+                                height = 3.dp, color = Color(0xFFE53935)
+                            )
+                        }
+                    ) {
+                        Tab(
+                            selected = selectedTab == 0,
+                            onClick = { selectedTab = 0; pager?.setCurrentItem(0, true) },
+                            text = { Text("广播动态", fontSize = 15.sp, color = if (selectedTab == 0) Color(0xFFE53935) else Color(0xFF888888), fontWeight = if (selectedTab == 0) FontWeight.Medium else FontWeight.Normal) }
+                        )
+                        Tab(
+                            selected = selectedTab == 1,
+                            onClick = { selectedTab = 1; pager?.setCurrentItem(1, true) },
+                            text = { Text("我的收听", fontSize = 15.sp, color = if (selectedTab == 1) Color(0xFFE53935) else Color(0xFF888888), fontWeight = if (selectedTab == 1) FontWeight.Medium else FontWeight.Normal) }
+                        )
+                        Tab(
+                            selected = selectedTab == 2,
+                            onClick = { selectedTab = 2; pager?.setCurrentItem(2, true) },
+                            text = { Text("我的听众", fontSize = 15.sp, color = if (selectedTab == 2) Color(0xFFE53935) else Color(0xFF888888), fontWeight = if (selectedTab == 2) FontWeight.Medium else FontWeight.Normal) }
+                        )
+                    }
+                }
+                
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { context ->
+                        ViewPager2(context).apply {
+                            adapter = FollowPagerAdapter(childFragmentManager, lifecycle)
+                            pager = this
+                            registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+                                override fun onPageSelected(position: Int) {
+                                    selectedTab = position
+                                }
+                            })
+                        }
+                    }
+                )
+            }
+        }
     }
 }
