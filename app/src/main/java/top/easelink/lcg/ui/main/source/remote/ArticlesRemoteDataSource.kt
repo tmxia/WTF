@@ -303,7 +303,12 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
 
             // 3. 极限兜底：如果连 tbody 都没有，抓取包含 a.xst 的 table，但过滤掉置顶
             if (elements.isEmpty()) {
-                elements = doc.select("tbody:has(a.xst)").filter { !it.outerHtml().contains("stickthread_") }
+                elements = Elements()
+                doc.select("tbody:has(a.xst)").forEach { el ->
+                    if (!el.outerHtml().contains("stickthread_")) {
+                        elements.add(el)
+                    }
+                }
             }
 
             if (elements.isEmpty()) {
