@@ -144,36 +144,27 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
             return@LaunchedEffect
         }
 
-        val sp = SharedPreferencesHelper.getUserSp()
-        val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)
-        val todayStart = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-
-        if (lastTime >= todayStart) {
+        // 核心修复 1：直接判断接口返回的签到状态！不再盲目发签到请求触发风控
+        val isSignedInFromApi = !userInfo?.signInStateUrl.isNullOrBlank()
+        
+        if (isSignedInFromApi) {
             signInText = "✅ 已签到"
             signInColor = Color(0xFF4CAF50)
-        } else {
-            // 核心修复：无论是否开启自动签到，只要本地没记录，就静默请求一次服务器验证状态（对齐网页端已签到状态）
-            if (!isSigningIn) {
-                isSigningIn = true
-                signInText = "同步中..."
-                signInColor = Color(0xFFE53935)
-                
-                SignInManager.performSignIn { status, msg ->
-                    isSigningIn = false
-                    if (status == "SUCCESS" || status == "ALREADY_DONE") {
-                        // 关键修复：同步成功必须记录本地时间戳，下次进页面直接命中缓存
-                        val newSp = SharedPreferencesHelper.getUserSp()
-                        newSp.edit().putLong("sp_key_last_sign_in_at", System.currentTimeMillis()).apply()
-                        signInText = "✅ 已签到"
-                        signInColor = Color(0xFF4CAF50)
-                    } else {
-                        signInText = "🔥 未签到，点我"
-                        signInColor = Color(0xFFE53935)
-                    }
-                }
+            
+            // 如果接口显示已签到，但本地没有记录，顺手补全本地时间戳（为了防重复触发）
+            val sp = SharedPreferencesHelper.getUserSp()
+            val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)
+            val todayStart = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            
+            if (lastTime < todayStart) {
+                sp.edit().putLong("sp_key_last_sign_in_at", System.currentTimeMillis()).apply()
             }
+        } else {
+            // 本地没记录，接口也明确显示未签到
+            signInText = "🔥 未签到，点我"
+            signInColor = Color(0xFFE53935)
         }
     }
 
