@@ -454,6 +454,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         currentTabId = item.itemId
 
         return when (item.itemId) {
+            R.id.action_search -> { showFragment(SearchFragment::class.java) }
             R.id.action_message -> {
                 binding.bottomNavigation.removeBadge(R.id.action_message)
                 showFragment(MessageFragment::class.java)
