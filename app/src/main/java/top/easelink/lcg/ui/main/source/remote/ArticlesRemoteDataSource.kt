@@ -293,63 +293,76 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         processThreadList: Boolean
     ): ForumPage? {
         try {
-            // 核心修复：彻底抛弃 normalthread 这种死板的 id，直接找页面上所有带 .xst 的 tr 或 tbody
-            var elements = doc.select("tbody:has(a.xst)")
+            // 1. 核心选择器：优先使用首页最标准的 tbody
+            var elements = doc.select("tbody[id^=normal]")
+            
+            // 2. 兼容部分分类页特有的 normalthread
             if (elements.isEmpty()) {
-                elements = doc.select("tr:has(a.xst)")
-            }
-            if (elements.isEmpty()) {
-                elements = doc.select("table:has(a.xst)")
+                elements = doc.select("tbody[id^=normalthread]")
             }
 
-            // 如果连 a.xst 都没有，说明可能被拦截了，或者真的没帖子
+            // 3. 极限兜底：如果连 tbody 都没有，抓取包含 a.xst 的 table，但过滤掉置顶
+            if (elements.isEmpty()) {
+                elements = doc.select("tbody:has(a.xst)").filter { !it.outerHtml().contains("stickthread_") }
+            }
+
             if (elements.isEmpty()) {
                 val loginElement = doc.getElementById("messagelogin")
                 if (loginElement != null && loginElement.text().contains("登录")) {
                     throw LoginRequiredException()
                 }
-                // 返回空列表，防止死循环
                 return ForumPage(emptyList(), emptyList())
             }
 
             val articleList: List<Article> = elements.mapNotNull { element ->
-                var article: Article? = null
                 try {
-                    // 核心修复：过滤掉置顶公告。如果当前节点包含 stickthread 特征，直接抛弃
-                    val outerHtml = element.outerHtml()
-                    if (outerHtml.contains("stickthread_") || outerHtml.contains("class=\"stickthread\"")) {
-                        return@mapNotNull null
-                    }
-
-                    // 核心修复：必须在 td.num 这个数据列里提取，防止抓到作者名字
-                    val replyStr = element.selectFirst("td.num a.xi2")?.text() ?: 
-                                   element.select("a.xi2").map { it.text() }.firstOrNull { it.toIntOrNull() != null } ?: "0"
-                    val viewStr = element.selectFirst("td.num em")?.text() ?: 
-                                  element.select("em").map { it.text() }.firstOrNull { it.toIntOrNull() != null } ?: "0"
-                                  
-                    val reply = replyStr.toIntOrNull() ?: 0
-                    val view = viewStr.toIntOrNull() ?: 0
+                    // ================= 核心：直接抄首页的精准校验 =================
+                    // 如果 td.num 里没东西，直接判定为非帖子行，抛弃！
+                    val replyStr = extractFrom(element, "td.num", "a.xi2")
+                    val viewStr = extractFrom(element, "td.num", "em")
                     
-                    // 无死角提取标题和链接
-                    val xstNode = element.selectFirst("a.xst")
-                    val title = xstNode?.text().orEmpty()
-                    val url = xstNode?.attr("href").orEmpty()
-
-                    val author = element.selectFirst("a[href*=uid]")?.text().orEmpty()
-                    val date = element.selectFirst("span")?.text().orEmpty()
-                    val origin = element.selectFirst("a[target]")?.text().orEmpty()
-
-                    // 核心：不再强求 author 非空，只要标题和 URL 有，就是有效帖子！
-                    if (title.isNotBlank() && url.isNotBlank()) {
-                        article = Article(title, author, date, url, view, reply, origin)
+                    var reply = 0
+                    var view = 0
+                    
+                    if (replyStr.isNotBlank()) reply = replyStr.toIntOrNull() ?: 0
+                    if (viewStr.isNotBlank()) view = viewStr.toIntOrNull() ?: 0
+                    
+                    // 如果精准提取失败（比如分类页结构变了），用正则从 td.num 里硬抠数字
+                    if (reply == 0 || view == 0) {
+                        val numTd = element.selectFirst("td.num")
+                        if (numTd != null) {
+                            val numbers = Regex("""\d+""").findAll(numTd.text()).map { it.value.toInt() }.toList()
+                            if (numbers.isNotEmpty()) {
+                                reply = numbers.getOrNull(0) ?: 0
+                                view = numbers.getOrNull(1) ?: 0
+                            }
+                        } else {
+                            // 连 td.num 都没有，绝对是误抓的（比如公告框），直接跳过
+                            return@mapNotNull null
+                        }
+                    }
+                    
+                    val title = extractFrom(element, "th.new", ".xst").let {
+                        it.ifBlank { extractFrom(element, "th.common", ".xst") }
+                    }
+                    val author = extractFrom(element, "td.by", "a[href*=uid]")
+                    val date = extractFrom(element, "td.by", "span")
+                    val url = extractAttrFrom(element, "href", "th.new", "a.xst").let {
+                        it.ifBlank { extractAttrFrom(element, "href", "th.common", "a.xst") }
+                    }
+                    val origin = extractFrom(element, "td.by", "a[target]")
+                    
+                    if (!TextUtils.isEmpty(title) && !TextUtils.isEmpty(author)) {
+                        Article(title, author, date, url, view, reply, origin)
+                    } else {
+                        null
                     }
                 } catch (e: Exception) {
                     Timber.e(e)
+                    null
                 }
-                article
             }
 
-            // 核心修复：如果抓出来的列表是空的，直接返回空，强行斩断无限拉取
             if (articleList.isEmpty()) {
                 return ForumPage(emptyList(), emptyList())
             }
