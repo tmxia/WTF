@@ -7,40 +7,36 @@ import timber.log.Timber
 
 object ForumNetworkSource {
 
-    /**
-     * 使用 Jsoup 从论坛首页抓取全量主/子版块
-     */
     fun fetchAllForumsFromApi(): List<ForumNavigationModel> {
         val list = mutableListOf<ForumNavigationModel>()
         try {
-            Timber.d("【板块API】开始请求 forum.php 抓取板块结构...")
-            // 请求版块导航页
+            Timber.d("【板块API】开始请求 forum.php...")
+            // 请求 52pojie 版块列表页
             val doc = JsoupClient.sendGetRequestWithUrl("https://www.52pojie.cn/forum.php")
             
+            // 打印页面标题，如果被 WAF 拦截，标题通常不是“吾爱破解”
             Timber.d("【板块API】请求成功，页面标题: ${doc.title()}")
             
-            // 传统的 Discuz! 结构通常把主版块和子版块放在 <dl> 标签里
+            // 先尝试利用 Discuz! 的 <dl> 结构解析
             val dls = doc.select("dl")
-            Timber.d("【板块API】页面共找到 ${dls.size} 个 <dl> 节点")
-            
+            Timber.d("【板块API】找到 ${dls.size} 个 <dl> 节点")
+
             for (dl in dls) {
-                // 主版块解析
                 val mainLink = dl.selectFirst("dt a")
                 val mainTitle = mainLink?.text()
-                val mainUrl = mainLink?.attr("href")
-                
+                var mainUrl = mainLink?.attr("href")
+
                 if (!mainTitle.isNullOrBlank() && !mainUrl.isNullOrBlank()) {
                     list.add(
                         ForumNavigationModel(
                             title = mainTitle,
-                            drawableRes = R.drawable.ic_software, // 默认图标
+                            drawableRes = R.drawable.ic_software,
                             url = mainUrl,
                             isSubForum = false
                         )
                     )
                 }
 
-                // 子版块解析 (在 <dd> 标签内)
                 val dd = dl.selectFirst("dd")
                 if (dd != null) {
                     val subLinks = dd.select("a")
@@ -61,23 +57,37 @@ object ForumNetworkSource {
                     }
                 }
             }
-            
-            // 如果 dl 抓不到，尝试抓取更宽泛的板块链接
+
+            // 如果 <dl> 结构没抓全，进行保底暴力提取所有 forum-xxx-1.html 的链接
             if (list.isEmpty()) {
-                Timber.w("【板块API】未从 <dl> 解析到数据，尝试通过 href 特征兜底匹配...")
-                val links = doc.select("a[href^=forum-][href$=-1.html]")
+                Timber.w("【板块API】<dl> 解析为空，启动兜底正则提取...")
+                val links = doc.select("a")
+                val uniqueUrls = mutableSetOf<String>()
+                
                 for (link in links) {
-                    val title = link.text()
-                    val url = link.attr("href")
-                    if (title.isNotBlank() && url.isNotBlank()) {
-                        list.add(ForumNavigationModel(title, R.drawable.ic_software, url, false))
+                    val title = link.text().trim()
+                    val url = link.attr("href").trim()
+                    
+                    // 52pojie 版块链接格式通常是 forum-xx-1.html
+                    if (url.matches(Regex("forum-\\d+-1\\.html")) && title.isNotEmpty() && title.length < 15) {
+                        if (uniqueUrls.add(url)) {
+                            list.add(
+                                ForumNavigationModel(
+                                    title = title,
+                                    drawableRes = R.drawable.ic_software,
+                                    url = url,
+                                    isSubForum = false
+                                )
+                            )
+                        }
                     }
                 }
+                Timber.d("【板块API】兜底提取到 ${list.size} 个板块")
             }
-            
-            Timber.d("【板块API】解析完成，共获取到 ${list.size} 个有效板块")
+
+            Timber.d("【板块API】解析完成，最终共计 ${list.size} 个板块")
         } catch (e: Exception) {
-            Timber.e(e, "【板块API】抓取板块发生异常，将降级使用本地写死数据")
+            Timber.e(e, "【板块API】请求或解析异常")
         }
         return list
     }

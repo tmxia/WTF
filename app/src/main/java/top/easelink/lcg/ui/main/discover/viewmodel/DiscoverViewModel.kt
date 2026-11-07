@@ -13,6 +13,7 @@ import top.easelink.lcg.ui.main.discover.model.DiscoverModel
 import top.easelink.lcg.ui.main.discover.model.ForumListModel
 import top.easelink.lcg.ui.main.discover.model.generateAllForums
 import top.easelink.lcg.ui.main.discover.source.DateType
+import top.easelink.lcg.ui.main.discover.source.ForumNetworkSource
 import top.easelink.lcg.ui.main.discover.source.RankType
 import top.easelink.lcg.ui.main.discover.source.fetchRank
 import top.easelink.lcg.utils.showMessage
@@ -30,28 +31,37 @@ class DiscoverViewModel : ViewModel() {
     @MainThread
     fun refreshOptions(context: Context) {
         isLoading.value = true
-        Timber.d("【发现页】开始刷新热榜数据...")
-        
+        Timber.d("【发现页】开始刷新热榜与板块数据...")
         viewModelScope.launch(IOPool) {
             runCatching {
-                fetchRank(RankType.HEAT, DateType.TODAY).let { ranks ->
-                    // 打印日志，确认数据是否真的拿到了
-                    Timber.d("【发现页】热榜请求成功，获取到 ${ranks.listModel.size} 条热榜")
-                    
-                    // 核心优化：数据拉取成功后，再组装新列表并更新 UI，避免刷新时先清空旧数据导致闪烁
-                    val newList = mutableListOf<DiscoverModel>()
+                // 1. 尝试请求实时板块 API
+                Timber.d("【发现页】开始拉取板块数据...")
+                val apiForums = ForumNetworkSource.fetchAllForumsFromApi()
+                
+                // 2. 拉取热榜数据
+                val ranks = fetchRank(RankType.HEAT, DateType.TODAY)
+                Timber.d("【发现页】热榜请求成功，获取到 ${ranks.listModel.size} 条热榜")
+
+                // 3. 组装数据
+                val newList = mutableListOf<DiscoverModel>()
+                if (apiForums.isNotEmpty()) {
+                    Timber.d("【发现页】使用 API 返回的 ${apiForums.size} 个板块")
+                    newList.add(ForumListModel(apiForums))
+                } else {
+                    Timber.w("【发现页】API 未返回数据，降级使用本地写死的板块")
                     newList.add(ForumListModel(generateAllForums(context)))
-                    newList.add(ranks)
-                    aggregationModels.postValue(newList.toMutableList())
                 }
+                newList.add(ranks)
+                
+                aggregationModels.postValue(newList.toMutableList())
             }.getOrElse {
-                Timber.e(it, "【发现页】热榜请求异常")
+                Timber.e(it, "【发现页】数据拉取异常")
                 when (it) {
                     is SocketTimeoutException -> showMessage(R.string.network_error)
                     else -> showMessage(R.string.error)
                 }
             }.also {
-                // 核心修复：强制转圈动画至少执行 800 毫秒，给用户明确的刷新反馈
+                // 保证转圈动画至少执行 800 毫秒
                 kotlinx.coroutines.delay(800)
                 isLoading.postValue(false)
             }
