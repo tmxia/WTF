@@ -1,7 +1,7 @@
 package top.easelink.lcg.ui.main.discover.view
 
+import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
-import timber.log.Timber
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -12,18 +12,22 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import timber.log.Timber
 import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.discover.model.DiscoverModel
 import top.easelink.lcg.ui.main.discover.model.ForumListModel
@@ -41,13 +45,26 @@ fun DiscoverScreenCompose(
     onRefresh: () -> Unit,
     isLoading: Boolean = false
 ) {
+    val context = LocalContext.current
     val forumModel = models.filterIsInstance<ForumListModel>().firstOrNull()
     val rankModels = models.filterIsInstance<RankListModel>().flatMap { it.listModel }
+    val allForums = forumModel?.forumList ?: emptyList()
 
-    // 核心探针：只要界面重组，就打印当前第一条数据的状态
     if (rankModels.isNotEmpty()) {
         Timber.d("【发现页-UI】界面刷新，第一条热榜: ${rankModels.first().title} (热度: ${rankModels.first().num})")
     }
+
+    // 自定义板块状态管理
+    val prefs = remember { context.getSharedPreferences("forum_customize", Context.MODE_PRIVATE) }
+    var displayUrls by remember { mutableStateOf(loadSavedUrls(prefs, allForums)) }
+    var showCustomizeDialog by remember { mutableStateOf(false) }
+
+    // 当 allForums 发生变化时（如刷新），重新同步展示列表
+    LaunchedEffect(allForums) {
+        displayUrls = loadSavedUrls(prefs, allForums)
+    }
+
+    val displayedForums = displayUrls.mapNotNull { url -> allForums.find { it.url == url } }
 
     Column(
         modifier = Modifier
@@ -55,9 +72,14 @@ fun DiscoverScreenCompose(
             .background(Color(0xFFF5F5F5))
             .padding(top = 12.dp)
     ) {
-        if (forumModel != null) {
+        if (forumModel != null && displayedForums.isNotEmpty()) {
             Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-                ForumNavigationSection(forumModel, onForumClick, onMoreForumsClick)
+                ForumNavigationSection(
+                    forums = displayedForums,
+                    onForumClick = onForumClick,
+                    onMoreClick = onMoreForumsClick,
+                    onLongClick = { showCustomizeDialog = true } // 触发长按定制
+                )
             }
         }
 
@@ -114,19 +136,50 @@ fun DiscoverScreenCompose(
             }
         }
     }
+
+    // 定制弹窗
+    if (showCustomizeDialog) {
+        ForumCustomizeDialog(
+            allForums = allForums,
+            currentUrls = displayUrls,
+            onDismiss = { showCustomizeDialog = false },
+            onSave = { newUrls ->
+                displayUrls = newUrls
+                prefs.edit().putString("forum_urls", newUrls.joinToString(",")).apply()
+                showCustomizeDialog = false
+            }
+        )
+    }
 }
 
+// 读取已保存的配置，如果没有则默认取前8个
+private fun loadSavedUrls(prefs: android.content.SharedPreferences, allForums: List<top.easelink.lcg.ui.main.discover.model.ForumModel>): List<String> {
+    val saved = prefs.getString("forum_urls", null)
+    if (saved != null) {
+        return saved.split(",").filter { it.isNotBlank() }
+    }
+    return allForums.take(8).map { it.url }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ForumNavigationSection(
-    model: ForumListModel,
+    forums: List<top.easelink.lcg.ui.main.discover.model.ForumModel>,
     onForumClick: (String, String) -> Unit,
-    onMoreClick: () -> Unit
+    onMoreClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .combinedClickable(
+                onClick = { }, // 点击卡片本身不做事，点击里面的具体项才跳转
+                onLongClick = onLongClick
+            )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -141,10 +194,14 @@ fun ForumNavigationSection(
             Spacer(modifier = Modifier.height(16.dp))
 
             LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                items(model.forumList.take(8)) { forum ->
+                items(forums, key = { it.url }) { forum ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.width(56.dp).clickable { onForumClick(forum.title, forum.url) }
+                        modifier = Modifier
+                            .width(56.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onForumClick(forum.title, forum.url) }
+                            .padding(vertical = 4.dp)
                     ) {
                         Icon(painterResource(id = forum.drawableRes), forum.title, tint = Color.Unspecified, modifier = Modifier.size(40.dp))
                         Spacer(modifier = Modifier.height(8.dp))
@@ -154,7 +211,11 @@ fun ForumNavigationSection(
                 item {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.width(56.dp).clickable { onMoreClick() }
+                        modifier = Modifier
+                            .width(56.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onMoreClick() }
+                            .padding(vertical = 4.dp)
                     ) {
                         Icon(painterResource(id = R.drawable.ic_more), "更多", tint = Color(0xFF999999), modifier = Modifier.size(40.dp))
                         Spacer(modifier = Modifier.height(8.dp))
@@ -164,6 +225,92 @@ fun ForumNavigationSection(
             }
         }
     }
+}
+
+@Composable
+fun ForumCustomizeDialog(
+    allForums: List<top.easelink.lcg.ui.main.discover.model.ForumModel>,
+    currentUrls: List<String>,
+    onDismiss: () -> Unit,
+    onSave: (List<String>) -> Unit
+) {
+    val selectedUrls = remember { mutableStateListOf<String>().apply { addAll(currentUrls) } }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("自定义常用板块", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text("已选 (长按上下图标排序)", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 8.dp))
+                LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+                    items(selectedUrls) { url ->
+                        val forum = allForums.find { it.url == url }
+                        if (forum != null) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                            ) {
+                                Checkbox(
+                                    checked = true,
+                                    onCheckedChange = { selectedUrls.remove(url) }
+                                )
+                                Text(forum.title, modifier = Modifier.weight(1f), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                IconButton(
+                                    onClick = {
+                                        val index = selectedUrls.indexOf(url)
+                                        if (index > 0) {
+                                            val tmp = selectedUrls[index]
+                                            selectedUrls[index] = selectedUrls[index - 1]
+                                            selectedUrls[index - 1] = tmp
+                                        }
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(Icons.Default.ArrowUpward, "上移", modifier = Modifier.size(18.dp), tint = Color.Gray)
+                                }
+                                IconButton(
+                                    onClick = {
+                                        val index = selectedUrls.indexOf(url)
+                                        if (index != -1 && index < selectedUrls.size - 1) {
+                                            val tmp = selectedUrls[index]
+                                            selectedUrls[index] = selectedUrls[index + 1]
+                                            selectedUrls[index + 1] = tmp
+                                        }
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(Icons.Default.ArrowDownward, "下移", modifier = Modifier.size(18.dp), tint = Color.Gray)
+                                }
+                            }
+                        }
+                    }
+                }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Text("未选", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 8.dp))
+                LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
+                    val unselected = allForums.filter { it.url !in selectedUrls }
+                    items(unselected) { forum ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                        ) {
+                            Checkbox(
+                                checked = false,
+                                onCheckedChange = { selectedUrls.add(forum.url) }
+                            )
+                            Text(forum.title, modifier = Modifier.weight(1f), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(selectedUrls.toList()) }) { Text("保存") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        }
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -195,9 +342,7 @@ fun RankItemCard(
             ) {
                 Text(rank.index.toString(), fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.White)
             }
-
             Spacer(modifier = Modifier.width(12.dp))
-
             Text(
                 text = rank.title,
                 fontSize = 15.sp,
@@ -207,9 +352,7 @@ fun RankItemCard(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
-
             Spacer(modifier = Modifier.width(12.dp))
-
             Text(
                 text = "热度: ${rank.num}",
                 fontSize = 13.sp,
