@@ -236,34 +236,28 @@ fun ForumCustomizeDialog(
     onSave: (List<String>) -> Unit
 ) {
     val selectedUrls = remember { mutableStateListOf<String>().apply { addAll(currentUrls) } }
+    val expandedGroups = remember { mutableStateMapOf<String, Boolean>() }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(16.dp),
         containerColor = Color(0xFFF5F5F5),
-        // 核心修复：去除系统自带的巨大边距
-        modifier = Modifier.padding(0.dp),
         title = { 
             Text(
                 "自定义常用板块", 
                 fontSize = 16.sp, 
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 4.dp)
             ) 
         },
         text = {
-            // 使用权重让两个列表平分空间，消灭上下空白
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 450.dp) 
-                    .padding(horizontal = 16.dp)
-            ) {
+            // 去掉 weight(1f)，改用 heightIn 让内容自适应并限制最大高度，消灭上下巨大留白
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text("已选板块", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 6.dp))
                 
                 LazyColumn(
                     modifier = Modifier
-                        .weight(1f) // 强行分配等分高度
+                        .heightIn(max = 200.dp) // 限制最大高度，内容少时自动收紧
                         .fillMaxWidth()
                 ) {
                     items(selectedUrls) { url ->
@@ -315,56 +309,106 @@ fun ForumCustomizeDialog(
                 
                 LazyColumn(
                     modifier = Modifier
-                        .weight(1f) // 强行分配等分高度
+                        .heightIn(max = 280.dp) // 限制最大高度
                         .fillMaxWidth()
                 ) {
                     val unselected = allForums.filter { it.url !in selectedUrls }
-                    
-                    items(unselected) { forum ->
+                    val mainForums = unselected.filter { !it.isSubForum }
+                    val subForums = unselected.filter { it.isSubForum }
+
+                    items(mainForums) { main ->
+                        val children = subForums.filter { it.parentTitle == main.title }
+                        val isExpanded = expandedGroups[main.title] == true
+
+                        Column {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color.White)
+                                    .clickable { 
+                                        // 点击整行：如果有子版块则切换折叠，否则直接添加
+                                        if (children.isNotEmpty()) {
+                                            expandedGroups[main.title] = !isExpanded
+                                        } else {
+                                            selectedUrls.add(main.url)
+                                        }
+                                    }
+                                    .padding(horizontal = 10.dp, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = "+ ${main.title}",
+                                    fontSize = 13.sp,
+                                    color = Color.DarkGray,
+                                    modifier = Modifier.weight(1f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                if (children.isNotEmpty()) {
+                                    Icon(
+                                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                        contentDescription = "折叠",
+                                        tint = Color.Gray,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            
+                            // 渲染子版块 (折叠状态下才显示)
+                            if (isExpanded) {
+                                children.forEach { child ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, top = 2.dp, bottom = 2.dp) // 层级缩进
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(Color(0xFFEEEEEE)) // 变色区分
+                                            .clickable { selectedUrls.add(child.url) }
+                                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(
+                                            text = "+ ${child.title}",
+                                            fontSize = 12.sp,
+                                            color = Color.Black, // 子版块文字颜色稍深一点
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+
+                    // 处理没有归属主版块的野子版块
+                    val orphanSubs = subForums.filter { sub -> mainForums.none { it.title == sub.parentTitle } }
+                    items(orphanSubs) { child ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(Color.White)
-                                .clickable { selectedUrls.add(forum.url) }
+                                .clickable { selectedUrls.add(child.url) }
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
-                                .padding(start = if (forum.isSubForum) 16.dp else 0.dp)
                         ) {
-                            Text(
-                                text = "+ ${forum.title}",
-                                fontSize = 13.sp,
-                                color = Color.DarkGray,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            Text(text = "+ ${child.title}", fontSize = 13.sp, color = Color.DarkGray)
                         }
                         Spacer(modifier = Modifier.height(4.dp))
-                    }
-                    
-                    if (unselected.isEmpty()) {
-                        item {
-                            Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                                Text("已加载全部可用板块", fontSize = 13.sp, color = Color.Gray)
-                            }
-                        }
                     }
                 }
             }
         },
         confirmButton = {
-            TextButton(
-                onClick = { onSave(selectedUrls.toList()) },
-                modifier = Modifier.padding(bottom = 8.dp, end = 8.dp)
-            ) { 
+            TextButton(onClick = { onSave(selectedUrls.toList()) }) { 
                 Text("保存", color = Color(0xFFE53935), fontWeight = FontWeight.Bold) 
             }
         },
         dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                modifier = Modifier.padding(bottom = 8.dp)
-            ) { Text("取消", color = Color.Gray) }
+            TextButton(onClick = onDismiss) { Text("取消", color = Color.Gray) }
         }
     )
 }
