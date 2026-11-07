@@ -2,6 +2,9 @@ package top.easelink.lcg.ui.main.message.view
 
 import android.graphics.Color
 import android.os.Bundle
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,6 +35,12 @@ class MessageFragment : TopFragment(), ControllableFragment {
     override fun isControllable(): Boolean = true
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // 核心修复：强制让 Toolbar 避开状态栏，防止被 MainActivity 的白色背景遮挡
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.toolbar.updatePadding(top = systemBars.top)
+            insets
+        }
         super.onViewCreated(view, savedInstanceState)
 
         // 核心适配 1：像“我的帖子”一样处理沉浸式状态栏
