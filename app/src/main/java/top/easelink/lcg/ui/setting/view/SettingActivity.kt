@@ -27,6 +27,7 @@ import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.topbase.TopActivity
 import top.easelink.lcg.R
 import top.easelink.lcg.account.UserDataRepo
+import androidx.lifecycle.lifecycleScope
 import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.databinding.ActivitySettingsBinding
 import top.easelink.lcg.network.LCGCookieJar
@@ -192,10 +193,14 @@ class SettingActivity : TopActivity() {
 
     private fun tryLocalCookieLoginFirst() {
         val cookies = LCGCookieJar.cookiesForUrl("https://www.52pojie.cn")
-        if (cookies.isEmpty()) { showLoginOptionsDialog(); return }
+        if (cookies.isEmpty()) {
+            showLoginOptionsDialog()
+            return
+        }
 
         showMessage("正在验证本地登录凭证...")
-        CoroutineScope(Dispatchers.IO).launch {
+        // 核心修复：使用 lifecycleScope 防止页面销毁后崩溃
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val userInfo = UserInfoRepo.requestUserInfo()
                 withContext(Dispatchers.Main) {
@@ -205,15 +210,15 @@ class SettingActivity : TopActivity() {
                         showMessage("本地登录成功！欢迎回来，${userInfo.userName}")
                         updateAccountButton(true)
                     } else {
-                        LCGCookieJar.clearAll()
+                        // 核心修复：验证失败时绝对不能 LCGCookieJar.clearAll()，否则会被风控误杀彻底掉线
                         showMessage("本地登录已失效，请重新登录")
                         showLoginOptionsDialog()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    showMessage("网络异常，无法验证本地凭证")
-                    showLoginOptionsDialog()
+                    // 网络异常也绝不清理本地 CK，只提示失败
+                    showMessage("网络异常，无法验证凭证")
                 }
             }
         }

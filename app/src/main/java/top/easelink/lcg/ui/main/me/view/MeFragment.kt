@@ -143,7 +143,7 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
             signInColor = Color(0xFF999999)
             return@LaunchedEffect
         }
-        
+
         val sp = SharedPreferencesHelper.getUserSp()
         val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)
         val todayStart = Calendar.getInstance().apply {
@@ -154,20 +154,23 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
             signInText = "✅ 已签到"
             signInColor = Color(0xFF4CAF50)
         } else {
-            signInText = "🔥 未签到，点我"
-            signInColor = Color(0xFFE53935)
-            
-            // 自动补签逻辑：如果跨天且在设置中开启了自动签到，这里直接触发静默补签
-            if (AppConfig.autoSignEnable && !isSigningIn) {
+            // 核心修复：无论是否开启自动签到，只要本地没记录，就静默请求一次服务器验证状态（对齐网页端已签到状态）
+            if (!isSigningIn) {
                 isSigningIn = true
-                signInText = "自动签到中..."
+                signInText = "同步中..."
+                signInColor = Color(0xFFE53935)
+                
                 SignInManager.performSignIn { status, msg ->
                     isSigningIn = false
                     if (status == "SUCCESS" || status == "ALREADY_DONE") {
+                        // 关键修复：同步成功必须记录本地时间戳，下次进页面直接命中缓存
+                        val newSp = SharedPreferencesHelper.getUserSp()
+                        newSp.edit().putLong("sp_key_last_sign_in_at", System.currentTimeMillis()).apply()
                         signInText = "✅ 已签到"
                         signInColor = Color(0xFF4CAF50)
                     } else {
                         signInText = "🔥 未签到，点我"
+                        signInColor = Color(0xFFE53935)
                     }
                 }
             }
