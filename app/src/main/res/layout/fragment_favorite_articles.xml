@@ -11,6 +11,7 @@
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:fitsSystemWindows="true"
         android:id="@+id/clRootView"
         android:background="@color/slight_light_gray"
         android:layout_width="match_parent"
