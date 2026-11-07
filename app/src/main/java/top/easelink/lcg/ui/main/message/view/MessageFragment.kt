@@ -13,8 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,14 +26,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
-import androidx.viewpager2.adapter.FragmentStateAdapter
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.framework.topbase.TopFragment
-import top.easelink.lcg.R
 import top.easelink.lcg.account.AccountManager
-import top.easelink.lcg.ui.main.login.view.LoginHintFragment
 import top.easelink.lcg.ui.main.message.viewmodel.ConversationListViewModel
 import top.easelink.lcg.ui.main.message.viewmodel.NotificationViewModel
 import top.easelink.lcg.ui.main.model.BaseNotification
@@ -43,6 +39,9 @@ import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 
 class MessageFragment : TopFragment(), ControllableFragment {
+
+    private lateinit var notificationViewModel: NotificationViewModel
+    private lateinit var conversationViewModel: ConversationListViewModel
 
     override fun isControllable(): Boolean = true
 
@@ -59,11 +58,12 @@ class MessageFragment : TopFragment(), ControllableFragment {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        val notificationViewModel = ViewModelProvider(this)[NotificationViewModel::class.java]
-        val conversationViewModel = ViewModelProvider(this)[ConversationListViewModel::class.java]
+        notificationViewModel = ViewModelProvider(this)[NotificationViewModel::class.java]
+        conversationViewModel = ViewModelProvider(this)[ConversationListViewModel::class.java]
         val context = requireContext()
 
         (view as ComposeView).setContent {
@@ -73,16 +73,15 @@ class MessageFragment : TopFragment(), ControllableFragment {
             val isNotifLoading by notificationViewModel.isLoading.observeAsState(initial = false)
             val isConvLoading by conversationViewModel.isLoading.observeAsState(initial = false)
 
-            var selectedTab by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+            var selectedTab by remember { mutableIntStateOf(0) }
 
             if (!isLoggedIn) {
-                // 未登录，显示提示
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5)), contentAlignment = Alignment.Center) {
                     Text(text = "请先登录", color = Color.Gray)
                 }
             } else {
                 Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
-                    // 顶部导航栏
+                    // 顶部导航栏 (Material3 标准写法)
                     TopAppBar(
                         title = { Text("我的信息", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black) },
                         navigationIcon = {
@@ -93,18 +92,12 @@ class MessageFragment : TopFragment(), ControllableFragment {
                         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
                     )
 
-                    // Tab 栏
+                    // Tab 栏 (使用最标准的 TabRow 和自带的指示器)
                     TabRow(
                         selectedTabIndex = selectedTab,
                         containerColor = Color.White,
                         contentColor = Color(0xFFE53935),
-                        indicator = { tabPositions ->
-                            TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                height = 3.dp,
-                                color = Color(0xFFE53935)
-                            )
-                        }
+                        divider = { HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp) }
                     ) {
                         Tab(
                             selected = selectedTab == 0,
@@ -138,7 +131,7 @@ class MessageFragment : TopFragment(), ControllableFragment {
             }
             
             // 初始化数据
-            androidx.compose.runtime.LaunchedEffect(isLoggedIn) {
+            LaunchedEffect(isLoggedIn) {
                 if (isLoggedIn) {
                     notificationViewModel.fetchNotifications()
                     conversationViewModel.fetchConversations()
@@ -157,7 +150,8 @@ fun NotificationList(list: List<BaseNotification>) {
     } else {
         LazyColumn(
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxSize()
         ) {
             items(list) { item ->
                 Card(
@@ -194,7 +188,8 @@ fun ConversationList(list: List<Conversation>, context: android.content.Context)
     } else {
         LazyColumn(
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxSize()
         ) {
             items(list) { item ->
                 Card(
