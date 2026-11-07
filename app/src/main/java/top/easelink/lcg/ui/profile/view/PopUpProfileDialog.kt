@@ -159,7 +159,7 @@ class PopUpProfileDialog : DialogFragment() {
                                 blacklistBtn.text = originalText
                                 if (responseHtml.contains("您需要先登录")) {
                                     showMessage("登录已失效，请重新登录")
-                                    UserDataRepo.clearAll()
+                                    Timber.w("【安全防御】拦截了非法的 clearAll 调用，保留 CK！")
                                     EventBus.getDefault().post(SessionExpiredEvent())
                                 } else {
                                     showMessage("操作失败，请稍后再试")

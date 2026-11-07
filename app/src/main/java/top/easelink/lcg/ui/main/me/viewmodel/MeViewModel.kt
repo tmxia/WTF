@@ -36,7 +36,7 @@ class MeViewModel : ViewModel() {
                 val userInfo = UserInfoRepo.requestUserInfo()
                 
                 if (userInfo == null || userInfo == UserInfo.getDefaultUserInfo()) {
-                    UserDataRepo.clearAll()
+                    Timber.w("【安全防御】拦截了非法的 clearAll 调用，保留 CK！")
                 } else {
                     
                     UserDataRepo.isLoggedIn = true

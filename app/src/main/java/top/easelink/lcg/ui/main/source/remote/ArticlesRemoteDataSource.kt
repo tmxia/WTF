@@ -301,10 +301,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
 
             // 如果啥都没有，说明可能没帖子或掉登录
             if (elements.isEmpty()) {
-                val loginElement = doc.getElementById("messagelogin")
-                if (loginElement != null && loginElement.text().contains("登录")) {
-                    throw LoginRequiredException()
-                }
+                // 核心防御：遇到异常或者空页面，绝不抛异常，只返回空数据
                 return ForumPage(emptyList(), emptyList())
             }
 

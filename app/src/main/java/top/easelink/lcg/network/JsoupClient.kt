@@ -36,17 +36,21 @@ object JsoupClient : ApiRequest {
     private const val FOLLOW_REDIRECTS_ENABLE = true
 
     var formHash: String? = null
-        set(value) { Timber.d("formHash = $value"); field = value }
+        set(value) {
+            Timber.d("formHash = $value")
+            field = value
+        }
 
     private var lastTime = 0L
     private val CHECK_INTERVAL = if (BuildConfig.DEBUG) 60 * 1000 else 30 * 1000
+
     private const val TIME_OUT_LIMIT = 30 * 1000
     private const val BASE_URL = SERVER_BASE_URL
     private val USER_AGENT = getDeviceUserAgent(LCGApp.context)
 
     private val sessionExpiredFiredOnce = AtomicBoolean(false)
-    
-    // 历史版本真实的 400ms 限流
+
+    // 核心防封：400ms 强制冷却锁
     private const val MIN_INTERVAL_MS = 400L
     private val lastRequestAt = AtomicLong(0L)
 
@@ -88,17 +92,22 @@ object JsoupClient : ApiRequest {
 
     override fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?): Connection.Response {
         return getConnection(url)
-            .apply { if (form != null) data(form) }
+            .apply {
+                if (form != null) data(form)
+            }
             .postDataCharset("gbk")
             .method(Connection.Method.POST)
             .execute()
-            .also { updateCookies(it.cookies()) }
+            .also {
+                updateCookies(it.cookies())
+            }
     }
 
-    fun resetSessionExpiredFlag() { sessionExpiredFiredOnce.set(false) }
+    fun resetSessionExpiredFlag() {
+        sessionExpiredFiredOnce.set(false)
+    }
 
     private fun getConnection(url: String): Connection {
-        // 核心防封机制：全局 400ms 强制限流，杜绝瞬间并发请求
         synchronized(this) {
             val since = System.currentTimeMillis() - lastRequestAt.get()
             if (since < MIN_INTERVAL_MS) {
@@ -112,7 +121,7 @@ object JsoupClient : ApiRequest {
             .ignoreHttpErrors(true)
             .cookies(getCookiesFor(url))
             .userAgent(USER_AGENT)
-            .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-")
+            .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
             .header("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
             .header("Accept-Encoding", "gzip, deflate, br, zstd")
             .header("Cache-Control", "max-age=0")
@@ -146,7 +155,13 @@ object JsoupClient : ApiRequest {
 
     private fun checkLoginState(doc: Document) {
         if (!UserDataRepo.isLoggedIn) return
-        val hasMessageLogin = doc.getElementById("messagelogin") != null
+        
+        // 核心修复：严格判定是否真的掉登录。绝不能被隐藏的弹窗模板骗了！
+        val loginElement = doc.getElementById("messagelogin")
+        val hasMessageLogin = loginElement != null && 
+                              !loginElement.attr("style").contains("display: none") && 
+                              (doc.title().contains("提示") || loginElement.text().contains("登录"))
+
         val messageText = doc.getElementById("messagetext")?.text().orEmpty()
         val explicitExpired = messageText.contains(SESSION_EXPIRED_MARKER)
 
@@ -155,12 +170,11 @@ object JsoupClient : ApiRequest {
             return
         }
 
-        Timber.w("session expired detected: hasMessageLogin=%s explicitExpired=%s messageText='%s'",
-            hasMessageLogin, explicitExpired, messageText.take(120))
+        Timber.w("检测到风控拦截，hasMessageLogin=%s, explicitExpired=%s", hasMessageLogin, explicitExpired)
 
         if (sessionExpiredFiredOnce.compareAndSet(false, true)) {
-            // 核心：遇到风控不发弹窗，而是启动静默 WebView 刷新 Cookie
-            Timber.w("检测到风控拦截，启动静默 WebView 刷新 Cookie...")
+            // 核心防御：触发静默刷新，绝不直接清空 CK 或发送 SessionExpiredEvent 踢人下线
+            Timber.w("启动静默 WebView 刷新 Cookie...")
             refreshCookieSilently {
                 resetSessionExpiredFlag()
             }
@@ -169,7 +183,6 @@ object JsoupClient : ApiRequest {
 
     private const val SESSION_EXPIRED_MARKER = " 您需要先登录才能继续"
 
-    // 核心防封：后台不可见的 WebView 静默过盾
     @SuppressLint("SetJavaScriptEnabled")
     private fun refreshCookieSilently(onComplete: () -> Unit) {
         Handler(Looper.getMainLooper()).post {
@@ -179,7 +192,7 @@ object JsoupClient : ApiRequest {
                     settings.domStorageEnabled = true
                     settings.userAgentString = getDeviceUserAgent(LCGApp.context)
                     CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-
+                    
                     val currentCookies = getCookiesFor(SERVER_BASE_URL)
                     val cookieStr = currentCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
                     CookieManager.getInstance().setCookie(SERVER_BASE_URL, cookieStr)
