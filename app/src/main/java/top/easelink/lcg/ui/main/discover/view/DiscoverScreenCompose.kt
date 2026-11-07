@@ -236,6 +236,8 @@ fun ForumCustomizeDialog(
     onSave: (List<String>) -> Unit
 ) {
     val selectedUrls = remember { mutableStateListOf<String>().apply { addAll(currentUrls) } }
+    // 记录主版块的折叠状态
+    val expandedGroups = remember { mutableStateMapOf<String, Boolean>() }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -251,66 +253,94 @@ fun ForumCustomizeDialog(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                             ) {
-                                Checkbox(
-                                    checked = true,
-                                    onCheckedChange = { selectedUrls.remove(url) }
-                                )
+                                Checkbox(checked = true, onCheckedChange = { selectedUrls.remove(url) })
                                 Text(forum.title, modifier = Modifier.weight(1f), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 IconButton(
                                     onClick = {
                                         val index = selectedUrls.indexOf(url)
                                         if (index > 0) {
-                                            val tmp = selectedUrls[index]
-                                            selectedUrls[index] = selectedUrls[index - 1]
-                                            selectedUrls[index - 1] = tmp
+                                            val tmp = selectedUrls[index]; selectedUrls[index] = selectedUrls[index - 1]; selectedUrls[index - 1] = tmp
                                         }
-                                    },
-                                    modifier = Modifier.size(32.dp)
-                                ) {
-                                    Icon(Icons.Default.KeyboardArrowUp, "上移", modifier = Modifier.size(20.dp), tint = Color.Gray)
-                                }
+                                    }, modifier = Modifier.size(32.dp)
+                                ) { Icon(Icons.Default.KeyboardArrowUp, "上移", modifier = Modifier.size(20.dp), tint = Color.Gray) }
                                 IconButton(
                                     onClick = {
                                         val index = selectedUrls.indexOf(url)
                                         if (index != -1 && index < selectedUrls.size - 1) {
-                                            val tmp = selectedUrls[index]
-                                            selectedUrls[index] = selectedUrls[index + 1]
-                                            selectedUrls[index + 1] = tmp
+                                            val tmp = selectedUrls[index]; selectedUrls[index] = selectedUrls[index + 1]; selectedUrls[index + 1] = tmp
                                         }
-                                    },
-                                    modifier = Modifier.size(32.dp)
-                                ) {
-                                    Icon(Icons.Default.KeyboardArrowDown, "下移", modifier = Modifier.size(20.dp), tint = Color.Gray)
-                                }
+                                    }, modifier = Modifier.size(32.dp)
+                                ) { Icon(Icons.Default.KeyboardArrowDown, "下移", modifier = Modifier.size(20.dp), tint = Color.Gray) }
                             }
                         }
                     }
                 }
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Text("未选", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 8.dp))
-                LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
+                Text("未选 (点击主版块折叠/展开)", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 8.dp))
+                
+                LazyColumn(modifier = Modifier.heightIn(max = 250.dp)) {
                     val unselected = allForums.filter { it.url !in selectedUrls }
-                    items(unselected) { forum ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                        ) {
-                            Checkbox(
-                                checked = false,
-                                onCheckedChange = { selectedUrls.add(forum.url) }
-                            )
-                            Text(forum.title, modifier = Modifier.weight(1f), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    // 分离主版块和子版块
+                    val mainForums = unselected.filter { !it.isSubForum }
+                    val subForums = unselected.filter { it.isSubForum }
+
+                    items(mainForums) { main ->
+                        // 找到属于该主版块的子版块
+                        val children = subForums.filter { it.parentTitle == main.title }
+                        val isExpanded = expandedGroups[main.title] == true
+
+                        Column {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { 
+                                    // 点击整行切换展开状态
+                                    expandedGroups[main.title] = !isExpanded 
+                                }
+                            ) {
+                                Checkbox(
+                                    checked = false,
+                                    onCheckedChange = { 
+                                        selectedUrls.add(main.url)
+                                        // 同时勾选子版块（可选逻辑，这里保持简单：只选主版块）
+                                    }
+                                )
+                                Text(main.title, modifier = Modifier.weight(1f), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                if (children.isNotEmpty()) {
+                                    Icon(
+                                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                        contentDescription = null, tint = Color.Gray, modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            
+                            // 渲染子版块
+                            if (isExpanded && children.isNotEmpty()) {
+                                children.forEach { child ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth().padding(start = 24.dp, top = 2.dp, bottom = 2.dp)
+                                    ) {
+                                        Checkbox(checked = false, onCheckedChange = { selectedUrls.add(child.url) })
+                                        Text(child.title, modifier = Modifier.weight(1f), fontSize = 13.sp, color = Color.DarkGray)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 如果有些子版块没归属主版块，单独展示
+                    val orphanSubs = subForums.filter { it.parentTitle == null || mainForums.none { m -> m.title == it.parentTitle } }
+                    items(orphanSubs) { child ->
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                            Checkbox(checked = false, onCheckedChange = { selectedUrls.add(child.url) })
+                            Text(child.title, modifier = Modifier.weight(1f), fontSize = 14.sp)
                         }
                     }
                 }
             }
         },
-        confirmButton = {
-            TextButton(onClick = { onSave(selectedUrls.toList()) }) { Text("保存") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
-        }
+        confirmButton = { TextButton(onClick = { onSave(selectedUrls.toList()) }) { Text("保存") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
     )
 }
 
