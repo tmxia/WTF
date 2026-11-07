@@ -81,7 +81,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     private fun setupWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
+            
             binding.statusBarBackground.apply {
                 layoutParams.height = systemBars.top
                 setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.white))
@@ -93,7 +93,6 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             (binding.bottomNavigation.layoutParams as? ViewGroup.MarginLayoutParams)?.apply {
                 bottomMargin = systemBars.bottom
             }
-
             insets
         }
     }
@@ -123,10 +122,8 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             val backStackCount = supportFragmentManager.backStackEntryCount
             if (backStackCount == 0) {
                 showBottomNavigation()
-                
                 restoreCurrentTabFragment()
             } else {
-                
                 val fragments = supportFragmentManager.fragments
                 for (fragment in fragments) {
                     if (fragment.isVisible) {
@@ -173,14 +170,12 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     private fun setupDrawer(toolbar: Toolbar) {
         val header = layoutInflater.inflate(R.layout.nav_header, binding.navigationView, false)
         binding.navigationView.addHeaderView(header)
-
+        
         binding.appVersion.text = BuildConfig.VERSION_NAME
         setSupportActionBar(toolbar)
 
         ActionBarDrawerToggle(
-            this,
-            binding.drawerView,
-            toolbar,
+            this, binding.drawerView, toolbar,
             R.string.open_drawer,
             R.string.close_drawer
         ).apply {
@@ -239,10 +234,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 }
             }
 
-            setCustomAnimations(
-                R.anim.fade_in,
-                R.anim.fade_out
-            )
+            setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
         }
 
         updateUIForFragment(fragment)
@@ -265,10 +257,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 }
             }
 
-            setCustomAnimations(
-                R.anim.fade_in,
-                R.anim.fade_out
-            )
+            setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
         }
 
         updateUIForFragment(fragment)
@@ -278,7 +267,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     private fun updateUIForFragment(fragment: Fragment) {
         val isLightStatusBar = when (fragment) {
             is RecommendFragment,
-            is MessageFragment,
+            is SearchFragment,
             is DiscoverFragment,
             is MeFragment,
             is ArticleFragment,
@@ -292,14 +281,10 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             is RecommendFragment -> View.VISIBLE
             else -> View.GONE
         }
-        
-        
-        if (fragment is MessageFragment) {
-            toggleBottomNavScrollBehavior(false)
-        } else {
-            toggleBottomNavScrollBehavior(true)
-        }
 
+        // 统一交由滚动逻辑控制，移除针对 MessageFragment 的特判
+        toggleBottomNavScrollBehavior(true)
+        
         syncBottomNavigation()
     }
 
@@ -312,7 +297,6 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         } else {
             if (layoutParams?.behavior != null) {
                 layoutParams?.behavior = null
-                
                 binding.bottomNavigation.translationY = 0f
             }
         }
@@ -335,9 +319,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     fun hideBottomNavigation() {
         binding.bottomNavigation.visibility = View.GONE
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentContainer) { view, insets ->
-            view.updatePadding(
-                bottom = 0
-            )
+            view.updatePadding(bottom = 0)
             insets
         }
     }
@@ -353,9 +335,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentContainer) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.updatePadding(
-                bottom = systemBars.bottom
-            )
+            view.updatePadding(bottom = systemBars.bottom)
             insets
         }
     }
@@ -381,7 +361,6 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
 
     private fun showArticleFragment(fragment: Fragment) {
         supportFragmentManager.commit {
-            
             supportFragmentManager.fragments.forEach {
                 hide(it)
             }
@@ -393,27 +372,24 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         hideBottomNavigation()
     }
 
-    @Suppress("unused")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onOpenForumEvent(event: OpenForumEvent) {
         showFragment(ForumArticlesFragment.newInstance(event.title, event.url, event.showTab))
     }
 
-    @Suppress("unused")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onNewMessageEvent(event: NewMessageEvent) {
         if (event.notificationInfo.isNotEmpty()) {
             showMessage(getString(R.string.notification_arrival))
-            // 信息红点逻辑已随底栏迁移移除
+            // 红点逻辑已随底栏迁移移除
+        }
     }
 
-    @Suppress("unused")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onShowFragmentEvent(clazz: Class<out TopFragment>) {
         showFragment(clazz)
     }
 
-    @Suppress("unused")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onOpenLargeImageViewEvent(event: OpenLargeImageViewEvent) {
         if (event.url.isNotEmpty()) {
@@ -426,14 +402,12 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         }
     }
 
-    @Suppress("unused")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onOpenHalfScreenWebViewEvent(event: OpenHalfWebViewFragmentEvent) {
         HalfScreenWebViewFragment.newInstance(event.html)
             .show(supportFragmentManager, HalfScreenWebViewFragment::class.java.simpleName)
     }
 
-    @Suppress("unused", "UNUSED_PARAMETER")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onSessionExpired(event: SessionExpiredEvent) {
         showMessage(R.string.session_expired_tips)
@@ -483,6 +457,4 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             }
         }
     }
-
-
 }
