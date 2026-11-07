@@ -293,44 +293,56 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         processThreadList: Boolean
     ): ForumPage? {
         try {
-            var elements = doc.select("tbody[id^=normal]")
+            // 核心修复：彻底抛弃 normalthread 这种死板的 id，直接找页面上所有带 .xst 的 tr 或 tbody
+            var elements = doc.select("tbody:has(a.xst)")
             if (elements.isEmpty()) {
-                val element = doc.getElementById("messagelogin")
-                if (element != null) {
+                elements = doc.select("tr:has(a.xst)")
+            }
+            if (elements.isEmpty()) {
+                elements = doc.select("table:has(a.xst)")
+            }
+
+            // 如果连 a.xst 都没有，说明可能被拦截了，或者真的没帖子
+            if (elements.isEmpty()) {
+                val loginElement = doc.getElementById("messagelogin")
+                if (loginElement != null && loginElement.text().contains("登录")) {
                     throw LoginRequiredException()
                 }
+                // 返回空列表，防止死循环
+                return ForumPage(emptyList(), emptyList())
             }
+
             val articleList: List<Article> = elements.mapNotNull { element ->
                 var article: Article? = null
                 try {
-                    val reply = extractFrom(element, "td.num", "a.xi2").toIntOrNull() ?: 0
-                    val view = extractFrom(element, "td.num", "em").toIntOrNull() ?: 0
-                    val title = extractFrom(element, "th.new", ".xst").let {
-                        it.ifBlank {
-                            extractFrom(element, "th.common", ".xst")
-                        }
+                    // 极宽提取器：只要有回复数就抓，没有就默认0
+                    val reply = element.selectFirst("a.xi2")?.text()?.toIntOrNull() ?: 0
+                    val view = element.selectFirst("em")?.text()?.toIntOrNull() ?: 0
+                    
+                    // 无死角提取标题和链接
+                    val xstNode = element.selectFirst("a.xst")
+                    val title = xstNode?.text().orEmpty()
+                    val url = xstNode?.attr("href").orEmpty()
 
-                    }
-                    val author = extractFrom(element, "td.by", "a[href*=uid]")
-                    val date = extractFrom(element, "td.by", "span")
-                    val url = extractAttrFrom(element, "href", "th.new", "a.xst").let {
-                        it.ifBlank {
-                            extractAttrFrom(element, "href", "th.common", "a.xst")
-                        }
-                    }
-                    val origin = extractFrom(element, "td.by", "a[target]")
-                    if (!TextUtils.isEmpty(title) && !TextUtils.isEmpty(author)) {
+                    val author = element.selectFirst("a[href*=uid]")?.text().orEmpty()
+                    val date = element.selectFirst("span")?.text().orEmpty()
+                    val origin = element.selectFirst("a[target]")?.text().orEmpty()
+
+                    // 核心：不再强求 author 非空，只要标题和 URL 有，就是有效帖子！
+                    if (title.isNotBlank() && url.isNotBlank()) {
                         article = Article(title, author, date, url, view, reply, origin)
                     }
-                } catch (nbe: NumberFormatException) {
-                    Timber.v(nbe)
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
                 article
             }
 
-            
+            // 核心修复：如果抓出来的列表是空的，直接返回空，强行斩断无限拉取
+            if (articleList.isEmpty()) {
+                return ForumPage(emptyList(), emptyList())
+            }
+
             var threadList: List<ForumThread>? = null
             if (processThreadList) {
                 doc.getElementById("thread_types")?.let { threadTypes ->
@@ -339,22 +351,21 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                         .mapNotNull { elementByTag ->
                             try {
                                 val element = elementByTag.getElementsByTag("a").firstOrNull()
-                                elements = element?.getElementsByTag("span") ?: Elements()
-                                if (elements.isNotEmpty()) {
-                                    elements.remove()
+                                val tempElements = element?.getElementsByTag("span") ?: Elements()
+                                if (tempElements.isNotEmpty()) {
+                                    tempElements.remove()
                                 }
                                 val threadUrl = element?.attr("href").orEmpty()
                                 val name = element?.text()?.trim { it <= ' ' }.orEmpty()
-                                if (!TextUtils.isEmpty(name) && !TextUtils.isEmpty(threadUrl)) {
+                                if (name.isNotEmpty() && threadUrl.isNotEmpty()) {
                                     return@mapNotNull ForumThread(name, threadUrl)
                                 }
-                            } catch (_: Exception) {
-                            }
+                            } catch (_: Exception) { }
                             null
                         }
-
                 }
             }
+
             return ForumPage(articleList, threadList ?: emptyList())
         } catch (e: LoginRequiredException) {
             throw e
