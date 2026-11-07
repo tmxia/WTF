@@ -90,7 +90,7 @@ class FollowFragment : TopFragment(), ControllableFragment {
                     factory = { context ->
                         ViewPager2(context).apply {
                             // 核心修复：使用你项目原有的 FollowViewPagerAdapter
-                            adapter = FollowViewPagerAdapter(childFragmentManager, lifecycle)
+                            adapter = FollowViewPagerAdapter(requireActivity(), requireContext())
                             pager = this
                             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                                 override fun onPageSelected(position: Int) {

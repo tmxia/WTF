@@ -111,4 +111,10 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
             }
         }
     }
+
+    companion object {
+        fun newInstance(): FavoriteArticlesFragment {
+            return FavoriteArticlesFragment()
+        }
+    }
 }

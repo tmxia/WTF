@@ -124,4 +124,10 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
             }
         }
     }
+
+    companion object {
+        fun newInstance(): HistoryArticlesFragment {
+            return HistoryArticlesFragment()
+        }
+    }
 }
