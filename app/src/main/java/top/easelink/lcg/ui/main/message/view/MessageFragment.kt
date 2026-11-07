@@ -35,12 +35,13 @@ class MessageFragment : TopFragment(), ControllableFragment {
     override fun isControllable(): Boolean = true
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // 核心修复：强制让 Toolbar 避开状态栏，防止被 MainActivity 的白色背景遮挡
+        // 核心修复：给根布局增加与状态栏等高的 Padding，而不是死板地去改 Toolbar 高度
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            binding.toolbar.updatePadding(top = systemBars.top)
+            view.updatePadding(top = systemBars.top)
             insets
         }
+        // 核心修复：强制让 Toolbar 避开状态栏，防止被 MainActivity 的白色背景遮挡
         super.onViewCreated(view, savedInstanceState)
 
         // 核心适配 1：像“我的帖子”一样处理沉浸式状态栏
