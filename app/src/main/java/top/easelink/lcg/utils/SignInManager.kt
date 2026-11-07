@@ -8,6 +8,17 @@ object SignInManager {
     private const val APPLY_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=apply&id=2"
     private const val DRAW_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=draw&id=2"
 
+
+    fun isSignedToday(): Boolean {
+        val sp = SharedPreferencesHelper.getUserSp()
+        val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)
+        if (lastTime == 0L) return false
+        val lastCal = java.util.Calendar.getInstance().apply { timeInMillis = lastTime }
+        val todayCal = java.util.Calendar.getInstance()
+        return lastCal.get(java.util.Calendar.YEAR) == todayCal.get(java.util.Calendar.YEAR) &&
+               lastCal.get(java.util.Calendar.DAY_OF_YEAR) == todayCal.get(java.util.Calendar.DAY_OF_YEAR)
+    }
+
     fun performSignIn(onResult: (String, String) -> Unit) {
         try {
             val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL)
