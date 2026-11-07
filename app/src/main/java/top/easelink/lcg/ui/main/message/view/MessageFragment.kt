@@ -7,6 +7,10 @@ import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -82,16 +86,24 @@ class MessageFragment : TopFragment(), ControllableFragment {
                 }
             } else {
                 Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
-                    // 顶部导航栏 (Material3 标准写法)
-                    TopAppBar(
-                        title = { Text("我的信息", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black) },
-                        navigationIcon = {
-                            IconButton(onClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }) {
-                                Icon(Icons.Filled.ArrowBack, contentDescription = "返回", tint = Color.Black)
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-                    )
+                    // 核心修复：在顶部栏外层包裹一个 Column，强制填充白色，并加上状态栏避让
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .statusBarsPadding() // 完美避开系统状态栏
+                    ) {
+                        // 顶部导航栏 (Material3 标准写法)
+                        TopAppBar(
+                            title = { Text("我的信息", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black) },
+                            navigationIcon = {
+                                IconButton(onClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }) {
+                                    Icon(Icons.Filled.ArrowBack, contentDescription = "返回", tint = Color.Black)
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
+                            windowInsets = WindowInsets(0, 0, 0, 0) // 取消内部自带的 Insets 避让，防止双重留白
+                        )
 
                     // Tab 栏 (完美复刻“我的帖子”的 ScrollableTabRow)
                     ScrollableTabRow(
@@ -135,7 +147,8 @@ class MessageFragment : TopFragment(), ControllableFragment {
                             }
                         )
                     }
-
+                    } // 闭合包裹 TopAppBar 和 ScrollableTabRow 的白色 Column
+                    
                     // 内容区
                     Box(modifier = Modifier.fillMaxSize().weight(1f)) {
                         if (selectedTab == 0) {
