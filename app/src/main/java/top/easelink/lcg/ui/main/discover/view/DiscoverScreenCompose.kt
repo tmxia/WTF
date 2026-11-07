@@ -236,47 +236,64 @@ fun ForumCustomizeDialog(
     onSave: (List<String>) -> Unit
 ) {
     val selectedUrls = remember { mutableStateListOf<String>().apply { addAll(currentUrls) } }
-    // 记录主版块的折叠状态
-    val expandedGroups = remember { mutableStateMapOf<String, Boolean>() }
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(16.dp),
+        containerColor = Color(0xFFF5F5F5),
         title = { Text("自定义常用板块", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text("已选 (长按上下图标排序)", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 8.dp))
+                Text("已选板块", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 8.dp))
+                
                 LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
                     items(selectedUrls) { url ->
                         val forum = allForums.find { it.url == url }
                         if (forum != null) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White)
+                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                                    .padding(bottom = 4.dp)
                             ) {
-                                Checkbox(checked = true, onCheckedChange = { selectedUrls.remove(url) })
-                                Text(forum.title, modifier = Modifier.weight(1f), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(forum.title, modifier = Modifier.weight(1f), fontSize = 14.sp, color = Color.Black)
+                                
                                 IconButton(
                                     onClick = {
                                         val index = selectedUrls.indexOf(url)
                                         if (index > 0) {
                                             val tmp = selectedUrls[index]; selectedUrls[index] = selectedUrls[index - 1]; selectedUrls[index - 1] = tmp
                                         }
-                                    }, modifier = Modifier.size(32.dp)
-                                ) { Icon(Icons.Default.KeyboardArrowUp, "上移", modifier = Modifier.size(20.dp), tint = Color.Gray) }
+                                    }, modifier = Modifier.size(28.dp)
+                                ) { Icon(Icons.Default.KeyboardArrowUp, "上移", modifier = Modifier.size(18.dp), tint = Color.Gray) }
+                                
                                 IconButton(
                                     onClick = {
                                         val index = selectedUrls.indexOf(url)
                                         if (index != -1 && index < selectedUrls.size - 1) {
                                             val tmp = selectedUrls[index]; selectedUrls[index] = selectedUrls[index + 1]; selectedUrls[index + 1] = tmp
                                         }
-                                    }, modifier = Modifier.size(32.dp)
-                                ) { Icon(Icons.Default.KeyboardArrowDown, "下移", modifier = Modifier.size(20.dp), tint = Color.Gray) }
+                                    }, modifier = Modifier.size(28.dp)
+                                ) { Icon(Icons.Default.KeyboardArrowDown, "下移", modifier = Modifier.size(18.dp), tint = Color.Gray) }
+                                
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "移除",
+                                    fontSize = 13.sp,
+                                    color = Color.Red,
+                                    modifier = Modifier.clickable { selectedUrls.remove(url) }
+                                )
                             }
+                            Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
                 }
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Text("未选 (点击主版块折叠/展开)", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 8.dp))
+                
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color.LightGray)
+                Text("点击添加板块", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 8.dp))
                 
                 LazyColumn(modifier = Modifier.heightIn(max = 250.dp)) {
                     val unselected = allForums.filter { it.url !in selectedUrls }
@@ -286,32 +303,21 @@ fun ForumCustomizeDialog(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 2.dp)
-                                .padding(start = if (forum.isSubForum) 24.dp else 0.dp) 
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.White)
+                                .clickable { selectedUrls.add(forum.url) }
+                                .padding(horizontal = 12.dp, vertical = 10.dp)
+                                .padding(start = if (forum.isSubForum) 16.dp else 0.dp)
                         ) {
-                            Checkbox(
-                                checked = false,
-                                onCheckedChange = { selectedUrls.add(forum.url) }
+                            Text(
+                                text = "+ ${forum.title}",
+                                fontSize = if (forum.isSubForum) 13.sp else 14.sp,
+                                color = if (forum.isSubForum) Color.DarkGray else Color.Black,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = forum.title,
-                                    fontSize = if (forum.isSubForum) 13.sp else 14.sp,
-                                    fontWeight = if (forum.isSubForum) FontWeight.Normal else FontWeight.Medium,
-                                    color = if (forum.isSubForum) Color.DarkGray else Color.Black,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                // 如果是主版块且带有分类信息，显示分类小标签
-                                if (!forum.isSubForum && forum.parentTitle != null) {
-                                    Text(
-                                        text = forum.parentTitle,
-                                        fontSize = 11.sp,
-                                        color = Color.Gray
-                                    )
-                                }
-                            }
                         }
+                        Spacer(modifier = Modifier.height(4.dp))
                     }
                     
                     if (unselected.isEmpty()) {
@@ -324,8 +330,14 @@ fun ForumCustomizeDialog(
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onSave(selectedUrls.toList()) }) { Text("保存") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+        confirmButton = {
+            TextButton(onClick = { onSave(selectedUrls.toList()) }) { 
+                Text("保存", color = Color(0xFFE53935), fontWeight = FontWeight.Bold) 
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("取消", color = Color.Gray) }
+        }
     )
 }
 
