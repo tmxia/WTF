@@ -74,7 +74,6 @@ class FavoriteArticlesFragment :
     }
 
     private fun setupToolBar() {
-        binding.articleToolbar.setStatusBarPadding()
         binding.articleToolbar.apply {
             inflateMenu(R.menu.favorite_articles)
             setOnMenuItemClickListener { menuItem ->

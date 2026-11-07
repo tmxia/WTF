@@ -30,7 +30,6 @@ class FollowFragment : TopFragment(), ControllableFragment {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.followTab.setStatusBarPadding()
 
         binding.followViewPager.adapter = FollowViewPagerAdapter(
             requireActivity(),

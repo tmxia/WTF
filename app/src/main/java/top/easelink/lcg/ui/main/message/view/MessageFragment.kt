@@ -35,7 +35,6 @@ class MessageFragment : TopFragment(), ControllableFragment {
         super.onViewCreated(view, savedInstanceState)
 
         // 核心适配 1：像“我的帖子”一样处理沉浸式状态栏
-        binding.toolbar.setStatusBarPadding()
         binding.toolbar.setNavigationOnClickListener {
             requireActivity().onBackPressedDispatcher.onBackPressed()
         }

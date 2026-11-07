@@ -45,8 +45,6 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        binding.toolbar.setStatusBarPadding()
         ViewCompat.setOnApplyWindowInsetsListener(binding.recyclerView) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.updatePadding(bottom = bars.bottom)
