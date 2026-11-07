@@ -241,12 +241,31 @@ fun ForumCustomizeDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(16.dp),
         containerColor = Color(0xFFF5F5F5),
-        title = { Text("自定义常用板块", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+        // 核心修复：去除系统自带的巨大边距
+        modifier = Modifier.padding(0.dp),
+        title = { 
+            Text(
+                "自定义常用板块", 
+                fontSize = 16.sp, 
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
+            ) 
+        },
         text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            // 使用权重让两个列表平分空间，消灭上下空白
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 450.dp) 
+                    .padding(horizontal = 16.dp)
+            ) {
                 Text("已选板块", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 6.dp))
                 
-                LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f) // 强行分配等分高度
+                        .fillMaxWidth()
+                ) {
                     items(selectedUrls) { url ->
                         val forum = allForums.find { it.url == url }
                         if (forum != null) {
@@ -256,7 +275,7 @@ fun ForumCustomizeDialog(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(Color.White)
-                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
                             ) {
                                 Text(forum.title, modifier = Modifier.weight(1f), fontSize = 13.sp, color = Color.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 
@@ -278,7 +297,7 @@ fun ForumCustomizeDialog(
                                     }, modifier = Modifier.size(24.dp)
                                 ) { Icon(Icons.Default.KeyboardArrowDown, "下移", modifier = Modifier.size(16.dp), tint = Color.Gray) }
                                 
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "移除",
                                     fontSize = 13.sp,
@@ -294,7 +313,11 @@ fun ForumCustomizeDialog(
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.LightGray)
                 Text("点击添加板块", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 6.dp))
                 
-                LazyColumn(modifier = Modifier.heightIn(max = 250.dp)) {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f) // 强行分配等分高度
+                        .fillMaxWidth()
+                ) {
                     val unselected = allForums.filter { it.url !in selectedUrls }
                     
                     items(unselected) { forum ->
@@ -330,12 +353,18 @@ fun ForumCustomizeDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(selectedUrls.toList()) }) { 
+            TextButton(
+                onClick = { onSave(selectedUrls.toList()) },
+                modifier = Modifier.padding(bottom = 8.dp, end = 8.dp)
+            ) { 
                 Text("保存", color = Color(0xFFE53935), fontWeight = FontWeight.Bold) 
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消", color = Color.Gray) }
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.padding(bottom = 8.dp)
+            ) { Text("取消", color = Color.Gray) }
         }
     )
 }

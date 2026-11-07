@@ -9,8 +9,8 @@ object ForumNetworkSource {
 
     // 极端黑名单过滤：剔除所有包含操作、管理、公告等无关字眼的标题
     private val BLACKLIST = listOf(
-        "新帖", "举报", "投诉", "管理", "公告", "活动", "大赛", "竞赛", 
-        "招募", "欢迎", "处理", "站务", "福利", "建议", "申请", "专帖", "置顶"
+        "新帖", "新贴", "举报", "投诉", "管理", "公告", "活动", "大赛", "竞赛", 
+        "招募", "欢迎", "处理", "站务", "福利", "建议", "申请", "专帖", "置顶", "版规", "指引"
     )
 
     fun fetchAllForumsFromApi(): List<ForumNavigationModel> {
@@ -62,7 +62,9 @@ object ForumNetworkSource {
     private fun isValidForumUrl(href: String): Boolean {
         val isPureForum = href.matches(Regex("forum-\\d+-1\\.html")) || href.contains("forumdisplay&fid=")
         val isJunk = href.contains("newthread") || href.contains("viewthread") || 
-                     href.contains("mod=post") || href.contains("action=")
+                     href.contains("mod=post") || href.contains("action=") ||
+                     href.contains("guide") || href.contains("filter=") || 
+                     href.contains("view=") || href.contains("typeid=")
         return isPureForum && !isJunk
     }
 
