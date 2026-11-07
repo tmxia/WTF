@@ -12,8 +12,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,6 +31,7 @@ import timber.log.Timber
 import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.discover.model.DiscoverModel
 import top.easelink.lcg.ui.main.discover.model.ForumListModel
+import top.easelink.lcg.ui.main.discover.model.ForumNavigationModel
 import top.easelink.lcg.ui.main.discover.model.RankListModel
 import top.easelink.lcg.ui.main.discover.model.RankModel
 
@@ -153,7 +154,7 @@ fun DiscoverScreenCompose(
 }
 
 // 读取已保存的配置，如果没有则默认取前8个
-private fun loadSavedUrls(prefs: android.content.SharedPreferences, allForums: List<top.easelink.lcg.ui.main.discover.model.ForumModel>): List<String> {
+private fun loadSavedUrls(prefs: android.content.SharedPreferences, allForums: List<ForumNavigationModel>): List<String> {
     val saved = prefs.getString("forum_urls", null)
     if (saved != null) {
         return saved.split(",").filter { it.isNotBlank() }
@@ -164,7 +165,7 @@ private fun loadSavedUrls(prefs: android.content.SharedPreferences, allForums: L
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ForumNavigationSection(
-    forums: List<top.easelink.lcg.ui.main.discover.model.ForumModel>,
+    forums: List<ForumNavigationModel>,
     onForumClick: (String, String) -> Unit,
     onMoreClick: () -> Unit,
     onLongClick: () -> Unit
@@ -229,7 +230,7 @@ fun ForumNavigationSection(
 
 @Composable
 fun ForumCustomizeDialog(
-    allForums: List<top.easelink.lcg.ui.main.discover.model.ForumModel>,
+    allForums: List<ForumNavigationModel>,
     currentUrls: List<String>,
     onDismiss: () -> Unit,
     onSave: (List<String>) -> Unit
@@ -266,7 +267,7 @@ fun ForumCustomizeDialog(
                                     },
                                     modifier = Modifier.size(32.dp)
                                 ) {
-                                    Icon(Icons.Default.ArrowUpward, "上移", modifier = Modifier.size(18.dp), tint = Color.Gray)
+                                    Icon(Icons.Default.KeyboardArrowUp, "上移", modifier = Modifier.size(20.dp), tint = Color.Gray)
                                 }
                                 IconButton(
                                     onClick = {
@@ -279,7 +280,7 @@ fun ForumCustomizeDialog(
                                     },
                                     modifier = Modifier.size(32.dp)
                                 ) {
-                                    Icon(Icons.Default.ArrowDownward, "下移", modifier = Modifier.size(18.dp), tint = Color.Gray)
+                                    Icon(Icons.Default.KeyboardArrowDown, "下移", modifier = Modifier.size(20.dp), tint = Color.Gray)
                                 }
                             }
                         }
