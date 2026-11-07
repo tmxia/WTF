@@ -10,17 +10,7 @@ object SignInManager {
 
     fun performSignIn(onResult: (String, String) -> Unit) {
         try {
-            // 核心：传 false 禁止弹出人机验证，遇到 WAF 直接断定为失败
-            val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL, enableWafPopup = false)
-            val rawHtml = applyResponse.outerHtml()
-            Timber.d("签到任务响应: status=${applyResponse.location()}, body=${rawHtml.take(200)}")
-
-            if (rawHtml.contains("您需要先登录")) {
-                Timber.e("签到失败：Cookie 已失效，请重新登录")
-                onResult("FAILED", "签到失败：登录已失效")
-                return
-            }
-
+            val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL)
             val applyMessage = applyResponse.getElementsByClass("alert_info")
                 .first()?.selectFirst("p")?.text().orEmpty()
 
@@ -30,9 +20,7 @@ object SignInManager {
                 return
             }
 
-            // 发起领取奖励
-            val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL, enableWafPopup = false)
-            Timber.d("领取奖励响应: ${drawResponse.outerHtml().take(200)}")
+            val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL)
             val drawText = drawResponse.getElementsByClass("alert_info")
                 .first()?.selectFirst("p")?.text().orEmpty()
 
@@ -41,12 +29,7 @@ object SignInManager {
 
         } catch (e: Exception) {
             Timber.e(e, "Jsoup 签到请求异常")
-            // 如果是 WAF 拦截，直接提示失败
-            if (e.message?.contains("WAF_VERIFICATION_REQUIRED") == true) {
-                onResult("FAILED", "签到失败：触发安全风控，请稍后再试")
-            } else {
-                onResult("FAILED", "签到失败，请检查网络或登录状态")
-            }
+            onResult("FAILED", "签到失败，请检查网络或登录状态")
         }
     }
 }

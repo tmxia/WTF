@@ -46,8 +46,6 @@ import top.easelink.lcg.ui.webview.view.HalfScreenWebViewFragment
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 import top.easelink.lcg.utils.showMessage
-import top.easelink.lcg.ui.main.article.view.WafVerificationDialog
-import top.easelink.lcg.ui.main.model.WafVerificationEvent
 
 class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
 
@@ -491,12 +489,5 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         }
     }
 
-    @Suppress("unused")
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onWafVerificationRequired(event: WafVerificationEvent) {
-        if (supportFragmentManager.findFragmentByTag("WafVerificationDialog") != null) return
-        WafVerificationDialog.newInstance(event.targetUrl)
-            .show(supportFragmentManager, "WafVerificationDialog")
-    }
 
 }
