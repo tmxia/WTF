@@ -3,6 +3,7 @@ package top.easelink.lcg.ui.main.message.viewmodel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.jsoup.nodes.Document
 import timber.log.Timber
@@ -11,21 +12,19 @@ import top.easelink.lcg.ui.main.model.Conversation
 import top.easelink.lcg.utils.WebsiteConstant
 
 class ConversationListViewModel : ViewModel() {
-
     val conversations = MutableLiveData<List<Conversation>>()
     val isLoading = MutableLiveData<Boolean>()
-
     private var formHash: String? = null
 
     fun fetchConversations() {
-        isLoading.value = true
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
+            isLoading.postValue(true)
             try {
                 parseConversations(JsoupClient.sendGetRequestWithQuery(WebsiteConstant.PRIVATE_MESSAGE_QUERY))
             } catch (e: Exception) {
                 Timber.e(e)
             }
-            isLoading.value = false
+            isLoading.postValue(false)
         }
     }
 
@@ -56,7 +55,7 @@ class ConversationListViewModel : ViewModel() {
                     replyUrl = replyUrl
                 )
             }
-            conversations.value = conversationList
+            conversations.postValue(conversationList)
         }
     }
 }

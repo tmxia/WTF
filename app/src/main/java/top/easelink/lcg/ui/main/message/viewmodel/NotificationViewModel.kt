@@ -3,6 +3,7 @@ package top.easelink.lcg.ui.main.message.viewmodel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.jsoup.nodes.Document
 import timber.log.Timber
@@ -13,7 +14,6 @@ import top.easelink.lcg.ui.main.model.SystemNotification
 import top.easelink.lcg.utils.WebsiteConstant.NOTIFICATION_HOME_QUERY
 
 class NotificationViewModel : ViewModel() {
-
     val notifications = MutableLiveData<NotificationModel>()
     val isLoading = MutableLiveData<Boolean>()
     var nextPageUrl = ""
@@ -23,11 +23,11 @@ class NotificationViewModel : ViewModel() {
             callback.invoke(false)
             return
         }
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 JsoupClient.sendGetRequestWithQuery(nextPageUrl).let {
                     val model = parseResponse(it)
-                    notifications.value = model
+                    notifications.postValue(model)
                     callback.invoke(true)
                 }
             } catch (e: Exception) {
@@ -38,33 +38,27 @@ class NotificationViewModel : ViewModel() {
     }
 
     fun fetchNotifications() {
-        viewModelScope.launch {
-            isLoading.value = true
+        viewModelScope.launch(Dispatchers.IO) {
+            isLoading.postValue(true)
             try {
                 JsoupClient.sendGetRequestWithQuery(NOTIFICATION_HOME_QUERY).let {
-                    notifications.value = parseResponse(it)
+                    notifications.postValue(parseResponse(it))
                 }
             } catch (e: Exception) {
                 Timber.e(e)
             }
-            isLoading.value = false
+            isLoading.postValue(false)
         }
     }
 
     @Suppress("unused")
     private fun parseSystemResponse(doc: Document): List<SystemNotification> {
         doc.apply {
-            val dateTimeList = select("span.xg1").map {
-                it.text()
-            }
+            val dateTimeList = select("span.xg1").map { it.text() }
             return select("dl.cl").mapIndexed { index, element ->
                 val title = element.selectFirst("dd.ntc_body")?.html().orEmpty()
                 val dateTime = dateTimeList.getOrNull(index).orEmpty()
-
-                SystemNotification(
-                    title = title,
-                    dateTime = dateTime
-                )
+                SystemNotification(title = title, dateTime = dateTime)
             }
         }
     }
@@ -86,7 +80,6 @@ class NotificationViewModel : ViewModel() {
                         it.attr("href", "lcg:$href")
                     }
                 }
-
                 BaseNotification(
                     avatar = avatarElement.attr("src"),
                     content = ntc.html(),
