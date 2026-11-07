@@ -144,7 +144,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
 
     private fun shouldShowBottomNavigation(fragment: Fragment): Boolean {
         return fragment is RecommendFragment
-                || fragment is MessageFragment
+                || fragment is SearchFragment
                 || fragment is DiscoverFragment
                 || fragment is MeFragment
                 || fragment is ForumArticlesFragment
@@ -153,15 +153,13 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     }
 
     private fun restoreCurrentTabFragment() {
-        
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         }
-        
-        
+
         when (currentTabId) {
             R.id.action_home -> showFragment(RecommendFragment::class.java)
-            R.id.action_message -> showFragment(MessageFragment::class.java)
+            R.id.action_search -> showFragment(SearchFragment::class.java)
             R.id.action_forum_navigation -> showFragment(DiscoverFragment::class.java)
             R.id.action_about_me -> showFragment(MeFragment::class.java)
         }
@@ -446,7 +444,6 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             return false
         }
 
-        
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         }
@@ -454,10 +451,8 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         currentTabId = item.itemId
 
         return when (item.itemId) {
-            R.id.action_search -> { showFragment(SearchFragment::class.java) }
-            R.id.action_message -> {
-                binding.bottomNavigation.removeBadge(R.id.action_message)
-                showFragment(MessageFragment::class.java)
+            R.id.action_search -> {
+                showFragment(SearchFragment::class.java)
                 true
             }
             R.id.action_forum_navigation -> {
