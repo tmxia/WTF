@@ -8,6 +8,7 @@
     android:background="@color/slight_light_gray">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:fitsSystemWindows="true"
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -30,7 +31,7 @@
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/message_tab"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:background="@color/slight_light_gray"
             app:tabIndicatorColor="@color/colorAccent"
             app:tabIndicatorHeight="3dp"
