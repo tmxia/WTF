@@ -10,11 +10,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
@@ -23,15 +20,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.framework.topbase.TopFragment
 
 class FollowFragment : TopFragment(), ControllableFragment {
 
     private var pager: ViewPager2? = null
-    private var tabLayout: TabLayout? = null
 
     override fun isControllable(): Boolean = true
 
@@ -95,7 +89,8 @@ class FollowFragment : TopFragment(), ControllableFragment {
                     modifier = Modifier.fillMaxSize(),
                     factory = { context ->
                         ViewPager2(context).apply {
-                            adapter = FollowPagerAdapter(childFragmentManager, lifecycle)
+                            // 核心修复：使用你项目原有的 FollowViewPagerAdapter
+                            adapter = FollowViewPagerAdapter(childFragmentManager, lifecycle)
                             pager = this
                             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                                 override fun onPageSelected(position: Int) {

@@ -26,22 +26,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
-import top.easelink.framework.topbase.BaseFragment
+import top.easelink.framework.base.BaseFragment
 import top.easelink.lcg.R
-import top.easelink.lcg.ui.main.source.model.Article
+import top.easelink.lcg.databinding.FragmentFavoriteArticlesBinding
 import top.easelink.lcg.ui.main.articles.viewmodel.FavoriteArticlesViewModel
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 
 class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, FavoriteArticlesViewModel>() {
-    // BaseFragment 需要保留 getLayoutId，但我们现在不依赖它渲染内容了
-    override fun getLayoutId(): Int = R.layout.fragment_favorite_articles
     private lateinit var mViewModel: FavoriteArticlesViewModel
 
+    override fun getLayoutId(): Int = R.layout.fragment_favorite_articles
     override fun initViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentFavoriteArticlesBinding {
         return FragmentFavoriteArticlesBinding.inflate(inflater, container, false)
     }
-
     override fun getViewModel(): FavoriteArticlesViewModel {
         return ViewModelProvider(this)[FavoriteArticlesViewModel::class.java]
     }
@@ -104,7 +102,6 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                         Text(text = article.author ?: "", fontSize = 12.sp, color = Color.Gray)
-                                        Text(text = article.date ?: "", fontSize = 12.sp, color = Color.Gray)
                                     }
                                 }
                             }
