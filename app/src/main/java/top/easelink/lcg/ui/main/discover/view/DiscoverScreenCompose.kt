@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -27,6 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import timber.log.Timber
 import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.discover.model.DiscoverModel
@@ -34,6 +37,7 @@ import top.easelink.lcg.ui.main.discover.model.ForumListModel
 import top.easelink.lcg.ui.main.discover.model.ForumNavigationModel
 import top.easelink.lcg.ui.main.discover.model.RankListModel
 import top.easelink.lcg.ui.main.discover.model.RankModel
+import top.easelink.lcg.ui.main.discover.model.generateAllForums
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -51,16 +55,10 @@ fun DiscoverScreenCompose(
     val rankModels = models.filterIsInstance<RankListModel>().flatMap { it.listModel }
     val allForums = forumModel?.forumList ?: emptyList()
 
-    if (rankModels.isNotEmpty()) {
-        Timber.d("【发现页-UI】界面刷新，第一条热榜: ${rankModels.first().title} (热度: ${rankModels.first().num})")
-    }
-
-    // 自定义板块状态管理
     val prefs = remember { context.getSharedPreferences("forum_customize", Context.MODE_PRIVATE) }
     var displayUrls by remember { mutableStateOf(loadSavedUrls(prefs, allForums)) }
     var showCustomizeDialog by remember { mutableStateOf(false) }
 
-    // 当 allForums 发生变化时（如刷新），重新同步展示列表
     LaunchedEffect(allForums) {
         displayUrls = loadSavedUrls(prefs, allForums)
     }
@@ -79,7 +77,7 @@ fun DiscoverScreenCompose(
                     forums = displayedForums,
                     onForumClick = onForumClick,
                     onMoreClick = onMoreForumsClick,
-                    onLongClick = { showCustomizeDialog = true } // 触发长按定制
+                    onLongClick = { showCustomizeDialog = true }
                 )
             }
         }
@@ -138,12 +136,32 @@ fun DiscoverScreenCompose(
         }
     }
 
-    // 定制弹窗
     if (showCustomizeDialog) {
         ForumCustomizeDialog(
             allForums = allForums,
             currentUrls = displayUrls,
             onDismiss = { showCustomizeDialog = false },
+            onReset = {
+                val hardcodedForums = generateAllForums(context)
+                val resetUrls = hardcodedForums.mapNotNull { original ->
+                    val fidMatch = Regex("""(?:forum-|fid=)([0-9]+)""").find(original.url)
+                    val fid = fidMatch?.groupValues?.get(1)
+                    if (fid != null) {
+                        val matchedUrl = allForums.find { 
+                            it.url.contains("forum-$fid-1.html") || 
+                            it.url.contains("fid=$fid") || 
+                            it.url.contains("forum-$fid-") 
+                        }?.url 
+                        matchedUrl ?: "forum-$fid-1.html"
+                    } else {
+                        original.url
+                    }
+                }.distinct()
+
+                displayUrls = resetUrls
+                prefs.edit().putString("forum_urls", resetUrls.joinToString(",")).apply()
+                showCustomizeDialog = false
+            },
             onSave = { newUrls ->
                 displayUrls = newUrls
                 prefs.edit().putString("forum_urls", newUrls.joinToString(",")).apply()
@@ -153,13 +171,16 @@ fun DiscoverScreenCompose(
     }
 }
 
-// 读取已保存的配置，如果没有则默认取前8个
 private fun loadSavedUrls(prefs: android.content.SharedPreferences, allForums: List<ForumNavigationModel>): List<String> {
     val saved = prefs.getString("forum_urls", null)
     if (saved != null) {
-        return saved.split(",").filter { it.isNotBlank() }
+        val validUrls = allForums.map { it.url }.toSet()
+        val cleaned = saved.split(",").filter { it.isNotBlank() && it in validUrls }
+        if (cleaned.isNotEmpty()) {
+            return cleaned
+        }
     }
-    return allForums.take(8).map { it.url }
+    return allForums.filter { !it.isSubForum }.take(8).map { it.url }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -178,8 +199,10 @@ fun ForumNavigationSection(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
-                onClick = { }, // 点击卡片本身不做事，点击里面的具体项才跳转
-                onLongClick = onLongClick
+                onClick = { },
+                onLongClick = onLongClick,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
             )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -189,7 +212,10 @@ fun ForumNavigationSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("常用板块导航", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color.Black)
-                Text("右滑查看更多 >", fontSize = 12.sp, fontWeight = FontWeight.Normal, color = Color(0xFF999999), modifier = Modifier.clickable { onMoreClick() })
+                Text("右滑查看更多 >", fontSize = 12.sp, fontWeight = FontWeight.Normal, color = Color(0xFF999999), modifier = Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { onMoreClick() })
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -201,7 +227,10 @@ fun ForumNavigationSection(
                         modifier = Modifier
                             .width(56.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable { onForumClick(forum.title, forum.url) }
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { onForumClick(forum.title, forum.url) }
                             .padding(vertical = 4.dp)
                     ) {
                         Icon(painterResource(id = forum.drawableRes), forum.title, tint = Color.Unspecified, modifier = Modifier.size(40.dp))
@@ -215,7 +244,10 @@ fun ForumNavigationSection(
                         modifier = Modifier
                             .width(56.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable { onMoreClick() }
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { onMoreClick() }
                             .padding(vertical = 4.dp)
                     ) {
                         Icon(painterResource(id = R.drawable.ic_more), "更多", tint = Color(0xFF999999), modifier = Modifier.size(40.dp))
@@ -233,184 +265,234 @@ fun ForumCustomizeDialog(
     allForums: List<ForumNavigationModel>,
     currentUrls: List<String>,
     onDismiss: () -> Unit,
+    onReset: () -> Unit,
     onSave: (List<String>) -> Unit
 ) {
     val selectedUrls = remember { mutableStateListOf<String>().apply { addAll(currentUrls) } }
     val expandedGroups = remember { mutableStateMapOf<String, Boolean>() }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(16.dp),
-        containerColor = Color(0xFFF5F5F5),
-        title = { 
-            Text(
-                "自定义常用板块", 
-                fontSize = 16.sp, 
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 4.dp)
-            ) 
-        },
-        text = {
-            // 去掉 weight(1f)，改用 heightIn 让内容自适应并限制最大高度，消灭上下巨大留白
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text("已选板块", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 6.dp))
-                
-                LazyColumn(
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xFFF5F5F5),
+            shadowElevation = 0.dp,
+            tonalElevation = 0.dp
+        ) {
+            Column(modifier = Modifier.wrapContentHeight()) {
+                // 顶部标题栏
+                Row(
                     modifier = Modifier
-                        .heightIn(max = 200.dp) // 限制最大高度，内容少时自动收紧
                         .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    items(selectedUrls) { url ->
-                        val forum = allForums.find { it.url == url }
-                        if (forum != null) {
+                    Text("自定义常用板块", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text(
+                        text = "恢复默认",
+                        fontSize = 13.sp,
+                        color = Color(0xFFE53935),
+                        modifier = Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { onReset() }
+                    )
+                }
+
+                // 列表区域
+                Column(
+                    modifier = Modifier
+                        .wrapContentHeight()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Text("已选板块", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 6.dp))
+                    
+                    // 已选区最大高度 110dp
+                    LazyColumn(modifier = Modifier.heightIn(max = 110.dp).fillMaxWidth()) {
+                        items(selectedUrls) { url ->
+                            val forum = allForums.find { it.url == url }
+                            if (forum != null) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color.White)
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null
+                                        ) { }
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    Text(forum.title, modifier = Modifier.weight(1f), fontSize = 13.sp, color = Color.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    
+                                    IconButton(
+                                        onClick = {
+                                            val index = selectedUrls.indexOf(url)
+                                            if (index > 0) {
+                                                val tmp = selectedUrls[index]; selectedUrls[index] = selectedUrls[index - 1]; selectedUrls[index - 1] = tmp
+                                            }
+                                        }, modifier = Modifier.size(24.dp)
+                                    ) { Icon(Icons.Default.KeyboardArrowUp, "上移", modifier = Modifier.size(16.dp), tint = Color.Gray) }
+                                    
+                                    IconButton(
+                                        onClick = {
+                                            val index = selectedUrls.indexOf(url)
+                                            if (index != -1 && index < selectedUrls.size - 1) {
+                                                val tmp = selectedUrls[index]; selectedUrls[index] = selectedUrls[index + 1]; selectedUrls[index + 1] = tmp
+                                            }
+                                        }, modifier = Modifier.size(24.dp)
+                                    ) { Icon(Icons.Default.KeyboardArrowDown, "下移", modifier = Modifier.size(16.dp), tint = Color.Gray) }
+                                    
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "移除",
+                                        fontSize = 13.sp,
+                                        color = Color.Red,
+                                        modifier = Modifier.clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null
+                                        ) { selectedUrls.remove(url) }
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                            }
+                        }
+                    }
+                    
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.LightGray)
+                    Text("点击添加板块", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 6.dp))
+                    
+                    // 添加区最大高度 180dp
+                    LazyColumn(modifier = Modifier.heightIn(max = 180.dp).fillMaxWidth()) {
+                        val unselected = allForums.filter { it.url !in selectedUrls }
+                        val mainForums = unselected.filter { !it.isSubForum }
+                        val subForums = unselected.filter { it.isSubForum }
+
+                        items(mainForums) { main ->
+                            val children = subForums.filter { it.parentTitle == main.title }
+                            val isExpanded = expandedGroups[main.title] == true
+
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color.White)
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null
+                                        ) { 
+                                            if (children.isNotEmpty()) {
+                                                expandedGroups[main.title] = !isExpanded
+                                            } else {
+                                                selectedUrls.add(main.url)
+                                            }
+                                        }
+                                        .padding(horizontal = 10.dp, vertical = 8.dp)
+                                ) {
+                                    Text(
+                                        text = "+ ${main.title}",
+                                        fontSize = 13.sp,
+                                        color = Color.DarkGray,
+                                        modifier = Modifier.weight(1f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    if (children.isNotEmpty()) {
+                                        Icon(
+                                            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                            contentDescription = "折叠",
+                                            tint = Color.Gray,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                                
+                                if (isExpanded) {
+                                    children.forEach { child ->
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(start = 16.dp, top = 2.dp, bottom = 2.dp)
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(Color(0xFFEEEEEE))
+                                                .clickable(
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                    indication = null
+                                                ) { selectedUrls.add(child.url) }
+                                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                        ) {
+                                            Text(
+                                                text = "+ ${child.title}",
+                                                fontSize = 12.sp,
+                                                color = Color.Black,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                        
+                        // 野子版块兜底
+                        val orphanSubs = subForums.filter { sub -> mainForums.none { it.title == sub.parentTitle } }
+                        items(orphanSubs) { child ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(Color.White)
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) { selectedUrls.add(child.url) }
                                     .padding(horizontal = 10.dp, vertical = 6.dp)
                             ) {
-                                Text(forum.title, modifier = Modifier.weight(1f), fontSize = 13.sp, color = Color.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                
-                                IconButton(
-                                    onClick = {
-                                        val index = selectedUrls.indexOf(url)
-                                        if (index > 0) {
-                                            val tmp = selectedUrls[index]; selectedUrls[index] = selectedUrls[index - 1]; selectedUrls[index - 1] = tmp
-                                        }
-                                    }, modifier = Modifier.size(24.dp)
-                                ) { Icon(Icons.Default.KeyboardArrowUp, "上移", modifier = Modifier.size(16.dp), tint = Color.Gray) }
-                                
-                                IconButton(
-                                    onClick = {
-                                        val index = selectedUrls.indexOf(url)
-                                        if (index != -1 && index < selectedUrls.size - 1) {
-                                            val tmp = selectedUrls[index]; selectedUrls[index] = selectedUrls[index + 1]; selectedUrls[index + 1] = tmp
-                                        }
-                                    }, modifier = Modifier.size(24.dp)
-                                ) { Icon(Icons.Default.KeyboardArrowDown, "下移", modifier = Modifier.size(16.dp), tint = Color.Gray) }
-                                
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "移除",
-                                    fontSize = 13.sp,
-                                    color = Color.Red,
-                                    modifier = Modifier.clickable { selectedUrls.remove(url) }
-                                )
+                                Text(text = "+ ${child.title}", fontSize = 13.sp, color = Color.DarkGray)
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
                 }
-                
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.LightGray)
-                Text("点击添加板块", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 6.dp))
-                
-                LazyColumn(
+
+                // 底部按钮区域
+                Row(
                     modifier = Modifier
-                        .heightIn(max = 280.dp) // 限制最大高度
                         .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    val unselected = allForums.filter { it.url !in selectedUrls }
-                    val mainForums = unselected.filter { !it.isSubForum }
-                    val subForums = unselected.filter { it.isSubForum }
-
-                    items(mainForums) { main ->
-                        val children = subForums.filter { it.parentTitle == main.title }
-                        val isExpanded = expandedGroups[main.title] == true
-
-                        Column {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(Color.White)
-                                    .clickable { 
-                                        // 点击整行：如果有子版块则切换折叠，否则直接添加
-                                        if (children.isNotEmpty()) {
-                                            expandedGroups[main.title] = !isExpanded
-                                        } else {
-                                            selectedUrls.add(main.url)
-                                        }
-                                    }
-                                    .padding(horizontal = 10.dp, vertical = 8.dp)
-                            ) {
-                                Text(
-                                    text = "+ ${main.title}",
-                                    fontSize = 13.sp,
-                                    color = Color.DarkGray,
-                                    modifier = Modifier.weight(1f),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                if (children.isNotEmpty()) {
-                                    Icon(
-                                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                        contentDescription = "折叠",
-                                        tint = Color.Gray,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            }
-                            
-                            // 渲染子版块 (折叠状态下才显示)
-                            if (isExpanded) {
-                                children.forEach { child ->
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, top = 2.dp, bottom = 2.dp) // 层级缩进
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .background(Color(0xFFEEEEEE)) // 变色区分
-                                            .clickable { selectedUrls.add(child.url) }
-                                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                                    ) {
-                                        Text(
-                                            text = "+ ${child.title}",
-                                            fontSize = 12.sp,
-                                            color = Color.Black, // 子版块文字颜色稍深一点
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
+                    TextButton(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+                    ) {
+                        Text("取消", fontSize = 14.sp)
                     }
-
-                    // 处理没有归属主版块的野子版块
-                    val orphanSubs = subForums.filter { sub -> mainForums.none { it.title == sub.parentTitle } }
-                    items(orphanSubs) { child ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(Color.White)
-                                .clickable { selectedUrls.add(child.url) }
-                                .padding(horizontal = 10.dp, vertical = 6.dp)
-                        ) {
-                            Text(text = "+ ${child.title}", fontSize = 13.sp, color = Color.DarkGray)
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = { onSave(selectedUrls.toList()) },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
+                        shape = RoundedCornerShape(8.dp),
+                        elevation = ButtonDefaults.buttonElevation(0.dp) // 底部按钮取消阴影
+                    ) {
+                        Text("保存", color = Color.White, fontSize = 14.sp)
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = { onSave(selectedUrls.toList()) }) { 
-                Text("保存", color = Color(0xFFE53935), fontWeight = FontWeight.Bold) 
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消", color = Color.Gray) }
         }
-    )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -429,7 +511,9 @@ fun RankItemCard(
             .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
                 onClick = { onRankClick(rank.url) },
-                onLongClick = { onRankLongClick(rank.url) }
+                onLongClick = { onRankLongClick(rank.url) },
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
             )
     ) {
         Row(

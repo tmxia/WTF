@@ -9,7 +9,7 @@ object ForumNetworkSource {
 
     private val BLACKLIST = listOf(
         "新帖", "新贴", "举报", "投诉", "管理", "公告", "活动", "大赛", "竞赛", 
-        "招募", "欢迎", "处理", "站务", "福利", "建议", "申请", "专帖", "置顶", "版规", "指引"
+        "招募", "欢迎", "处理", "站务", "福利", "建议", "申请", "专帖", "置顶", "版规", "指引", "办公区", "证据区"
     )
 
     fun fetchAllForumsFromApi(): List<ForumNavigationModel> {
