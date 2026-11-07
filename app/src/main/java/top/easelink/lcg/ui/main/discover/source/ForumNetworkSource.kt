@@ -12,61 +12,73 @@ object ForumNetworkSource {
         val uniqueUrls = mutableSetOf<String>()
 
         try {
-            // 策略 1：请求发帖页，获取最纯净的板块下拉树
-            Timber.d("【板块API】尝试从发帖页面获取真实板块树...")
-            val doc = JsoupClient.sendGetRequestWithUrl("https://www.52pojie.cn/forum.php?mod=post&action=newthread&fid=2")
-            
-            // Discuz! 标准的版块下拉框
-            val options = doc.select("select[name=fid] option, select#fid option")
-            Timber.d("【板块API】发帖页找到 ${options.size} 个选项")
+            Timber.d("【板块API】开始请求 forum.php 获取完整的分类板块树...")
+            val doc = JsoupClient.sendGetRequestWithUrl("https://www.52pojie.cn/forum.php")
 
-            if (options.isNotEmpty()) {
-                for (option in options) {
-                    val text = option.text().trim()
-                    val value = option.attr("value").trim()
-                    
-                    // 过滤掉“请选择”或空选项
-                    if (value.matches(Regex("\\d+")) && text.isNotBlank() && !text.contains("请选择")) {
-                        // 通过缩进和特殊符号判断层级（Discuz 通常用全角空格或 ├ 表示子版块）
-                        val isSub = text.startsWith("&nbsp;") || text.contains("├") || text.startsWith("　") || text.startsWith(">")
-                        val cleanTitle = text.replace("&nbsp;", "").replace("├", "").replace("　", "").replace(">", "").trim()
-                        
-                        val url = "forum-${value}-1.html"
-                        if (uniqueUrls.add(url)) {
+            // Discuz! 标准的分类容器结构：<div id="category_1" class="category"> 或 <div class="category">
+            val categories = doc.select("div[id^=category_], div.category")
+            Timber.d("【板块API】找到 ${categories.size} 个大分类容器")
+
+            for (category in categories) {
+                // 获取分类名称（如“软件安全”、“病毒分析”）
+                val categoryName = category.selectFirst(".category-header, .mtm, h2")?.text()?.trim() ?: ""
+                
+                val dls = category.select("dl")
+                for (dl in dls) {
+                    val mainLink = dl.selectFirst("dt a")
+                    val mainTitleRaw = mainLink?.text()
+                    val mainUrl = mainLink?.attr("href")
+
+                    if (!mainTitleRaw.isNullOrBlank() && !mainUrl.isNullOrBlank() && isForumUrl(mainUrl)) {
+                        val cleanTitle = cleanTitle(mainTitleRaw)
+                        if (uniqueUrls.add(mainUrl)) {
                             list.add(
                                 ForumNavigationModel(
                                     title = cleanTitle,
                                     drawableRes = getIconForForum(cleanTitle),
-                                    url = url,
-                                    isSubForum = isSub
+                                    url = mainUrl,
+                                    isSubForum = false,
+                                    parentTitle = categoryName.ifBlank { null }
                                 )
                             )
+                        }
+                    }
+
+                    // 提取子版块
+                    val subLinks = dl.select("dd a")
+                    for (subLink in subLinks) {
+                        val subTitleRaw = subLink.text()
+                        val subUrl = subLink.attr("href")
+                        if (subTitleRaw.isNotBlank() && subUrl.isNotBlank() && isForumUrl(subUrl)) {
+                            val cleanSubTitle = cleanTitle(subTitleRaw)
+                            if (uniqueUrls.add(subUrl)) {
+                                list.add(
+                                    ForumNavigationModel(
+                                        title = cleanSubTitle,
+                                        drawableRes = getIconForForum(cleanSubTitle),
+                                        url = subUrl,
+                                        isSubForum = true,
+                                        parentTitle = cleanTitle(mainTitleRaw!!)
+                                    )
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            // 策略 2：如果发帖页抓取失败，从首页兜底提取严谨的 forumdisplay 链接
+            // 如果分类容器解析不到（WAF 拦截或者页面改版），回退到最原始的全局 <dl> 扫描
             if (list.isEmpty()) {
-                Timber.w("【板块API】发帖页提取失败，尝试从首页兜底提取...")
-                val homeDoc = JsoupClient.sendGetRequestWithUrl("https://www.52pojie.cn/forum.php")
-                val links = homeDoc.select("a[href^=forum-]")
-                
-                for (link in links) {
-                    val title = link.text().trim()
-                    val url = link.attr("href").trim()
-                    
-                    // 只提取 `forum-数字-1.html` 格式的链接，这绝对是版块
-                    if (url.matches(Regex("forum-\\d+-1\\.html")) && title.isNotBlank() && title.length < 20) {
-                        if (uniqueUrls.add(url)) {
-                            list.add(
-                                ForumNavigationModel(
-                                    title = title,
-                                    drawableRes = getIconForForum(title),
-                                    url = url,
-                                    isSubForum = false
-                                )
-                            )
+                Timber.w("【板块API】分类容器解析为空，启动兜底全局 <dl> 扫描...")
+                val dls = doc.select("dl")
+                for (dl in dls) {
+                    val mainLink = dl.selectFirst("dt a")
+                    val mainTitleRaw = mainLink?.text()
+                    val mainUrl = mainLink?.attr("href")
+                    if (!mainTitleRaw.isNullOrBlank() && !mainUrl.isNullOrBlank() && isForumUrl(mainUrl)) {
+                        val cleanTitle = cleanTitle(mainTitleRaw)
+                        if (uniqueUrls.add(mainUrl)) {
+                            list.add(ForumNavigationModel(cleanTitle, getIconForForum(cleanTitle), mainUrl, false))
                         }
                     }
                 }
@@ -77,6 +89,17 @@ object ForumNetworkSource {
             Timber.e(e, "【板块API】请求异常")
         }
         return list
+    }
+
+    private fun isForumUrl(url: String): Boolean {
+        return url.matches(Regex("forum-\\d+-1\\.html")) || (url.startsWith("forum-") && !url.contains("viewthread"))
+    }
+
+    private fun cleanTitle(raw: String): String {
+        return raw.replace("『", "").replace("』", "")
+            .replace("《", "").replace("》", "")
+            .replace("【", "").replace("】", "")
+            .trim()
     }
 
     private fun getIconForForum(title: String): Int {

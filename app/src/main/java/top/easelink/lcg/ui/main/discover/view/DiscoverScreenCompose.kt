@@ -281,29 +281,36 @@ fun ForumCustomizeDialog(
                 LazyColumn(modifier = Modifier.heightIn(max = 250.dp)) {
                     val unselected = allForums.filter { it.url !in selectedUrls }
                     
-                    // 直接平铺所有板块，利用数据源带回的 isSubForum 属性做 UI 区分
                     items(unselected) { forum ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 2.dp)
-                                // 子版块增加左侧内边距
                                 .padding(start = if (forum.isSubForum) 24.dp else 0.dp) 
                         ) {
                             Checkbox(
                                 checked = false,
                                 onCheckedChange = { selectedUrls.add(forum.url) }
                             )
-                            Text(
-                                text = forum.title,
-                                modifier = Modifier.weight(1f),
-                                fontSize = if (forum.isSubForum) 13.sp else 14.sp,
-                                fontWeight = if (forum.isSubForum) FontWeight.Normal else FontWeight.Medium,
-                                color = if (forum.isSubForum) Color.DarkGray else Color.Black,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = forum.title,
+                                    fontSize = if (forum.isSubForum) 13.sp else 14.sp,
+                                    fontWeight = if (forum.isSubForum) FontWeight.Normal else FontWeight.Medium,
+                                    color = if (forum.isSubForum) Color.DarkGray else Color.Black,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                // 如果是主版块且带有分类信息，显示分类小标签
+                                if (!forum.isSubForum && forum.parentTitle != null) {
+                                    Text(
+                                        text = forum.parentTitle,
+                                        fontSize = 11.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
                         }
                     }
                     
