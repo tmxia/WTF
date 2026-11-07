@@ -336,6 +336,15 @@ fun ForumCustomizeDialog(
                             Text(child.title, modifier = Modifier.weight(1f), fontSize = 14.sp)
                         }
                     }
+                    
+                    // 如果未选列表彻底为空，给个文字提示
+                    if (unselected.isEmpty()) {
+                        item {
+                            Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                                Text("已加载全部可用板块", fontSize = 13.sp, color = Color.Gray)
+                            }
+                        }
+                    }
                 }
             }
         },
