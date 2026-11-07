@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.union
@@ -55,23 +54,23 @@ class MessageFragment : TopFragment(), ControllableFragment {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return ComposeView(requireContext()).apply {
+        val context = requireContext()
+        // 完全复刻“我的帖子”的外层结构
+        val swipeRefreshLayout = androidx.swiperefreshlayout.widget.SwipeRefreshLayout(context).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         }
-    }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        
-        notificationViewModel = ViewModelProvider(this)[NotificationViewModel::class.java]
-        conversationViewModel = ViewModelProvider(this)[ConversationListViewModel::class.java]
-        val context = requireContext()
+        val composeView = ComposeView(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
 
-        (view as ComposeView).setContent {
+        composeView.setContent {
             val isLoggedIn by AccountManager.isLoggedIn.observeAsState(initial = false)
             val notifications by notificationViewModel.notifications.observeAsState()
             val conversations by conversationViewModel.conversations.observeAsState()
@@ -86,14 +85,12 @@ class MessageFragment : TopFragment(), ControllableFragment {
                 }
             } else {
                 Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
-                    // 核心修复：在顶部栏外层包裹一个 Column，强制填充白色，并加上状态栏避让
+                    // 头部区域，严格不加任何 statusBarsPadding
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Color.White)
-                            .statusBarsPadding() // 完美避开系统状态栏
                     ) {
-                        // 顶部导航栏 (Material3 标准写法)
                         TopAppBar(
                             title = { Text("我的信息", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black) },
                             navigationIcon = {
@@ -102,54 +99,38 @@ class MessageFragment : TopFragment(), ControllableFragment {
                                 }
                             },
                             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
-                            windowInsets = WindowInsets(0, 0, 0, 0) // 取消内部自带的 Insets 避让，防止双重留白
+                            windowInsets = WindowInsets(0, 0, 0, 0) // 保持与我的帖子一致
                         )
 
-                    // Tab 栏 (完美复刻“我的帖子”的 ScrollableTabRow)
-                    ScrollableTabRow(
-                        selectedTabIndex = selectedTab,
-                        edgePadding = 16.dp,
-                        containerColor = Color.White,
-                        contentColor = Color(0xFFE53935),
-                        divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) },
-                        indicator = { tabPositions ->
-                            TabRowDefaults.SecondaryIndicator(
-                                Modifier
-                                    .tabIndicatorOffset(tabPositions[selectedTab])
-                                    .fillMaxWidth(),
-                                height = 3.dp,
-                                color = Color(0xFFE53935) // 使用与你主题一致的红色
+                        ScrollableTabRow(
+                            selectedTabIndex = selectedTab,
+                            edgePadding = 16.dp,
+                            containerColor = Color.White,
+                            contentColor = Color(0xFFE53935),
+                            divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) },
+                            indicator = { tabPositions ->
+                                TabRowDefaults.SecondaryIndicator(
+                                    Modifier
+                                        .tabIndicatorOffset(tabPositions[selectedTab])
+                                        .fillMaxWidth(),
+                                    height = 3.dp,
+                                    color = Color(0xFFE53935)
+                                )
+                            }
+                        ) {
+                            Tab(
+                                selected = selectedTab == 0,
+                                onClick = { selectedTab = 0 },
+                                text = { Text("通知", fontSize = 15.sp, color = if (selectedTab == 0) Color(0xFFE53935) else Color(0xFF888888), fontWeight = if (selectedTab == 0) FontWeight.Medium else FontWeight.Normal) }
+                            )
+                            Tab(
+                                selected = selectedTab == 1,
+                                onClick = { selectedTab = 1 },
+                                text = { Text("私信", fontSize = 15.sp, color = if (selectedTab == 1) Color(0xFFE53935) else Color(0xFF888888), fontWeight = if (selectedTab == 1) FontWeight.Medium else FontWeight.Normal) }
                             )
                         }
-                    ) {
-                        Tab(
-                            selected = selectedTab == 0,
-                            onClick = { selectedTab = 0 },
-                            text = { 
-                                Text(
-                                    text = "通知",
-                                    fontSize = 15.sp,
-                                    color = if (selectedTab == 0) Color(0xFFE53935) else Color(0xFF888888),
-                                    fontWeight = if (selectedTab == 0) FontWeight.Medium else FontWeight.Normal
-                                ) 
-                            }
-                        )
-                        Tab(
-                            selected = selectedTab == 1,
-                            onClick = { selectedTab = 1 },
-                            text = { 
-                                Text(
-                                    text = "私信",
-                                    fontSize = 15.sp,
-                                    color = if (selectedTab == 1) Color(0xFFE53935) else Color(0xFF888888),
-                                    fontWeight = if (selectedTab == 1) FontWeight.Medium else FontWeight.Normal
-                                ) 
-                            }
-                        )
                     }
-                    } // 闭合包裹 TopAppBar 和 ScrollableTabRow 的白色 Column
-                    
-                    // 内容区
+
                     Box(modifier = Modifier.fillMaxSize().weight(1f)) {
                         if (selectedTab == 0) {
                             if (isNotifLoading && notifications == null) {
@@ -168,7 +149,6 @@ class MessageFragment : TopFragment(), ControllableFragment {
                 }
             }
             
-            // 初始化数据
             LaunchedEffect(isLoggedIn) {
                 if (isLoggedIn) {
                     notificationViewModel.fetchNotifications()
@@ -176,6 +156,15 @@ class MessageFragment : TopFragment(), ControllableFragment {
                 }
             }
         }
+
+        swipeRefreshLayout.addView(composeView)
+        return swipeRefreshLayout
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        notificationViewModel = ViewModelProvider(this)[NotificationViewModel::class.java]
+        conversationViewModel = ViewModelProvider(this)[ConversationListViewModel::class.java]
     }
 }
 
