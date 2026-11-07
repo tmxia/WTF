@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -32,20 +33,23 @@ import top.easelink.lcg.databinding.FragmentFavoriteArticlesBinding
 import top.easelink.lcg.ui.main.articles.viewmodel.FavoriteArticlesViewModel
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
+import top.easelink.lcg.utils.WebsiteConstant.GET_FAVORITE_QUERY
 
 class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, FavoriteArticlesViewModel>() {
-    private lateinit var mViewModel: FavoriteArticlesViewModel
+    private var _binding: FragmentFavoriteArticlesBinding? = null
+    private val binding get() = _binding!!
 
     override fun getLayoutId(): Int = R.layout.fragment_favorite_articles
+
     override fun initViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentFavoriteArticlesBinding {
-        return FragmentFavoriteArticlesBinding.inflate(inflater, container, false)
+        return FragmentFavoriteArticlesBinding.inflate(inflater, container, false).also { _binding = it }
     }
+
     override fun getViewModel(): FavoriteArticlesViewModel {
         return ViewModelProvider(this)[FavoriteArticlesViewModel::class.java]
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        mViewModel = getViewModel()
         return ComposeView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
@@ -53,12 +57,16 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        mViewModel.fetchArticles(top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher.FetchType.FETCH_INIT) {}
+        
+        // 核心修复：使用父类暴露的 viewModel，确保 UI 监听和网络请求是同一个实例
+        viewModel.fetchArticles(top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher.FetchType.FETCH_INIT) {}
         
         (view as ComposeView).setContent {
-            val articles by mViewModel.articles.observeAsState(initial = emptyList())
-            val isLoading by mViewModel.isLoading.observeAsState(initial = false)
-            
+            val articles by viewModel.articles.observeAsState(initial = emptyList())
+            val isLoading by viewModel.isLoading.observeAsState(initial = false)
+            var showMenu by remember { mutableStateOf(false) }
+            val context = LocalContext.current
+
             Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
                 Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
                     TopAppBar(
@@ -69,8 +77,38 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
                             }
                         },
                         actions = {
-                            IconButton(onClick = { mViewModel.removeAllFavorites() }) {
-                                Icon(Icons.Filled.MoreVert, contentDescription = "更多", tint = Color.Black)
+                            Box {
+                                IconButton(onClick = { showMenu = true }) {
+                                    Icon(Icons.Filled.MoreVert, contentDescription = "菜单", tint = Color.Black)
+                                }
+                                // 核心修复：恢复原版的完整下拉菜单项
+                                DropdownMenu(
+                                    expanded = showMenu,
+                                    onDismissRequest = { showMenu = false },
+                                    modifier = Modifier.background(Color.White)
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("清空收藏", fontSize = 14.sp) },
+                                        onClick = {
+                                            showMenu = false
+                                            viewModel.removeAllFavorites()
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("同步收藏", fontSize = 14.sp) },
+                                        onClick = {
+                                            showMenu = false
+                                            viewModel.syncFavorites()
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("管理收藏", fontSize = 14.sp) },
+                                        onClick = {
+                                            showMenu = false
+                                            WebViewActivity.startWebViewWith(SERVER_BASE_URL + GET_FAVORITE_QUERY, context)
+                                        }
+                                    )
+                                }
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
@@ -109,12 +147,6 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
                     }
                 }
             }
-        }
-    }
-
-    companion object {
-        fun newInstance(): FavoriteArticlesFragment {
-            return FavoriteArticlesFragment()
         }
     }
 }
