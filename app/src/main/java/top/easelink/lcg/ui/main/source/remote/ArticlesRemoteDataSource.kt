@@ -321,9 +321,14 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                         return@mapNotNull null
                     }
 
-                    // 极宽提取器：只要有回复数就抓，没有就默认0
-                    val reply = element.selectFirst("a.xi2")?.text()?.toIntOrNull() ?: 0
-                    val view = element.selectFirst("em")?.text()?.toIntOrNull() ?: 0
+                    // 核心修复：必须在 td.num 这个数据列里提取，防止抓到作者名字
+                    val replyStr = element.selectFirst("td.num a.xi2")?.text() ?: 
+                                   element.select("a.xi2").map { it.text() }.firstOrNull { it.toIntOrNull() != null } ?: "0"
+                    val viewStr = element.selectFirst("td.num em")?.text() ?: 
+                                  element.select("em").map { it.text() }.firstOrNull { it.toIntOrNull() != null } ?: "0"
+                                  
+                    val reply = replyStr.toIntOrNull() ?: 0
+                    val view = viewStr.toIntOrNull() ?: 0
                     
                     // 无死角提取标题和链接
                     val xstNode = element.selectFirst("a.xst")
