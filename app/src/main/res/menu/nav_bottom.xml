@@ -14,7 +14,7 @@
         app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/action_search"
-        android:icon="@drawable/ic_find"
+        android:icon="@drawable/ic_search"
         android:title="搜索"
         app:showAsAction="ifRoom"/>
     <item
