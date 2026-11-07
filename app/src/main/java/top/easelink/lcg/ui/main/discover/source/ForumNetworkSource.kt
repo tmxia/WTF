@@ -7,72 +7,71 @@ import timber.log.Timber
 
 object ForumNetworkSource {
 
-    // 垃圾版块黑名单关键字
-    private val BLACKLIST = listOf("大赛", "竞赛", "公告", "活动", "招募", "征集", "专帖", "申请", "建议")
+    // 极端黑名单过滤：剔除所有包含操作、管理、公告等无关字眼的标题
+    private val BLACKLIST = listOf(
+        "新帖", "举报", "投诉", "管理", "公告", "活动", "大赛", "竞赛", 
+        "招募", "欢迎", "处理", "站务", "福利", "建议", "申请", "专帖", "置顶"
+    )
 
     fun fetchAllForumsFromApi(): List<ForumNavigationModel> {
         val list = mutableListOf<ForumNavigationModel>()
         val uniqueUrls = mutableSetOf<String>()
 
         try {
-            Timber.d("【板块API】开始暴力遍历 forum.php ...")
+            Timber.d("【板块API】开始严苛模式遍历 forum.php ...")
             val doc = JsoupClient.sendGetRequestWithUrl("https://www.52pojie.cn/forum.php")
             
-            // 暴力抓取全页面所有的 <a> 标签，不管它在哪
-            val allLinks = doc.select("a[href]")
-            Timber.d("【板块API】全页找到 ${allLinks.size} 个链接，开始提取...")
+            // 仅提取可能是版块的 <a> 标签
+            val allLinks = doc.select("a[href*=forum-], a[href*=forumdisplay]")
+            Timber.d("【板块API】找到 ${allLinks.size} 个候选链接")
 
             for (link in allLinks) {
                 val href = link.attr("href").trim()
                 val title = link.text().trim()
 
-                if (title.isNotBlank() && isValidForumUrl(href, title)) {
-                    // 标准化 URL (有些是相对路径，有些带参数，这里简单处理下用于去重)
-                    val standardUrl = if (href.startsWith("http")) href else href
+                // 1. 严格且合规的 URL 判断
+                if (!isValidForumUrl(href)) continue
+                
+                // 2. 极端严苛的标题过滤
+                if (!isValidForumTitle(title)) continue
+
+                val standardUrl = if (href.startsWith("http")) href else href
+                if (uniqueUrls.add(standardUrl)) {
+                    // 在构造时直接判定是否为子版块，彻底解决上一版 copy() 导致的报错
+                    val isSub = link.parents().any { it.tagName() == "dd" }
                     
-                    if (uniqueUrls.add(standardUrl)) {
-                        list.add(
-                            ForumNavigationModel(
-                                title = cleanTitle(title),
-                                drawableRes = getIconForForum(title),
-                                url = standardUrl,
-                                isSubForum = isSubForumLink(link)
-                            )
+                    list.add(
+                        ForumNavigationModel(
+                            title = cleanTitle(title),
+                            drawableRes = getIconForForum(title),
+                            url = standardUrl,
+                            isSubForum = isSub
                         )
-                    }
+                    )
                 }
             }
 
-            Timber.d("【板块API】解析完成，最终确认 ${list.size} 个真实板块")
+            Timber.d("【板块API】净化完成，最终确认 ${list.size} 个干净板块")
         } catch (e: Exception) {
             Timber.e(e, "【板块API】请求异常")
         }
         return list
     }
 
-    // 严格校验是否为真实版块
-    private fun isValidForumUrl(href: String, title: String): Boolean {
-        // 1. 必须包含论坛版块特征
-        val isForumPattern = (href.contains("forum-") && href.endsWith("-1.html")) || 
-                             href.contains("forumdisplay&fid=") ||
-                             href.contains("forum.php?mod=forumdisplay")
-        if (!isForumPattern) return false
-
-        // 2. 排除帖子查看、发帖、搜索等链接
-        if (href.contains("viewthread") || href.contains("action=") || href.contains("mod=post")) return false
-
-        // 3. 黑名单过滤
-        if (BLACKLIST.any { title.contains(it) }) return false
-        
-        // 4. 纯数字或极短的无意义标题过滤
-        if (title.length < 2 || title.toIntOrNull() != null) return false
-
-        return true
+    // 严格 URL 校验：彻底击毙伪装的快捷入口
+    private fun isValidForumUrl(href: String): Boolean {
+        val isPureForum = href.matches(Regex("forum-\\d+-1\\.html")) || href.contains("forumdisplay&fid=")
+        val isJunk = href.contains("newthread") || href.contains("viewthread") || 
+                     href.contains("mod=post") || href.contains("action=")
+        return isPureForum && !isJunk
     }
 
-    // 利用 DOM 结构判断是否为子版块（如果它的父节点含有 dd 标签）
-    private fun isSubForumLink(element: org.jsoup.nodes.Element): Boolean {
-        return element.parents().any { it.tagName() == "dd" }
+    // 严格标题校验：杜绝“处理举报贴”混入
+    private fun isValidForumTitle(title: String): Boolean {
+        if (title.isBlank() || title.length < 2 || title.length > 15) return false
+        if (title.toIntOrNull() != null) return false
+        if (BLACKLIST.any { title.contains(it) }) return false
+        return true
     }
 
     private fun cleanTitle(raw: String): String {
@@ -85,12 +84,10 @@ object ForumNetworkSource {
 
     private fun getIconForForum(title: String): Int {
         return when {
-            title.contains("安全") || title.contains("逆向") || title.contains("病毒") || title.contains("破解") -> R.drawable.ic_sercurite
-            title.contains("软件") || title.contains("程序") || title.contains("工具") || title.contains("资源") -> R.drawable.ic_software
-            title.contains("原创") || title.contains("发布") -> R.drawable.ic_creator
-            title.contains("水") || title.contains("闲聊") -> R.drawable.ic_water
-            title.contains("福利") || title.contains("活动") -> R.drawable.ic_welfare
-            else -> R.drawable.ic_software
+            title.contains("安全") || title.contains("逆向") || title.contains("病毒") || title.contains("破解") || title.contains("软件") -> R.drawable.ic_sercurite
+            title.contains("程序") || title.contains("工具") || title.contains("资源") || title.contains("原创") -> R.drawable.ic_software
+            title.contains("水") || title.contains("闲聊") || title.contains("福利") -> R.drawable.ic_water
+            else -> R.drawable.ic_creator
         }
     }
 }
