@@ -350,12 +350,27 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ================= 退出账号 ================= -->
+        <!-- ================= 查看 Cookie ================= -->
         <TextView
-            android:id="@+id/account_btn"
+            android:id="@+id/btn_view_cookie"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:padding="12dp"
+            android:text="查看当前 Cookie"
+            android:textColor="@color/black"
+            android:textSize="15sp" />
+
+        <!-- ================= 退出账号 ================= -->
+        <TextView
+            android:id="@+id/account_btn"
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="32dp"
             android:background="?attr/selectableItemBackground"
             android:clickable="true"

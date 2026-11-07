@@ -92,6 +92,26 @@ class SettingActivity : TopActivity() {
 
             checkUpdateBtn.setOnClickListener { showMessage(R.string.app_is_latest) }
 
+            // 核心修复：使用 this@SettingActivity 防止上下文丢失
+            btnViewCookie.setOnClickListener {
+                val cookies = top.easelink.lcg.network.LCGCookieJar.cookiesForUrl(top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL)
+                if (cookies.isEmpty()) {
+                    showMessage("本地暂无 Cookie 数据")
+                    return@setOnClickListener
+                }
+                
+                val cookieStr = cookies.entries.joinToString(";\n") { "${it.key} = ${it.value}" }
+                val clipboard = this@SettingActivity.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                val clip = android.content.ClipData.newPlainText("Cookie", cookieStr)
+                clipboard.setPrimaryClip(clip)
+                
+                com.google.android.material.dialog.MaterialAlertDialogBuilder(this@SettingActivity)
+                    .setTitle("当前 Cookie (已复制)")
+                    .setMessage(cookieStr)
+                    .setPositiveButton("确定", null)
+                    .show()
+            }
+
             val batteryPrefs = getSharedPreferences("battery_settings", Context.MODE_PRIVATE)
             val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
             keepAliveSwitch.isChecked = if (batteryPrefs.contains("battery_state")) batteryPrefs.getBoolean("battery_state", true) else powerManager.isIgnoringBatteryOptimizations(packageName)
@@ -150,6 +170,8 @@ class SettingActivity : TopActivity() {
     }
 
     private fun updateAccountButton(isLoggedIn: Boolean) {
+        binding.btnViewCookie.visibility = if (isLoggedIn) View.VISIBLE else View.GONE
+        
         if (!isLoggedIn) {
             with(binding) {
                 syncFavoritesSwitch.isEnabled = false
