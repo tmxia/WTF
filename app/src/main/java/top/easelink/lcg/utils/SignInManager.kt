@@ -9,6 +9,12 @@ object SignInManager {
     private const val DRAW_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=draw&id=2"
 
 
+    fun updateLocalSignInTime() {
+        SharedPreferencesHelper.getUserSp().edit {
+            putLong("sp_key_last_sign_in_at", System.currentTimeMillis())
+        }
+    }
+
     fun isSignedToday(): Boolean {
         val sp = SharedPreferencesHelper.getUserSp()
         val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)
@@ -27,6 +33,8 @@ object SignInManager {
 
             if (applyMessage.contains("已申请") || applyMessage.contains("已完成")) {
                 Timber.d("今日已签到: $applyMessage")
+                // 核心修复：服务端已签到，强制同步本地时间戳
+                updateLocalSignInTime()
                 onResult("ALREADY_DONE", "今日已签到")
                 return
             }
@@ -36,6 +44,8 @@ object SignInManager {
                 .first()?.selectFirst("p")?.text().orEmpty()
 
             Timber.d("签到成功结果: $drawText")
+            // 核心修复：签到成功，强制同步本地时间戳
+            updateLocalSignInTime()
             onResult("SUCCESS", "签到成功！")
 
         } catch (e: Exception) {
