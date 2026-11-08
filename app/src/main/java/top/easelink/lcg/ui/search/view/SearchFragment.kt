@@ -104,6 +104,8 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
     var keyword by remember { mutableStateOf("") }
     var hasSearched by remember { mutableStateOf(false) }
     var showBoardDialog by remember { mutableStateOf(false) }
+    var isBoardMultiMode by remember { mutableStateOf(false) }
+    var tempSelectedFids by remember { mutableStateOf(setOf<String>()) }
     var showSortDialog by remember { mutableStateOf(false) }
     
     val prefs = remember { context.getSharedPreferences("wtf_search_prefs", Context.MODE_PRIVATE) }
@@ -342,45 +344,90 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
         }
     }
 
-    // 板块选择弹窗
+    // 板块选择弹窗（支持长按多选）
     if (showBoardDialog) {
         Dialog(
-            onDismissRequest = { showBoardDialog = false },
+            onDismissRequest = { showBoardDialog = false; isBoardMultiMode = false },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(0.88f).clip(RoundedCornerShape(20.dp)).background(Color.White).padding(20.dp)
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("选择板块", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    Box(modifier = Modifier.size(32.dp).clip(RoundedCornerShape(16.dp)).clickable { showBoardDialog = false }, contentAlignment = Alignment.Center) {
+                    Text(if (isBoardMultiMode) "多选板块" else "选择板块", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    Box(modifier = Modifier.size(32.dp).clip(RoundedCornerShape(16.dp)).clickable { showBoardDialog = false; isBoardMultiMode = false }, contentAlignment = Alignment.Center) {
                         Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.LightGray, modifier = Modifier.size(20.dp))
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
+                
+                // 全部板块按钮
                 Box(
                     modifier = Modifier.fillMaxWidth().height(48.dp).clip(RoundedCornerShape(12.dp))
-                        .background(if (selectedFidName == "全部板块") primaryColor.copy(alpha = 0.1f) else bgColor)
-                        .clickable { viewModel.selectFid(null, "全部板块"); showBoardDialog = false },
+                        .background(if (selectedFidName == "全部板块" && !isBoardMultiMode) primaryColor.copy(alpha = 0.1f) else bgColor)
+                        .clickable { 
+                            viewModel.selectFids(emptyList(), "全部板块")
+                            showBoardDialog = false
+                            isBoardMultiMode = false
+                        },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("全部板块", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = if (selectedFidName == "全部板块") primaryColor else Color.DarkGray)
+                    Text("全部板块", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = if (selectedFidName == "全部板块" && !isBoardMultiMode) primaryColor else Color.DarkGray)
                 }
                 Spacer(modifier = Modifier.height(20.dp))
-                Text("常用板块", fontSize = 13.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 10.dp))
-                Column(modifier = Modifier.fillMaxWidth().heightIn(max = 380.dp).verticalScroll(rememberScrollState())) {
+                Text(if (isBoardMultiMode) "已选 ${tempSelectedFids.size} 个板块" else "常用板块 (长按多选)", fontSize = 13.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 10.dp))
+                
+                Column(modifier = Modifier.weight(1f, fill = false).heightIn(max = 380.dp).verticalScroll(rememberScrollState())) {
                     forumList.forEach { forum ->
-                        val isSelected = selectedFidName == forum.title
+                        val fidStr = forum.fid ?: ""
+                        val isSelected = if (isBoardMultiMode) tempSelectedFids.contains(fidStr) else selectedFidName == forum.title
+                        
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(RoundedCornerShape(12.dp))
                                 .background(if (isSelected) primaryColor.copy(alpha = 0.1f) else bgColor)
-                                .clickable { viewModel.selectFid(forum.fid, forum.title); showBoardDialog = false }
+                                .combinedClickable(
+                                    onClick = {
+                                        if (isBoardMultiMode) {
+                                            tempSelectedFids = if (tempSelectedFids.contains(fidStr)) tempSelectedFids - fidStr else tempSelectedFids + fidStr
+                                        } else {
+                                            viewModel.selectFids(listOf(fidStr), forum.title)
+                                            showBoardDialog = false
+                                        }
+                                    },
+                                    onLongClick = {
+                                        isBoardMultiMode = true
+                                        tempSelectedFids = setOf(fidStr)
+                                    }
+                                )
                                 .padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(forum.title, fontSize = 14.sp, color = if (isSelected) primaryColor else Color.Black, modifier = Modifier.weight(1f))
                             if (isSelected) Icon(Icons.Default.Check, contentDescription = null, tint = primaryColor, modifier = Modifier.size(18.dp))
                         }
+                    }
+                }
+                
+                // 多选模式下的确定按钮
+                if (isBoardMultiMode) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(48.dp).clip(RoundedCornerShape(12.dp))
+                            .background(primaryColor)
+                            .clickable {
+                                if (tempSelectedFids.isNotEmpty()) {
+                                    val names = forumList.filter { tempSelectedFids.contains(it.fid) }.map { it.title }
+                                    val nameStr = if (names.size == 1) names.first() else "已选${names.size}个板块"
+                                    viewModel.selectFids(tempSelectedFids.toList(), nameStr)
+                                } else {
+                                    viewModel.selectFids(emptyList(), "全部板块")
+                                }
+                                showBoardDialog = false
+                                isBoardMultiMode = false
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("确定选择", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color.White)
                     }
                 }
             }
