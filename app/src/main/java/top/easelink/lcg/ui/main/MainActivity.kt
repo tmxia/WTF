@@ -38,6 +38,9 @@ import top.easelink.lcg.ui.main.discover.view.DiscoverFragment
 import top.easelink.lcg.ui.main.forumnav.view.ForumNavigationFragment
 import top.easelink.lcg.ui.main.largeimg.view.LargeImageDialog
 import top.easelink.lcg.ui.main.me.view.MeFragment
+import top.easelink.lcg.ui.profile.view.ProfileFragment
+import top.easelink.lcg.ui.main.history.view.HistoryArticlesFragment
+import top.easelink.lcg.ui.main.follow.view.FollowFragment
 import top.easelink.lcg.ui.search.view.SearchFragment
 import top.easelink.lcg.ui.main.recommand.view.RecommendFragment
 import top.easelink.lcg.ui.main.model.*
@@ -280,7 +283,10 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             is MeFragment,
             is ArticleFragment,
             is ForumArticlesFragment,
-            is FavoriteArticlesFragment -> true
+            is FavoriteArticlesFragment,
+            is FollowFragment,
+            is HistoryArticlesFragment,
+            is ProfileFragment -> true
             else -> false
         }
         setStatusBarAppearance(isLightStatusBar)

@@ -78,7 +78,7 @@ fun ProfileScreen(onBackClick: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
-            .statusBarsPadding() // 关键：让 Compose 自动避开系统状态栏
+             // 关键：让 Compose 自动避开系统状态栏
     ) {
         // 顶部导航栏和 Tab
         Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
