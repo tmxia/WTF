@@ -101,10 +101,12 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
     val totalResult by viewModel.totalResult.observeAsState(initial = null)
     val forumList by viewModel.forumList.observeAsState(initial = emptyList())
     val selectedFidName by viewModel.selectedFidName.observeAsState(initial = "全部板块")
+    val selectedSortName by viewModel.selectedSortName.observeAsState(initial = "按相关度")
 
     var keyword by remember { mutableStateOf("") }
     var hasSearched by remember { mutableStateOf(false) }
     var showBoardDialog by remember { mutableStateOf(false) }
+    var showSortDialog by remember { mutableStateOf(false) }
     
     val prefs = remember { context.getSharedPreferences("wtf_search_prefs", Context.MODE_PRIVATE) }
     var historyList by remember { mutableStateOf(loadHistory(prefs)) }
@@ -222,8 +224,12 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
             }
         }
 
-        // 板块过滤栏
-        Row(modifier = Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 16.dp, vertical = 8.dp)) {
+        // 过滤与排序栏
+        Row(
+            modifier = Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // 范围选择
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -233,6 +239,19 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
                     .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
                 Text("范围：$selectedFidName", fontSize = 12.sp, color = Color.DarkGray)
+                Text(" ▾", fontSize = 10.sp, color = Color.DarkGray)
+            }
+            
+            // 排序选择
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(bgColor)
+                    .clickable { showSortDialog = true }
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            ) {
+                Text("排序：$selectedSortName", fontSize = 12.sp, color = Color.DarkGray)
                 Text(" ▾", fontSize = 10.sp, color = Color.DarkGray)
             }
         }
@@ -373,6 +392,54 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(forum.title, fontSize = 14.sp, color = if (isSelected) primaryColor else Color.Black, modifier = Modifier.weight(1f))
+                            if (isSelected) Icon(Icons.Default.Check, contentDescription = null, tint = primaryColor, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    // 排序选择弹窗
+    if (showSortDialog) {
+        Dialog(
+            onDismissRequest = { showSortDialog = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(0.88f).clip(RoundedCornerShape(20.dp)).background(Color.White).padding(20.dp)
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("选择排序方式", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    Box(modifier = Modifier.size(32.dp).clip(RoundedCornerShape(16.dp)).clickable { showSortDialog = false }, contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.LightGray, modifier = Modifier.size(20.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 选项列表
+                val sortOptions = listOf(
+                    "按相关度" to null,
+                    "按发布时间" to "dateline",
+                    "按最后回复" to "lastpost",
+                    "按回复热度" to "replies"
+                )
+                
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    sortOptions.forEach { (name, orderby) ->
+                        val isSelected = selectedSortName == name
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(RoundedCornerShape(12.dp))
+                                .background(if (isSelected) primaryColor.copy(alpha = 0.1f) else bgColor)
+                                .clickable { 
+                                    viewModel.selectSort(orderby, name)
+                                    showSortDialog = false 
+                                }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(name, fontSize = 14.sp, color = if (isSelected) primaryColor else Color.Black, modifier = Modifier.weight(1f))
                             if (isSelected) Icon(Icons.Default.Check, contentDescription = null, tint = primaryColor, modifier = Modifier.size(18.dp))
                         }
                     }

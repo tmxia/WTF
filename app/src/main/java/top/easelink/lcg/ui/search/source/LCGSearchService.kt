@@ -24,7 +24,7 @@ object LCGSearchService {
     private var mNextPageUrl: String? = null
     private var mTotalResults: String? = null
 
-    fun doSearchWith(keyword: String, fid: String? = null): LCGSearchResults {
+    fun doSearchWith(keyword: String, fid: String? = null, orderby: String? = null): LCGSearchResults {
         mNextPageUrl = null
         mTotalResults = null
         if (keyword.isBlank() || !canSendRequest()) {
@@ -38,6 +38,7 @@ object LCGSearchService {
                 put("mod", "forum")
                 put("srchtype", "title")
                 put("srhfid", fid ?: "")
+                if (!orderby.isNullOrBlank()) put("orderby", orderby)
                 put("srhlocality", "forum::index")
                 put("srchtxt", keyword)
                 put("searchsubmit", "true")

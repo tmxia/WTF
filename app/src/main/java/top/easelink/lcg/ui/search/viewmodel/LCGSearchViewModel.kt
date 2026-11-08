@@ -18,6 +18,8 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     val isLoadingMore = MutableLiveData<Boolean>()
     
     val selectedFidName = MutableLiveData<String>("全部板块")
+    val selectedSortName = MutableLiveData<String>("按相关度")
+    private var mSortOrder: String? = null
     val forumList = MutableLiveData<List<ForumNavigationModel>>()
     
     override fun fetch(type: LCGSearchResultAdapter.ContentFetcher.Type, callback: ((Boolean) -> Unit)?) {
@@ -32,6 +34,14 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
         if (!forumList.value.isNullOrEmpty()) return
         GlobalScope.launch(IOPool) {
             forumList.postValue(ForumNetworkSource.fetchAllForumsFromApi())
+        }
+    }
+
+    fun selectSort(orderby: String?, name: String) {
+        mSortOrder = orderby
+        selectedSortName.value = name
+        if (!mKeyWord.isNullOrBlank()) {
+            fetchInit(mKeyWord!!)
         }
     }
 
@@ -56,7 +66,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
         searchResults.value = emptyList()
         totalResult.value = null
         GlobalScope.launch(IOPool) {
-            doSearchWith(keyword, mFid).let {
+            doSearchWith(keyword, mFid, mSortOrder).let {
                 searchResults.postValue(it.searchResultList)
                 totalResult.postValue(it.totalResult)
                 hasMore = it.searchResultList.isNotEmpty()
