@@ -1,5 +1,8 @@
 package top.easelink.lcg.ui.search.viewmodel
 
+import android.content.Context
+import top.easelink.lcg.appinit.LCGApp
+
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.GlobalScope
@@ -17,10 +20,16 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     val isLoading = MutableLiveData<Boolean>()
     val isLoadingMore = MutableLiveData<Boolean>()
     
-    val selectedFidName = MutableLiveData<String>("全部板块")
+        private val prefs = LCGApp.context.getSharedPreferences("wtf_search_prefs", Context.MODE_PRIVATE)
+
+    val selectedFidName = MutableLiveData<String>(prefs.getString("search_fid_name", "全部板块") ?: "全部板块")
+    val selectedSortName = MutableLiveData<String>(prefs.getString("search_sort_name", "按相关度") ?: "按相关度")
     val isMultiSelect = MutableLiveData<Boolean>(false)
-    val selectedSortName = MutableLiveData<String>("按相关度")
-    private var mSortOrder: String? = null
+    private var mFids: List<String> = prefs.getString("search_fids", "")?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+    private var mSortOrder: String? = prefs.getString("search_sort_order", null)
+    
+    // 暴露当前选中的 ID 列表，供 UI 同步状态
+    val currentFids: List<String> get() = mFids
     val forumList = MutableLiveData<List<ForumNavigationModel>>()
     
     override fun fetch(type: LCGSearchResultAdapter.ContentFetcher.Type, callback: ((Boolean) -> Unit)?) {
@@ -41,6 +50,8 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     fun selectSort(orderby: String?, name: String) {
         mSortOrder = orderby
         selectedSortName.value = name
+        prefs.edit().putString("search_sort_order", orderby)
+            .putString("search_sort_name", name).apply()
         if (!mKeyWord.isNullOrBlank()) {
             fetchInit(mKeyWord!!)
         }
@@ -50,6 +61,8 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
         mFids = fids
         selectedFidName.value = name
         isMultiSelect.value = fids.size > 1
+        prefs.edit().putString("search_fids", fids.joinToString(","))
+            .putString("search_fid_name", name).apply()
         if (!mKeyWord.isNullOrBlank()) {
             fetchInit(mKeyWord!!)
         }
