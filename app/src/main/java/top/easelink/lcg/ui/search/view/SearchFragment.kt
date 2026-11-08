@@ -107,11 +107,27 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
     
     val prefs = remember { context.getSharedPreferences("wtf_search_prefs", Context.MODE_PRIVATE) }
     var historyList by remember { mutableStateOf(loadHistory(prefs)) }
-    val hotSearchWords = listOf("微信", "逆向破解", "Magisk", "Xposed", "Dex修复", "汉化教程", "自动化脚本", "Arsc")
     
-    val primaryColor = Color(0xFFE53935) // WTF 红色
-    val bgColor = Color(0xFFF5F5F5)      // 全局浅灰底色
-    val chipBgColor = Color(0xFFF2F3F5)  // 标签底色
+    // 热门搜索与自定义
+    val defaultHotWords = listOf("微信", "逆向破解", "Magisk", "Xposed", "Dex修复", "汉化教程", "自动化脚本", "Arsc")
+    var hotSearchWords by remember { mutableStateOf(loadHotWords(prefs, defaultHotWords)) }
+    var showCustomHotDialog by remember { mutableStateOf(false) }
+    var editingHotIndex by remember { mutableStateOf(-1) }
+    var editingHotText by remember { mutableStateOf("") }
+
+    // 热门胶囊多彩配色
+    val chipColors = listOf(
+        Color(0xFFE53935), // 柔和红
+        Color(0xFF1E88E5), // 柔和蓝
+        Color(0xFF43A047), // 柔和绿
+        Color(0xFFFB8C00), // 柔和橙
+        Color(0xFF8E24AA), // 柔和紫
+        Color(0xFF00ACC1)  // 柔和青
+    )
+    
+    val primaryColor = Color(0xFFE53935) // WTF 主色调
+    val bgColor = Color(0xFFF5F5F5)      // 页面底色
+    val inputBgColor = Color(0xFFF2F3F5) // 输入框底色
 
     LaunchedEffect(Unit) { viewModel.loadForums() }
 
@@ -135,7 +151,6 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
             modifier = Modifier.fillMaxWidth().background(Color.White).padding(top = 40.dp, bottom = 10.dp, start = 8.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 返回按钮
             Box(
                 modifier = Modifier.size(40.dp).clip(RoundedCornerShape(20.dp)).clickable { onBack() },
                 contentAlignment = Alignment.Center
@@ -144,9 +159,9 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
             }
             Spacer(modifier = Modifier.width(4.dp))
             
-            // 极简无边框搜索框
+            // 关键字那样的窗口UI：大圆角、背景纯色
             Row(
-                modifier = Modifier.weight(1f).height(38.dp).clip(RoundedCornerShape(19.dp)).background(bgColor).padding(horizontal = 12.dp),
+                modifier = Modifier.weight(1f).height(40.dp).clip(RoundedCornerShape(20.dp)).background(inputBgColor).padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(18.dp))
@@ -183,7 +198,6 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
             }
             Spacer(modifier = Modifier.width(10.dp))
             
-            // 搜索按钮（加上了按压反馈）
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
@@ -232,7 +246,6 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
                                     chipBgColor = Color.White,
                                     onClick = { performSearch(tag) },
                                     onLongClick = {
-                                        // 新增长按删除交互
                                         val updated = historyList.filterNot { it == tag }
                                         historyList = updated
                                         saveHistory(prefs, updated)
@@ -243,15 +256,28 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
                         }
                     }
                     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                        Text("热门搜索", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primaryColor)
+                        Text("热门搜索 (长按可自定义)", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primaryColor)
                     }
                     FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        hotSearchWords.forEach { tag -> 
-                            SearchChip(text = tag, chipBgColor = chipBgColor, isHot = true, primaryColor = primaryColor) { performSearch(tag) } 
+                        hotSearchWords.forEachIndexed { index, tag -> 
+                            val color = chipColors[index % chipColors.size]
+                            SearchChip(
+                                text = tag, 
+                                chipBgColor = color.copy(alpha = 0.1f), 
+                                isHot = true, 
+                                textColor = color, 
+                                onClick = { performSearch(tag) },
+                                onLongClick = {
+                                    editingHotIndex = index
+                                    editingHotText = tag
+                                    showCustomHotDialog = true
+                                }
+                            ) 
                         }
                     }
                 }
             } else {
+                // 结果区 (同前)
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = primaryColor)
                 } else if (searchResults.isEmpty()) {
@@ -297,77 +323,78 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
         }
     }
 
-    // 完美复刻图3：极简板块选择弹窗
+    // 板块选择弹窗
     if (showBoardDialog) {
         Dialog(
             onDismissRequest = { showBoardDialog = false },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth(0.88f)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color.White)
-                    .padding(20.dp)
+                modifier = Modifier.fillMaxWidth(0.88f).clip(RoundedCornerShape(20.dp)).background(Color.White).padding(20.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("选择板块", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    Box(
-                        modifier = Modifier.size(32.dp).clip(RoundedCornerShape(16.dp)).clickable { showBoardDialog = false },
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.size(32.dp).clip(RoundedCornerShape(16.dp)).clickable { showBoardDialog = false }, contentAlignment = Alignment.Center) {
                         Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.LightGray, modifier = Modifier.size(20.dp))
                     }
                 }
-                
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                    modifier = Modifier.fillMaxWidth().height(48.dp).clip(RoundedCornerShape(12.dp))
                         .background(if (selectedFidName == "全部板块") primaryColor.copy(alpha = 0.1f) else bgColor)
-                        .clickable {
-                            viewModel.selectFid(null, "全部板块")
-                            showBoardDialog = false
-                        },
+                        .clickable { viewModel.selectFid(null, "全部板块"); showBoardDialog = false },
                     contentAlignment = Alignment.Center
                 ) {
                     Text("全部板块", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = if (selectedFidName == "全部板块") primaryColor else Color.DarkGray)
                 }
-
                 Spacer(modifier = Modifier.height(20.dp))
                 Text("常用板块", fontSize = 13.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 10.dp))
-
-                Column(
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 380.dp).verticalScroll(rememberScrollState())
-                ) {
+                Column(modifier = Modifier.fillMaxWidth().heightIn(max = 380.dp).verticalScroll(rememberScrollState())) {
                     forumList.forEach { forum ->
                         val isSelected = selectedFidName == forum.title
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 10.dp)
-                                .clip(RoundedCornerShape(12.dp))
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(RoundedCornerShape(12.dp))
                                 .background(if (isSelected) primaryColor.copy(alpha = 0.1f) else bgColor)
-                                .clickable {
-                                    viewModel.selectFid(forum.fid, forum.title)
-                                    showBoardDialog = false
-                                }
+                                .clickable { viewModel.selectFid(forum.fid, forum.title); showBoardDialog = false }
                                 .padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(forum.title, fontSize = 14.sp, color = if (isSelected) primaryColor else Color.Black, modifier = Modifier.weight(1f))
-                            if (isSelected) {
-                                Icon(Icons.Default.Check, contentDescription = null, tint = primaryColor, modifier = Modifier.size(18.dp))
-                            }
+                            if (isSelected) Icon(Icons.Default.Check, contentDescription = null, tint = primaryColor, modifier = Modifier.size(18.dp))
                         }
                     }
+                }
+            }
+        }
+    }
+
+    // 自定义热门搜索词弹窗
+    if (showCustomHotDialog) {
+        Dialog(onDismissRequest = { showCustomHotDialog = false }) {
+            Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White).padding(20.dp)) {
+                Text("自定义热门搜索词", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = editingHotText,
+                    onValueChange = { editingHotText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = primaryColor)
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    Text("取消", modifier = Modifier.clickable { showCustomHotDialog = false }.padding(8.dp), color = Color.Gray)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text("保存", modifier = Modifier.clickable {
+                        if (editingHotText.isNotBlank() && editingHotIndex >= 0) {
+                            val updatedList = hotSearchWords.toMutableList()
+                            updatedList[editingHotIndex] = editingHotText.trim()
+                            hotSearchWords = updatedList
+                            saveHotWords(prefs, updatedList)
+                        }
+                        showCustomHotDialog = false
+                    }.padding(8.dp), color = primaryColor, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -380,18 +407,18 @@ fun SearchChip(
     text: String, 
     chipBgColor: Color, 
     isHot: Boolean = false, 
-    primaryColor: Color = Color(0xFFE53935), 
+    textColor: Color = Color.DarkGray, 
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null
 ) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(if (isHot) primaryColor.copy(alpha = 0.1f) else chipBgColor)
+            .background(chipBgColor)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(horizontal = 14.dp, vertical = 8.dp)
     ) {
-        Text(text = text, fontSize = 13.sp, color = if (isHot) primaryColor else Color.DarkGray)
+        Text(text = text, fontSize = 13.sp, color = textColor)
     }
 }
 
@@ -417,6 +444,14 @@ private fun loadHistory(prefs: android.content.SharedPreferences): List<String> 
 }
 private fun saveHistory(prefs: android.content.SharedPreferences, list: List<String>) {
     prefs.edit().putString("history", list.joinToString("|||")).apply()
+}
+
+private fun loadHotWords(prefs: android.content.SharedPreferences, defaults: List<String>): List<String> {
+    val raw = prefs.getString("hot_words", "") ?: ""
+    return if (raw.isBlank()) defaults else raw.split("|||")
+}
+private fun saveHotWords(prefs: android.content.SharedPreferences, list: List<String>) {
+    prefs.edit().putString("hot_words", list.joinToString("|||")).apply()
 }
 
 // 轻量级 HTML 解析器，完美替代高版本 Compose 的 fromHtml，并保留粗体和红色高亮
