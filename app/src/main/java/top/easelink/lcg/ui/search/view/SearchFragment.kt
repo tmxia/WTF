@@ -509,12 +509,25 @@ fun SearchResultCard(item: LCGSearchResultItem, onClick: () -> Unit) {
                 Box(
                     modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Color(0xFFF2F3F5)).padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
-                    Text(item.forum, fontSize = 11.sp, color = Color.DarkGray)
+                    Text(item.forum, fontSize = 11.sp, color = Color.DarkGray, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(item.author, fontSize = 11.sp, color = Color.Gray)
+                Text(item.author, fontSize = 11.sp, color = Color.Gray, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                
                 Spacer(modifier = Modifier.weight(1f))
-                Text("${item.date}  |  ${item.replyView}", fontSize = 11.sp, color = Color.Gray)
+                
+                // 格式化 回复/查看：将 "71 个回复 - 2191 次查看" 变成 "71/2191"
+                val replyMatch = Regex("(\\d+)\\s*个?回复").find(item.replyView)?.groupValues?.get(1)
+                val viewMatch = Regex("(\\d+)\\s*次?查看").find(item.replyView)?.groupValues?.get(1)
+                val statText = if (replyMatch != null && viewMatch != null) "$replyMatch/$viewMatch" else item.replyView.replace(" ", "")
+
+                Text(
+                    text = "${item.date}  $statText",
+                    fontSize = 11.sp,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
