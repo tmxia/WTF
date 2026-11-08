@@ -28,7 +28,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     }
 
     private var mKeyWord: String? = null
-    private var mFids: List<String> = emptyList() = null
+    private var mFids: List<String> = emptyList()
     private var hasMore = true
 
     fun loadForums() {
