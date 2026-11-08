@@ -392,12 +392,13 @@ private fun saveHistory(prefs: android.content.SharedPreferences, list: List<Str
 // 轻量级 HTML 解析器，完美替代高版本 Compose 的 fromHtml，并保留粗体和红色高亮
 fun parseHtmlHighlight(html: String): AnnotatedString {
     return buildAnnotatedString {
-        val parts = html.split(Regex("(<font color="#ff0000">|</font>|<strong>|</strong>)", RegexOption.IGNORE_CASE))
+        // 注意：这里的双引号正确使用了 \" 转义
+        val parts = html.split(Regex("(<font color=\"#ff0000\">|</font>|<strong>|</strong>)", RegexOption.IGNORE_CASE))
         var isRed = false
         var isBold = false
         for (part in parts) {
             when (part.lowercase()) {
-                "<font color="#ff0000">" -> isRed = true
+                "<font color=\"#ff0000\">" -> isRed = true
                 "</font>" -> isRed = false
                 "<strong>" -> isBold = true
                 "</strong>" -> isBold = false
