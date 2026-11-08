@@ -22,7 +22,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -79,7 +78,6 @@ class SearchFragment : TopFragment(), ControllableFragment {
         (view as ComposeView).setContent {
             SearchScreen(
                 viewModel = viewModel,
-                onBack = { requireActivity().onBackPressedDispatcher.onBackPressed() },
                 onNavigate = { fragment ->
                     activity?.supportFragmentManager?.let { fm ->
                         top.easelink.framework.utils.addFragmentInActivity(fm, fragment, R.id.clRootView)
@@ -92,7 +90,7 @@ class SearchFragment : TopFragment(), ControllableFragment {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
-fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: (Fragment) -> Unit) {
+fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) {
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val searchResults by viewModel.searchResults.observeAsState(initial = emptyList())
@@ -126,7 +124,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
     val bgColor = Color(0xFFF5F5F5)      
     val inputBgColor = Color(0xFFF2F3F5) 
 
-    // 核心修复：仅在输入框有关键字时拦截返回键，防止无限递归导致 App 崩溃
+    // 独立模块不需要返回上一级，仅在有关键字时拦截返回键用于清空文字
     BackHandler(enabled = keyword.isNotEmpty()) {
         keyword = ""
         hasSearched = false
@@ -152,25 +150,10 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
     Column(modifier = Modifier.fillMaxSize().background(bgColor)) {
         // 沉浸式 TopBar
         Row(
-            modifier = Modifier.fillMaxWidth().background(Color.White).padding(top = 40.dp, bottom = 10.dp, start = 8.dp, end = 12.dp),
+            modifier = Modifier.fillMaxWidth().background(Color.White).padding(top = 40.dp, bottom = 10.dp, start = 16.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 返回按钮
-            Box(
-                modifier = Modifier.size(40.dp).clip(RoundedCornerShape(20.dp)).clickable { 
-                    if (keyword.isNotEmpty()) {
-                        keyword = ""
-                        hasSearched = false
-                        keyboardController?.hide()
-                    } else {
-                        onBack()
-                    }
-                },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "返回", tint = Color.Black, modifier = Modifier.size(22.dp))
-            }
-            Spacer(modifier = Modifier.width(4.dp))
+            
             
             // 搜索输入框
             Row(
