@@ -16,8 +16,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 object SignInManager {
 
     private const val SIGN_IN_URL = "https://www.52pojie.cn/home.php?mod=task&do=apply&id=2"
-    
-    // 防止用户连续点击导致创建多个 WebView
     private val isSigningIn = AtomicBoolean(false)
 
     fun updateLocalSignInTime() {
@@ -42,7 +40,6 @@ object SignInManager {
     @SuppressLint("SetJavaScriptEnabled")
     fun performSignIn(onResult: (String, String) -> Unit) {
         if (!isSigningIn.compareAndSet(false, true)) {
-            // 正在签到中，忽略重复请求
             return
         }
 
@@ -54,7 +51,6 @@ object SignInManager {
             webView.settings.apply {
                 javaScriptEnabled = true
                 domStorageEnabled = true
-                // 设置一个手机端的 User-Agent，防止被识别为爬虫
                 userAgentString = "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
             }
             
@@ -73,19 +69,16 @@ object SignInManager {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     
-                    // 只有当加载的确实是签到页时，才进行判断
                     if (url?.contains("do=apply") == true) {
+                        // 获取并同步最新的 Cookie (关键：穿透盾后 Cookie 会更新)
+                        LCGCookieJar.syncFromWebView(url)
+                        
                         view?.evaluateJavascript(
                             "(function() { return document.body.innerText; })();"
                         ) { result ->
+                            // 清理 JS 返回字符串中的转义双引号和换行符
                             val text = result?.replace("\n", "
-").orEmpty()
-                            
-                            // 尝试获取 WAF 验证通过后，服务端返回的新 Cookie 并同步回本地
-                            val newCookies = CookieManager.getInstance().getCookie(url)
-                            if (!newCookies.isNullOrEmpty()) {
-                                LCGCookieJar.saveCookiesFromString(url, newCookies)
-                            }
+")?.replace(""", "")?.trim().orEmpty()
 
                             if (text.contains("您需要先登录") || text.contains("请先登录")) {
                                 withResult(onResult, "FAILED", "签到失败：登录已失效")
@@ -96,21 +89,18 @@ object SignInManager {
                                 updateLocalSignInTime()
                                 withResult(onResult, "SUCCESS", "签到成功！")
                             } else if (text.isNotEmpty()) {
-                                // 如果页面有其它反馈信息，直接展示（防止误判）
-                                val hint = text.lines().find { it.contains("提示") || it.contains("失败") || it.contains("错误") } ?: "签到完成，请刷新查看状态"
+                                val hint = text.lines().find { it.contains("提示") || it.contains("失败") || it.contains("错误") } ?: "签到完成，请刷新查看"
                                 withResult(onResult, "SUCCESS", hint)
                             } else {
                                 withResult(onResult, "FAILED", "签到失败：未获取到反馈")
                             }
                             
-                            // 销毁 WebView，释放资源
                             destroyWebView(webView)
                         }
                     }
                 }
             }
             
-            // 4. 开始加载签到页
             webView.loadUrl(SIGN_IN_URL)
         }
     }
