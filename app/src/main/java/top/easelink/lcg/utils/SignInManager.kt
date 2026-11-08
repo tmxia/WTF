@@ -1,6 +1,5 @@
 package top.easelink.lcg.utils
 
-import android.content.Context
 import androidx.core.content.edit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,10 +29,8 @@ object SignInManager {
                lastCal.get(java.util.Calendar.DAY_OF_YEAR) == todayCal.get(java.util.Calendar.DAY_OF_YEAR)
     }
 
-    /**
-     * 修复核心：将网络请求放入 IO 线程，防止主线程崩溃/卡死
-     */
-    fun performSignIn(context: Context, onResult: (String, String) -> Unit) {
+    // 核心修复：彻底移除了 context 参数，修复所有调用方的编译报错
+    fun performSignIn(onResult: (String, String) -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL)
