@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -108,26 +109,31 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
     val prefs = remember { context.getSharedPreferences("wtf_search_prefs", Context.MODE_PRIVATE) }
     var historyList by remember { mutableStateOf(loadHistory(prefs)) }
     
-    // 热门搜索与自定义
     val defaultHotWords = listOf("微信", "逆向破解", "Magisk", "Xposed", "Dex修复", "汉化教程", "自动化脚本", "Arsc")
     var hotSearchWords by remember { mutableStateOf(loadHotWords(prefs, defaultHotWords)) }
     var showCustomHotDialog by remember { mutableStateOf(false) }
     var editingHotIndex by remember { mutableStateOf(-1) }
     var editingHotText by remember { mutableStateOf("") }
 
-    // 热门胶囊多彩配色
     val chipColors = listOf(
-        Color(0xFFE53935), // 柔和红
-        Color(0xFF1E88E5), // 柔和蓝
-        Color(0xFF43A047), // 柔和绿
-        Color(0xFFFB8C00), // 柔和橙
-        Color(0xFF8E24AA), // 柔和紫
-        Color(0xFF00ACC1)  // 柔和青
+        Color(0xFFE53935), Color(0xFF1E88E5), Color(0xFF43A047),
+        Color(0xFFFB8C00), Color(0xFF8E24AA), Color(0xFF00ACC1)
     )
     
-    val primaryColor = Color(0xFFE53935) // WTF 主色调
-    val bgColor = Color(0xFFF5F5F5)      // 页面底色
-    val inputBgColor = Color(0xFFF2F3F5) // 输入框底色
+    val primaryColor = Color(0xFFE53935) 
+    val bgColor = Color(0xFFF5F5F5)      
+    val inputBgColor = Color(0xFFF2F3F5) 
+
+    // 拦截手势/物理返回键
+    BackHandler(enabled = true) {
+        if (keyword.isNotEmpty()) {
+            keyword = ""
+            hasSearched = false
+            keyboardController?.hide()
+        } else {
+            onBack()
+        }
+    }
 
     LaunchedEffect(Unit) { viewModel.loadForums() }
 
@@ -151,6 +157,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
             modifier = Modifier.fillMaxWidth().background(Color.White).padding(top = 40.dp, bottom = 10.dp, start = 8.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // 返回按钮
             Box(
                 modifier = Modifier.size(40.dp).clip(RoundedCornerShape(20.dp)).clickable { onBack() },
                 contentAlignment = Alignment.Center
@@ -159,7 +166,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
             }
             Spacer(modifier = Modifier.width(4.dp))
             
-            // 关键字那样的窗口UI：大圆角、背景纯色
+            // 搜索输入框
             Row(
                 modifier = Modifier.weight(1f).height(40.dp).clip(RoundedCornerShape(20.dp)).background(inputBgColor).padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -198,13 +205,20 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
             }
             Spacer(modifier = Modifier.width(10.dp))
             
+            // 动态搜索按钮：有字亮起，无字灰色
+            val isButtonActive = keyword.isNotBlank()
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable { performSearch(keyword) }
+                    .clickable(enabled = isButtonActive) { performSearch(keyword) }
                     .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
-                Text("搜索", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = primaryColor)
+                Text(
+                    text = "搜索", 
+                    fontSize = 15.sp, 
+                    fontWeight = FontWeight.Medium, 
+                    color = if (isButtonActive) primaryColor else Color.Gray
+                )
             }
         }
 
@@ -277,7 +291,6 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
                     }
                 }
             } else {
-                // 结果区 (同前)
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = primaryColor)
                 } else if (searchResults.isEmpty()) {
@@ -432,8 +445,23 @@ fun SearchResultCard(item: LCGSearchResultItem, onClick: () -> Unit) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = parseHtmlHighlight(item.title), fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color.Black, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = parseHtmlHighlight(item.content), fontSize = 13.sp, color = Color.Gray, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(text = parseHtmlHighlight(item.content), fontSize = 13.sp, color = Color.Gray, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Spacer(modifier = Modifier.height(10.dp))
+            
+            // 底部常规信息：板块、作者、时间、查看/回复
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                // 板块（小胶囊背景）
+                Box(
+                    modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Color(0xFFF2F3F5)).padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(item.forum, fontSize = 11.sp, color = Color.DarkGray)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(item.author, fontSize = 11.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.weight(1f))
+                Text("${item.date}  |  ${item.replyView}", fontSize = 11.sp, color = Color.Gray)
+            }
         }
     }
 }
