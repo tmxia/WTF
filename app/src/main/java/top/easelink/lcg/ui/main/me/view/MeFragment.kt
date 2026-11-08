@@ -138,6 +138,24 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
 
     
     LaunchedEffect(Unit) {
+        // 核心优化：如果本地未签到，静默探测一次服务器状态，解决网页端签了但App不知道的问题
+        if (!SignInManager.isSignedToday()) {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val doc = top.easelink.lcg.network.JsoupClient.sendGetRequestWithUrl("https://www.52pojie.cn/home.php?mod=task&do=apply&id=2")
+                    val text = doc.text()
+                    if (text.contains("已申请") || text.contains("已完成") || text.contains("已签到") || text.contains("已经签到")) {
+                        SignInManager.updateLocalSignInTime()
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                            signInText = "✅ 已签到"
+                        }
+                    }
+                } catch (e: Exception) {
+                    // 静默失败，忽略即可
+                }
+            }
+        }
+
         while (true) {
             delay(60_000)
             tick = System.currentTimeMillis()
