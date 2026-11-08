@@ -78,14 +78,13 @@ class MessageFragment : TopFragment(), ControllableFragment {
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color(0xFFF5F5F5))
-                        .statusBarsPadding()
                 ) {
                     if (!isLoggedIn) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(text = "请先登录", color = Color.Gray)
                         }
                     } else {
-                        Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
+                        Column(modifier = Modifier.fillMaxWidth().background(Color.White).statusBarsPadding()) {
                             TopAppBar(
                                 title = { Text("我的信息", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black) },
                                 navigationIcon = {
