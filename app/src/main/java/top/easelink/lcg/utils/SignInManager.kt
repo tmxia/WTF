@@ -1,17 +1,24 @@
 package top.easelink.lcg.utils
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import android.webkit.CookieManager
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.core.content.edit
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
-import top.easelink.lcg.network.JsoupClient
+import top.easelink.lcg.appinit.LCGApp
+import top.easelink.lcg.network.LCGCookieJar
+import java.util.concurrent.atomic.AtomicBoolean
 
 object SignInManager {
 
-    private const val APPLY_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=apply&id=2"
-    private const val DRAW_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=draw&id=2"
+    private const val SIGN_IN_URL = "https://www.52pojie.cn/home.php?mod=task&do=apply&id=2"
+    
+    // 防止用户连续点击导致创建多个 WebView
+    private val isSigningIn = AtomicBoolean(false)
 
     fun updateLocalSignInTime() {
         SharedPreferencesHelper.getUserSp().edit {
@@ -29,64 +36,102 @@ object SignInManager {
                lastCal.get(java.util.Calendar.DAY_OF_YEAR) == todayCal.get(java.util.Calendar.DAY_OF_YEAR)
     }
 
-    // 核心修复：彻底移除了 context 参数，修复所有调用方的编译报错
+    /**
+     * 采用无头 WebView 进行签到，自动穿透 WZWS 盾
+     */
+    @SuppressLint("SetJavaScriptEnabled")
     fun performSignIn(onResult: (String, String) -> Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
+        if (!isSigningIn.compareAndSet(false, true)) {
+            // 正在签到中，忽略重复请求
+            return
+        }
+
+        Handler(Looper.getMainLooper()).post {
+            val context: Context = LCGApp.context
+            val webView = WebView(context)
+            
+            // 1. 初始化 WebView 设置
+            webView.settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                // 设置一个手机端的 User-Agent，防止被识别为爬虫
+                userAgentString = "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+            }
+            
+            // 2. 同步当前 Cookie 进 WebView
+            CookieManager.getInstance().setAcceptCookie(true)
+            CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
+            val savedCookies = LCGCookieJar.cookiesForUrl("https://www.52pojie.cn/")
+            if (savedCookies.isNotEmpty()) {
+                val cookieStr = savedCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
+                CookieManager.getInstance().setCookie("https://www.52pojie.cn/", cookieStr)
+                CookieManager.getInstance().flush()
+            }
+
+            // 3. 设置 WebViewClient 拦截页面加载状态
+            webView.webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    
+                    // 只有当加载的确实是签到页时，才进行判断
+                    if (url?.contains("do=apply") == true) {
+                        view?.evaluateJavascript(
+                            "(function() { return document.body.innerText; })();"
+                        ) { result ->
+                            val text = result?.replace("\n", "
+").orEmpty()
+                            
+                            // 尝试获取 WAF 验证通过后，服务端返回的新 Cookie 并同步回本地
+                            val newCookies = CookieManager.getInstance().getCookie(url)
+                            if (!newCookies.isNullOrEmpty()) {
+                                LCGCookieJar.saveCookiesFromString(url, newCookies)
+                            }
+
+                            if (text.contains("您需要先登录") || text.contains("请先登录")) {
+                                withResult(onResult, "FAILED", "签到失败：登录已失效")
+                            } else if (text.contains("已申请") || text.contains("已完成") || text.contains("已签到")) {
+                                updateLocalSignInTime()
+                                withResult(onResult, "ALREADY_DONE", "今日已签到")
+                            } else if (text.contains("签到成功") || text.contains("获得") || text.contains("奖励")) {
+                                updateLocalSignInTime()
+                                withResult(onResult, "SUCCESS", "签到成功！")
+                            } else if (text.isNotEmpty()) {
+                                // 如果页面有其它反馈信息，直接展示（防止误判）
+                                val hint = text.lines().find { it.contains("提示") || it.contains("失败") || it.contains("错误") } ?: "签到完成，请刷新查看状态"
+                                withResult(onResult, "SUCCESS", hint)
+                            } else {
+                                withResult(onResult, "FAILED", "签到失败：未获取到反馈")
+                            }
+                            
+                            // 销毁 WebView，释放资源
+                            destroyWebView(webView)
+                        }
+                    }
+                }
+            }
+            
+            // 4. 开始加载签到页
+            webView.loadUrl(SIGN_IN_URL)
+        }
+    }
+    
+    private fun withResult(onResult: (String, String) -> Unit, status: String, msg: String) {
+        isSigningIn.set(false)
+        Handler(Looper.getMainLooper()).post {
+            onResult(status, msg)
+        }
+    }
+    
+    private fun destroyWebView(webView: WebView) {
+        Handler(Looper.getMainLooper()).post {
             try {
-                val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL)
-                val applyHtml = applyResponse.outerHtml()
-
-                if (applyHtml.contains("您需要先登录")) {
-                    Timber.tag("SignIn").e("签到失败：Cookie 已失效")
-                    withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：登录已失效") }
-                    return@launch
-                }
-                if (applyHtml.contains("wzwsquestion") || applyHtml.contains("waf_zw_verify")) {
-                    Timber.tag("SignIn").e("签到失败：触发 WAF 拦截")
-                    withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：触发安全风控") }
-                    return@launch
-                }
-
-                val applyMessage = applyResponse.getElementsByClass("alert_info")
-                    .first()?.selectFirst("p")?.text().orEmpty()
-
-                if (applyMessage.contains("已申请") || applyMessage.contains("已完成") || applyMessage.contains("已签到")) {
-                    Timber.tag("SignIn").d("签到结果：今日已签到")
-                    updateLocalSignInTime()
-                    withContext(Dispatchers.Main) { onResult("ALREADY_DONE", "今日已签到") }
-                    return@launch
-                }
-
-                val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL)
-                val drawHtml = drawResponse.outerHtml()
-
-                if (drawHtml.contains("您需要先登录")) {
-                    Timber.tag("SignIn").e("签到失败：Cookie 已失效")
-                    withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：登录已失效") }
-                    return@launch
-                }
-
-                val drawText = drawResponse.getElementsByClass("alert_info")
-                    .first()?.selectFirst("p")?.text().orEmpty()
-
-                if (drawText.isBlank()) {
-                    Timber.tag("SignIn").e("签到失败：未获取到反馈信息（可能被 WAF 拦截）")
-                    withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：未获取到反馈信息") }
-                    return@launch
-                }
-                if (drawText.contains("失败") || drawText.contains("错误") || drawText.contains("异常")) {
-                    Timber.tag("SignIn").e("签到结果：$drawText")
-                    withContext(Dispatchers.Main) { onResult("FAILED", drawText) }
-                    return@launch
-                }
-
-                Timber.tag("SignIn").d("签到结果：$drawText")
-                updateLocalSignInTime()
-                withContext(Dispatchers.Main) { onResult("SUCCESS", "签到成功！") }
-
+                (webView.parent as? android.view.ViewGroup)?.removeView(webView)
+                webView.stopLoading()
+                webView.clearHistory()
+                webView.clearCache(true)
+                webView.destroy()
             } catch (e: Exception) {
-                Timber.tag("SignIn").e("签到异常：${e.message}")
-                withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：${e.message}") }
+                Timber.e(e, "WebView 销毁异常")
             }
         }
     }
