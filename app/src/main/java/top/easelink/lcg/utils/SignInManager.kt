@@ -34,9 +34,6 @@ object SignInManager {
                lastCal.get(java.util.Calendar.DAY_OF_YEAR) == todayCal.get(java.util.Calendar.DAY_OF_YEAR)
     }
 
-    /**
-     * 采用无头 WebView 进行签到，自动穿透 WZWS 盾
-     */
     @SuppressLint("SetJavaScriptEnabled")
     fun performSignIn(onResult: (String, String) -> Unit) {
         if (!isSigningIn.compareAndSet(false, true)) {
@@ -47,14 +44,12 @@ object SignInManager {
             val context: Context = LCGApp.context
             val webView = WebView(context)
             
-            // 1. 初始化 WebView 设置
             webView.settings.apply {
                 javaScriptEnabled = true
                 domStorageEnabled = true
                 userAgentString = "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
             }
             
-            // 2. 同步当前 Cookie 进 WebView
             CookieManager.getInstance().setAcceptCookie(true)
             CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
             val savedCookies = LCGCookieJar.cookiesForUrl("https://www.52pojie.cn/")
@@ -64,21 +59,23 @@ object SignInManager {
                 CookieManager.getInstance().flush()
             }
 
-            // 3. 设置 WebViewClient 拦截页面加载状态
             webView.webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     
                     if (url?.contains("do=apply") == true) {
-                        // 获取并同步最新的 Cookie (关键：穿透盾后 Cookie 会更新)
                         LCGCookieJar.syncFromWebView(url)
                         
                         view?.evaluateJavascript(
                             "(function() { return document.body.innerText; })();"
                         ) { result ->
-                            // 清理 JS 返回字符串中的转义双引号和换行符
-                            val text = result?.replace("\n", "
-")?.replace(""", "")?.trim().orEmpty()
+                            // 核心修复：安全地处理 JSON 转义字符
+                            val text = result
+                                .orEmpty()
+                                .replace("\\n", "
+")
+                                .replace("\"", "")
+                                .trim()
 
                             if (text.contains("您需要先登录") || text.contains("请先登录")) {
                                 withResult(onResult, "FAILED", "签到失败：登录已失效")
