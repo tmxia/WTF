@@ -1,5 +1,4 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
-
 package top.easelink.lcg.ui.main.message.view
 
 import android.os.Bundle
@@ -9,16 +8,12 @@ import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.ui.unit.Dp
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -57,111 +52,98 @@ class MessageFragment : TopFragment(), ControllableFragment {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val context = requireContext()
-        // 完全复刻“我的帖子”的外层结构
-        val swipeRefreshLayout = androidx.swiperefreshlayout.widget.SwipeRefreshLayout(context).apply {
+        return ComposeView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-        }
+            setContent {
+                val isLoggedIn by AccountManager.isLoggedIn.observeAsState(initial = false)
+                val notifications by notificationViewModel.notifications.observeAsState()
+                val conversations by conversationViewModel.conversations.observeAsState()
+                val isNotifLoading by notificationViewModel.isLoading.observeAsState(initial = false)
+                val isConvLoading by conversationViewModel.isLoading.observeAsState(initial = false)
+                
+                var selectedTab by remember { mutableIntStateOf(0) }
 
-        val composeView = ComposeView(context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        }
-
-        composeView.setContent {
-            val isLoggedIn by AccountManager.isLoggedIn.observeAsState(initial = false)
-            val notifications by notificationViewModel.notifications.observeAsState()
-            val conversations by conversationViewModel.conversations.observeAsState()
-            val isNotifLoading by notificationViewModel.isLoading.observeAsState(initial = false)
-            val isConvLoading by conversationViewModel.isLoading.observeAsState(initial = false)
-
-            var selectedTab by remember { mutableIntStateOf(0) }
-
-            if (!isLoggedIn) {
-                Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5)), contentAlignment = Alignment.Center) {
-                    Text(text = "请先登录", color = Color.Gray)
-                }
-            } else {
-                Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
-                    // 头部区域，严格不加任何 statusBarsPadding
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                    ) {
-                        TopAppBar(
-                            title = { Text("我的信息", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black) },
-                            navigationIcon = {
-                                IconButton(onClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }) {
-                                    Icon(Icons.Filled.ArrowBack, contentDescription = "返回", tint = Color.Black)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFFF5F5F5))
+                        .statusBarsPadding()
+                ) {
+                    if (!isLoggedIn) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(text = "请先登录", color = Color.Gray)
+                        }
+                    } else {
+                        Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
+                            TopAppBar(
+                                title = { Text("我的信息", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black) },
+                                navigationIcon = {
+                                    IconButton(onClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }) {
+                                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回", tint = Color.Black)
+                                    }
+                                },
+                                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
+                                windowInsets = WindowInsets(0, 0, 0, 0)
+                            )
+                            
+                            ScrollableTabRow(
+                                selectedTabIndex = selectedTab,
+                                edgePadding = 16.dp,
+                                containerColor = Color.White,
+                                contentColor = Color(0xFFE53935),
+                                divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) },
+                                indicator = { tabPositions ->
+                                    TabRowDefaults.SecondaryIndicator(
+                                        Modifier
+                                            .tabIndicatorOffset(tabPositions[selectedTab])
+                                            .fillMaxWidth(),
+                                        height = 3.dp,
+                                        color = Color(0xFFE53935)
+                                    )
                                 }
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
-                            windowInsets = WindowInsets(0, 0, 0, 0) // 保持与我的帖子一致
-                        )
-
-                        ScrollableTabRow(
-                            selectedTabIndex = selectedTab,
-                            edgePadding = 16.dp,
-                            containerColor = Color.White,
-                            contentColor = Color(0xFFE53935),
-                            divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) },
-                            indicator = { tabPositions ->
-                                TabRowDefaults.SecondaryIndicator(
-                                    Modifier
-                                        .tabIndicatorOffset(tabPositions[selectedTab])
-                                        .fillMaxWidth(),
-                                    height = 3.dp,
-                                    color = Color(0xFFE53935)
+                            ) {
+                                Tab(
+                                    selected = selectedTab == 0,
+                                    onClick = { selectedTab = 0 },
+                                    text = { Text("通知", fontSize = 15.sp, color = if (selectedTab == 0) Color(0xFFE53935) else Color(0xFF888888), fontWeight = if (selectedTab == 0) FontWeight.Medium else FontWeight.Normal) }
+                                )
+                                Tab(
+                                    selected = selectedTab == 1,
+                                    onClick = { selectedTab = 1 },
+                                    text = { Text("私信", fontSize = 15.sp, color = if (selectedTab == 1) Color(0xFFE53935) else Color(0xFF888888), fontWeight = if (selectedTab == 1) FontWeight.Medium else FontWeight.Normal) }
                                 )
                             }
-                        ) {
-                            Tab(
-                                selected = selectedTab == 0,
-                                onClick = { selectedTab = 0 },
-                                text = { Text("通知", fontSize = 15.sp, color = if (selectedTab == 0) Color(0xFFE53935) else Color(0xFF888888), fontWeight = if (selectedTab == 0) FontWeight.Medium else FontWeight.Normal) }
-                            )
-                            Tab(
-                                selected = selectedTab == 1,
-                                onClick = { selectedTab = 1 },
-                                text = { Text("私信", fontSize = 15.sp, color = if (selectedTab == 1) Color(0xFFE53935) else Color(0xFF888888), fontWeight = if (selectedTab == 1) FontWeight.Medium else FontWeight.Normal) }
-                            )
                         }
-                    }
 
-                    Box(modifier = Modifier.fillMaxSize().weight(1f)) {
-                        if (selectedTab == 0) {
-                            if (isNotifLoading && notifications == null) {
-                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color(0xFFE53935))
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            if (selectedTab == 0) {
+                                if (isNotifLoading && notifications == null) {
+                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color(0xFFE53935))
+                                } else {
+                                    NotificationList(notifications?.notifications ?: emptyList())
+                                }
                             } else {
-                                NotificationList(notifications?.notifications ?: emptyList())
-                            }
-                        } else {
-                            if (isConvLoading && conversations == null) {
-                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color(0xFFE53935))
-                            } else {
-                                ConversationList(conversations ?: emptyList(), context)
+                                if (isConvLoading && conversations == null) {
+                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color(0xFFE53935))
+                                } else {
+                                    ConversationList(conversations ?: emptyList(), requireContext())
+                                }
                             }
                         }
                     }
                 }
-            }
-            
-            LaunchedEffect(isLoggedIn) {
-                if (isLoggedIn) {
-                    notificationViewModel.fetchNotifications()
-                    conversationViewModel.fetchConversations()
+
+                LaunchedEffect(isLoggedIn) {
+                    if (isLoggedIn) {
+                        notificationViewModel.fetchNotifications()
+                        conversationViewModel.fetchConversations()
+                    }
                 }
             }
         }
-
-        swipeRefreshLayout.addView(composeView)
-        return swipeRefreshLayout
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
