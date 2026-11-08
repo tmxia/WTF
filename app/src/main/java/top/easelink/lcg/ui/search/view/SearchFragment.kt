@@ -6,7 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,16 +32,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -85,7 +89,7 @@ class SearchFragment : TopFragment(), ControllableFragment {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: (Fragment) -> Unit) {
     val context = LocalContext.current
@@ -104,8 +108,9 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
     val prefs = remember { context.getSharedPreferences("wtf_search_prefs", Context.MODE_PRIVATE) }
     var historyList by remember { mutableStateOf(loadHistory(prefs)) }
     val hotSearchWords = listOf("微信", "逆向破解", "Magisk", "Xposed", "Dex修复", "汉化教程", "自动化脚本", "Arsc")
+    
     val primaryColor = Color(0xFFE53935) // WTF 红色
-    val bgColor = Color(0xFFF7F8FA)      // 极简浅灰底色
+    val bgColor = Color(0xFFF5F5F5)      // 全局浅灰底色
     val chipBgColor = Color(0xFFF2F3F5)  // 标签底色
 
     LaunchedEffect(Unit) { viewModel.loadForums() }
@@ -127,13 +132,18 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
     Column(modifier = Modifier.fillMaxSize().background(bgColor)) {
         // 沉浸式 TopBar
         Row(
-            modifier = Modifier.fillMaxWidth().background(Color.White).padding(top = 40.dp, bottom = 10.dp, start = 8.dp, end = 16.dp),
+            modifier = Modifier.fillMaxWidth().background(Color.White).padding(top = 40.dp, bottom = 10.dp, start = 8.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
+            // 返回按钮
+            Box(
+                modifier = Modifier.size(40.dp).clip(RoundedCornerShape(20.dp)).clickable { onBack() },
+                contentAlignment = Alignment.Center
+            ) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "返回", tint = Color.Black, modifier = Modifier.size(22.dp))
             }
             Spacer(modifier = Modifier.width(4.dp))
+            
             // 极简无边框搜索框
             Row(
                 modifier = Modifier.weight(1f).height(38.dp).clip(RoundedCornerShape(19.dp)).background(bgColor).padding(horizontal = 12.dp),
@@ -149,8 +159,8 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
                     },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
-                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontSize = 14.sp),
-                    cursorBrush = androidx.compose.ui.graphics.SolidColor(primaryColor),
+                    textStyle = TextStyle(color = Color.Black, fontSize = 14.sp),
+                    cursorBrush = SolidColor(primaryColor),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { performSearch(keyword) }),
                     decorationBox = { innerTextField: @Composable () -> Unit ->
@@ -163,16 +173,25 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
                     }
                 )
                 if (keyword.isNotEmpty()) {
-                    IconButton(onClick = { keyword = ""; hasSearched = false }, modifier = Modifier.size(24.dp)) {
+                    Box(
+                        modifier = Modifier.size(24.dp).clip(RoundedCornerShape(12.dp)).clickable { keyword = ""; hasSearched = false },
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.Gray, modifier = Modifier.size(16.dp))
                     }
                 }
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                "搜索", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = primaryColor, 
-                modifier = Modifier.clickable { performSearch(keyword) }
-            )
+            Spacer(modifier = Modifier.width(10.dp))
+            
+            // 搜索按钮（加上了按压反馈）
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { performSearch(keyword) }
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Text("搜索", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = primaryColor)
+            }
         }
 
         // 板块过滤栏
@@ -180,7 +199,8 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .background(bgColor, RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(bgColor)
                     .clickable { showBoardDialog = true }
                     .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
@@ -194,19 +214,41 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
             if (!hasSearched) {
                 Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
                     if (historyList.isNotEmpty()) {
-                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Text("搜索历史", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.Black)
-                            Text("清空", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.clickable { historyList = emptyList(); saveHistory(prefs, emptyList()) })
+                            Box(
+                                modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable { 
+                                    historyList = emptyList()
+                                    saveHistory(prefs, emptyList()) 
+                                }.padding(horizontal = 6.dp, vertical = 4.dp)
+                            ) {
+                                Text("清空", fontSize = 12.sp, color = Color.Gray)
+                            }
                         }
                         FlowRow(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            historyList.forEach { tag -> SearchChip(text = tag, chipBgColor = chipBgColor) { performSearch(tag) } }
+                            historyList.forEach { tag -> 
+                                SearchChip(
+                                    text = tag, 
+                                    chipBgColor = Color.White,
+                                    onClick = { performSearch(tag) },
+                                    onLongClick = {
+                                        // 新增长按删除交互
+                                        val updated = historyList.filterNot { it == tag }
+                                        historyList = updated
+                                        saveHistory(prefs, updated)
+                                        Toast.makeText(context, "已删除「$tag」", Toast.LENGTH_SHORT).show()
+                                    }
+                                ) 
+                            }
                         }
                     }
                     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                         Text("热门搜索", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primaryColor)
                     }
                     FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        hotSearchWords.forEach { tag -> SearchChip(text = tag, chipBgColor = chipBgColor, isHot = true, primaryColor = primaryColor) { performSearch(tag) } }
+                        hotSearchWords.forEach { tag -> 
+                            SearchChip(text = tag, chipBgColor = chipBgColor, isHot = true, primaryColor = primaryColor) { performSearch(tag) } 
+                        }
                     }
                 }
             } else {
@@ -268,21 +310,22 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
                     .background(Color.White)
                     .padding(20.dp)
             ) {
-                // 标题栏
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("选择板块", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    IconButton(onClick = { showBoardDialog = false }, modifier = Modifier.size(24.dp)) {
+                    Box(
+                        modifier = Modifier.size(32.dp).clip(RoundedCornerShape(16.dp)).clickable { showBoardDialog = false },
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.LightGray, modifier = Modifier.size(20.dp))
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 全部板块大按钮
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -295,25 +338,14 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        "全部板块",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = if (selectedFidName == "全部板块") primaryColor else Color.DarkGray
-                    )
+                    Text("全部板块", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = if (selectedFidName == "全部板块") primaryColor else Color.DarkGray)
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
-
-                // 列表标题
                 Text("常用板块", fontSize = 13.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 10.dp))
 
-                // 板块列表
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 380.dp)
-                        .verticalScroll(rememberScrollState())
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 380.dp).verticalScroll(rememberScrollState())
                 ) {
                     forumList.forEach { forum ->
                         val isSelected = selectedFidName == forum.title
@@ -330,19 +362,9 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
                                 .padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = forum.title,
-                                fontSize = 14.sp,
-                                color = if (isSelected) primaryColor else Color.Black,
-                                modifier = Modifier.weight(1f)
-                            )
+                            Text(forum.title, fontSize = 14.sp, color = if (isSelected) primaryColor else Color.Black, modifier = Modifier.weight(1f))
                             if (isSelected) {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = primaryColor,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Icon(Icons.Default.Check, contentDescription = null, tint = primaryColor, modifier = Modifier.size(18.dp))
                             }
                         }
                     }
@@ -352,12 +374,21 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SearchChip(text: String, chipBgColor: Color, isHot: Boolean = false, primaryColor: Color = Color(0xFFE53935), onClick: () -> Unit) {
+fun SearchChip(
+    text: String, 
+    chipBgColor: Color, 
+    isHot: Boolean = false, 
+    primaryColor: Color = Color(0xFFE53935), 
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null
+) {
     Box(
         modifier = Modifier
-            .background(if (isHot) primaryColor.copy(alpha = 0.1f) else chipBgColor, RoundedCornerShape(16.dp))
-            .clickable { onClick() }
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (isHot) primaryColor.copy(alpha = 0.1f) else chipBgColor)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(horizontal = 14.dp, vertical = 8.dp)
     ) {
         Text(text = text, fontSize = 13.sp, color = if (isHot) primaryColor else Color.DarkGray)
@@ -370,7 +401,7 @@ fun SearchResultCard(item: LCGSearchResultItem, onClick: () -> Unit) {
         shape = RoundedCornerShape(12.dp), 
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), 
-        modifier = Modifier.fillMaxWidth().clickable { onClick() }
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onClick() }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = parseHtmlHighlight(item.title), fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color.Black, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -388,11 +419,9 @@ private fun saveHistory(prefs: android.content.SharedPreferences, list: List<Str
     prefs.edit().putString("history", list.joinToString("|||")).apply()
 }
 
-
 // 轻量级 HTML 解析器，完美替代高版本 Compose 的 fromHtml，并保留粗体和红色高亮
 fun parseHtmlHighlight(html: String): AnnotatedString {
     return buildAnnotatedString {
-        // 注意：这里的双引号正确使用了 \" 转义
         val parts = html.split(Regex("(<font color=\"#ff0000\">|</font>|<strong>|</strong>)", RegexOption.IGNORE_CASE))
         var isRed = false
         var isBold = false
@@ -410,7 +439,7 @@ fun parseHtmlHighlight(html: String): AnnotatedString {
                                 fontWeight = if (isBold) FontWeight.Bold else null
                             )
                         ) {
-                            append(android.text.Html.fromHtml(part).toString()) // 清除其他无关标签
+                            append(android.text.Html.fromHtml(part).toString())
                         }
                     }
                 }
