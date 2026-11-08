@@ -184,7 +184,7 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
                                 Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(signInColor).clickable(enabled = !isSigningIn && signInText.contains("未签到")) {
                                     isSigningIn = true
                                     signInText = "签到中..."
-                                    SignInManager.performSignIn(requireContext()) { status, msg ->
+                                    SignInManager.performSignIn(context) { status, msg ->
                                         isSigningIn = false
                                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                                         if (status == "SUCCESS" || status == "ALREADY_DONE") {
