@@ -28,16 +28,15 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     private var mFids: List<String> = prefs.getString("search_fids", "")?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
     private var mSortOrder: String? = prefs.getString("search_sort_order", null)
     
-    // 暴露当前选中的 ID 列表，供 UI 同步状态
+    
     val currentFids: List<String> get() = mFids
     val forumList = MutableLiveData<List<ForumNavigationModel>>()
     
     override fun fetch(type: LCGSearchResultAdapter.ContentFetcher.Type, callback: ((Boolean) -> Unit)?) {
-        // 兼容旧的 Fragment 代码，已废弃，无需实现
+        
     }
 
     private var mKeyWord: String? = null
-    private var mFids: List<String> = emptyList()
     private var hasMore = true
 
     fun loadForums() {

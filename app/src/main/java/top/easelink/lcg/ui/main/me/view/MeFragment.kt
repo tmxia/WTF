@@ -104,7 +104,7 @@ class MeFragment : TopFragment(), ControllableFragment {
     private fun showFragment(fragment: Fragment) {
         activity?.let {
             if (it is top.easelink.lcg.ui.main.MainActivity) {
-                it.showFragment(fragment) // 调用全局的 showFragment，打开真正的全屏新页面
+                it.showFragment(fragment) 
             } else {
                 top.easelink.framework.utils.addFragmentInActivity(it.supportFragmentManager, fragment, R.id.clRootView)
             }
@@ -138,7 +138,7 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
 
     
     LaunchedEffect(Unit) {
-        // 核心优化：如果本地未签到，静默探测一次服务器状态，解决网页端签了但App不知道的问题
+        
         if (!SignInManager.isSignedToday()) {
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 try {
@@ -151,7 +151,7 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
                         }
                     }
                 } catch (e: Exception) {
-                    // 静默失败，忽略即可
+                    
                 }
             }
         }

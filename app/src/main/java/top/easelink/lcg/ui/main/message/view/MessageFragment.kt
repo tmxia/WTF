@@ -50,7 +50,7 @@ class MessageFragment : TopFragment(), ControllableFragment {
     
     override fun onResume() {
         super.onResume()
-        // 双保险：强制把状态栏图标设置为深色，防止白底白字隐身
+        
         val window = requireActivity().window
         androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
     }

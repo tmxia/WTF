@@ -233,7 +233,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 show(fragment)
             } else {
                 add(R.id.fragment_container, fragment, tag)
-                // 核心修复：排除四大主页面，其余所有二级页面均入栈以支持系统手势回退
+                
                 if (fragment !is RecommendFragment && 
                     fragment !is SearchFragment && 
                     fragment !is DiscoverFragment && 
@@ -260,7 +260,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 show(fragment)
             } else {
                 add(R.id.fragment_container, fragment, tag)
-                // 核心修复：排除四大主页面，其余所有二级页面均入栈以支持系统手势回退
+                
                 if (fragment !is RecommendFragment && 
                     fragment !is SearchFragment && 
                     fragment !is DiscoverFragment && 
@@ -297,7 +297,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             else -> View.GONE
         }
 
-        // 统一交由滚动逻辑控制，移除针对 MessageFragment 的特判
+        
         toggleBottomNavScrollBehavior(true)
         
         syncBottomNavigation()
@@ -396,7 +396,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     fun onNewMessageEvent(event: NewMessageEvent) {
         if (event.notificationInfo.isNotEmpty()) {
             showMessage(getString(R.string.notification_arrival))
-            // 红点逻辑已随底栏迁移移除
+            
         }
     }
 

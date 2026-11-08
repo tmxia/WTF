@@ -126,7 +126,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
     val bgColor = Color(0xFFF5F5F5)      
     val inputBgColor = Color(0xFFF2F3F5) 
 
-    // 独立模块不需要返回上一级，仅在有关键字时拦截返回键用于清空文字
+    
     BackHandler(enabled = keyword.isNotEmpty()) {
         keyword = ""
         hasSearched = false
@@ -150,14 +150,14 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
     }
 
     Column(modifier = Modifier.fillMaxSize().background(bgColor)) {
-        // 沉浸式 TopBar
+        
         Row(
             modifier = Modifier.fillMaxWidth().background(Color.White).padding(top = 40.dp, bottom = 10.dp, start = 16.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             
             
-            // 搜索输入框
+            
             Row(
                 modifier = Modifier.weight(1f).height(40.dp).clip(RoundedCornerShape(20.dp)).background(inputBgColor).padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -196,7 +196,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
             }
             Spacer(modifier = Modifier.width(10.dp))
             
-            // 动态搜索按钮：有字亮起，无字灰色
+            
             val isButtonActive = keyword.isNotBlank()
             Box(
                 modifier = Modifier
@@ -213,12 +213,12 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
             }
         }
 
-        // 过滤与排序栏
+        
         Row(
             modifier = Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // 范围选择
+            
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -231,7 +231,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                 Text(" ▾", fontSize = 10.sp, color = Color.DarkGray)
             }
             
-            // 排序选择
+            
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -245,7 +245,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
             }
         }
 
-        // 内容区
+        
         Box(modifier = Modifier.fillMaxSize()) {
             if (!hasSearched) {
                 Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
@@ -344,7 +344,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
         }
     }
 
-    // 板块选择弹窗（支持长按多选）
+    
     if (showBoardDialog) {
         Dialog(
             onDismissRequest = { showBoardDialog = false; isBoardMultiMode = false },
@@ -361,7 +361,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // 全部板块按钮
+                
                 Box(
                     modifier = Modifier.fillMaxWidth().height(48.dp).clip(RoundedCornerShape(12.dp))
                         .background(if (selectedFidName == "全部板块" && !isBoardMultiMode) primaryColor.copy(alpha = 0.1f) else bgColor)
@@ -408,7 +408,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                     }
                 }
                 
-                // 多选模式下的确定按钮
+                
                 if (isBoardMultiMode) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Box(
@@ -435,7 +435,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
     }
 
 
-    // 排序选择弹窗
+    
     if (showSortDialog) {
         Dialog(
             onDismissRequest = { showSortDialog = false },
@@ -452,7 +452,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // 选项列表
+                
                 val sortOptions = listOf(
                     "按相关度" to null,
                     "按发布时间" to "dateline",
@@ -482,7 +482,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
         }
     }
 
-    // 自定义热门搜索词弹窗
+    
     if (showCustomHotDialog) {
         Dialog(onDismissRequest = { showCustomHotDialog = false }) {
             Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White).padding(20.dp)) {
@@ -550,9 +550,9 @@ fun SearchResultCard(item: LCGSearchResultItem, onClick: () -> Unit) {
             Text(text = parseHtmlHighlight(item.content), fontSize = 13.sp, color = Color.Gray, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Spacer(modifier = Modifier.height(10.dp))
             
-            // 底部常规信息：板块、作者、时间、查看/回复
+            
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                // 板块（小胶囊背景）
+                
                 Box(
                     modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Color(0xFFF2F3F5)).padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
@@ -563,7 +563,7 @@ fun SearchResultCard(item: LCGSearchResultItem, onClick: () -> Unit) {
                 
                 Spacer(modifier = Modifier.weight(1f))
                 
-                // 格式化 回复/查看：将 "71 个回复 - 2191 次查看" 变成 "71/2191"
+                
                 val replyMatch = Regex("(\\d+)\\s*个?回复").find(item.replyView)?.groupValues?.get(1)
                 val viewMatch = Regex("(\\d+)\\s*次?查看").find(item.replyView)?.groupValues?.get(1)
                 val statText = if (replyMatch != null && viewMatch != null) "$replyMatch/$viewMatch" else item.replyView.replace(" ", "")
@@ -596,7 +596,7 @@ private fun saveHotWords(prefs: android.content.SharedPreferences, list: List<St
     prefs.edit().putString("hot_words", list.joinToString("|||")).apply()
 }
 
-// 轻量级 HTML 解析器，完美替代高版本 Compose 的 fromHtml，并保留粗体和红色高亮
+
 fun parseHtmlHighlight(html: String): AnnotatedString {
     return buildAnnotatedString {
         val parts = html.split(Regex("(<font color=\"#ff0000\">|</font>|<strong>|</strong>)", RegexOption.IGNORE_CASE))

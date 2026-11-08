@@ -35,7 +35,7 @@ class ProfileFragment : TopFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // 彻底废弃原生的 inflater.inflate，改用纯 ComposeView
+        
         return ComposeView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -73,14 +73,14 @@ class ProfileFragment : TopFragment() {
 fun ProfileScreen(onBackClick: () -> Unit) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    // 纯 Compose 标准状态栏避让，完美适配白底黑字
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
-             // 关键：让 Compose 自动避开系统状态栏
+             
     ) {
-        // 顶部导航栏和 Tab
+        
         Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
             TopAppBar(
                 title = { 
@@ -97,7 +97,7 @@ fun ProfileScreen(onBackClick: () -> Unit) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
-                windowInsets = WindowInsets(0, 0, 0, 0) // 禁用 TopAppBar 自带的双重避让
+                windowInsets = WindowInsets(0, 0, 0, 0) 
             )
             
             TabRow(
@@ -124,7 +124,7 @@ fun ProfileScreen(onBackClick: () -> Unit) {
             }
         }
 
-        // 内容区域（目前为空状态，与你截图一致）
+        
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center

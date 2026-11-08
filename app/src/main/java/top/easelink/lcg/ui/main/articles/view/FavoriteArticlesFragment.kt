@@ -58,7 +58,7 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // 核心修复：使用父类暴露的 viewModel，确保 UI 监听和网络请求是同一个实例
+        
         viewModel.fetchArticles(top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher.FetchType.FETCH_INIT) {}
         
         (view as ComposeView).setContent {
@@ -81,7 +81,7 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
                                 IconButton(onClick = { showMenu = true }) {
                                     Icon(Icons.Filled.MoreVert, contentDescription = "菜单", tint = Color.Black)
                                 }
-                                // 核心修复：恢复原版的完整下拉菜单项
+                                
                                 DropdownMenu(
                                     expanded = showMenu,
                                     onDismissRequest = { showMenu = false },

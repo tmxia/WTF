@@ -61,7 +61,7 @@ object SignInManager {
 
         Handler(Looper.getMainLooper()).post {
             val activity = context as? Activity
-            // 如果不是在 Activity 环境，或者 Activity 已销毁，无法弹窗，直接中断
+            
             if (activity == null || activity.isFinishing) {
                 isSigningIn.set(false)
                 onResult("FAILED", "触发安全验证，请打开App手动前往签到")
@@ -78,7 +78,7 @@ object SignInManager {
             CookieManager.getInstance().setAcceptCookie(true)
             CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
             
-            // 同步已有的 Cookie
+            
             val savedCookies = LCGCookieJar.cookiesForUrl("https://www.52pojie.cn/")
             if (savedCookies.isNotEmpty()) {
                 val cookieStr = savedCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
@@ -93,7 +93,7 @@ object SignInManager {
                     super.onPageStarted(view, url, favicon)
                     if (url?.contains(WAF_URL_KEYWORD) == true) {
                         isWafTriggered = true
-                        // 已经拦截，此时弹窗应该已经显示，什么都不用做，等待用户交互
+                        
                         Timber.tag("SignIn").d("检测到 WAF 拦截，等待用户手动完成验证...")
                     }
                 }
@@ -102,15 +102,15 @@ object SignInManager {
                     super.onPageFinished(view, url)
                     Timber.tag("SignIn").d("页面加载完毕: $url")
 
-                    // 如果用户刚完成验证，URL 会跳出 WAF 页面
+                    
                     if (isWafTriggered && url?.contains(WAF_URL_KEYWORD) == false) {
                         Timber.tag("SignIn").d("WAF 验证通过，正在同步 Cookie...")
                         LCGCookieJar.syncFromWebView(url ?: "")
-                        // 验证通过后，关闭弹窗
+                        
                         dismissDialog()
                     }
 
-                    // 继续延时等待 DOM 渲染并抓取结果
+                    
                     Handler(Looper.getMainLooper()).postDelayed({
                         val js = """
                             (function() {
@@ -126,7 +126,7 @@ object SignInManager {
                             val text = result?.replace("\"", "")?.trim().orEmpty()
                             Timber.tag("SignIn").d("抓取到内容: $text")
 
-                            // 如果仍然是 WAF 页面，不处理，让用户继续验证
+                            
                             if (url?.contains(WAF_URL_KEYWORD) == true) {
                                 return@evaluateJavascript
                             }
@@ -147,7 +147,7 @@ object SignInManager {
                                 dismissDialog()
                                 withResult(onResult, "SUCCESS", hint)
                             } else {
-                                // 如果没抓到内容，且没触发 WAF，可能是页面还没加载完，或静默失败
+                                
                                 dismissDialog()
                                 withResult(onResult, "FAILED", "签到失败：页面无响应")
                             }
@@ -158,9 +158,9 @@ object SignInManager {
 
             webView.loadUrl(SIGN_IN_URL)
 
-            // 为了兼容可能需要手动验证的情况，只要触发了 WAF，就立刻弹出全屏 WebView
-            // 由于我们在 onPageStarted 才知道是不是 WAF，这里采用最简单的策略：直接弹出弹窗，让用户看着它加载
-            // 如果秒过，用户只看个白屏，然后弹窗自动关。如果卡住，用户可以手动滑验证。
+            
+            
+            
             showVerifyDialog(activity, webView)
         }
     }
@@ -174,7 +174,7 @@ object SignInManager {
                 setBackgroundColor(Color.WHITE)
             }
             
-            // 顶部提示栏
+            
             val header = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 setPadding(32, 64, 32, 32)
@@ -207,7 +207,7 @@ object SignInManager {
                 isSigningIn.set(false)
             }
             
-            // 延迟 500ms 弹出，给用户一点反应时间，避免白屏闪烁
+            
             Handler(Looper.getMainLooper()).postDelayed({
                 if (isSigningIn.get() && !activity.isFinishing) {
                     show()

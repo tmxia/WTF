@@ -89,7 +89,7 @@ class FollowFragment : TopFragment(), ControllableFragment {
                     modifier = Modifier.fillMaxSize(),
                     factory = { context ->
                         ViewPager2(context).apply {
-                            // 核心修复：使用你项目原有的 FollowViewPagerAdapter
+                            
                             adapter = FollowViewPagerAdapter(requireActivity(), requireContext())
                             pager = this
                             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
