@@ -44,6 +44,7 @@ import top.easelink.lcg.ui.main.follow.view.FollowFragment
 import top.easelink.lcg.ui.search.view.SearchFragment
 import top.easelink.lcg.ui.main.recommand.view.RecommendFragment
 import top.easelink.lcg.ui.main.model.*
+import top.easelink.lcg.ui.main.message.view.MessageFragment
 import top.easelink.lcg.ui.setting.view.SettingActivity
 import top.easelink.lcg.ui.webview.view.HalfScreenWebViewFragment
 import top.easelink.lcg.ui.webview.view.WebViewActivity
