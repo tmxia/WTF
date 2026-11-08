@@ -27,6 +27,8 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.fromHtml
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -150,9 +152,23 @@ fun SearchResultCard(item: LCGSearchResultItem, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth().clickable { onClick() }
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            Text(text = item.title, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color.Black, maxLines = 2)
+            // 核心修复：使用 fromHtml 解析 <strong> 和 <font> 标签
+            Text(
+                text = fromHtml(item.title),
+                fontSize = 15.sp, 
+                fontWeight = FontWeight.Medium, 
+                color = Color.Black, 
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
             Spacer(modifier = Modifier.height(6.dp))
-            Text(text = item.content, fontSize = 13.sp, color = Color.Gray, maxLines = 3)
+            Text(
+                text = fromHtml(item.content),
+                fontSize = 13.sp, 
+                color = Color.Gray, 
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
