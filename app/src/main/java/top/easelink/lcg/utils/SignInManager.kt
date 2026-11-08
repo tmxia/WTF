@@ -66,16 +66,12 @@ object SignInManager {
                     if (url?.contains("do=apply") == true) {
                         LCGCookieJar.syncFromWebView(url)
                         
+                        // 让 JS 直接返回纯文本，不经过任何 JSON 序列化
                         view?.evaluateJavascript(
                             "(function() { return document.body.innerText; })();"
                         ) { result ->
-                            // 核心修复：安全地处理 JSON 转义字符
-                            val text = result
-                                .orEmpty()
-                                .replace("\\n", "
-")
-                                .replace("\"", "")
-                                .trim()
+                            // 最安全的处理方式：只去掉双引号，保留所有换行和特殊字符
+                            val text = result?.replace("\"", "")?.trim().orEmpty()
 
                             if (text.contains("您需要先登录") || text.contains("请先登录")) {
                                 withResult(onResult, "FAILED", "签到失败：登录已失效")
@@ -86,7 +82,8 @@ object SignInManager {
                                 updateLocalSignInTime()
                                 withResult(onResult, "SUCCESS", "签到成功！")
                             } else if (text.isNotEmpty()) {
-                                val hint = text.lines().find { it.contains("提示") || it.contains("失败") || it.contains("错误") } ?: "签到完成，请刷新查看"
+                                // 如果页面有其它反馈信息，直接展示（防止误判）
+                                val hint = text.split("\n").find { it.contains("提示") || it.contains("失败") || it.contains("错误") } ?: "签到完成，请刷新查看"
                                 withResult(onResult, "SUCCESS", hint)
                             } else {
                                 withResult(onResult, "FAILED", "签到失败：未获取到反馈")
