@@ -84,7 +84,7 @@ class MessageFragment : TopFragment(), ControllableFragment {
                             Text(text = "请先登录", color = Color.Gray)
                         }
                     } else {
-                        Column(modifier = Modifier.fillMaxWidth().background(Color.White).statusBarsPadding()) {
+                        Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
                             TopAppBar(
                                 title = { Text("我的信息", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black) },
                                 navigationIcon = {
