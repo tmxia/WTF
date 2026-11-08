@@ -128,13 +128,25 @@ class MessageFragment : TopFragment(), ControllableFragment {
                         Box(modifier = Modifier.fillMaxSize()) {
                             if (selectedTab == 0) {
                                 if (isNotifLoading && notifications == null) {
-                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color(0xFFE53935))
+                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(32.dp),
+                                            color = Color(0xFFE53935),
+                                            strokeWidth = 3.dp
+                                        )
+                                    }
                                 } else {
                                     NotificationList(notifications?.notifications ?: emptyList())
                                 }
                             } else {
                                 if (isConvLoading && conversations == null) {
-                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color(0xFFE53935))
+                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(32.dp),
+                                            color = Color(0xFFE53935),
+                                            strokeWidth = 3.dp
+                                        )
+                                    }
                                 } else {
                                     ConversationList(conversations ?: emptyList(), requireContext())
                                 }

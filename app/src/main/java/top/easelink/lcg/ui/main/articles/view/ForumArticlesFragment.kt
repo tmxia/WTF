@@ -29,21 +29,8 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         savedInstanceState: Bundle?
     ): View {
         val context = requireContext()
-
-        val swipeRefreshLayout = SwipeRefreshLayout(context).apply {
-            setDistanceToTriggerSync(300)
-            setSlingshotDistance(350)
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            setOnChildScrollUpCallback { _, _ -> !isListAtTop }
-            setOnRefreshListener {
-                val url = arguments?.getString("url") ?: ""
-                viewModel.initUrlAndFetch(url, ArticleFetcher.FetchType.FETCH_INIT)
-            }
-        }
-
+        
+        // 彻底废弃 SwipeRefreshLayout，直接使用 ComposeView
         val composeView = ComposeView(context).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -55,10 +42,6 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
             val articles by viewModel.articles.observeAsState(initial = emptyList())
             val tabs by viewModel.threadList.observeAsState(initial = emptyList())
             val isLoading by viewModel.isLoading.observeAsState(initial = false)
-            
-            androidx.compose.runtime.LaunchedEffect(isLoading) {
-                swipeRefreshLayout.isRefreshing = isLoading
-            }
 
             val title = arguments?.getString("title") ?: "帖子列表"
             ForumArticlesScreen(
@@ -78,8 +61,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
             )
         }
 
-        swipeRefreshLayout.addView(composeView)
-        return swipeRefreshLayout
+        return composeView
     }
 
     companion object {
