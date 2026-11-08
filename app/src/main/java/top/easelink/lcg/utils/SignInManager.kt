@@ -2,15 +2,16 @@ package top.easelink.lcg.utils
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.core.content.edit
 import timber.log.Timber
+import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.network.LCGCookieJar
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -36,28 +37,38 @@ object SignInManager {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    fun performSignIn(activity: Activity, onResult: (String, String) -> Unit) {
+    fun performSignIn(context: Context, onResult: (String, String) -> Unit) {
         if (!isSigningIn.compareAndSet(false, true)) {
             return
         }
 
         Handler(Looper.getMainLooper()).post {
-            val rootView = activity.window.decorView as ViewGroup
-            val webView = WebView(activity)
+            // 核心修复：根据是否有 Activity 采用不同的挂载策略
+            val activity = context as? Activity
+            val rootView: ViewGroup?
             
-            // 【核心修复】直接挂载到当前 Activity 的 DecorView 上（1x1 像素），确保 JS 渲染引擎被唤醒
+            if (activity != null) {
+                rootView = activity.window.decorView as ViewGroup
+            } else {
+                // 如果没有 Activity（后台 Worker 调用），退回到 ApplicationContext 的 WindowManager
+                rootView = LCGApp.context.getSystemService(Context.WINDOW_SERVICE).let { wm ->
+                    // 这里我们只做兜底，通常在后台 Worker 中 WebView 的 JS 会被挂起
+                    // 但为了不报错，我们借用 rootView 的壳
+                    ViewGroup(LCGApp.context) // 这是一个空壳 ViewGroup，无法真正渲染
+                }
+            }
+
+            val webView = WebView(context)
             webView.layoutParams = ViewGroup.LayoutParams(1, 1)
             webView.alpha = 0.01f
-            rootView.addView(webView)
+            rootView?.addView(webView)
 
-            // 配置 WebView
             webView.settings.apply {
                 javaScriptEnabled = true
                 domStorageEnabled = true
                 userAgentString = "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
             }
             
-            // 注入 Cookie
             CookieManager.getInstance().setAcceptCookie(true)
             CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
             val savedCookies = LCGCookieJar.cookiesForUrl("https://www.52pojie.cn/")
@@ -71,7 +82,7 @@ object SignInManager {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     Timber.tag("SignIn").d("页面加载完毕: $url")
-                    // 延迟 2 秒，等待可能存在的 WAF JS 执行
+                    
                     Handler(Looper.getMainLooper()).postDelayed({
                         LCGCookieJar.syncFromWebView(url ?: "")
                         
@@ -101,12 +112,11 @@ object SignInManager {
                                 val hint = text.split("\n").find { it.contains("提示") || it.contains("失败") || it.contains("错误") || it.contains("申请") } ?: "签到完成，请刷新查看"
                                 withResult(onResult, "SUCCESS", hint)
                             } else {
-                                withResult(onResult, "FAILED", "签到失败：页面内容为空")
+                                withResult(onResult, "FAILED", "签到失败：页面无响应")
                             }
                             
-                            // 销毁 WebView
                             try {
-                                rootView.removeView(webView)
+                                rootView?.removeView(webView)
                                 webView.destroy()
                             } catch (e: Exception) {}
                         }
