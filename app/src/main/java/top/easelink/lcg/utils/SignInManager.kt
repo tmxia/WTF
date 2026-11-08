@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import androidx.core.content.edit
 import timber.log.Timber
 import top.easelink.lcg.appinit.LCGApp
@@ -36,32 +37,42 @@ object SignInManager {
                lastCal.get(java.util.Calendar.DAY_OF_YEAR) == todayCal.get(java.util.Calendar.DAY_OF_YEAR)
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    /**
+     * 供后台（Worker、LCGApp）使用的无参方法
+     */
+    fun performSignIn(onResult: (String, String) -> Unit) {
+        doSignIn(LCGApp.context, onResult)
+    }
+
+    /**
+     * 供前台（MeFragment）使用的带 Context 方法，用于挂载 Activity 唤醒 JS
+     */
     fun performSignIn(context: Context, onResult: (String, String) -> Unit) {
+        doSignIn(context, onResult)
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun doSignIn(context: Context, onResult: (String, String) -> Unit) {
         if (!isSigningIn.compareAndSet(false, true)) {
             return
         }
 
         Handler(Looper.getMainLooper()).post {
-            // 核心修复：根据是否有 Activity 采用不同的挂载策略
             val activity = context as? Activity
-            val rootView: ViewGroup?
-            
-            if (activity != null) {
-                rootView = activity.window.decorView as ViewGroup
+            var parentView: ViewGroup? = null
+
+            // 核心修复 1：如果是 Activity，将其挂载到界面上以保证 100% 渲染
+            if (activity != null && !activity.isFinishing) {
+                parentView = activity.window.decorView as ViewGroup
             } else {
-                // 如果没有 Activity（后台 Worker 调用），退回到 ApplicationContext 的 WindowManager
-                rootView = LCGApp.context.getSystemService(Context.WINDOW_SERVICE).let { wm ->
-                    // 这里我们只做兜底，通常在后台 Worker 中 WebView 的 JS 会被挂起
-                    // 但为了不报错，我们借用 rootView 的壳
-                    ViewGroup(LCGApp.context) // 这是一个空壳 ViewGroup，无法真正渲染
-                }
+                // 核心修复 2：如果是后台 Worker，则用 FrameLayout 实例化兜底
+                parentView = FrameLayout(LCGApp.context)
             }
 
             val webView = WebView(context)
             webView.layoutParams = ViewGroup.LayoutParams(1, 1)
             webView.alpha = 0.01f
-            rootView?.addView(webView)
+            parentView.addView(webView)
 
             webView.settings.apply {
                 javaScriptEnabled = true
@@ -116,7 +127,7 @@ object SignInManager {
                             }
                             
                             try {
-                                rootView?.removeView(webView)
+                                parentView?.removeView(webView)
                                 webView.destroy()
                             } catch (e: Exception) {}
                         }
