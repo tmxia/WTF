@@ -126,15 +126,11 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
     val bgColor = Color(0xFFF5F5F5)      
     val inputBgColor = Color(0xFFF2F3F5) 
 
-    // 拦截手势/物理返回键
-    BackHandler(enabled = true) {
-        if (keyword.isNotEmpty()) {
-            keyword = ""
-            hasSearched = false
-            keyboardController?.hide()
-        } else {
-            onBack()
-        }
+    // 核心修复：仅在输入框有关键字时拦截返回键，防止无限递归导致 App 崩溃
+    BackHandler(enabled = keyword.isNotEmpty()) {
+        keyword = ""
+        hasSearched = false
+        keyboardController?.hide()
     }
 
     LaunchedEffect(Unit) { viewModel.loadForums() }
@@ -161,7 +157,15 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
         ) {
             // 返回按钮
             Box(
-                modifier = Modifier.size(40.dp).clip(RoundedCornerShape(20.dp)).clickable { onBack() },
+                modifier = Modifier.size(40.dp).clip(RoundedCornerShape(20.dp)).clickable { 
+                    if (keyword.isNotEmpty()) {
+                        keyword = ""
+                        hasSearched = false
+                        keyboardController?.hide()
+                    } else {
+                        onBack()
+                    }
+                },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "返回", tint = Color.Black, modifier = Modifier.size(22.dp))
