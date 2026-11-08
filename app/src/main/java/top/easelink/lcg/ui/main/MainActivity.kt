@@ -287,7 +287,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             is FavoriteArticlesFragment,
             is FollowFragment,
             is HistoryArticlesFragment,
-            is ProfileFragment -> true
+            is ProfileFragment, is MessageFragment -> true
             else -> false
         }
         setStatusBarAppearance(isLightStatusBar)
