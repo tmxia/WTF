@@ -1,6 +1,11 @@
 package top.easelink.lcg.utils
 
+import android.content.Context
 import androidx.core.content.edit
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import top.easelink.lcg.network.JsoupClient
 
@@ -25,67 +30,67 @@ object SignInManager {
                lastCal.get(java.util.Calendar.DAY_OF_YEAR) == todayCal.get(java.util.Calendar.DAY_OF_YEAR)
     }
 
-    fun performSignIn(onResult: (String, String) -> Unit) {
-        try {
-            
-            val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL)
-            val applyHtml = applyResponse.outerHtml()
-            
-            if (applyHtml.contains("您需要先登录")) {
-                Timber.tag("SignIn").e("签到失败：Cookie 已失效")
-                onResult("FAILED", "签到失败：登录已失效")
-                return
-            }
-            if (applyHtml.contains("wzwsquestion") || applyHtml.contains("waf_zw_verify")) {
-                Timber.tag("SignIn").e("签到失败：触发 WAF 拦截")
-                onResult("FAILED", "签到失败：触发安全风控")
-                return
-            }
+    /**
+     * 修复核心：将网络请求放入 IO 线程，防止主线程崩溃/卡死
+     */
+    fun performSignIn(context: Context, onResult: (String, String) -> Unit) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL)
+                val applyHtml = applyResponse.outerHtml()
 
-            val applyMessage = applyResponse.getElementsByClass("alert_info")
-                .first()?.selectFirst("p")?.text().orEmpty()
+                if (applyHtml.contains("您需要先登录")) {
+                    Timber.tag("SignIn").e("签到失败：Cookie 已失效")
+                    withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：登录已失效") }
+                    return@launch
+                }
+                if (applyHtml.contains("wzwsquestion") || applyHtml.contains("waf_zw_verify")) {
+                    Timber.tag("SignIn").e("签到失败：触发 WAF 拦截")
+                    withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：触发安全风控") }
+                    return@launch
+                }
 
-            if (applyMessage.contains("已申请") || applyMessage.contains("已完成") || applyMessage.contains("已签到")) {
-                Timber.tag("SignIn").d("签到结果：今日已签到")
+                val applyMessage = applyResponse.getElementsByClass("alert_info")
+                    .first()?.selectFirst("p")?.text().orEmpty()
+
+                if (applyMessage.contains("已申请") || applyMessage.contains("已完成") || applyMessage.contains("已签到")) {
+                    Timber.tag("SignIn").d("签到结果：今日已签到")
+                    updateLocalSignInTime()
+                    withContext(Dispatchers.Main) { onResult("ALREADY_DONE", "今日已签到") }
+                    return@launch
+                }
+
+                val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL)
+                val drawHtml = drawResponse.outerHtml()
+
+                if (drawHtml.contains("您需要先登录")) {
+                    Timber.tag("SignIn").e("签到失败：Cookie 已失效")
+                    withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：登录已失效") }
+                    return@launch
+                }
+
+                val drawText = drawResponse.getElementsByClass("alert_info")
+                    .first()?.selectFirst("p")?.text().orEmpty()
+
+                if (drawText.isBlank()) {
+                    Timber.tag("SignIn").e("签到失败：未获取到反馈信息（可能被 WAF 拦截）")
+                    withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：未获取到反馈信息") }
+                    return@launch
+                }
+                if (drawText.contains("失败") || drawText.contains("错误") || drawText.contains("异常")) {
+                    Timber.tag("SignIn").e("签到结果：$drawText")
+                    withContext(Dispatchers.Main) { onResult("FAILED", drawText) }
+                    return@launch
+                }
+
+                Timber.tag("SignIn").d("签到结果：$drawText")
                 updateLocalSignInTime()
-                onResult("ALREADY_DONE", "今日已签到")
-                return
+                withContext(Dispatchers.Main) { onResult("SUCCESS", "签到成功！") }
+
+            } catch (e: Exception) {
+                Timber.tag("SignIn").e("签到异常：${e.message}")
+                withContext(Dispatchers.Main) { onResult("FAILED", "签到失败：${e.message}") }
             }
-
-            
-            val drawResponse = JsoupClient.sendGetRequestWithUrl(DRAW_TASK_URL)
-            val drawHtml = drawResponse.outerHtml()
-            
-            if (drawHtml.contains("您需要先登录")) {
-                Timber.tag("SignIn").e("签到失败：Cookie 已失效")
-                onResult("FAILED", "签到失败：登录已失效")
-                return
-            }
-
-            val drawText = drawResponse.getElementsByClass("alert_info")
-                .first()?.selectFirst("p")?.text().orEmpty()
-
-            
-            if (drawText.isBlank()) {
-                Timber.tag("SignIn").e("签到失败：未获取到反馈信息（可能被 WAF 拦截）")
-                onResult("FAILED", "签到失败：未获取到反馈信息")
-                return
-            }
-
-            if (drawText.contains("失败") || drawText.contains("错误") || drawText.contains("异常")) {
-                Timber.tag("SignIn").e("签到结果：$drawText")
-                onResult("FAILED", drawText)
-                return
-            }
-
-            
-            Timber.tag("SignIn").d("签到结果：$drawText")
-            updateLocalSignInTime()
-            onResult("SUCCESS", "签到成功！")
-
-        } catch (e: Exception) {
-            Timber.tag("SignIn").e("签到异常：${e.message}")
-            onResult("FAILED", "签到失败：网络异常或登录状态失效")
         }
     }
 }
