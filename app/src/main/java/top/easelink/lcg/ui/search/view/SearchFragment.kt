@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -32,8 +33,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -149,7 +153,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onBack: () -> Unit, onNavigate: 
                     cursorBrush = androidx.compose.ui.graphics.SolidColor(primaryColor),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { performSearch(keyword) }),
-                    decorationBox = { innerTextField ->
+                    decorationBox = { innerTextField: @Composable () -> Unit ->
                         Box(contentAlignment = Alignment.CenterStart) {
                             if (keyword.isEmpty()) {
                                 Text("输入关键词搜索帖子...", color = Color.Gray, fontSize = 14.sp)
@@ -369,9 +373,9 @@ fun SearchResultCard(item: LCGSearchResultItem, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth().clickable { onClick() }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = fromHtml(item.title), fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color.Black, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(text = parseHtmlHighlight(item.title), fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color.Black, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = fromHtml(item.content), fontSize = 13.sp, color = Color.Gray, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            Text(text = parseHtmlHighlight(item.content), fontSize = 13.sp, color = Color.Gray, maxLines = 3, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -382,4 +386,34 @@ private fun loadHistory(prefs: android.content.SharedPreferences): List<String> 
 }
 private fun saveHistory(prefs: android.content.SharedPreferences, list: List<String>) {
     prefs.edit().putString("history", list.joinToString("|||")).apply()
+}
+
+
+// 轻量级 HTML 解析器，完美替代高版本 Compose 的 fromHtml，并保留粗体和红色高亮
+fun parseHtmlHighlight(html: String): AnnotatedString {
+    return buildAnnotatedString {
+        val parts = html.split(Regex("(<font color="#ff0000">|</font>|<strong>|</strong>)", RegexOption.IGNORE_CASE))
+        var isRed = false
+        var isBold = false
+        for (part in parts) {
+            when (part.lowercase()) {
+                "<font color="#ff0000">" -> isRed = true
+                "</font>" -> isRed = false
+                "<strong>" -> isBold = true
+                "</strong>" -> isBold = false
+                else -> {
+                    if (part.isNotEmpty()) {
+                        withStyle(
+                            SpanStyle(
+                                color = if (isRed) Color(0xFFE53935) else Color.Unspecified,
+                                fontWeight = if (isBold) FontWeight.Bold else null
+                            )
+                        ) {
+                            append(android.text.Html.fromHtml(part).toString()) // 清除其他无关标签
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

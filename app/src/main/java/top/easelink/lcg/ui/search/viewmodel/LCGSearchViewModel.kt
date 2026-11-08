@@ -11,7 +11,7 @@ import top.easelink.lcg.ui.search.model.LCGSearchResultItem
 import top.easelink.lcg.ui.search.source.LCGSearchService.doSearchNextPage
 import top.easelink.lcg.ui.search.source.LCGSearchService.doSearchWith
 
-class LCGSearchViewModel : ViewModel() {
+class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     val searchResults = MutableLiveData<List<LCGSearchResultItem>>()
     val totalResult = MutableLiveData<String?>()
     val isLoading = MutableLiveData<Boolean>()
@@ -20,6 +20,10 @@ class LCGSearchViewModel : ViewModel() {
     val selectedFidName = MutableLiveData<String>("全部板块")
     val forumList = MutableLiveData<List<ForumNavigationModel>>()
     
+    override fun fetch(type: LCGSearchResultAdapter.ContentFetcher.Type, callback: ((Boolean) -> Unit)?) {
+        // 兼容旧的 Fragment 代码，已废弃，无需实现
+    }
+
     private var mKeyWord: String? = null
     private var mFid: String? = null
     private var hasMore = true
