@@ -37,6 +37,7 @@ object ForumNetworkSource {
                         ForumNavigationModel(
                             title = cleanTitle(title),
                             drawableRes = getIconByFid(extractFid(href), title),
+                            fid = extractFid(href)?.toString(),
                             url = standardUrl,
                             isSubForum = isSub,
                             parentTitle = parentTitle

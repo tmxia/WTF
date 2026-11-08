@@ -24,7 +24,7 @@ object LCGSearchService {
     private var mNextPageUrl: String? = null
     private var mTotalResults: String? = null
 
-    fun doSearchWith(keyword: String): LCGSearchResults {
+    fun doSearchWith(keyword: String, fid: String? = null): LCGSearchResults {
         mNextPageUrl = null
         mTotalResults = null
         if (keyword.isBlank() || !canSendRequest()) {
@@ -37,7 +37,7 @@ object LCGSearchService {
                 put("formhash", JsoupClient.formHash)
                 put("mod", "forum")
                 put("srchtype", "title")
-                put("srhfid", "")
+                put("srhfid", fid ?: "")
                 put("srhlocality", "forum::index")
                 put("srchtxt", keyword)
                 put("searchsubmit", "true")

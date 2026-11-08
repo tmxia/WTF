@@ -5,56 +5,77 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import top.easelink.framework.threadpool.IOPool
+import top.easelink.lcg.ui.main.discover.model.ForumNavigationModel
+import top.easelink.lcg.ui.main.discover.source.ForumNetworkSource
 import top.easelink.lcg.ui.search.model.LCGSearchResultItem
 import top.easelink.lcg.ui.search.source.LCGSearchService.doSearchNextPage
 import top.easelink.lcg.ui.search.source.LCGSearchService.doSearchWith
 
-class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
+class LCGSearchViewModel : ViewModel() {
     val searchResults = MutableLiveData<List<LCGSearchResultItem>>()
     val totalResult = MutableLiveData<String?>()
     val isLoading = MutableLiveData<Boolean>()
+    val isLoadingMore = MutableLiveData<Boolean>()
+    
+    val selectedFidName = MutableLiveData<String>("全部板块")
+    val forumList = MutableLiveData<List<ForumNavigationModel>>()
+    
     private var mKeyWord: String? = null
+    private var mFid: String? = null
+    private var hasMore = true
+
+    fun loadForums() {
+        if (!forumList.value.isNullOrEmpty()) return
+        GlobalScope.launch(IOPool) {
+            forumList.postValue(ForumNetworkSource.fetchAllForumsFromApi())
+        }
+    }
+
+    fun selectFid(fid: String?, name: String) {
+        if (mFid == fid) return
+        mFid = fid
+        selectedFidName.value = name
+        if (!mKeyWord.isNullOrBlank()) {
+            fetchInit(mKeyWord!!)
+        }
+    }
 
     fun setKeyword(keyword: String?) {
         mKeyWord = keyword
-        fetch(LCGSearchResultAdapter.ContentFetcher.Type.INIT, null)
+        fetchInit(keyword)
     }
 
-    override fun fetch(
-        type: LCGSearchResultAdapter.ContentFetcher.Type,
-        callback: ((Boolean) -> Unit)?
-    ) {
-        if (type == LCGSearchResultAdapter.ContentFetcher.Type.INIT) {
-            isLoading.value = true
-        }
-        mKeyWord?.let {
-            GlobalScope.launch(IOPool) {
-                when (type) {
-                    LCGSearchResultAdapter.ContentFetcher.Type.INIT ->
-                        doSearchWith(it).let {
-                            if (!it.searchResultList.isNullOrEmpty()) {
-                                searchResults.postValue(it.searchResultList)
-                            }
-                            if (!it.totalResult.isNullOrEmpty()) {
-                                totalResult.postValue(it.totalResult)
-                            }
-                            callback?.invoke(!it.searchResultList.isNullOrEmpty())
-                        }
-                    LCGSearchResultAdapter.ContentFetcher.Type.NEXT_PAGE -> {
-                        doSearchNextPage().let {
-                            val list = searchResults.value
-                            if (!it.searchResultList.isNullOrEmpty() && !list.isNullOrEmpty()) {
-                                searchResults.postValue(list.plus(it.searchResultList))
-                            }
-                            totalResult.postValue(it.totalResult)
-                            callback?.invoke(!it.searchResultList.isNullOrEmpty())
-                        }
-                    }
-                }
-                if (type == LCGSearchResultAdapter.ContentFetcher.Type.INIT) {
-                    isLoading.postValue(false)
-                }
+    private fun fetchInit(keyword: String?) {
+        if (keyword.isNullOrBlank()) return
+        isLoading.value = true
+        hasMore = true
+        searchResults.value = emptyList()
+        totalResult.value = null
+        GlobalScope.launch(IOPool) {
+            doSearchWith(keyword, mFid).let {
+                searchResults.postValue(it.searchResultList)
+                totalResult.postValue(it.totalResult)
+                hasMore = it.searchResultList.isNotEmpty()
             }
+            isLoading.postValue(false)
+        }
+    }
+
+    fun loadNextPage() {
+        if (isLoadingMore.value == true || !hasMore) return
+        isLoadingMore.value = true
+        GlobalScope.launch(IOPool) {
+            doSearchNextPage().let {
+                val currentList = searchResults.value?.toMutableList() ?: mutableListOf()
+                if (it.searchResultList.isEmpty()) {
+                    hasMore = false
+                } else {
+                    currentList.addAll(it.searchResultList)
+                    searchResults.postValue(currentList)
+                }
+                if (!it.totalResult.isNullOrEmpty()) totalResult.postValue(it.totalResult)
+            }
+            isLoadingMore.postValue(false)
         }
     }
 }

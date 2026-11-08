@@ -8,4 +8,4 @@ data class ForumNavigationModel(
     val url: String,
     val isSubForum: Boolean = false,
     val parentTitle: String? = null
-)
+, val fid: String? = null)
