@@ -32,13 +32,12 @@ object SignInManager {
 
     /**
      * 【独立模块 1：验证机制】
-     * 纯后台静默检测，绝不弹窗
+     * 智能反馈：能连上就去官方拿真实状态；连不上（被 WAF 拦截）就保留本地状态，不乱覆盖。
      */
     fun checkSignInStatus(onResult: (Boolean) -> Unit) {
         GlobalScope.launch(Dispatchers.IO) {
             try {
                 Timber.tag("SignInDebug").d("【官方API验证】发起 GET 状态同步请求...")
-                // 传入 false，禁止弹出 WAF 验证
                 val doc = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL, enableWafPopup = false)
                 val text = doc.text()
                 val rawHtml = doc.outerHtml()
@@ -47,7 +46,8 @@ object SignInManager {
 
                 if (rawHtml.contains("wzwsquestion") || rawHtml.contains("waf_zw_verify") || rawHtml.contains("Please enable JavaScript")) {
                     Timber.tag("SignInDebug").w("【官方API验证】被 WAF 拦截，无法确认状态。")
-                    withContext(Dispatchers.Main) { onResult(false) }
+                    // 真实反馈：如果被拦截，且本地有已签到记录，依然保持已签到
+                    withContext(Dispatchers.Main) { onResult(isSignedToday()) }
                     return@launch
                 }
 
@@ -56,19 +56,21 @@ object SignInManager {
                     updateLocalSignInTime()
                     withContext(Dispatchers.Main) { onResult(true) }
                 } else {
+                    // 如果官方明确返回未签到，那确实没签
                     withContext(Dispatchers.Main) { onResult(false) }
                 }
             } catch (e: IOException) {
                 if (e.message == "WAF_VERIFICATION_REQUIRED") {
-                    Timber.tag("SignInDebug").w("【官方API验证】触发 WAF，判定为状态未知（保持未签到）")
-                    withContext(Dispatchers.Main) { onResult(false) }
+                    Timber.tag("SignInDebug").w("【官方API验证】触发 WAF 异常，无法确认真实状态，保留本地记录。")
+                    // 核心修复：如果遇到 WAF 异常，不要强行传 false，而是传本地状态！
+                    withContext(Dispatchers.Main) { onResult(isSignedToday()) }
                 } else {
                     Timber.tag("SignInDebug").e(e, "【官方API验证】网络异常")
-                    withContext(Dispatchers.Main) { onResult(false) }
+                    withContext(Dispatchers.Main) { onResult(isSignedToday()) }
                 }
             } catch (e: Exception) {
                 Timber.tag("SignInDebug").e(e, "【官方API验证】请求异常")
-                withContext(Dispatchers.Main) { onResult(false) }
+                withContext(Dispatchers.Main) { onResult(isSignedToday()) }
             }
         }
     }
@@ -86,14 +88,12 @@ object SignInManager {
             try {
                 Timber.tag("SignIn").d("【手工签到】发起静默签到请求...")
                 
-                // 核心大招：传入 false，底层遇到 WAF 会直接抛出 IOException("WAF_VERIFICATION_REQUIRED")
                 val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL, enableWafPopup = false)
                 val rawHtml = applyResponse.outerHtml()
                 
                 Timber.tag("SignIn").d("签到任务响应: body=${rawHtml.take(200)}")
 
                 if (rawHtml.contains("您需要先登录")) {
-                    Timber.tag("SignIn").e("签到失败：Cookie 已失效")
                     withResult(onResult, "FAILED", "签到失败：登录已失效")
                     return@launch
                 }
@@ -102,7 +102,6 @@ object SignInManager {
                     .first()?.selectFirst("p")?.text().orEmpty()
                 
                 if (applyMessage.contains("已申请") || applyMessage.contains("已完成")) {
-                    Timber.tag("SignIn").d("今日已签到: $applyMessage")
                     updateLocalSignInTime()
                     withResult(onResult, "ALREADY_DONE", "今日已签到")
                     return@launch
@@ -117,16 +116,12 @@ object SignInManager {
                 }
                 
             } catch (e: IOException) {
-                // 完美捕获底层抛出的 WAF 异常
                 if (e.message == "WAF_VERIFICATION_REQUIRED") {
-                    Timber.tag("SignIn").w("手工签到遇到 WAF，静默拦截成功。")
-                    withResult(onResult, "FAILED", "触发安全风控，请前往网页端签到")
+                    withResult(onResult, "FAILED", "触发安全风控，如已签到请忽略")
                 } else {
-                    Timber.tag("SignIn").e(e, "签到请求网络异常")
                     withResult(onResult, "FAILED", "网络异常: ${e.message}")
                 }
             } catch (e: Exception) {
-                Timber.tag("SignIn").e(e, "签到请求未知异常")
                 withResult(onResult, "FAILED", "未知异常: ${e.message}")
             }
         }
