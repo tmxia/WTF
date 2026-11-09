@@ -132,8 +132,17 @@ class ArticleFragment : Fragment(), ControllableFragment {
         val fm = requireActivity().supportFragmentManager
         if (fm.backStackEntryCount > 0) {
             fm.popBackStack()
+            // 等待出栈事务执行完毕
+            fm.executePendingTransactions()
+            
+            // 智能恢复：找到退栈后位于栈顶的 Fragment，并把它显示出来
+            val topFragment = fm.fragments.lastOrNull { it.isAdded && !it.isRemoving }
+            if (topFragment != null && topFragment.isHidden) {
+                fm.beginTransaction().show(topFragment).commitAllowingStateLoss()
+            }
+        } else {
+            requireActivity().onBackPressedDispatcher.onBackPressed()
         }
-        (requireActivity() as? top.easelink.lcg.ui.main.MainActivity)?.showCurrentTabFragment()
     }
 
     private fun ComposeView.setContentView(content: @Composable () -> Unit) {
