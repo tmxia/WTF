@@ -1,10 +1,13 @@
 package top.easelink.lcg.utils
 
 import androidx.core.content.edit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.network.JsoupClient
-import top.easelink.lcg.network.LCGCookieJar
 
 object SignInManager {
 
@@ -28,53 +31,53 @@ object SignInManager {
 
     /**
      * 【独立模块 1：验证机制】
-     * 保持纯净的 GET 请求，强行对齐官方 API 状态
+     * 静默验证，遇到 WAF 直接跳过（不弹窗）
      */
     fun checkSignInStatus(onResult: (Boolean) -> Unit) {
-        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        GlobalScope.launch(Dispatchers.IO) {
             try {
-                Timber.tag("SignInDebug").d("【官方API验证】发起 GET 状态同步请求...")
-                // 注意这里也传了 false，防止后台验证时弹窗
+                Timber.tag("SignInDebug").d("【官方API验证】发起状态同步请求...")
+                // 传入 false，禁止弹出 WAF 验证
                 val doc = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL, enableWafPopup = false)
                 val text = doc.text()
                 val rawHtml = doc.outerHtml()
 
                 Timber.tag("SignInDebug").d("【官方API验证】返回片段: ${text.take(100)}")
 
-                if (rawHtml.contains("wzwsquestion") || rawHtml.contains("waf_zw_verify")) {
+                if (rawHtml.contains("wzwsquestion") || rawHtml.contains("waf_zw_verify") || rawHtml.contains("Please enable JavaScript")) {
                     Timber.tag("SignInDebug").w("【官方API验证】被 WAF 拦截，无法确认状态。")
-                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { onResult(false) }
+                    withContext(Dispatchers.Main) { onResult(false) }
                     return@launch
                 }
 
                 if (text.contains("已申请") || text.contains("已完成") || text.contains("已签到") || 
                     text.contains("已经签到") || text.contains("已经完成") || text.contains("无法再次申请")) {
                     updateLocalSignInTime()
-                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { onResult(true) }
+                    withContext(Dispatchers.Main) { onResult(true) }
                 } else {
-                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { onResult(false) }
+                    withContext(Dispatchers.Main) { onResult(false) }
                 }
             } catch (e: Exception) {
                 Timber.tag("SignInDebug").e(e, "【官方API验证】请求异常")
-                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { onResult(false) }
+                withContext(Dispatchers.Main) { onResult(false) }
             }
         }
     }
 
     /**
      * 【独立模块 2：手工签到机制】
-     * 完美复刻历史提交，使用请求级隔离，静默签到不弹窗
+     * 请求级隔离，遇到 WAF 直接失败，绝不弹窗
      */
     fun performSignIn(onResult: (String, String) -> Unit) {
         performSignIn(LCGApp.context, onResult)
     }
 
     fun performSignIn(context: android.content.Context, onResult: (String, String) -> Unit) {
-        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        GlobalScope.launch(Dispatchers.IO) {
             try {
                 Timber.tag("SignIn").d("【手工签到】发起静默签到请求...")
                 
-                // 核心大招：enableWafPopup = false，强制请求级隔离，绝不弹人机验证
+                // 核心：传入 false，禁止弹出人机验证
                 val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL, enableWafPopup = false)
                 val rawHtml = applyResponse.outerHtml()
                 
@@ -86,9 +89,9 @@ object SignInManager {
                     return@launch
                 }
 
-                if (rawHtml.contains("wzwsquestion") || rawHtml.contains("waf_zw_verify")) {
+                if (rawHtml.contains("wzwsquestion") || rawHtml.contains("waf_zw_verify") || rawHtml.contains("Please enable JavaScript")) {
                     Timber.tag("SignIn").e("签到失败：触发 WAF 风控")
-                    withResult(onResult, "FAILED", "签到失败：触发安全风控，请去网页端签到")
+                    withResult(onResult, "FAILED", "签到失败：触发安全风控")
                     return@launch
                 }
 
@@ -106,7 +109,6 @@ object SignInManager {
                     updateLocalSignInTime()
                     withResult(onResult, "SUCCESS", "签到成功！")
                 } else {
-                    // 有些情况下任务申请完成，需要去领取奖励，但通常 GET 一次 apply 就会触发
                     updateLocalSignInTime()
                     withResult(onResult, "SUCCESS", if (applyMessage.isNotBlank()) applyMessage else "签到完成")
                 }
@@ -119,7 +121,7 @@ object SignInManager {
     }
 
     private fun withResult(onResult: (String, String) -> Unit, status: String, msg: String) {
-        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+        GlobalScope.launch(Dispatchers.Main) {
             onResult(status, msg)
         }
     }
