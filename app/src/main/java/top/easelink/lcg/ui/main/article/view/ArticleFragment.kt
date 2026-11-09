@@ -115,14 +115,27 @@ class ArticleFragment : Fragment(), ControllableFragment {
                 articleUrl = url,
                 viewModel = viewModel,
                 fragment = this@ArticleFragment,
-                onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }
+                onBackClick = { handleBackClick() }
             )
         }
         
+        requireActivity().onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                handleBackClick()
+            }
+        })
         return composeView
     }
     
     
+    private fun handleBackClick() {
+        val fm = requireActivity().supportFragmentManager
+        if (fm.backStackEntryCount > 0) {
+            fm.popBackStack()
+        }
+        (requireActivity() as? top.easelink.lcg.ui.main.MainActivity)?.showCurrentTabFragment()
+    }
+
     private fun ComposeView.setContentView(content: @Composable () -> Unit) {
         this.setContent {
             content()

@@ -276,6 +276,18 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         updateFragmentTags(tag)
     }
 
+    fun showCurrentTabFragment() {
+        val selectedId = binding.bottomNavigation.selectedItemId
+        val clazz = when (selectedId) {
+            R.id.action_home -> RecommendFragment::class.java
+            R.id.action_search -> SearchFragment::class.java
+            R.id.action_forum_navigation -> DiscoverFragment::class.java
+            R.id.action_about_me -> MeFragment::class.java
+            else -> RecommendFragment::class.java
+        }
+        showFragment(clazz)
+    }
+
     private fun updateUIForFragment(fragment: Fragment) {
         val isLightStatusBar = when (fragment) {
             is RecommendFragment,
