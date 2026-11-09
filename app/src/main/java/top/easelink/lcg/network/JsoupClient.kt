@@ -133,6 +133,10 @@ object JsoupClient : ApiRequest {
     }
 
     override fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?): Connection.Response {
+        return sendPostRequestWithUrl(url, form, enableWafPopup = true)
+    }
+
+    fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?, enableWafPopup: Boolean): Connection.Response {
         var response = getConnection(url)
             .apply { if (form != null) data(form) }
             .postDataCharset("gbk")
@@ -142,6 +146,10 @@ object JsoupClient : ApiRequest {
         updateCookies(response.cookies())
 
         if (isWafPage(response.body())) {
+            // 核心修复：如果明确禁止弹窗（如搜索/签到场景），直接抛出异常，绝不卡死挂起！
+            if (!enableWafPopup) {
+                throw IOException("WAF_VERIFICATION_REQUIRED")
+            }
             Timber.w("网络层：POST 命中 WAF 盾，挂起请求等待真人验证...")
             EventBus.getDefault().post(WafVerificationEvent(url))
             

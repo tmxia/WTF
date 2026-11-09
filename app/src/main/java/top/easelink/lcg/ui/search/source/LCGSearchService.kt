@@ -24,14 +24,13 @@ object LCGSearchService {
     private var mNextPageUrl: String? = null
     private var mTotalResults: String? = null
 
-    fun doSearchWith(keyword: String, fid: String? = null, orderby: String? = null): LCGSearchResults {
+    fun doSearchWith(keyword: String, fid: String? = null, orderby: String? = null): LCGSearchResults? {
         mNextPageUrl = null
         mTotalResults = null
-        if (keyword.isBlank() || !canSendRequest()) {
-            return emptyResult()
-        }
-        try {
+        if (keyword.isBlank()) return null
+        if (!canSendRequest()) return null // 限流拦截，静默返回 null
 
+        try {
             val url = "${WebsiteConstant.SERVER_BASE_URL}search.php?searchsubmit=yes"
             val form = ArrayMap<String, String>().apply {
                 put("formhash", JsoupClient.formHash)
@@ -43,12 +42,13 @@ object LCGSearchService {
                 put("srchtxt", keyword)
                 put("searchsubmit", "true")
             }
-            val response = JsoupClient.sendPostRequestWithUrl(url, form)
+            // 核心修复：传入 enableWafPopup = false 防止 WAF 卡死
+            val response = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = false)
+            
             if (response.statusCode() in 200..299) {
                 val doc = response.parse()
                 val result = parseSearchResults(doc)
                 try {
-                    
                     mTotalResults = doc.selectFirst("h2")?.text()
                     result.totalResult = mTotalResults
                 } catch (e: Exception) {
@@ -57,7 +57,8 @@ object LCGSearchService {
                 return result
             }
         } catch (e: Exception) {
-            Timber.e(e)
+            Timber.tag("SearchDebug").e(e, "搜索异常: ${e.message}")
+            throw e // 抛给 ViewModel
         }
         return emptyResult()
     }
