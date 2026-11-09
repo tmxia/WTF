@@ -18,7 +18,7 @@ import java.net.SocketTimeoutException
 
 
 object LCGSearchService {
-    private const val MIN_REQUEST_INTERVAL = 5000L
+    private const val MIN_REQUEST_INTERVAL = 500L
     private var lastRequestTime: Long = 0L
 
     private var mNextPageUrl: String? = null
@@ -117,8 +117,7 @@ object LCGSearchService {
 
     private fun canSendRequest(): Boolean {
         return if (System.currentTimeMillis() - lastRequestTime < MIN_REQUEST_INTERVAL) {
-            showMessage(R.string.request_too_often_warning)
-            false
+            false // 如果网络太快，直接静默拦截，不再弹 Toast 骚扰
         } else {
             lastRequestTime = System.currentTimeMillis()
             true

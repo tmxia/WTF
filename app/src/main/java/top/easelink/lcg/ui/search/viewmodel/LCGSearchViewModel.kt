@@ -6,6 +6,8 @@ import top.easelink.lcg.appinit.LCGApp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.ui.main.discover.model.ForumNavigationModel
@@ -37,6 +39,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     }
 
     private var mKeyWord: String? = null
+    private var searchJob: Job? = null
     private var hasMore = true
 
     fun loadForums() {
@@ -76,13 +79,19 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
         if (keyword.isNullOrBlank()) return
         isLoading.value = true
         hasMore = true
-        searchResults.value = emptyList()
-        totalResult.value = null
-        GlobalScope.launch(IOPool) {
-            doSearchWith(keyword, mFids.joinToString(","), mSortOrder).let {
-                searchResults.postValue(it.searchResultList)
-                totalResult.postValue(it.totalResult)
-                hasMore = it.searchResultList.isNotEmpty()
+        
+        // 核心修复：取消上一次未完成的搜索，防止结果覆盖
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch(IOPool) {
+            val result = doSearchWith(keyword, mFids.joinToString(","), mSortOrder)
+            if (result.searchResultList.isNotEmpty() || result.totalResult != null) {
+                searchResults.postValue(result.searchResultList)
+                totalResult.postValue(result.totalResult)
+                hasMore = result.searchResultList.isNotEmpty()
+            } else {
+                // 如果返回空，说明可能被限流或 WAF 拦截，保持原有列表或清空（此处选择清空）
+                searchResults.postValue(emptyList())
+                totalResult.postValue(result.totalResult)
             }
             isLoading.postValue(false)
         }
