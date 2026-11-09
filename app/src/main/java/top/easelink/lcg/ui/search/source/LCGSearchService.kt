@@ -36,7 +36,19 @@ object LCGSearchService {
                 put("formhash", JsoupClient.formHash)
                 put("mod", "forum")
                 put("srchtype", "title")
-                put("srchfid", fid ?: "")
+                
+                // 核心修复：Discuz 多选必须使用数组格式 srchfid[0], srchfid[1]
+                val fidList = fid?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+                if (fidList.isEmpty()) {
+                    put("srchfid", "")
+                } else if (fidList.size == 1) {
+                    put("srchfid", fidList.first())
+                } else {
+                    fidList.forEachIndexed { index, f ->
+                        put("srchfid[$index]", f)
+                    }
+                }
+
                 if (!orderby.isNullOrBlank()) put("orderby", orderby)
                 put("srhlocality", "forum::index")
                 put("srchtxt", keyword)
