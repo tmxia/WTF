@@ -37,7 +37,7 @@ object LCGSearchService {
                 put("formhash", JsoupClient.formHash)
                 put("mod", "forum")
                 put("srchtype", "title")
-                put("srhfid", fid ?: "")
+                put("srchfid", fid ?: "")
                 if (!orderby.isNullOrBlank()) put("orderby", orderby)
                 put("srhlocality", "forum::index")
                 put("srchtxt", keyword)
