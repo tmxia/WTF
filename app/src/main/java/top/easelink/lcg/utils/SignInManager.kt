@@ -8,6 +8,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.network.JsoupClient
+import java.io.IOException
 
 object SignInManager {
 
@@ -31,12 +32,12 @@ object SignInManager {
 
     /**
      * 【独立模块 1：验证机制】
-     * 静默验证，遇到 WAF 直接跳过（不弹窗）
+     * 纯后台静默检测，绝不弹窗
      */
     fun checkSignInStatus(onResult: (Boolean) -> Unit) {
         GlobalScope.launch(Dispatchers.IO) {
             try {
-                Timber.tag("SignInDebug").d("【官方API验证】发起状态同步请求...")
+                Timber.tag("SignInDebug").d("【官方API验证】发起 GET 状态同步请求...")
                 // 传入 false，禁止弹出 WAF 验证
                 val doc = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL, enableWafPopup = false)
                 val text = doc.text()
@@ -55,6 +56,14 @@ object SignInManager {
                     updateLocalSignInTime()
                     withContext(Dispatchers.Main) { onResult(true) }
                 } else {
+                    withContext(Dispatchers.Main) { onResult(false) }
+                }
+            } catch (e: IOException) {
+                if (e.message == "WAF_VERIFICATION_REQUIRED") {
+                    Timber.tag("SignInDebug").w("【官方API验证】触发 WAF，判定为状态未知（保持未签到）")
+                    withContext(Dispatchers.Main) { onResult(false) }
+                } else {
+                    Timber.tag("SignInDebug").e(e, "【官方API验证】网络异常")
                     withContext(Dispatchers.Main) { onResult(false) }
                 }
             } catch (e: Exception) {
@@ -77,7 +86,7 @@ object SignInManager {
             try {
                 Timber.tag("SignIn").d("【手工签到】发起静默签到请求...")
                 
-                // 核心：传入 false，禁止弹出人机验证
+                // 核心大招：传入 false，底层遇到 WAF 会直接抛出 IOException("WAF_VERIFICATION_REQUIRED")
                 val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL, enableWafPopup = false)
                 val rawHtml = applyResponse.outerHtml()
                 
@@ -86,12 +95,6 @@ object SignInManager {
                 if (rawHtml.contains("您需要先登录")) {
                     Timber.tag("SignIn").e("签到失败：Cookie 已失效")
                     withResult(onResult, "FAILED", "签到失败：登录已失效")
-                    return@launch
-                }
-
-                if (rawHtml.contains("wzwsquestion") || rawHtml.contains("waf_zw_verify") || rawHtml.contains("Please enable JavaScript")) {
-                    Timber.tag("SignIn").e("签到失败：触发 WAF 风控")
-                    withResult(onResult, "FAILED", "签到失败：触发安全风控")
                     return@launch
                 }
 
@@ -113,9 +116,18 @@ object SignInManager {
                     withResult(onResult, "SUCCESS", if (applyMessage.isNotBlank()) applyMessage else "签到完成")
                 }
                 
+            } catch (e: IOException) {
+                // 完美捕获底层抛出的 WAF 异常
+                if (e.message == "WAF_VERIFICATION_REQUIRED") {
+                    Timber.tag("SignIn").w("手工签到遇到 WAF，静默拦截成功。")
+                    withResult(onResult, "FAILED", "触发安全风控，请前往网页端签到")
+                } else {
+                    Timber.tag("SignIn").e(e, "签到请求网络异常")
+                    withResult(onResult, "FAILED", "网络异常: ${e.message}")
+                }
             } catch (e: Exception) {
-                Timber.tag("SignIn").e(e, "签到请求异常")
-                withResult(onResult, "FAILED", "网络异常: ${e.message}")
+                Timber.tag("SignIn").e(e, "签到请求未知异常")
+                withResult(onResult, "FAILED", "未知异常: ${e.message}")
             }
         }
     }
