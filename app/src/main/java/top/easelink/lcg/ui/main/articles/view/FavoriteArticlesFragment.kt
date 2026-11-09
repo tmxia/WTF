@@ -136,7 +136,8 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
                                 colors = CardDefaults.cardColors(containerColor = Color.White),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                                 modifier = Modifier.fillMaxWidth().clickable {
-                                    WebViewActivity.startWebViewWith(SERVER_BASE_URL + article.url, requireContext())
+                                    val fragment = top.easelink.lcg.ui.main.article.view.ArticleFragment.newInstance(article.url, article.title)
+                                            (activity as? top.easelink.lcg.ui.main.MainActivity)?.showFragment(fragment)
                                 }
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
