@@ -20,6 +20,8 @@ import top.easelink.lcg.ui.search.source.LCGSearchService.doSearchNextPage
 import top.easelink.lcg.ui.search.source.LCGSearchService.doSearchWith
 
 class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
+    var lastSearchKeyword: String = ""
+    var hasSearchedOnce: Boolean = false
     val searchResults = MutableLiveData<List<LCGSearchResultItem>>()
     val totalResult = MutableLiveData<String?>()
     val isLoading = MutableLiveData<Boolean>()

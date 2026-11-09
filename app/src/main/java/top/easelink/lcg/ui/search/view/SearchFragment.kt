@@ -79,9 +79,8 @@ class SearchFragment : TopFragment(), ControllableFragment {
             SearchScreen(
                 viewModel = viewModel,
                 onNavigate = { fragment ->
-                    activity?.supportFragmentManager?.let { fm ->
-                        top.easelink.framework.utils.addFragmentInActivity(fm, fragment, R.id.clRootView)
-                    }
+                    // 核心修复：将跳转统一交还给 MainActivity 的容器管理，保护回退栈！
+                    (activity as? top.easelink.lcg.ui.main.MainActivity)?.showFragment(fragment)
                 }
             )
         }
@@ -101,8 +100,9 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
     val selectedFidName by viewModel.selectedFidName.observeAsState(initial = "全部板块")
     val selectedSortName by viewModel.selectedSortName.observeAsState(initial = "按相关度")
 
-    var keyword by remember { mutableStateOf("") }
-    var hasSearched by remember { mutableStateOf(false) }
+    // 核心修复：从 ViewModel 读取，防止 Fragment 重建导致状态丢失
+    var keyword by remember { mutableStateOf(viewModel.lastSearchKeyword) }
+    var hasSearched by remember { mutableStateOf(viewModel.hasSearchedOnce) }
     var showBoardDialog by remember { mutableStateOf(false) }
     var isBoardMultiMode by remember { mutableStateOf(false) }
     var tempSelectedFids by remember { mutableStateOf(setOf<String>()) }
@@ -140,6 +140,8 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
             keyword = query
             hasSearched = true
             keyboardController?.hide()
+            viewModel.lastSearchKeyword = query
+            viewModel.hasSearchedOnce = true
             viewModel.setKeyword(query)
             val newHistory = (listOf(query) + historyList.filterNot { it == query }).take(10)
             historyList = newHistory
@@ -168,7 +170,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                     value = keyword,
                     onValueChange = { 
                         keyword = it
-                        if (it.isEmpty()) hasSearched = false 
+                        if (it.isEmpty()) { hasSearched = false; viewModel.lastSearchKeyword = ""; viewModel.hasSearchedOnce = false } 
                     },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
