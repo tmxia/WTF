@@ -59,19 +59,17 @@ object SignInManager {
                     // 如果官方明确返回未签到，那确实没签
                     withContext(Dispatchers.Main) { onResult(false) }
                 }
-            } catch (e: IOException) {
+                        } catch (e: IOException) {
                 if (e.message == "WAF_VERIFICATION_REQUIRED") {
-                    Timber.tag("SignIn").w("手工签到请求已发出，但被 WAF 拦截。")
-                    // 核心修复：既然你已经点击了，实际大概率已经成功。这里更新本地状态，防止误导。
-                    updateLocalSignInTime()
-                    withResult(onResult, "SUCCESS", "签到请求已发送，请重新打开页面查看")
+                    Timber.tag("SignInDebug").w("【官方API验证】触发 WAF，无法确认真实状态，保留本地记录。")
+                    withContext(Dispatchers.Main) { onResult(isSignedToday()) }
                 } else {
-                    Timber.tag("SignIn").e(e, "签到请求网络异常")
-                    withResult(onResult, "FAILED", "网络异常: ${e.message}")
+                    Timber.tag("SignInDebug").e(e, "【官方API验证】网络异常")
+                    withContext(Dispatchers.Main) { onResult(isSignedToday()) }
                 }
             } catch (e: Exception) {
-                Timber.tag("SignIn").e(e, "签到请求未知异常")
-                withResult(onResult, "FAILED", "未知异常: ${e.message}")
+                Timber.tag("SignInDebug").e(e, "【官方API验证】请求异常")
+                withContext(Dispatchers.Main) { onResult(isSignedToday()) }
             }
         }
     }
