@@ -102,7 +102,7 @@ object JsoupClient : ApiRequest {
 
         if (isWafPage(response.body())) {
             // 如果禁止弹窗（签到场景），直接抛出错误，绝不挂起
-            if (!enableWafPopup) {
+            if (!enableWafPopup || url.contains("home.php?mod=task")) {
                 throw IOException("WAF_VERIFICATION_REQUIRED")
             }
             
@@ -147,7 +147,7 @@ object JsoupClient : ApiRequest {
 
         if (isWafPage(response.body())) {
             // 核心修复：如果明确禁止弹窗（如搜索/签到场景），直接抛出异常，绝不卡死挂起！
-            if (!enableWafPopup) {
+            if (!enableWafPopup || url.contains("home.php?mod=task")) {
                 throw IOException("WAF_VERIFICATION_REQUIRED")
             }
             Timber.w("网络层：POST 命中 WAF 盾，触发 URL: $url")

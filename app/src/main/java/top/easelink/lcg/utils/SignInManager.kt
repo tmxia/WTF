@@ -47,9 +47,6 @@ object SignInManager {
                 lastCal.get(java.util.Calendar.DAY_OF_YEAR) == todayCal.get(java.util.Calendar.DAY_OF_YEAR)
     }
 
-    /**
-     * 【验证机制】静默 GET 探测状态，遇到 WAF 直接保留本地状态
-     */
     fun checkSignInStatus(onResult: (Boolean) -> Unit) {
         GlobalScope.launch(Dispatchers.IO) {
             try {
@@ -71,16 +68,10 @@ object SignInManager {
         }
     }
 
-    /**
-     * 【手工签到机制】无参重载（供 LCGApp 和 SignInWorker 调用）
-     */
     fun performSignIn(onResult: (String, String) -> Unit) {
         performSignIn(LCGApp.context, onResult)
     }
 
-    /**
-     * 【手工签到机制】带 Context 重载（带隐形 WebView 过盾）
-     */
     fun performSignIn(context: android.content.Context, onResult: (String, String) -> Unit) {
         GlobalScope.launch(Dispatchers.IO) {
             try {
@@ -97,9 +88,14 @@ object SignInManager {
                 }
             } catch (e: IOException) {
                 if (e.message == "WAF_VERIFICATION_REQUIRED") {
-                    Timber.tag("SignIn").w("遭遇 WAF，启动隐形 WebView 静默过盾...")
+                    Timber.tag("SignIn").w("遭遇 WAF，启动可见 WebView 进行验证...")
                     Handler(Looper.getMainLooper()).post {
-                        startHeadlessWebView(context, onResult)
+                        val activity = context as? Activity
+                        if (activity != null && !activity.isFinishing) {
+                            startWebViewSignIn(activity, onResult)
+                        } else {
+                            withResult(onResult, "FAILED", "无法启动验证界面")
+                        }
                     }
                 } else {
                     withResult(onResult, "FAILED", "网络异常: ${e.message}")
@@ -111,22 +107,12 @@ object SignInManager {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun startHeadlessWebView(context: Context, onResult: (String, String) -> Unit) {
-        val activity = context as? Activity
-        if (activity == null || activity.isFinishing) {
-            withResult(onResult, "FAILED", "无法启动验证环境")
-            return
-        }
-
+    private fun startWebViewSignIn(activity: Activity, onResult: (String, String) -> Unit) {
         val webView = WebView(activity).apply {
-            layoutParams = ViewGroup.LayoutParams(1, 1)
-            alpha = 0.01f
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.userAgentString = "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
         }
-        val decorView = activity.window.decorView as ViewGroup
-        decorView.addView(webView)
 
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
@@ -137,86 +123,64 @@ object SignInManager {
             CookieManager.getInstance().flush()
         }
 
-        var hasResolved = false
+        var isWafTriggered = false
 
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean = false
+            override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
+                return false // 核心：放行所有重定向
+            }
+
+            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                if (url?.contains("waf_text_verify") == true) {
+                    isWafTriggered = true
+                }
+            }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
 
-                if (url?.contains("waf_text_verify") == true) {
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        if (!hasResolved) {
-                            hasResolved = true
-                            decorView.removeView(webView)
-                            webView.destroy()
-                            startVisibleWebViewSignIn(activity, onResult)
-                        }
-                    }, 5000L)
+                // 如果当前 URL 还在验证页，或者包含 captcha，说明用户还在滑，不要急
+                if (url?.contains("waf_text_verify") == true || url?.contains("captcha=") == true) {
                     return
                 }
 
-                if (!hasResolved) {
-                    hasResolved = true
+                // 如果验证通过跳转回来了，立刻同步 Cookie
+                if (isWafTriggered) {
                     LCGCookieJar.syncFromWebView(url ?: "")
-                    decorView.removeView(webView)
-                    webView.destroy()
-
-                    GlobalScope.launch(Dispatchers.IO) {
-                        try {
-                            val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL, enableWafPopup = false)
-                            val applyMessage = applyResponse.getElementsByClass("alert_info").first()?.selectFirst("p")?.text().orEmpty()
-                            updateLocalSignInTime()
-                            withResult(onResult, "SUCCESS", if (applyMessage.isNotBlank()) applyMessage else "签到成功！")
-                        } catch (e: Exception) {
-                            updateLocalSignInTime()
-                            withResult(onResult, "SUCCESS", "签到请求已送达")
-                        }
-                    }
-                }
-            }
-        }
-
-        webView.loadUrl(APPLY_TASK_URL)
-    }
-
-    @SuppressLint("SetJavaScriptEnabled")
-    private fun startVisibleWebViewSignIn(activity: Activity, onResult: (String, String) -> Unit) {
-        val webView = WebView(activity).apply {
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            settings.userAgentString = "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
-        }
-
-        var isWafTriggered = false
-        webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean = false
-
-            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                if (url?.contains("waf_text_verify") == true) isWafTriggered = true
-            }
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-                if (url?.contains("captcha=") == true) return
-
-                if (isWafTriggered && url?.contains("waf_text_verify") == false) {
-                    LCGCookieJar.syncFromWebView(url ?: "")
-                    dismissDialog()
                 }
 
+                // 核心修复：延迟抓取，确保 DOM 渲染完成，防止抓到空页面
                 Handler(Looper.getMainLooper()).postDelayed({
-                    val js = "(function() { try { return document.body.innerText || document.documentElement.innerText || ''; } catch(e) { return ''; } })();"
+                    val js = """
+                        (function() {
+                            try {
+                                if (!document.body) return "";
+                                var alert = document.querySelector(".alert_info p");
+                                if (alert && alert.innerText) return alert.innerText;
+                                return document.body.innerText || document.documentElement.innerText || "";
+                            } catch(e) { return ""; }
+                        })();
+                    """.trimIndent()
+
                     view?.evaluateJavascript(js) { result ->
                         var text = result?.trim().orEmpty()
-                        if (text.startsWith("\"") && text.endsWith("\"")) text = text.substring(1, text.length - 1)
-                        if (url?.contains("waf_text_verify") == true) return@evaluateJavascript
-
-                        if (text.contains("已申请") || text.contains("已完成") || text.contains("已签到") || text.contains("签到成功")) {
+                        if (text.startsWith("\"") && text.endsWith("\"")) {
+                            text = text.substring(1, text.length - 1)
+                        }
+                        
+                        Timber.tag("SignIn").d("WebView 抓取到内容: ${text.take(50)}")
+                        
+                        // 检查文本是否包含签到成功的字样
+                        if (text.contains("已申请") || text.contains("已完成") || text.contains("已签到") || text.contains("签到成功") || text.contains("获得")) {
                             updateLocalSignInTime()
                             dismissDialog()
                             withResult(onResult, "SUCCESS", "签到成功！")
+                        } else if (text.isNotEmpty() && text.contains("您需要先登录")) {
+                            dismissDialog()
+                            withResult(onResult, "FAILED", "登录已失效")
                         }
+                        // 如果什么都没抓到，可能还在加载，等待下一次 onPageFinished
                     }
                 }, 2000L)
             }

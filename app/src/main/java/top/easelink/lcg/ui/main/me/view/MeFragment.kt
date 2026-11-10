@@ -140,18 +140,10 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
     LaunchedEffect(Unit) {
         
         if (!SignInManager.isSignedToday()) {
-            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                try {
-                    val doc = top.easelink.lcg.network.JsoupClient.sendGetRequestWithUrl("https://www.52pojie.cn/home.php?mod=task&do=apply&id=2")
-                    val text = doc.text()
-                    if (text.contains("已申请") || text.contains("已完成") || text.contains("已签到") || text.contains("已经签到")) {
-                        SignInManager.updateLocalSignInTime()
-                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                            signInText = "✅ 已签到"
-                        }
-                    }
-                } catch (e: Exception) {
-                    
+            SignInManager.checkSignInStatus { isSigned ->
+                if (isSigned) {
+                    signInText = "✅ 已签到"
+                    signInColor = Color(0xFF4CAF50)
                 }
             }
         }
