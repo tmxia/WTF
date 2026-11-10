@@ -98,7 +98,14 @@ object SignInManager {
                         Handler(Looper.getMainLooper()).postDelayed({
                             val js = """
                                 (function() {
-                                    try { return document.body.innerText || ""; } catch(e) { return ""; }
+                                    try {
+                                        var txt = document.body ? (document.body.innerText || "") : "";
+                                        if (txt.trim() === "") {
+                                            // 如果文本为空，大概率是 WAF 还在加载，返回 HTML 结构供排查
+                                            return document.documentElement ? document.documentElement.innerHTML.substring(0, 500) : "EMPTY_DOM";
+                                        }
+                                        return txt;
+                                    } catch(e) { return "JS_ERROR: " + e.message; }
                                 })();
                             """.trimIndent()
                             view?.evaluateJavascript(js) { result ->
@@ -106,11 +113,11 @@ object SignInManager {
                                 if (text.startsWith("\"") && text.endsWith("\"")) {
                                     text = text.substring(1, text.length - 1)
                                 }
-                                Timber.tag("SignInDebug").d("状态探测文本: ${text.take(50)}")
+                                Timber.tag("SignInDebug").d("探测页面内容: ${text.take(150)}...")
                                 
-                                val isSigned = text.contains("已申请") || text.contains("已完成") || text.contains("已签到") || text.contains("已经签到")
+                                val isSigned = text.contains("已申请") || text.contains("已完成") || text.contains("已签到") || text.contains("已经签到") || text.contains("您已经完成")
                                 if (isSigned) {
-                                    updateLocalSignInTime() // 确认真实已签到，更新本地缓存
+                                    updateLocalSignInTime()
                                     onResult(true)
                                 } else {
                                     onResult(false)
@@ -118,7 +125,7 @@ object SignInManager {
                                 parentView.removeView(webView)
                                 webView.destroy()
                             }
-                        }, 2500L)
+                        }, 4000L) // 延迟从 2.5 秒增加到 4 秒，给 WAF 足够的时间执行 JS
                     }
                 }
                 webView.loadUrl(APPLY_TASK_URL)
