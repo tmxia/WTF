@@ -106,7 +106,7 @@ object JsoupClient : ApiRequest {
                 throw IOException("WAF_VERIFICATION_REQUIRED")
             }
             
-            Timber.w("网络层：命中高级 JS WAF 盾，挂起请求等待真人验证...")
+            Timber.w("网络层：命中高级 JS WAF 盾，触发 URL: $url")
             EventBus.getDefault().post(WafVerificationEvent(url))
             
             val deferred = CompletableDeferred<String?>()
@@ -150,7 +150,7 @@ object JsoupClient : ApiRequest {
             if (!enableWafPopup) {
                 throw IOException("WAF_VERIFICATION_REQUIRED")
             }
-            Timber.w("网络层：POST 命中 WAF 盾，挂起请求等待真人验证...")
+            Timber.w("网络层：POST 命中 WAF 盾，触发 URL: $url")
             EventBus.getDefault().post(WafVerificationEvent(url))
             
             val deferred = CompletableDeferred<String?>()
