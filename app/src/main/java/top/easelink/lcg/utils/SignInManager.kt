@@ -132,6 +132,11 @@ object SignInManager {
     /**
      * 核心修复：废除盲目标记成功的逻辑，只认服务器真实的返回文本
      */
+    // 兼容后台 Worker 和 LCGApp 的无参调用
+    fun performSignIn(onResult: (String, String) -> Unit) {
+        performSignIn(LCGApp.context, onResult)
+    }
+
     fun performSignIn(context: Context, onResult: (String, String) -> Unit) {
         GlobalScope.launch(Dispatchers.IO) {
             try {
