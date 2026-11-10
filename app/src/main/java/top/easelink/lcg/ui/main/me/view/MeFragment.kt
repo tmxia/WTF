@@ -121,6 +121,34 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
     var signInText by remember { mutableStateOf("去签到") }
     var signInColor by remember { mutableStateOf(Color(0xFFE53935)) }
     var isSigningIn by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isLoggedIn) {
+        if (!isLoggedIn) {
+            signInText = "请先登录"
+            signInColor = Color(0xFF999999)
+            return@LaunchedEffect
+        }
+        
+        // 1. 先展示本地状态，防闪烁
+        if (SignInManager.isSignedToday()) {
+            signInText = "✅ 已签到"
+            signInColor = Color(0xFF4CAF50)
+        } else {
+            signInText = "🔥 未签到，点我"
+            signInColor = Color(0xFFE53935)
+        }
+
+        // 2. 强制调起隐藏 WebView 拉取真实状态
+        SignInManager.checkSignInStatus(context) { isSigned ->
+            if (isSigned) {
+                signInText = "✅ 已签到"
+                signInColor = Color(0xFF4CAF50)
+            } else {
+                signInText = "🔥 未签到，点我"
+                signInColor = Color(0xFFE53935)
+            }
+        }
+    }
     var tick by remember { mutableStateOf(System.currentTimeMillis()) }
 
     
@@ -137,45 +165,9 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
     }
 
     
-    LaunchedEffect(Unit) {
-        
-        if (!SignInManager.isSignedToday()) {
-            SignInManager.checkSignInStatus { isSigned ->
-                if (isSigned) {
-                    signInText = "✅ 已签到"
-                    signInColor = Color(0xFF4CAF50)
-                }
-            }
-        }
+    
 
-        while (true) {
-            delay(60_000)
-            tick = System.currentTimeMillis()
-        }
-    }
-
-    LaunchedEffect(isLoggedIn, tick) {
-        if (!isLoggedIn) {
-            signInText = "请先登录"
-            signInColor = Color(0xFF999999)
-            return@LaunchedEffect
-        }
-
-        
-        val sp = SharedPreferencesHelper.getUserSp()
-        val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)
-        val todayStart = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-        
-        if (lastTime >= todayStart) {
-            signInText = "✅ 已签到"
-            signInColor = Color(0xFF4CAF50)
-        } else {
-            signInText = "🔥 未签到，点我"
-            signInColor = Color(0xFFE53935)
-        }
-    }
+    
 
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5)).verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)) {
