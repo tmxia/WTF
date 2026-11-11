@@ -51,10 +51,12 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
         
         (view as ComposeView).setContent {
             var historyList by remember { mutableStateOf<List<HistoryModel>>(emptyList()) }
+            var isLoading by remember { mutableStateOf(true) }
 
             LaunchedEffect(Unit) {
                 ArticlesDatabase.getInstance().articlesDao().getHistories().observe(viewLifecycleOwner) { list ->
                     historyList = list.map { HistoryModel(url = it.url, author = it.author, title = it.title, timeStamp = it.timestamp) }
+                    isLoading = false
                 }
             }
 
@@ -81,7 +83,11 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
                     )
                 }
 
-                if (historyList.isEmpty()) {
+                if (isLoading) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(modifier = Modifier.size(32.dp), color = Color(0xFFE53935), strokeWidth = 3.dp)
+                    }
+                } else if (historyList.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("目前没有内容可供展示", color = Color.Gray)
                     }

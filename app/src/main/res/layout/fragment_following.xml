@@ -15,19 +15,11 @@
         android:id="@+id/follow_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-    <com.airbnb.lottie.LottieAnimationView
-        android:layout_gravity="center"
+    <ProgressBar
         android:id="@+id/loading"
-        android:layout_width="@dimen/dp_40"
-        android:layout_height="@dimen/dp_40"
-        android:scaleType="fitCenter"
-        android:visibility="gone"
-        app:lottie_rawRes="@raw/sync_icon"
-        app:lottie_loop="true"
-        app:lottie_autoPlay="true"
-        app:layout_constraintStart_toStartOf="@id/notification_recycler_view"
-        app:layout_constraintEnd_toEndOf="@id/notification_recycler_view"
-        app:layout_constraintBottom_toBottomOf="@id/notification_recycler_view"
-        app:layout_constraintTop_toTopOf="@id/notification_recycler_view"
-        />
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="center"
+        android:indeterminateTint="#E53935"
+        android:visibility="gone" />
 </FrameLayout>
