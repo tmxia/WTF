@@ -1,6 +1,7 @@
 package top.easelink.lcg.ui.search.view
 
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -53,6 +54,7 @@ import androidx.lifecycle.ViewModelProvider
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.framework.topbase.TopFragment
 import top.easelink.lcg.R
+import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.ui.main.article.view.ArticleFragment
 import top.easelink.lcg.ui.search.model.LCGSearchResultItem
 import top.easelink.lcg.ui.search.viewmodel.LCGSearchViewModel
@@ -137,6 +139,15 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
 
     fun performSearch(query: String) {
         if (query.isNotBlank()) {
+            // 核心修复：判断搜索引擎。如果是百度(1)，直接跳转百度网页搜索并返回
+            if (AppConfig.defaultSearchEngine == 1) {
+                keyboardController?.hide()
+                val baiduUrl = "https://www.baidu.com/s?wd=${Uri.encode(query)}"
+                WebViewActivity.startWebViewWith(baiduUrl, context)
+                return
+            }
+
+            // 否则（选择了吾爱破解），走原生帖子搜索流程
             keyword = query
             hasSearched = true
             keyboardController?.hide()

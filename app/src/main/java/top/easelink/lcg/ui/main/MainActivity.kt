@@ -162,13 +162,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
 
         when (currentTabId) {
             R.id.action_home -> showFragment(RecommendFragment::class.java)
-            R.id.action_search -> {
-                if (AppConfig.defaultSearchEngine == 1) {
-                    startActivity(android.content.Intent(this, BaiduSearchActivity::class.java).putExtra(URL_KEY, "https://www.baidu.com"))
-                } else {
-                    showFragment(SearchFragment::class.java)
-                }
-            }
+            R.id.action_search -> showFragment(SearchFragment::class.java)
             R.id.action_forum_navigation -> showFragment(DiscoverFragment::class.java)
             R.id.action_about_me -> showFragment(MeFragment::class.java)
         }
@@ -461,11 +455,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
 
         return when (item.itemId) {
             R.id.action_search -> {
-                if (AppConfig.defaultSearchEngine == 1) {
-                    startActivity(android.content.Intent(this, BaiduSearchActivity::class.java).putExtra(URL_KEY, "https://www.baidu.com"))
-                } else {
-                    showFragment(SearchFragment::class.java)
-                }
+                showFragment(SearchFragment::class.java)
                 true
             }
             R.id.action_forum_navigation -> {
