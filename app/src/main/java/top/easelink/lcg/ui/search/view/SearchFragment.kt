@@ -226,7 +226,12 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(bgColor)
-                    .clickable { showBoardDialog = true }
+                    .clickable { 
+                        // 核心修复：每次点击打开弹窗前，把 ViewModel 里的真实 ID 列表同步给临时状态
+                        tempSelectedFids = viewModel.currentFids.toSet()
+                        isBoardMultiMode = tempSelectedFids.size > 1
+                        showBoardDialog = true 
+                    }
                     .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
                 Text("范围：$selectedFidName", fontSize = 12.sp, color = Color.DarkGray)
