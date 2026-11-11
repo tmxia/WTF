@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.framework.topbase.TopFragment
@@ -53,10 +55,15 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
             var historyList by remember { mutableStateOf<List<HistoryModel>>(emptyList()) }
             var isLoading by remember { mutableStateOf(true) }
 
+                        val scope = rememberCoroutineScope()
             LaunchedEffect(Unit) {
                 ArticlesDatabase.getInstance().articlesDao().getHistories().observe(viewLifecycleOwner) { list ->
                     historyList = list.map { HistoryModel(url = it.url, author = it.author, title = it.title, timeStamp = it.timestamp) }
-                    isLoading = false
+                    // 核心修复：将 delay 放在协程作用域 scope.launch 中，解决编译报错并确保动画可见
+                    scope.launch {
+                        delay(400)
+                        isLoading = false
+                    }
                 }
             }
 
