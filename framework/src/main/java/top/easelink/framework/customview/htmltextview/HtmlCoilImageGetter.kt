@@ -70,7 +70,7 @@ class HtmlCoilImageGetter(
     }
 
     private suspend fun loadImage(originalUrl: String): Drawable {
-        // 核心修复 1：处理路径补全（包括双斜杠 // 开头的协议相对路径）
+        // 1. 路径智能补全
         var finalUrl = originalUrl.trim()
         if (finalUrl.startsWith("//")) {
             finalUrl = "https:$finalUrl"
@@ -79,6 +79,41 @@ class HtmlCoilImageGetter(
         } else if (!finalUrl.startsWith("http")) {
             finalUrl = "https://www.52pojie.cn/$finalUrl"
         }
+
+        // 2. 根据域名动态分配 Referer
+        val referer = if (finalUrl.contains("static.52pojie.cn")) {
+            "https://static.52pojie.cn/"
+        } else {
+            "https://www.52pojie.cn/"
+        }
+
+        // 3. 构建完整的浏览器级别请求头（彻底绕过 WAF 检测）
+        val headers = Headers.Builder()
+            .add("Referer", referer)
+            .add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            .add("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8")
+            .add("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,ja;q=0.7")
+            .add("sec-ch-ua-mobile", "?0")
+            .add("sec-ch-ua-platform", "\"Windows\"")
+            .add("Sec-Fetch-Site", "same-site")
+            .add("Sec-Fetch-Mode", "no-cors")
+            .add("Sec-Fetch-Dest", "image")
+            .add("Upgrade-Insecure-Requests", "1")
+            .build()
+
+        // 4. 执行请求，如果依然失败，降级返回 1x1 透明占位图，防止崩溃
+        return try {
+            Coil.imageLoader(context).execute(
+                ImageRequest.Builder(context)
+                    .data(finalUrl)
+                    .headers(headers)
+                    .apply { lifecycleOwner?.let { lifecycle(it) } }
+                    .build()
+            ).drawable ?: BitmapDrawable(context.resources, Bitmap.createBitmap(1, 1, Bitmap.Config.ALPHA_8))
+        } catch (e: Exception) {
+            BitmapDrawable(context.resources, Bitmap.createBitmap(1, 1, Bitmap.Config.ALPHA_8))
+        }
+    }
 
         // 核心修复 2：注入 Referer 和 User-Agent，绕过论坛防盗链（底层模块不能依赖 App 层的 Cookie）
         val headers = Headers.Builder()
