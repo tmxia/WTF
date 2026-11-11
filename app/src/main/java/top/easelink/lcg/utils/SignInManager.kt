@@ -23,9 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import top.easelink.lcg.appinit.LCGApp
-import top.easelink.lcg.network.JsoupClient
 import top.easelink.lcg.network.LCGCookieJar
-import java.io.IOException
 
 object SignInManager {
 
@@ -49,23 +47,19 @@ object SignInManager {
     }
 
     /**
-     * 核心修复：彻底摒弃 Jsoup 探测，改用隐形的真实 WebView 去拉取服务器状态（完美绕过 WAF）
+     * 核心对齐机制：使用隐藏的 WebView 去拉取真实服务器状态（如果被 WAF 拦就维持本地状态，绝不误报）
      */
     @SuppressLint("SetJavaScriptEnabled")
     fun checkSignInStatus(context: Context, onResult: (Boolean) -> Unit) {
         Handler(Looper.getMainLooper()).post {
             try {
                 val activity = context as? Activity
-                var parentView: ViewGroup? = null
-                if (activity != null && !activity.isFinishing) {
-                    parentView = activity.window.decorView as ViewGroup
-                } else {
-                    parentView = FrameLayout(LCGApp.context)
-                }
+                // 核心修复：使用 val 和 ?: 确保 parentView 绝对非空，解决 Kotlin 报错
+                val parentView: ViewGroup = (activity?.window?.decorView as? ViewGroup) ?: FrameLayout(LCGApp.context)
 
                 val webView = WebView(context).apply {
-                    layoutParams = ViewGroup.LayoutParams(100, 100) 
-                    alpha = 0.01f // 隐形
+                    layoutParams = ViewGroup.LayoutParams(100, 100)
+                    alpha = 0.01f
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
                     settings.userAgentString = "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
@@ -79,14 +73,13 @@ object SignInManager {
                 if (savedCookies.isNotEmpty()) {
                     val cookieStr = savedCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
                     CookieManager.getInstance().setCookie("https://www.52pojie.cn/", cookieStr)
-                    CookieManager.getInstance().flush()
                 }
+                CookieManager.getInstance().flush()
 
                 webView.webViewClient = object : WebViewClient() {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
-                        
-                        // 如果还在 WAF 页面，无法获取状态，直接返回本地记录防止误判
+                        // 如果遇到 WAF 拦截，说明无法拿到真实 DOM，直接放弃对齐，返回本地记录
                         if (url?.contains("waf_text_verify") == true) {
                             onResult(isSignedToday())
                             parentView.removeView(webView)
@@ -94,30 +87,21 @@ object SignInManager {
                             return
                         }
 
-                        // 等待 2.5 秒让 DOM 渲染完毕
                         Handler(Looper.getMainLooper()).postDelayed({
                             val js = """
                                 (function() {
-                                    try {
-                                        var txt = document.body ? (document.body.innerText || "") : "";
-                                        if (txt.trim() === "") {
-                                            // 如果文本为空，大概率是 WAF 还在加载，返回 HTML 结构供排查
-                                            return document.documentElement ? document.documentElement.innerHTML.substring(0, 500) : "EMPTY_DOM";
-                                        }
-                                        return txt;
-                                    } catch(e) { return "JS_ERROR: " + e.message; }
+                                    try { return document.body.innerText || ""; } catch(e) { return ""; }
                                 })();
                             """.trimIndent()
+
                             view?.evaluateJavascript(js) { result ->
                                 var text = result?.trim().orEmpty()
                                 if (text.startsWith("\"") && text.endsWith("\"")) {
                                     text = text.substring(1, text.length - 1)
                                 }
-                                Timber.tag("SignInDebug").d("探测页面内容: ${text.take(150)}...")
                                 
-                                val isSigned = text.contains("已申请") || text.contains("已完成") || text.contains("已签到") || text.contains("已经签到") || text.contains("您已经完成")
-                                if (isSigned) {
-                                    updateLocalSignInTime()
+                                if (text.contains("已申请") || text.contains("已完成") || text.contains("已签到") || text.contains("已经签到")) {
+                                    updateLocalSignInTime() // 服务器确认已签到，同步本地
                                     onResult(true)
                                 } else {
                                     onResult(false)
@@ -125,7 +109,7 @@ object SignInManager {
                                 parentView.removeView(webView)
                                 webView.destroy()
                             }
-                        }, 4000L) // 延迟从 2.5 秒增加到 4 秒，给 WAF 足够的时间执行 JS
+                        }, 3000L)
                     }
                 }
                 webView.loadUrl(APPLY_TASK_URL)
@@ -136,50 +120,17 @@ object SignInManager {
         }
     }
 
-    /**
-     * 核心修复：废除盲目标记成功的逻辑，只认服务器真实的返回文本
-     */
-    // 兼容后台 Worker 和 LCGApp 的无参调用
     fun performSignIn(onResult: (String, String) -> Unit) {
         performSignIn(LCGApp.context, onResult)
     }
 
     fun performSignIn(context: Context, onResult: (String, String) -> Unit) {
-        GlobalScope.launch(Dispatchers.IO) {
-            try {
-                val applyResponse = JsoupClient.sendGetRequestWithUrl(APPLY_TASK_URL, enableWafPopup = false)
-                val html = applyResponse.outerHtml()
-                
-                if (html.contains("wzwsquestion") || html.contains("waf_zw_verify")) {
-                    throw IOException("WAF_VERIFICATION_REQUIRED")
-                }
-
-                val applyMessage = applyResponse.getElementsByClass("alert_info").first()?.selectFirst("p")?.text().orEmpty()
-
-                if (applyMessage.contains("已申请") || applyMessage.contains("已完成") || applyMessage.contains("签到成功") || applyMessage.contains("获得")) {
-                    updateLocalSignInTime()
-                    withResult(onResult, "SUCCESS", "签到成功！")
-                } else if (applyMessage.contains("您需要先登录")) {
-                    withResult(onResult, "FAILED", "登录已失效")
-                } else {
-                    // 如果没有匹配到任何关键字，说明发生了未知状况，绝不盲目标记成功！
-                    withResult(onResult, "FAILED", "签到异常，请重试")
-                }
-            } catch (e: IOException) {
-                if (e.message == "WAF_VERIFICATION_REQUIRED") {
-                    Handler(Looper.getMainLooper()).post {
-                        val activity = context as? Activity
-                        if (activity != null && !activity.isFinishing) {
-                            startWebViewSignIn(activity, onResult)
-                        } else {
-                            withResult(onResult, "FAILED", "无法启动验证界面")
-                        }
-                    }
-                } else {
-                    withResult(onResult, "FAILED", "网络异常: ${e.message}")
-                }
-            } catch (e: Exception) {
-                withResult(onResult, "FAILED", "未知异常: ${e.message}")
+        Handler(Looper.getMainLooper()).post {
+            val activity = context as? Activity
+            if (activity != null && !activity.isFinishing) {
+                startWebViewSignIn(activity, onResult)
+            } else {
+                withResult(onResult, "FAILED", "无法启动验证界面")
             }
         }
     }
@@ -189,17 +140,32 @@ object SignInManager {
         val webView = WebView(activity).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
+            settings.databaseEnabled = true
+            settings.allowContentAccess = true
+            settings.allowFileAccess = true
+            settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             settings.userAgentString = "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
         }
 
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
+        
+        // 清除旧的 wzws_sid，防止 WAF 白屏
+        val currentCookie = CookieManager.getInstance().getCookie("https://www.52pojie.cn/")
+        if (currentCookie != null) {
+            currentCookie.split(";").forEach { cookie ->
+                if (cookie.trim().startsWith("wzws_sid=")) {
+                    CookieManager.getInstance().setCookie("https://www.52pojie.cn/", "wzws_sid=; Max-Age=0")
+                }
+            }
+        }
+
         val savedCookies = LCGCookieJar.cookiesForUrl("https://www.52pojie.cn/")
         if (savedCookies.isNotEmpty()) {
             val cookieStr = savedCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
             CookieManager.getInstance().setCookie("https://www.52pojie.cn/", cookieStr)
-            CookieManager.getInstance().flush()
         }
+        CookieManager.getInstance().flush()
 
         var isWafTriggered = false
 
@@ -214,7 +180,11 @@ object SignInManager {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 if (url?.contains("waf_text_verify") == true) return
-                if (isWafTriggered) LCGCookieJar.syncFromWebView(url ?: "")
+                
+                if (isWafTriggered) {
+                    LCGCookieJar.syncFromWebView(url ?: "")
+                    isWafTriggered = false
+                }
 
                 Handler(Looper.getMainLooper()).postDelayed({
                     val js = """
@@ -232,16 +202,20 @@ object SignInManager {
                         if (text.startsWith("\"") && text.endsWith("\"")) {
                             text = text.substring(1, text.length - 1)
                         }
-                        if (text.contains("已申请") || text.contains("已完成") || text.contains("签到成功") || text.contains("获得")) {
+                        
+                        if (text.contains("已申请") || text.contains("已完成") || text.contains("签到成功") || text.contains("获得") || text.contains("已经签到")) {
                             updateLocalSignInTime()
                             dismissDialog()
                             withResult(onResult, "SUCCESS", "签到成功！")
-                        } else if (text.isNotEmpty() && text.contains("您需要先登录")) {
+                        } else if (text.contains("您需要先登录")) {
                             dismissDialog()
                             withResult(onResult, "FAILED", "登录已失效")
+                        } else if (text.isNotBlank() && !text.contains("请完成安全验证")) {
+                            dismissDialog()
+                            withResult(onResult, "FAILED", "未能确认签到状态，请稍后在网页端核实")
                         }
                     }
-                }, 2000L)
+                }, 1500L)
             }
         }
 
@@ -258,19 +232,19 @@ object SignInManager {
             }
             val header = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
-                setPadding(32, 64, 32, 32)
+                setPadding(32, 100, 32, 32)
                 setBackgroundColor(Color.WHITE)
                 gravity = Gravity.CENTER_VERTICAL
             }
             val title = TextView(activity).apply {
-                text = "需要安全验证，请滑动完成"
-                textSize = 14f
-                setTextColor(Color.DKGRAY)
+                text = "需要安全验证，请滑动或点击完成"
+                textSize = 16f
+                setTextColor(Color.BLACK)
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             }
             val btnCancel = Button(activity).apply {
                 text = "取消"
-                setTextColor(Color.RED)
+                setTextColor(Color.parseColor("#E53935"))
                 setBackgroundColor(Color.TRANSPARENT)
                 setOnClickListener { dismissDialog() }
             }
