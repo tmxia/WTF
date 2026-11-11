@@ -129,20 +129,8 @@ class ArticleFragment : Fragment(), ControllableFragment {
     
     
     private fun handleBackClick() {
-        val fm = requireActivity().supportFragmentManager
-        if (fm.backStackEntryCount > 0) {
-            fm.popBackStack()
-            // 等待出栈事务执行完毕
-            fm.executePendingTransactions()
-            
-            // 智能恢复：找到退栈后位于栈顶的 Fragment，并把它显示出来
-            val topFragment = fm.fragments.lastOrNull { it.isAdded && !it.isRemoving }
-            if (topFragment != null && topFragment.isHidden) {
-                fm.beginTransaction().show(topFragment).commitAllowingStateLoss()
-            }
-        } else {
-            requireActivity().onBackPressedDispatcher.onBackPressed()
-        }
+        // 核心修复：只负责出栈，把状态恢复（显示底栏、恢复首页）交还给 MainActivity
+        requireActivity().supportFragmentManager.popBackStack()
     }
 
     private fun ComposeView.setContentView(content: @Composable () -> Unit) {
