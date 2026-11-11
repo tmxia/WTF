@@ -85,22 +85,22 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
         isLoading.value = true
         hasMore = true
         
-        // 核心修复：取消上一次未完成的搜索，防止结果覆盖
+        
         searchJob?.cancel()
         searchJob = viewModelScope.launch(IOPool) {
             try {
                 val result = doSearchWith(keyword, mFids.joinToString(","), mSortOrder)
                 if (result != null) {
-                    // 只有真实拿到结果（哪怕空列表），才刷新 UI
+                    
                     searchResults.postValue(result.searchResultList)
                     totalResult.postValue(result.totalResult)
                     hasMore = result.searchResultList.isNotEmpty()
                 } else {
-                    // 返回 null 说明被限流了（点击太快），不做任何 UI 更新
+                    
                     Timber.tag("SearchDebug").d("搜索被限流，忽略此次请求")
                 }
             } catch (e: Exception) {
-                // 核心修复：如果遇到 WAF 或其他网络错误，不清空原有列表，只弹提示
+                
                 Timber.tag("SearchDebug").e(e, "搜索异常：${e.message}")
                 if (e.message == "WAF_VERIFICATION_REQUIRED") {
                     withContext(Dispatchers.Main) {
@@ -111,7 +111,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                         top.easelink.lcg.utils.showMessage(top.easelink.lcg.R.string.network_error)
                     }
                 }
-                // 注意：这里千万不能写 searchResults.postValue(emptyList())，否则把用户的列表清空了
+                
             } finally {
                 isLoading.postValue(false)
             }
@@ -119,7 +119,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     }
 
     fun loadNextPage() {
-        // 防抖：如果已经在加载，或者没有更多了，直接返回
+        
         if (isLoadingMore.value == true || !hasMore) return
         
         isLoadingMore.value = true
@@ -136,13 +136,13 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                     }
                     if (!result.totalResult.isNullOrEmpty()) totalResult.postValue(result.totalResult)
                 } else {
-                    hasMore = false // 返回 null 代表没有下一页了
+                    hasMore = false 
                 }
             } catch (e: Exception) {
                 Timber.tag("SearchDebug").e(e, "加载下一页失败")
-                // 失败时不改变 hasMore 状态，允许用户重试
+                
             } finally {
-                // 无论如何，都要把加载状态重置，否则底部会一直转圈
+                
                 isLoadingMore.postValue(false)
             }
         }

@@ -33,7 +33,7 @@ class DownloadLinkDialog : TopDialog() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 核心修复 1：彻底去除背景黑框，让 Window 铺满宽度，背景透明
+        
         dialog?.window?.apply {
             setBackgroundDrawableResource(android.R.color.transparent)
             val params = attributes
@@ -48,7 +48,7 @@ class DownloadLinkDialog : TopDialog() {
                 val padding = (12 * density).toInt()
                 val marginBottom = (10 * density).toInt()
 
-                // 核心修复 2：提取全列表的提取码，用于后续复制时的智能拼接
+                
                 val allCodes = linkList.filter { 
                     it.contains("提取码") || it.contains("密码") || it.contains("访问码") || it.contains("口令") 
                 }.joinToString(" ") { it.trim() }
@@ -73,12 +73,12 @@ class DownloadLinkDialog : TopDialog() {
                         }
                         layoutParams = params
 
-                        // 点击复制
+                        
                         setOnClickListener { 
                             val copyText = buildSmartLink(link, linkList, allCodes)
                             copy(copyText) 
                         }
-                        // 长按复制
+                        
                         setOnLongClickListener { 
                             val copyText = buildSmartLink(link, linkList, allCodes)
                             copy(copyText)
@@ -93,7 +93,7 @@ class DownloadLinkDialog : TopDialog() {
         binding.exit.setOnClickListener { dismissDialog() }
     }
 
-    // 只要 ViewModel 已经帮我们整理好了，点击时直接复制该行文本即可
+    
     private fun buildSmartLink(targetLink: String, allLinks: List<String>, allCodes: String): String {
         return targetLink.trim()
     }
@@ -112,7 +112,7 @@ class DownloadLinkDialog : TopDialog() {
         val mClipData = ClipData.newPlainText("DownloadLink", clipString)
         cm.setPrimaryClip(mClipData)
         
-        // 如果复制包含了提取码，Toast 提示可以长一点，更有质感
+        
         val toastMsg = if (clipString.contains("提取码") || clipString.contains("密码")) {
             "已复制（含提取码），可直接粘贴"
         } else {

@@ -49,7 +49,7 @@ class BaiduSearchActivity : TopActivity() {
         EventBus.getDefault().register(this)
         mViewModelBaidu = ViewModelProvider(this)[BaiduSearchViewModel::class.java]
         setUp()
-        // 核心修复：增加空安全兜底，如果没传 URL 则默认加载百度首页
+        
         val startUrl = intent.getStringExtra(URL_KEY) ?: "https://www.baidu.com"
         mViewModelBaidu.initUrl(startUrl)
     }

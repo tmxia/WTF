@@ -86,6 +86,28 @@ public class HtmlTextView extends MaterialTextView {
 
             // 2. 交给原生解析
             String sanitizedHtml = sb.toString();
+
+            // 核心修复：预处理 Discuz 懒加载图片标签
+            // 很多帖子的 <img src="...none.gif">，真实地址在 file="..." 或 zoomfile="..."
+            Pattern imgPattern = Pattern.compile("<img[^>]*>", Pattern.CASE_INSENSITIVE);
+            Matcher imgMatcher = imgPattern.matcher(sanitizedHtml);
+            StringBuffer imgSb = new StringBuffer();
+            while (imgMatcher.find()) {
+                String imgTag = imgMatcher.group();
+                String realUrl = null;
+                // 依次尝试提取 file, zoomfile, data-original
+                Matcher fileMatcher = Pattern.compile("(?:file|zoomfile|data-original)=[\"']([^\"']+)[\"']", Pattern.CASE_INSENSITIVE).matcher(imgTag);
+                if (fileMatcher.find()) {
+                    realUrl = fileMatcher.group(1);
+                }
+                if (realUrl != null && !realUrl.contains("none.gif")) {
+                    // 替换原来的 src 为真实地址
+                    imgTag = imgTag.replaceAll("src=[\"']([^\"']+)[\"']", "src=\"" + realUrl + "\"");
+                }
+                imgMatcher.appendReplacement(imgSb, Matcher.quoteReplacement(imgTag));
+            }
+            imgMatcher.appendTail(imgSb);
+            sanitizedHtml = imgSb.toString();
             CharSequence text = HtmlFormatter.formatHtml(
                     sanitizedHtml, imageGetter, clickablePreCodeSpan, drawPreCodeSpan, indent, removeTrailingWhiteSpace, getContext(), onImgTagClickListener, onLinkTagClickListener);
 

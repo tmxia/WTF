@@ -129,7 +129,7 @@ class ArticleFragment : Fragment(), ControllableFragment {
     
     
     private fun handleBackClick() {
-        // 核心修复：只负责出栈，把状态恢复（显示底栏、恢复首页）交还给 MainActivity
+        
         requireActivity().supportFragmentManager.popBackStack()
     }
 

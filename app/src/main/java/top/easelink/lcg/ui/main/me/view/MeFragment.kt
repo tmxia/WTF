@@ -129,7 +129,7 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
             return@LaunchedEffect
         }
         
-        // 1. 先展示本地状态，防闪烁
+        
         if (SignInManager.isSignedToday()) {
             signInText = "✅ 已签到"
             signInColor = Color(0xFF4CAF50)
@@ -138,7 +138,7 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
             signInColor = Color(0xFFE53935)
         }
 
-        // 2. 强制调起隐藏 WebView 拉取真实状态
+        
         SignInManager.checkSignInStatus(context) { isSigned ->
             if (isSigned) {
                 signInText = "✅ 已签到"

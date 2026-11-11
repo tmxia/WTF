@@ -81,7 +81,7 @@ class SearchFragment : TopFragment(), ControllableFragment {
             SearchScreen(
                 viewModel = viewModel,
                 onNavigate = { fragment ->
-                    // 核心修复：将跳转统一交还给 MainActivity 的容器管理，保护回退栈！
+                    
                     (activity as? top.easelink.lcg.ui.main.MainActivity)?.showFragment(fragment)
                 }
             )
@@ -102,7 +102,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
     val selectedFidName by viewModel.selectedFidName.observeAsState(initial = "全部板块")
     val selectedSortName by viewModel.selectedSortName.observeAsState(initial = "按相关度")
 
-    // 核心修复：从 ViewModel 读取，防止 Fragment 重建导致状态丢失
+    
     var keyword by remember { mutableStateOf(viewModel.lastSearchKeyword) }
     var hasSearched by remember { mutableStateOf(viewModel.hasSearchedOnce) }
     var showBoardDialog by remember { mutableStateOf(false) }
@@ -139,7 +139,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
 
     fun performSearch(query: String) {
         if (query.isNotBlank()) {
-            // 核心修复：判断搜索引擎。如果是百度(1)，直接跳转百度网页搜索并返回
+            
             if (AppConfig.defaultSearchEngine == 1) {
                 keyboardController?.hide()
                 val baiduUrl = "https://www.baidu.com/s?wd=${Uri.encode(query)}"
@@ -147,7 +147,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                 return
             }
 
-            // 否则（选择了吾爱破解），走原生帖子搜索流程
+            
             keyword = query
             hasSearched = true
             keyboardController?.hide()
@@ -238,7 +238,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                     .clip(RoundedCornerShape(8.dp))
                     .background(bgColor)
                     .clickable { 
-                        // 核心修复：每次点击打开弹窗前，把 ViewModel 里的真实 ID 列表同步给临时状态
+                        
                         tempSelectedFids = viewModel.currentFids.toSet()
                         isBoardMultiMode = tempSelectedFids.size > 1
                         showBoardDialog = true 

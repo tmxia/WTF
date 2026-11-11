@@ -41,12 +41,12 @@ object JsoupClient : ApiRequest {
     private const val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
     private val sessionExpiredFiredOnce = AtomicBoolean(false)
-    private const val MIN_INTERVAL_MS = 300L // 物理限流保持 300ms
+    private const val MIN_INTERVAL_MS = 300L 
     private val lastRequestAt = AtomicLong(0L)
     private val BACKOFF_CODES = setOf(403, 429, 514)
     @Volatile private var blockedUntil = 0L
 
-    // 挂起锁
+    
     private var pendingVerification: CompletableDeferred<String?>? = null
     private const val VERIFY_TIMEOUT_MS = 3 * 60 * 1000L
 
@@ -88,9 +88,9 @@ object JsoupClient : ApiRequest {
         return sendGetRequestWithUrl(url, enableWafPopup = true)
     }
 
-    /**
-     * 核心修复：增加 enableWafPopup 开关，签到请求时传 false
-     */
+    
+
+
     @Throws(SocketTimeoutException::class, IOException::class)
     fun sendGetRequestWithUrl(url: String, enableWafPopup: Boolean): Document {
         var response = getConnection(url)
@@ -101,7 +101,7 @@ object JsoupClient : ApiRequest {
         updateCookies(response.cookies())
 
         if (isWafPage(response.body())) {
-            // 如果禁止弹窗（签到场景），直接抛出错误，绝不挂起
+            
             if (!enableWafPopup || url.contains("home.php?mod=task")) {
                 throw IOException("WAF_VERIFICATION_REQUIRED")
             }
@@ -146,7 +146,7 @@ object JsoupClient : ApiRequest {
         updateCookies(response.cookies())
 
         if (isWafPage(response.body())) {
-            // 核心修复：如果明确禁止弹窗（如搜索/签到场景），直接抛出异常，绝不卡死挂起！
+            
             if (!enableWafPopup || url.contains("home.php?mod=task")) {
                 throw IOException("WAF_VERIFICATION_REQUIRED")
             }

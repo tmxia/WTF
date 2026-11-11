@@ -46,15 +46,15 @@ object SignInManager {
                 lastCal.get(java.util.Calendar.DAY_OF_YEAR) == todayCal.get(java.util.Calendar.DAY_OF_YEAR)
     }
 
-    /**
-     * 核心对齐机制：使用隐藏的 WebView 去拉取真实服务器状态（如果被 WAF 拦就维持本地状态，绝不误报）
-     */
+    
+
+
     @SuppressLint("SetJavaScriptEnabled")
     fun checkSignInStatus(context: Context, onResult: (Boolean) -> Unit) {
         Handler(Looper.getMainLooper()).post {
             try {
                 val activity = context as? Activity
-                // 核心修复：使用 val 和 ?: 确保 parentView 绝对非空，解决 Kotlin 报错
+                
                 val parentView: ViewGroup = (activity?.window?.decorView as? ViewGroup) ?: FrameLayout(LCGApp.context)
 
                 val webView = WebView(context).apply {
@@ -79,7 +79,7 @@ object SignInManager {
                 webView.webViewClient = object : WebViewClient() {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
-                        // 如果遇到 WAF 拦截，说明无法拿到真实 DOM，直接放弃对齐，返回本地记录
+                        
                         if (url?.contains("waf_text_verify") == true) {
                             onResult(isSignedToday())
                             parentView.removeView(webView)
@@ -101,7 +101,7 @@ object SignInManager {
                                 }
                                 
                                 if (text.contains("已申请") || text.contains("已完成") || text.contains("已签到") || text.contains("已经签到")) {
-                                    updateLocalSignInTime() // 服务器确认已签到，同步本地
+                                    updateLocalSignInTime() 
                                     onResult(true)
                                 } else {
                                     onResult(false)
@@ -150,7 +150,7 @@ object SignInManager {
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
         
-        // 清除旧的 wzws_sid，防止 WAF 白屏
+        
         val currentCookie = CookieManager.getInstance().getCookie("https://www.52pojie.cn/")
         if (currentCookie != null) {
             currentCookie.split(";").forEach { cookie ->

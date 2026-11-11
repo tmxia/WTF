@@ -28,7 +28,7 @@ object LCGSearchService {
         mNextPageUrl = null
         mTotalResults = null
         if (keyword.isBlank()) return null
-        if (!canSendRequest()) return null // 限流拦截，静默返回 null
+        if (!canSendRequest()) return null 
 
         try {
             val url = "${WebsiteConstant.SERVER_BASE_URL}search.php?searchsubmit=yes"
@@ -37,7 +37,7 @@ object LCGSearchService {
                 put("mod", "forum")
                 put("srchtype", "title")
                 
-                // 核心修复：Discuz 多选必须使用数组格式 srchfid[0], srchfid[1]
+                
                 val fidList = fid?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
                 if (fidList.isEmpty()) {
                     put("srchfid", "")
@@ -54,7 +54,7 @@ object LCGSearchService {
                 put("srchtxt", keyword)
                 put("searchsubmit", "true")
             }
-            // 核心修复：传入 enableWafPopup = false 防止 WAF 卡死
+            
             val response = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = false)
             
             if (response.statusCode() in 200..299) {
@@ -70,7 +70,7 @@ object LCGSearchService {
             }
         } catch (e: Exception) {
             Timber.tag("SearchDebug").e(e, "搜索异常: ${e.message}")
-            throw e // 抛给 ViewModel
+            throw e 
         }
         return emptyResult()
     }
@@ -130,7 +130,7 @@ object LCGSearchService {
 
     private fun canSendRequest(): Boolean {
         return if (System.currentTimeMillis() - lastRequestTime < MIN_REQUEST_INTERVAL) {
-            false // 如果网络太快，直接静默拦截，不再弹 Toast 骚扰
+            false 
         } else {
             lastRequestTime = System.currentTimeMillis()
             true

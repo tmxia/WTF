@@ -59,7 +59,7 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
             LaunchedEffect(Unit) {
                 ArticlesDatabase.getInstance().articlesDao().getHistories().observe(viewLifecycleOwner) { list ->
                     historyList = list.map { HistoryModel(url = it.url, author = it.author, title = it.title, timeStamp = it.timestamp) }
-                    // 核心修复：将 delay 放在协程作用域 scope.launch 中，解决编译报错并确保动画可见
+                    
                     scope.launch {
                         delay(400)
                         isLoading = false
