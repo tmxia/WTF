@@ -38,7 +38,7 @@ class DownloadLinkDialog : TopDialog() {
             setBackgroundDrawableResource(android.R.color.transparent)
             val params = attributes
             params.width = ViewGroup.LayoutParams.MATCH_PARENT
-            params.height = ViewGroup.LayoutParams.WRAP_CONTENT
+            params.height = ViewGroup.LayoutParams.MATCH_PARENT
             attributes = params
         }
 
@@ -93,24 +93,9 @@ class DownloadLinkDialog : TopDialog() {
         binding.exit.setOnClickListener { dismissDialog() }
     }
 
-    // 智能合并链接与提取码
+    // 只要 ViewModel 已经帮我们整理好了，点击时直接复制该行文本即可
     private fun buildSmartLink(targetLink: String, allLinks: List<String>, allCodes: String): String {
-        var result = targetLink.trim()
-        
-        // 如果点的是纯链接，且全列表里有提取码，且这行本身没包含提取码
-        if (result.startsWith("http") && allCodes.isNotEmpty()) {
-            if (!result.contains("提取码") && !result.contains("密码") && !result.contains("访问码")) {
-                // 同时检查如果不包含提取码，为了防止多个链接共用一个码，但提取码不在本行，我们直接拼在最后
-                result = "$result $allCodes"
-            }
-        } else if (!result.startsWith("http") && allCodes.isEmpty()) {
-            // 如果点的是纯提取码，且全列表里有链接，把链接找出来拼在前面
-            val firstLink = allLinks.firstOrNull { it.startsWith("http") }
-            if (firstLink != null) {
-                result = "$firstLink $result"
-            }
-        }
-        return result
+        return targetLink.trim()
     }
 
     override fun onDestroyView() {

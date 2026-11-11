@@ -198,7 +198,12 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
 
             var combined = ""
             if (link.isNotEmpty() && code.isNotEmpty()) {
-                combined = "$link 提取码: $code"
+                // 如果链接里已经包含了 pwd=xxx，就不再重复拼接了
+                if (link.contains("pwd=$code") || link.contains("password=$code") || link.contains("code=$code") || link.contains("提取码")) {
+                    combined = link
+                } else {
+                    combined = "$link 提取码: $code"
+                }
             } else if (link.isNotEmpty()) {
                 combined = link
             } else if (code.isNotEmpty()) {
