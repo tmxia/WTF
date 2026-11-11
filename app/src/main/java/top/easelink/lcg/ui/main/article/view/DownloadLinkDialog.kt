@@ -32,12 +32,26 @@ class DownloadLinkDialog : TopDialog() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
+        // 核心修复 1：彻底去除背景黑框，让 Window 铺满宽度，背景透明
+        dialog?.window?.apply {
+            setBackgroundDrawableResource(android.R.color.transparent)
+            val params = attributes
+            params.width = ViewGroup.LayoutParams.MATCH_PARENT
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT
+            attributes = params
+        }
+
         arguments?.getStringArrayList(KEY_LINK_LIST)?.let { linkList ->
             if (linkList.isNotEmpty()) {
                 val density = resources.displayMetrics.density
                 val padding = (12 * density).toInt()
                 val marginBottom = (10 * density).toInt()
+
+                // 核心修复 2：提取全列表的提取码，用于后续复制时的智能拼接
+                val allCodes = linkList.filter { 
+                    it.contains("提取码") || it.contains("密码") || it.contains("访问码") || it.contains("口令") 
+                }.joinToString(" ") { it.trim() }
 
                 linkList.forEach { link ->
                     val textView = TextView(requireContext()).apply {
@@ -45,13 +59,12 @@ class DownloadLinkDialog : TopDialog() {
                         textSize = 14f
                         setTextColor(ContextCompat.getColor(context, R.color.black))
                         setPadding(padding, padding, padding, padding)
-                        
-                        
+
                         background = android.graphics.drawable.GradientDrawable().apply {
                             setColor(android.graphics.Color.parseColor("#F5F5F5"))
                             cornerRadius = 8f * density
                         }
-                        
+
                         val params = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
@@ -60,11 +73,16 @@ class DownloadLinkDialog : TopDialog() {
                         }
                         layoutParams = params
 
-                        
-                        setOnClickListener { copy(link) }
+                        // 点击复制
+                        setOnClickListener { 
+                            val copyText = buildSmartLink(link, linkList, allCodes)
+                            copy(copyText) 
+                        }
+                        // 长按复制
                         setOnLongClickListener { 
-                            copy(link)
-                            true 
+                            val copyText = buildSmartLink(link, linkList, allCodes)
+                            copy(copyText)
+                            true
                         }
                     }
                     binding.linkContainer.addView(textView)
@@ -73,6 +91,26 @@ class DownloadLinkDialog : TopDialog() {
         }
 
         binding.exit.setOnClickListener { dismissDialog() }
+    }
+
+    // 智能合并链接与提取码
+    private fun buildSmartLink(targetLink: String, allLinks: List<String>, allCodes: String): String {
+        var result = targetLink.trim()
+        
+        // 如果点的是纯链接，且全列表里有提取码，且这行本身没包含提取码
+        if (result.startsWith("http") && allCodes.isNotEmpty()) {
+            if (!result.contains("提取码") && !result.contains("密码") && !result.contains("访问码")) {
+                // 同时检查如果不包含提取码，为了防止多个链接共用一个码，但提取码不在本行，我们直接拼在最后
+                result = "$result $allCodes"
+            }
+        } else if (!result.startsWith("http") && allCodes.isEmpty()) {
+            // 如果点的是纯提取码，且全列表里有链接，把链接找出来拼在前面
+            val firstLink = allLinks.firstOrNull { it.startsWith("http") }
+            if (firstLink != null) {
+                result = "$firstLink $result"
+            }
+        }
+        return result
     }
 
     override fun onDestroyView() {
@@ -88,7 +126,14 @@ class DownloadLinkDialog : TopDialog() {
         val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val mClipData = ClipData.newPlainText("DownloadLink", clipString)
         cm.setPrimaryClip(mClipData)
-        Toast.makeText(requireContext(), "链接已复制", Toast.LENGTH_SHORT).show()
+        
+        // 如果复制包含了提取码，Toast 提示可以长一点，更有质感
+        val toastMsg = if (clipString.contains("提取码") || clipString.contains("密码")) {
+            "已复制（含提取码），可直接粘贴"
+        } else {
+            "链接已复制"
+        }
+        Toast.makeText(requireContext(), toastMsg, Toast.LENGTH_SHORT).show()
     }
 
     companion object {
