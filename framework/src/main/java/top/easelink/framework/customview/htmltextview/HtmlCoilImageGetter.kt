@@ -80,15 +80,10 @@ class HtmlCoilImageGetter(
             finalUrl = "https://www.52pojie.cn/$finalUrl"
         }
 
-        // 核心修复 2：获取当前用户的 Cookie
-        val cookies = top.easelink.lcg.network.LCGCookieJar.cookiesForUrl("https://www.52pojie.cn/")
-        val cookieStr = cookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
-
-        // 核心修复 3：注入 Referer、User-Agent 和 Cookie
+        // 核心修复 2：注入 Referer 和 User-Agent，绕过论坛防盗链（底层模块不能依赖 App 层的 Cookie）
         val headers = Headers.Builder()
             .add("Referer", "https://www.52pojie.cn/")
             .add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-            .apply { if (cookieStr.isNotEmpty()) add("Cookie", cookieStr) }
             .build()
 
         return Coil.imageLoader(context).execute(
