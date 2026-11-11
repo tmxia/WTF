@@ -170,35 +170,43 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         }
     }
 
-    fun extractDownloadUrl(): ArrayList<String>? {
+        fun extractDownloadUrl(): ArrayList<String>? {
         val content = posts.value?.firstOrNull()?.content ?: return null
         
+        val doc = org.jsoup.Jsoup.parse(content)
+        val plainText = doc.text()
         
-        val plainText = org.jsoup.Jsoup.parse(content).text()
+        val linkRegexStr = """https?://(?:pan\.baidu\.com/s/|pan\.quark\.cn/s/|www\.aliyundrive\.com/s/|aliyundrive\.com/s/|cloud\.189\.cn/t/|pan\.xunlei\.com/s/|(?:[a-zA-Z0-9.]{0,20})lanzou[a-z]{1}\.com/)[^\s<>"']+"""
+        val linkRegex = Regex(linkRegexStr)
         
+        // 1. 提取网页中所有的超链接（支持 <a href="隐藏链接">蓝奏下载</a> 形式）
+        val hrefLinks = doc.select("a[href]").mapNotNull { element ->
+            val href = element.attr("href").trim()
+            if (linkRegex.containsMatchIn(href)) href else null
+        }
         
-        val linkRegex = Regex("""https?://(?:pan\.baidu\.com/s/|pan\.quark\.cn/s/|www\.aliyundrive\.com/s/|aliyundrive\.com/s/|cloud\.189\.cn/t/|pan\.xunlei\.com/s/|(?:[a-zA-Z0-9.]{0,20})lanzou[a-z]{1}\.com/)[^\s<>"']+""")
-        val linkMatches = linkRegex.findAll(plainText).toList()
-
+        // 2. 提取纯文本中的链接（支持没有超链接的纯文本）
+        val textLinks = linkRegex.findAll(plainText).map { it.value }.toList()
+        
+        // 3. 合并并去重
+        val allLinks = (hrefLinks + textLinks).distinct()
         
         val codeRegex = Regex("""(?:提取码|密码|访问码|口令)[\s:：]*([a-zA-Z0-9]{4})""")
-        val codeMatches = codeRegex.findAll(plainText).toList()
-
-        if (linkMatches.isEmpty() && codeMatches.isEmpty()) {
+        val codeMatches = codeRegex.findAll(plainText).map { it.groupValues[1].trim() }.toList()
+        
+        if (allLinks.isEmpty() && codeMatches.isEmpty()) {
             return null
         }
-
-        val resultList = ArrayList<String>()
-
         
-        val maxCount = maxOf(linkMatches.size, codeMatches.size)
+        val resultList = ArrayList<String>()
+        val maxCount = maxOf(allLinks.size, codeMatches.size)
+        
         for (i in 0 until maxCount) {
-            val link = linkMatches.getOrNull(i)?.value?.trim() ?: ""
-            val code = codeMatches.getOrNull(i)?.groupValues?.get(1)?.trim() ?: ""
-
+            val link = allLinks.getOrNull(i)?.trim() ?: ""
+            val code = codeMatches.getOrNull(i)?.trim() ?: ""
+            
             var combined = ""
             if (link.isNotEmpty() && code.isNotEmpty()) {
-                
                 if (link.contains("pwd=$code") || link.contains("password=$code") || link.contains("code=$code") || link.contains("提取码")) {
                     combined = link
                 } else {
@@ -209,17 +217,16 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
             } else if (code.isNotEmpty()) {
                 combined = "提取码: $code"
             }
-
             
             if (combined.isNotEmpty() && !resultList.contains(combined)) {
                 resultList.add(combined)
             }
         }
-
-        return if (resultList.isNotEmpty()) resultList else null
+        
+        return resultList
     }
 
-    fun checkIsFavorited() {
+fun checkIsFavorited() {
         val url = mUrl ?: return
         currentJob = viewModelScope.launch(IOPool) {
             val isFav = ArticlesLocalDataSource.isArticleInFavorites(url)
