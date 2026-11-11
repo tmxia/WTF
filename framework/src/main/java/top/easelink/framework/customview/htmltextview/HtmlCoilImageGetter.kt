@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import coil.Coil
+import okhttp3.Headers
 import coil.request.ImageRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -68,10 +69,25 @@ class HtmlCoilImageGetter(
         return scope
     }
 
-    private suspend fun loadImage(url: String): Drawable {
+    private suspend fun loadImage(originalUrl: String): Drawable {
+        // 核心修复 1：如果是相对路径，自动补全为绝对路径
+        var finalUrl = originalUrl
+        if (finalUrl.startsWith("/")) {
+            finalUrl = "https://www.52pojie.cn$finalUrl"
+        } else if (!finalUrl.startsWith("http")) {
+            finalUrl = "https://www.52pojie.cn/$finalUrl"
+        }
+
+        // 核心修复 2：注入 Referer 和 User-Agent，绕过论坛防盗链
+        val headers = Headers.Builder()
+            .add("Referer", "https://www.52pojie.cn/")
+            .add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            .build()
+
         return Coil.imageLoader(context).execute(
             ImageRequest.Builder(context)
-                .data(url)
+                .data(finalUrl)
+                .headers(headers)
                 .apply { lifecycleOwner?.let { lifecycle(it) } }
                 .build()
         ).drawable!!
