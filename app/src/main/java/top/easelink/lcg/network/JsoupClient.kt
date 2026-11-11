@@ -203,6 +203,19 @@ object JsoupClient : ApiRequest {
             .header("sec-ch-ua-platform", "Windows")
     }
 
+    
+    fun forceReleasePendingVerification() {
+        try {
+            synchronized(this) {
+                pendingVerification?.complete(null)
+                pendingVerification = null
+            }
+            Timber.d("强制释放挂起的 WAF 验证")
+        } catch (e: Exception) {
+            Timber.e(e)
+        }
+    }
+
     fun resetSessionExpiredFlag() { sessionExpiredFiredOnce.set(false) }
 
     private fun checkResponse(doc: Document) {
