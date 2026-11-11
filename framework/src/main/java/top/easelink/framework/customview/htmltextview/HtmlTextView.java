@@ -9,6 +9,7 @@ import android.text.Spanned;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.UnderlineSpan;
+import android.text.style.URLSpan;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
@@ -84,11 +85,24 @@ public class HtmlTextView extends MaterialTextView {
             matcher.appendTail(sb);
 
             // 2. 交给原生解析
-            String sanitizedHtml = sb.toString().replaceAll("(?i)<a[^>]*>(.*?)</a>", "$1");
+            String sanitizedHtml = sb.toString();
             CharSequence text = HtmlFormatter.formatHtml(
                     sanitizedHtml, imageGetter, clickablePreCodeSpan, drawPreCodeSpan, indent, removeTrailingWhiteSpace, getContext(), onImgTagClickListener, onLinkTagClickListener);
 
             SpannableStringBuilder builder = new SpannableStringBuilder(text);
+
+            // 核心修复：遍历所有的超链接（URLSpan），给它们赋予 WTF 的主题红和下划线
+            URLSpan[] urlSpans = builder.getSpans(0, builder.length(), URLSpan.class);
+            for (URLSpan span : urlSpans) {
+                int start = builder.getSpanStart(span);
+                int end = builder.getSpanEnd(span);
+                int flags = builder.getSpanFlags(span);
+                
+                // 加上 WTF 标志性的红色 (#E53935)
+                builder.setSpan(new ForegroundColorSpan(android.graphics.Color.parseColor("#E53935")), start, end, flags);
+                // 加上下划线
+                builder.setSpan(new UnderlineSpan(), start, end, flags);
+            }
 
             // 3. 给占位符挂载点击事件
             int searchIndex = 0;
