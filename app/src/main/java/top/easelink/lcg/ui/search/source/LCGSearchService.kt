@@ -18,7 +18,7 @@ import java.net.SocketTimeoutException
 
 
 object LCGSearchService {
-    private const val MIN_REQUEST_INTERVAL = 3000L
+    private const val MIN_REQUEST_INTERVAL = 1000L
     private var lastRequestTime: Long = 0L
 
     private var mNextPageUrl: String? = null

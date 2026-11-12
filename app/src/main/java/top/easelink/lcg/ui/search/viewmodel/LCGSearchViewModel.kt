@@ -105,8 +105,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                     val msg = e.message
                     if (msg == "WAF_VERIFICATION_REQUIRED") {
                         top.easelink.lcg.utils.showMessage("触发安全风控，请完成验证")
-                    } else if (!msg.isNullOrBlank() && !msg.contains("timeout") && !msg.contains("connect", ignoreCase = true) && !msg.contains("Failed", ignoreCase = true)) {
-                        // 直接显示服务器的原话（比如：两次搜索间隔必须大于 10 秒）
+                    } else if (!msg.isNullOrBlank()) {
                         top.easelink.lcg.utils.showMessage(msg)
                     } else {
                         top.easelink.lcg.utils.showMessage(top.easelink.lcg.R.string.network_error)
@@ -144,8 +143,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                     val msg = e.message
                     if (msg == "WAF_VERIFICATION_REQUIRED") {
                         top.easelink.lcg.utils.showMessage("触发安全风控，请完成验证")
-                    } else if (!msg.isNullOrBlank() && !msg.contains("timeout") && !msg.contains("connect", ignoreCase = true) && !msg.contains("Failed", ignoreCase = true)) {
-                        // 直接显示服务器的原话（比如：两次搜索间隔必须大于 10 秒）
+                    } else if (!msg.isNullOrBlank()) {
                         top.easelink.lcg.utils.showMessage(msg)
                     } else {
                         top.easelink.lcg.utils.showMessage(top.easelink.lcg.R.string.network_error)
