@@ -18,7 +18,7 @@ import java.net.SocketTimeoutException
 
 
 object LCGSearchService {
-    private const val MIN_REQUEST_INTERVAL = 500L
+    private const val MIN_REQUEST_INTERVAL = 3000L
     private var lastRequestTime: Long = 0L
 
     private var mNextPageUrl: String? = null
@@ -28,16 +28,19 @@ object LCGSearchService {
         mNextPageUrl = null
         mTotalResults = null
         if (keyword.isBlank()) return null
-        if (!canSendRequest()) return null 
+        
+        if (!canSendRequest()) {
+            top.easelink.lcg.utils.showMessage("搜索太频繁，请稍后再试")
+            return null
+        }
 
         try {
             val url = "${WebsiteConstant.SERVER_BASE_URL}search.php?searchsubmit=yes"
             val form = ArrayMap<String, String>().apply {
-                put("formhash", JsoupClient.formHash)
+                put("formhash", JsoupClient.formHash ?: "")
                 put("mod", "forum")
                 put("srchtype", "title")
-                
-                
+
                 val fidList = fid?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
                 if (fidList.isEmpty()) {
                     put("srchfid", "")
@@ -54,11 +57,22 @@ object LCGSearchService {
                 put("srchtxt", keyword)
                 put("searchsubmit", "true")
             }
-            
-            val response = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = false)
-            
+
+            // 核心修复：允许触发 WAF 验证弹窗，否则遇到验证会直接阻断
+            val response = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = true)
+
             if (response.statusCode() in 200..299) {
                 val doc = response.parse()
+                
+                // 核心修复：检查服务器返回的错误提示并抛给上层
+                val errorNode = doc.selectFirst(".alert_error, .alert_info, .alert_msg")
+                if (errorNode != null) {
+                    val errorText = errorNode.text().trim()
+                    if (errorText.isNotBlank()) {
+                        throw Exception(errorText)
+                    }
+                }
+
                 val result = parseSearchResults(doc)
                 try {
                     mTotalResults = doc.selectFirst("h2")?.text()
@@ -70,12 +84,12 @@ object LCGSearchService {
             }
         } catch (e: Exception) {
             Timber.tag("SearchDebug").e(e, "搜索异常: ${e.message}")
-            throw e 
+            throw e
         }
         return emptyResult()
     }
 
-    fun doSearchNextPage(): LCGSearchResults {
+fun doSearchNextPage(): LCGSearchResults {
         if (mNextPageUrl.isNullOrEmpty()) {
             return emptyResult()
         }

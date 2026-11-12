@@ -100,18 +100,18 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                     Timber.tag("SearchDebug").d("搜索被限流，忽略此次请求")
                 }
             } catch (e: Exception) {
-                
                 Timber.tag("SearchDebug").e(e, "搜索异常：${e.message}")
-                if (e.message == "WAF_VERIFICATION_REQUIRED") {
-                    withContext(Dispatchers.Main) {
-                        top.easelink.lcg.utils.showMessage("触发安全风控，请稍后再试")
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
+                withContext(Dispatchers.Main) {
+                    val msg = e.message
+                    if (msg == "WAF_VERIFICATION_REQUIRED") {
+                        top.easelink.lcg.utils.showMessage("触发安全风控，请完成验证")
+                    } else if (!msg.isNullOrBlank() && !msg.contains("timeout") && !msg.contains("connect", ignoreCase = true) && !msg.contains("Failed", ignoreCase = true)) {
+                        // 直接显示服务器的原话（比如：两次搜索间隔必须大于 10 秒）
+                        top.easelink.lcg.utils.showMessage(msg)
+                    } else {
                         top.easelink.lcg.utils.showMessage(top.easelink.lcg.R.string.network_error)
                     }
                 }
-                
             } finally {
                 isLoading.postValue(false)
             }
@@ -139,8 +139,18 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                     hasMore = false 
                 }
             } catch (e: Exception) {
-                Timber.tag("SearchDebug").e(e, "加载下一页失败")
-                
+                Timber.tag("SearchDebug").e(e, "搜索异常：${e.message}")
+                withContext(Dispatchers.Main) {
+                    val msg = e.message
+                    if (msg == "WAF_VERIFICATION_REQUIRED") {
+                        top.easelink.lcg.utils.showMessage("触发安全风控，请完成验证")
+                    } else if (!msg.isNullOrBlank() && !msg.contains("timeout") && !msg.contains("connect", ignoreCase = true) && !msg.contains("Failed", ignoreCase = true)) {
+                        // 直接显示服务器的原话（比如：两次搜索间隔必须大于 10 秒）
+                        top.easelink.lcg.utils.showMessage(msg)
+                    } else {
+                        top.easelink.lcg.utils.showMessage(top.easelink.lcg.R.string.network_error)
+                    }
+                }
             } finally {
                 
                 isLoadingMore.postValue(false)
