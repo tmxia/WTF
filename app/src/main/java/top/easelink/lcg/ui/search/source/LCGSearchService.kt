@@ -44,12 +44,9 @@ object LCGSearchService {
                 val fidList = fid?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
                 if (fidList.isEmpty()) {
                     put("srchfid", "")
-                } else if (fidList.size == 1) {
-                    put("srchfid", fidList.first())
                 } else {
-                    fidList.forEachIndexed { index, f ->
-                        put("srchfid[$index]", f)
-                    }
+                    // 核心修复：Discuz 多选板块应使用逗号分隔，而不是数组下标格式
+                    put("srchfid", fidList.joinToString(","))
                 }
 
                 if (!orderby.isNullOrBlank()) put("orderby", orderby)
@@ -62,6 +59,9 @@ object LCGSearchService {
             val response = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = true)
 
             Timber.tag("[SearchProbe]").d("HTTP 响应码: ${response.statusCode()}")
+            if (response.statusCode() !in 200..299) {
+                throw Exception("服务器拒绝请求 (HTTP ${response.statusCode()})，请尝试切换板块或稍后再试")
+            }
             if (response.statusCode() in 200..299) {
                 val doc = response.parse()
                 Timber.tag("[SearchProbe]").d("返回 HTML 前 200 字: ${doc.html().take(200).replace("\n", " ")}")
