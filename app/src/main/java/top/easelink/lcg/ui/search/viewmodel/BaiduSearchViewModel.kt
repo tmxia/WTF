@@ -26,7 +26,7 @@ class BaiduSearchViewModel : ViewModel(), SearchAdapterListener {
         isLoading.value = true
         val requestUrl: String = when {
             type == SearchAdapterListener.FETCH_MORE && mNextPageUrl?.isNotBlank() ?: false -> {
-                WebsiteConstant.BAIDU_SEARCH_BASE_URL + mNextPageUrl
+                WebsiteConstant.BING_SEARCH_BASE_URL + mNextPageUrl
             }
             type == SearchAdapterListener.FETCH_INIT -> {
                 mUrl!!
