@@ -2,7 +2,7 @@
 <resources>
     <string-array name="search_engine_array">
         <item>吾爱破解</item>
-        <item>百度站内</item>
+        <item>必应站内</item>
     </string-array>
 
 </resources>
