@@ -61,8 +61,10 @@ object LCGSearchService {
             // 核心修复：允许触发 WAF 验证弹窗，否则遇到验证会直接阻断
             val response = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = true)
 
+            Timber.tag("[SearchProbe]").d("HTTP 响应码: ${response.statusCode()}")
             if (response.statusCode() in 200..299) {
                 val doc = response.parse()
+                Timber.tag("[SearchProbe]").d("返回 HTML 前 200 字: ${doc.html().take(200).replace("\n", " ")}")
                 
                 // 核心修复：检查服务器返回的错误提示并抛给上层
                 val errorNode = doc.selectFirst(".alert_error, .alert_info, .alert_msg")

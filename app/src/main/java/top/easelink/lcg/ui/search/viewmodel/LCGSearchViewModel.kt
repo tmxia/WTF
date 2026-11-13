@@ -27,7 +27,12 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     val isLoading = MutableLiveData<Boolean>()
     val isLoadingMore = MutableLiveData<Boolean>()
     
-        private val prefs = LCGApp.context.getSharedPreferences("wtf_search_prefs", Context.MODE_PRIVATE)
+        private val prefs = try {
+        LCGApp.context.getSharedPreferences("wtf_search_prefs", Context.MODE_PRIVATE)
+    } catch (e: Exception) {
+        Timber.tag("[SearchProbe]").e(e, "获取 SharedPreferences 崩溃，Context 异常！")
+        throw e
+    }
 
     val selectedFidName = MutableLiveData<String>(prefs.getString("search_fid_name", "全部板块") ?: "全部板块")
     val selectedSortName = MutableLiveData<String>(prefs.getString("search_sort_name", "按相关度") ?: "按相关度")
@@ -81,6 +86,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     }
 
     private fun fetchInit(keyword: String?) {
+        Timber.tag("[SearchProbe]").d("发起搜索请求: keyword=$keyword, fids=$mFids, sort=$mSortOrder")
         if (keyword.isNullOrBlank()) return
         isLoading.value = true
         hasMore = true
@@ -92,6 +98,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                 val result = doSearchWith(keyword, mFids.joinToString(","), mSortOrder)
                 if (result != null) {
                     
+                    Timber.tag("[SearchProbe]").d("收到搜索结果: 数量=${result.searchResultList.size}")
                     searchResults.postValue(result.searchResultList)
                     totalResult.postValue(result.totalResult)
                     hasMore = result.searchResultList.isNotEmpty()

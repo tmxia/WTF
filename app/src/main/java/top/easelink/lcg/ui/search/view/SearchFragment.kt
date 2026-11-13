@@ -74,10 +74,13 @@ class SearchFragment : TopFragment(), ControllableFragment {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        timber.log.Timber.tag("[SearchProbe]").d("SearchFragment onViewCreated 触发，准备初始化 ViewModel")
         super.onViewCreated(view, savedInstanceState)
         viewModel = ViewModelProvider(this)[LCGSearchViewModel::class.java]
+        timber.log.Timber.tag("[SearchProbe]").d("ViewModel 初始化成功")
 
         (view as ComposeView).setContent {
+            timber.log.Timber.tag("[SearchProbe]").d("准备渲染 Compose SearchScreen")
             SearchScreen(
                 viewModel = viewModel,
                 onNavigate = { fragment ->
