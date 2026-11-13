@@ -96,7 +96,7 @@ public class HtmlTextView extends MaterialTextView {
                 String imgTag = imgMatcher.group();
                 String realUrl = null;
                 // 依次尝试提取 file, zoomfile, data-original
-                Matcher fileMatcher = Pattern.compile("(?:file|zoomfile|data-original)=[\"']([^\"']+)[\"']", Pattern.CASE_INSENSITIVE).matcher(imgTag);
+                Matcher fileMatcher = Pattern.compile("(?:file|zoomfile|data-src|data-original)=[\"']([^\"']+)[\"']", Pattern.CASE_INSENSITIVE).matcher(imgTag);
                 if (fileMatcher.find()) {
                     realUrl = fileMatcher.group(1);
                 }

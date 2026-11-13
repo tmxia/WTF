@@ -68,6 +68,9 @@ class HtmlCoilImageGetter(
     private suspend fun loadImage(originalUrl: String): Drawable {
         // 1. 路径智能补全
         var finalUrl = originalUrl.trim()
+        if (finalUrl.startsWith("http://")) {
+            finalUrl = finalUrl.replaceFirst("http://", "https://")
+        }
         if (finalUrl.startsWith("//")) {
             finalUrl = "https:$finalUrl"
         } else if (finalUrl.startsWith("/")) {

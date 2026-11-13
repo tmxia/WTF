@@ -248,14 +248,13 @@ fun checkIsFavorited() {
             showMessage(R.string.add_to_favorite_failed)
             return
         }
-
         currentJob = viewModelScope.launch(IOPool) {
             try {
                 val title = articleTitle.value ?: articleAbstract?.title ?: "未知标题"
                 val author = currentPosts.firstOrNull()?.author ?: ""
                 val content = articleAbstract?.description ?: ""
                 val url = mUrl ?: throw IllegalStateException("URL is null")
-
+                
                 val articleEntity = ArticleEntity(
                     title = title,
                     author = author,
@@ -263,26 +262,26 @@ fun checkIsFavorited() {
                     content = content,
                     timestamp = System.currentTimeMillis()
                 )
-
+                
+                // 核心修复：先存本地，瞬间亮起红心，彻底告别网络延迟导致的 UI 不更新！
+                val localRes = ArticlesLocalDataSource.addArticleToFavorite(articleEntity)
+                safeUpdate(isFavorited, true)
+                
+                // 随后在后台默默进行网络同步
                 if (AppConfig.syncFavorites && UserDataRepo.isLoggedIn) {
                     val threadId = extractThreadId(mUrl)
                     if (threadId != null && mFormHash != null) {
                         val success = ArticlesRemoteDataSource.addFavorites(threadId, mFormHash!!)
-                        showMessage(if (success) R.string.sync_favorite_successfully else R.string.sync_favorite_failed)
+                        if (!success) {
+                            showMessage(R.string.sync_favorite_failed)
+                        } else {
+                            showMessage(R.string.sync_favorite_successfully)
+                        }
                     } else {
                         showMessage(R.string.sync_favorite_failed)
                     }
-                }
-
-                try {
-                    val res = ArticlesLocalDataSource.addArticleToFavorite(articleEntity)
-                    if (!AppConfig.syncFavorites) {
-                        showMessage(if (res) R.string.add_to_favorite_successfully else R.string.add_to_favorite_failed)
-                    }
-                    safeUpdate(isFavorited, true)
-                } catch (e: Exception) {
-                    Timber.e(e)
-                    showMessage(R.string.add_to_favorite_failed)
+                } else if (localRes) {
+                    showMessage(R.string.add_to_favorite_successfully)
                 }
             } catch (e: Exception) {
                 Timber.e(e)

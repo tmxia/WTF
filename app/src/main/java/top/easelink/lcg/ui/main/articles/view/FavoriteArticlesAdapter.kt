@@ -94,6 +94,12 @@ class FavoriteArticlesAdapter(private var favoriteArticlesViewModel: FavoriteArt
                 favoriteContainer.setOnClickListener {
                     onItemClick(articleEntity.url)
                 }
+                btnDelete.setOnClickListener {
+                    favoriteArticlesViewModel.removeFavorite(articleEntity)
+                    mArticleEntities.removeAt(position)
+                    notifyItemRemoved(position)
+                    notifyItemRangeChanged(position, mArticleEntities.size)
+                }
                 titleTextView.text = articleEntity.title
                 dateTime.text = getDateFrom(articleEntity.timestamp)
 
