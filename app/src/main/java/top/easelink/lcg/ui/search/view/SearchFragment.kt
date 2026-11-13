@@ -145,8 +145,8 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
             
             if (AppConfig.defaultSearchEngine == 1) {
                 keyboardController?.hide()
-                val baiduUrl = "https://www.baidu.com/s?wd=${Uri.encode(query)}"
-                WebViewActivity.startWebViewWith(baiduUrl, context)
+                val bingUrl = "https://cn.bing.com/search?q=${Uri.encode(query)}"
+                WebViewActivity.startWebViewWith(bingUrl, context)
                 return
             }
 
