@@ -43,10 +43,10 @@ object LCGSearchService {
 
                 val fidList = fid?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
                 if (fidList.isEmpty()) {
-                    put("srchfid", "")
+                    // no srhfid
                 } else {
                     // 核心修复：Discuz 多选板块应使用逗号分隔，而不是数组下标格式
-                    put("srchfid", fidList.joinToString(","))
+                    put("srhfid", fidList.joinToString(","))
                 }
 
                 if (!orderby.isNullOrBlank()) put("orderby", orderby)
