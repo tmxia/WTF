@@ -181,8 +181,10 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
                                         if (status == "SUCCESS" || status == "ALREADY_DONE") {
                                             signInText = "✅ 已签到"
                                             signInColor = Color(0xFF4CAF50)
+                                            EventBus.getDefault().post(SignInSuccessEvent())
                                         } else {
                                             signInText = "🔥 未签到，点我"
+                                            signInColor = Color(0xFFE53935)
                                         }
                                     }
                                 }.padding(horizontal = 8.dp, vertical = 2.dp)) {
