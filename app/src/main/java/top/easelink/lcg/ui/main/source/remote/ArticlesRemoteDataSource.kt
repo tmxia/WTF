@@ -1,6 +1,5 @@
 package top.easelink.lcg.ui.main.source.remote
 
-import android.text.TextUtils
 import android.util.ArrayMap
 import androidx.annotation.WorkerThread
 import com.google.gson.Gson
@@ -528,9 +527,15 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             ) {
                 imgElement.remove()
             }
-            val attr = imgElement.attr("file")
-            if (!TextUtils.isEmpty(attr)) {
-                imgElement.attr("src", attr)
+            // Discuz 懒加载：真实地址可能在 file / zoomfile / data-src / data-original，
+            // 依次回退；占位 none.gif 不作为真实地址。
+            val realAttr = listOf("file", "zoomfile", "data-src", "data-original")
+                .firstOrNull { key ->
+                    val value = imgElement.attr(key)
+                    value.isNotEmpty() && !value.contains("none.gif")
+                }
+            if (realAttr != null) {
+                imgElement.attr("src", imgElement.attr(realAttr))
             }
 
             for (bold in element.select("b, strong")) {

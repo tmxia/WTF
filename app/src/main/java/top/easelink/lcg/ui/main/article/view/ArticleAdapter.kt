@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.text.Html
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
@@ -159,7 +158,7 @@ class ArticleAdapter(
         private val binding: ItemPostViewBinding
     ) : BaseViewHolder(binding.root), View.OnClickListener {
         private var post: Post? = null
-        private val htmlHttpImageGetter: Html.ImageGetter = HtmlCoilImageGetter(binding.root.context, binding.contentTextView, mFragment)
+        private val htmlHttpImageGetter = HtmlCoilImageGetter(binding.root.context, binding.contentTextView, mFragment)
 
         override fun onBind(position: Int) {
             val p = mPostList.getOrNull(position) ?: return
@@ -174,6 +173,7 @@ class ArticleAdapter(
 
             with(binding) {
                 try {
+                    htmlHttpImageGetter.cancelJobs()
                     authorTextView.text = p.author
                     dateTextView.text = getDateDiff(p.date)
                     postAvatar.setOnClickListener { _ ->
@@ -327,7 +327,7 @@ class ArticleAdapter(
         private val binding: ItemReplyViewBinding
     ) : BaseViewHolder(binding.root), View.OnClickListener {
         private var post: Post? = null
-        private val htmlHttpImageGetter: Html.ImageGetter by lazy {
+        private val htmlHttpImageGetter by lazy {
             HtmlCoilImageGetter(binding.root.context, binding.replyContentTextView, mFragment)
         }
 
@@ -344,6 +344,7 @@ class ArticleAdapter(
 
                 with(binding) {
                     try {
+                        htmlHttpImageGetter.cancelJobs()
                         if (isLoggedIn && username.isNotEmpty() && p.author == username) {
                             replyCard.strokeColor = ContextCompat.getColor(root.context, R.color.orange)
                             replyCard.strokeWidth = dp2px(root.context, 1f).toInt()

@@ -22,7 +22,11 @@ object LCGImageLoaderFactory : ImageLoaderFactory {
     private fun buildClient(): OkHttpClient {
         val headerInterceptor = Interceptor { chain ->
             val original = chain.request()
-            if (original.url.host.contains("attach")) {
+            val host = original.url.host.lowercase()
+            val isLcgHost = host == "52pojie.cn" || host.endsWith(".52pojie.cn")
+            // 自有域（www/static/avatar/attach/down 等）携带登录 Cookie 与论坛 Referer；
+            // 第三方图床不注入 Cookie / Referer，避免外站防盗链拦截。
+            if (isLcgHost) {
                 val cookieHeader = getCookiesFor(original.url.toString()).toHeaderString()
                 val newRequest = original.newBuilder()
                     .header("Referer", "https://www.52pojie.cn/")
