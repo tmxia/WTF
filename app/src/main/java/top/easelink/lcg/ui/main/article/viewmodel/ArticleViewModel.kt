@@ -179,16 +179,16 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         val linkRegexStr = """https?://(?:pan\.baidu\.com/s/|pan\.quark\.cn/s/|www\.aliyundrive\.com/s/|aliyundrive\.com/s/|cloud\.189\.cn/t/|pan\.xunlei\.com/s/|(?:[a-zA-Z0-9.]{0,20})lanzou[a-z]{1}\.com/)[^\s<>"']+"""
         val linkRegex = Regex(linkRegexStr)
         
-        // 1. 提取网页中所有的超链接（支持 <a href="隐藏链接">蓝奏下载</a> 形式）
+        
         val hrefLinks = doc.select("a[href]").mapNotNull { element ->
             val href = element.attr("href").trim()
             if (linkRegex.containsMatchIn(href)) href else null
         }
         
-        // 2. 提取纯文本中的链接（支持没有超链接的纯文本）
+        
         val textLinks = linkRegex.findAll(plainText).map { it.value }.toList()
         
-        // 3. 合并并去重
+        
         val allLinks = (hrefLinks + textLinks).distinct()
         
         val codeRegex = Regex("""(?:提取码|密码|访问码|口令)[\s:：]*([a-zA-Z0-9]{4})""")
@@ -263,11 +263,11 @@ fun checkIsFavorited() {
                     timestamp = System.currentTimeMillis()
                 )
                 
-                // 核心修复：先存本地，瞬间亮起红心，彻底告别网络延迟导致的 UI 不更新！
+                
                 val localRes = ArticlesLocalDataSource.addArticleToFavorite(articleEntity)
                 safeUpdate(isFavorited, true)
                 
-                // 随后在后台默默进行网络同步
+                
                 if (AppConfig.syncFavorites && UserDataRepo.isLoggedIn) {
                     val threadId = extractThreadId(mUrl)
                     if (threadId != null && mFormHash != null) {

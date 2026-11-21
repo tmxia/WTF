@@ -43,9 +43,9 @@ object LCGSearchService {
 
                 val fidList = fid?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
                 if (fidList.isEmpty()) {
-                    // no srhfid
+                    
                 } else {
-                    // 核心修复：Discuz 多选板块应使用逗号分隔，而不是数组下标格式
+                    
                     put("srhfid", fidList.joinToString(","))
                 }
 
@@ -55,7 +55,7 @@ object LCGSearchService {
                 put("searchsubmit", "true")
             }
 
-            // 核心修复：允许触发 WAF 验证弹窗，否则遇到验证会直接阻断
+            
             val response = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = true)
 
             Timber.tag("[SearchProbe]").d("HTTP 响应码: ${response.statusCode()}")
