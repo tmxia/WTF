@@ -132,6 +132,18 @@ fun DiscoverScreenCompose(
                 items(rankModels, key = { it.url }) { rank ->
                     RankItemCard(rank, onRankClick, onRankLongClick)
                 }
+                if (rankModels.isEmpty() && !isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("暂无热榜，点击右上角刷新", color = Color.Gray, fontSize = 13.sp)
+                        }
+                    }
+                }
             }
         }
     }
