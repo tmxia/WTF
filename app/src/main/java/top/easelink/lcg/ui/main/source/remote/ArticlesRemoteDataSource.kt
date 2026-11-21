@@ -356,7 +356,8 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                                 if (name.isNotEmpty() && threadUrl.isNotEmpty()) {
                                     return@mapNotNull ForumThread(name, threadUrl)
                                 }
-                            } catch (_: Exception) { }
+                            } catch (_: Exception) {
+                                }
                             null
                         }
                 }

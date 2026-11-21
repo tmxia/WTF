@@ -89,7 +89,10 @@ class MeFragment : TopFragment(), ControllableFragment {
 
         if (SystemClock.elapsedRealtime() - lastFetchInfoTime > MINIMUM_REQUEST_INTERVAL) {
             lastFetchInfoTime = SystemClock.elapsedRealtime()
-            try { viewModel.fetchUserInfoDirect() } catch (e: Exception) {}
+            try {
+                viewModel.fetchUserInfoDirect()
+            } catch (e: Exception) {
+                }
         }
 
         AccountManager.isLoggedIn.observe(viewLifecycleOwner) {

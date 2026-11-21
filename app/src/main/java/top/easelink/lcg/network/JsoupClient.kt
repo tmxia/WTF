@@ -217,7 +217,11 @@ object JsoupClient : ApiRequest {
             if (formHash.isNullOrEmpty()) formHash = extractFormHash(doc)
             if (System.currentTimeMillis() - lastTime > CHECK_INTERVAL) {
                 lastTime = System.currentTimeMillis()
-                try { checkLoginState(doc); checkMessages(doc) } catch (e: Exception) { Timber.e(e) }
+                try {
+                    checkLoginState(doc); checkMessages(doc)
+                } catch (e: Exception) {
+                    Timber.e(e)
+                }
             }
         }
     }
