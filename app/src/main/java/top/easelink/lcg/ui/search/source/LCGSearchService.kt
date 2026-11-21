@@ -12,58 +12,74 @@ import top.easelink.lcg.utils.showMessage
 import java.net.SocketTimeoutException
 
 object LCGSearchService {
-    private const val MIN_REQUEST_INTERVAL = 1000L
-    private var lastRequestTime: Long = 0L
+    private const val MAX_RETRY = 3
 
     private var mNextPageUrl: String? = null
     private var mTotalResults: String? = null
 
-    fun doSearchWith(keyword: String, fid: String? = null, orderby: String? = null): LCGSearchResults? {
+    private val allowedOrderby = setOf("dateline", "lastpost", "replies", "views")
+
+    fun doSearchWith(keywordRaw: String, fid: String? = null, orderby: String? = null): LCGSearchResults? {
         mNextPageUrl = null
         mTotalResults = null
+
+        val keyword = SearchAntiDefense.normalizeKeyword(keywordRaw)
         if (keyword.isBlank()) return null
 
-        if (!canSendRequest()) {
-            top.easelink.lcg.utils.showMessage("搜索太频繁，请稍后再试")
+        if (SearchAntiDefense.isFrozen()) {
+            showMessage("搜索暂时受限，请稍后再试")
             return null
         }
 
-        try {
-            val url = "${WebsiteConstant.SERVER_BASE_URL}search.php?searchsubmit=yes"
-            val form = ArrayMap<String, String>().apply {
-                put("formhash", JsoupClient.formHash ?: "")
-                put("mod", "forum")
-                put("srchtype", "title")
+        // 同关键词 + 板块 + 排序命中缓存，直接复用，不再发起请求
+        val key = SearchAntiDefense.cacheKey(keyword, fid, orderby)
+        SearchAntiDefense.getCached(key)?.let {
+            Timber.tag("[SearchProbe]").d("命中搜索缓存: $keyword, 条数=${it.searchResultList.size}")
+            return it
+        }
 
-                val fidList = fid?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
-                if (fidList.isEmpty()) {
-                } else {
-                    put("srhfid", fidList.joinToString(","))
+        if (!SearchAntiDefense.acquireSlot()) {
+            showMessage("搜索太频繁，请稍后再试")
+            return null
+        }
+
+        val url = "${WebsiteConstant.SERVER_BASE_URL}search.php?searchsubmit=yes"
+        val form = buildForm(keyword, fid, orderby)
+
+        var lastError: Exception? = null
+        for (attempt in 0..MAX_RETRY) {
+            try {
+                val response = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = true)
+                val code = response.statusCode()
+                Timber.tag("[SearchProbe]").d("HTTP 响应码: $code (attempt=$attempt)")
+
+                // 风控状态码：退避重试，超限后冻结一段时间
+                if (SearchAntiDefense.isBlockedHttpCode(code)) {
+                    if (attempt < MAX_RETRY) {
+                        SearchAntiDefense.backoffSleep(attempt)
+                        continue
+                    }
+                    SearchAntiDefense.freeze()
+                    throw Exception("请求被站点风控拦截，请稍后再试")
+                }
+                if (code !in 200..299) {
+                    throw Exception("服务器拒绝请求 (HTTP $code)，请尝试切换板块或稍后再试")
                 }
 
-                if (!orderby.isNullOrBlank()) put("orderby", orderby)
-                put("srhlocality", "forum::index")
-                put("srchtxt", keyword)
-                put("searchsubmit", "true")
-            }
-
-            val response = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = true)
-
-            Timber.tag("[SearchProbe]").d("HTTP 响应码: ${response.statusCode()}")
-            if (response.statusCode() !in 200..299) {
-                throw Exception("服务器拒绝请求 (HTTP ${response.statusCode()})，请尝试切换板块或稍后再试")
-            }
-            if (response.statusCode() in 200..299) {
                 val doc = response.parse()
-                Timber.tag("[SearchProbe]").d("返回 HTML 前 200 字: ${doc.html().take(200).replace("\n", " ")}")
-
-                // 核心修复：检查服务器返回的错误提示并抛给上层
-                val errorNode = doc.selectFirst(".alert_error, .alert_info, .alert_msg")
-                if (errorNode != null) {
-                    val errorText = errorNode.text().trim()
-                    if (errorText.isNotBlank()) {
-                        throw Exception(errorText)
+                if (SearchAntiDefense.detectWaf(doc)) {
+                    if (attempt < MAX_RETRY) {
+                        SearchAntiDefense.backoffSleep(attempt)
+                        continue
                     }
+                    SearchAntiDefense.freeze()
+                    throw Exception("触发安全风控，请完成验证后再搜索")
+                }
+
+                // 服务器返回的业务错误提示（非风控），不重试，直接抛给上层
+                val errorText = doc.selectFirst(".alert_error, .alert_info, .alert_msg")?.text()?.trim().orEmpty()
+                if (errorText.isNotBlank()) {
+                    throw Exception(errorText)
                 }
 
                 val result = parseSearchResults(doc)
@@ -73,19 +89,34 @@ object LCGSearchService {
                 } catch (e: Exception) {
                     Timber.w(e)
                 }
+
+                SearchAntiDefense.putCached(key, result)
                 return result
+            } catch (e: Exception) {
+                lastError = e
+                val retryable = e is SocketTimeoutException ||
+                    e.message?.contains("风控") == true ||
+                    e.message?.contains("拦截") == true ||
+                    e.message?.contains("超时") == true
+                if (retryable && attempt < MAX_RETRY) {
+                    Timber.tag("SearchDebug").w(e, "搜索可重试异常，退避后重试 (attempt=$attempt)")
+                    SearchAntiDefense.backoffSleep(attempt)
+                    continue
+                }
+                throw e
             }
-        } catch (e: Exception) {
-            Timber.tag("SearchDebug").e(e, "搜索异常: ${e.message}")
-            throw e
         }
-        return emptyResult()
+        throw lastError ?: Exception("搜索失败，请稍后再试")
     }
 
     fun doSearchNextPage(): LCGSearchResults {
-        if (mNextPageUrl.isNullOrEmpty()) {
+        if (mNextPageUrl.isNullOrEmpty()) return emptyResult()
+        if (SearchAntiDefense.isFrozen()) {
+            showMessage("搜索暂时受限，请稍后再试")
             return emptyResult()
         }
+        // 翻页随机人型间隔，避免连续翻页触发频控
+        SearchAntiDefense.nextPageSleep()
         try {
             return parseSearchResults(JsoupClient.sendGetRequestWithQuery(mNextPageUrl!!))
         } catch (e: SocketTimeoutException) {
@@ -97,16 +128,35 @@ object LCGSearchService {
         return emptyResult()
     }
 
+    private fun buildForm(keyword: String, fid: String?, orderby: String?): ArrayMap<String, String> {
+        val safeFid = fid?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.matches(Regex("\\d+")) }
+            ?.joinToString(",")
+        val safeOrderby = orderby?.takeIf { it in allowedOrderby }
+
+        return ArrayMap<String, String>().apply {
+            put("formhash", JsoupClient.formHash ?: "")
+            put("mod", "forum")
+            put("srchtype", "title")
+            if (!safeFid.isNullOrEmpty()) put("srhfid", safeFid)
+            if (!safeOrderby.isNullOrBlank()) put("orderby", safeOrderby)
+            put("srhlocality", "forum::index")
+            put("srchtxt", keyword)
+            put("searchsubmit", "true")
+        }
+    }
+
     private fun parseSearchResults(doc: Document): LCGSearchResults {
-        val results: List<LCGSearchResultItem> =
+        val results: List<LCGSearchResultItem> = try {
             doc.getElementsByClass("pbw").mapNotNull {
                 try {
                     val spans = it.getElementsByTag("span")
                     val aNode = it.selectFirst("a")
                     val pNode = it.selectFirst("p.xg1")
 
-                    if (aNode != null && pNode != null && spans.isNotEmpty() && spans.size == 3) {
-                        return@mapNotNull LCGSearchResultItem(
+                    if (aNode != null && pNode != null && spans.size >= 3) {
+                        LCGSearchResultItem(
                             title = aNode.html(),
                             url = aNode.attr("href"),
                             replyView = pNode.text(),
@@ -115,12 +165,18 @@ object LCGSearchService {
                             date = spans[0].text(),
                             forum = spans[2].text()
                         )
+                    } else {
+                        null
                     }
                 } catch (e: Exception) {
                     Timber.e(e)
+                    null
                 }
-                null
             }
+        } catch (e: Exception) {
+            Timber.tag("SearchDebug").e(e, "搜索结果解析异常，返回已提取部分")
+            emptyList()
+        }
         return LCGSearchResults(results).also {
             mNextPageUrl = try {
                 doc.selectFirst("a.nxt")?.attr("href")
@@ -129,13 +185,6 @@ object LCGSearchService {
                 null
             }
         }
-    }
-
-    private fun canSendRequest(): Boolean = if (System.currentTimeMillis() - lastRequestTime < MIN_REQUEST_INTERVAL) {
-        false
-    } else {
-        lastRequestTime = System.currentTimeMillis()
-        true
     }
 
     private fun emptyResult(): LCGSearchResults {

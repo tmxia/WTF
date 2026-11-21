@@ -38,7 +38,14 @@ object JsoupClient : ApiRequest {
     private val CHECK_INTERVAL = if (BuildConfig.DEBUG) 60 * 1000 else 30 * 1000
     private const val TIME_OUT_LIMIT = 30 * 1000
     private const val BASE_URL = SERVER_BASE_URL
-    private const val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    // 进程内固定一套 UA，会话期间不随请求切换，避免指纹抖动被风控识别
+    private val UA_POOL = listOf(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edg/120.0.0.0 Safari/537.36"
+    )
+    private val sessionUserAgent: String by lazy { UA_POOL.random() }
 
     private val sessionExpiredFiredOnce = AtomicBoolean(false)
     private const val MIN_INTERVAL_MS = 300L
@@ -181,14 +188,16 @@ object JsoupClient : ApiRequest {
             lastRequestAt.set(System.currentTimeMillis())
         }
 
+        val isLcgHost = url.contains(WebsiteConstant.SERVER_HOST)
         return Jsoup.connect(url)
             .timeout(TIME_OUT_LIMIT)
             .ignoreHttpErrors(true)
             .cookies(getCookiesFor(url))
-            .userAgent(DESKTOP_UA)
+            .userAgent(sessionUserAgent)
             .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
             .header("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
             .header("Host", WebsiteConstant.SERVER_HOST)
+            .apply { if (isLcgHost) header("Referer", WebsiteConstant.SERVER_BASE_URL) }
             .header("Upgrade-Insecure-Requests", "1")
             .header("sec-ch-ua-mobile", "?0")
             .header("sec-ch-ua-platform", "Windows")
