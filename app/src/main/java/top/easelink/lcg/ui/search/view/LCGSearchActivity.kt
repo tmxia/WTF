@@ -133,7 +133,7 @@ class LCGSearchActivity : TopActivity() {
     fun onMessageEvent(event: OpenSearchResultEvent) {
         when {
             threadRegex.containsMatchIn(event.url) ||
-                    event.url.startsWith("forum.php") -> {
+                event.url.startsWith("forum.php") -> {
                 if (AppConfig.searchResultShowInWebView) {
                     WebViewActivity.startWebViewWith(SERVER_BASE_URL + event.url, this)
                 } else {
@@ -142,7 +142,7 @@ class LCGSearchActivity : TopActivity() {
             }
 
             event.url.startsWith("http") ||
-                    event.url.startsWith(SERVER_BASE_URL) -> {
+                event.url.startsWith(SERVER_BASE_URL) -> {
                 WebViewActivity.startWebViewWith(event.url, this)
             }
 

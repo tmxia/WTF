@@ -24,7 +24,7 @@ import kotlin.coroutines.resume
 
 class SignInWorker(context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
-        override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result {
         Timber.d("【任务层】WorkManager 唤醒自动签到任务")
         if (!UserDataRepo.isLoggedIn) {
             Timber.w("【任务层】签到跳过: 用户未登录")

@@ -79,27 +79,27 @@ class ConversationListAdapter(
 
     inner class ArticleViewHolder internal constructor(private val binding: ItemConversationViewBinding) :
         BaseViewHolder(binding.root) {
-        override fun onBind(position: Int) {
-            val conversation = mConversations[position]
-            binding.apply {
-                dateTime.text = conversation.lastMessageDateTime
-                conversation.avatar?.let {
-                    conversationUserAvatar.load(it) {
-                        transformations(RoundedCornersTransformation(2.dpToPx(root.context)))
-                        error(R.drawable.ic_noavatar_middle_gray)
+            override fun onBind(position: Int) {
+                val conversation = mConversations[position]
+                binding.apply {
+                    dateTime.text = conversation.lastMessageDateTime
+                    conversation.avatar?.let {
+                        conversationUserAvatar.load(it) {
+                            transformations(RoundedCornersTransformation(2.dpToPx(root.context)))
+                            error(R.drawable.ic_noavatar_middle_gray)
+                        }
                     }
-                }
-                lastMessage.text = conversation.lastMessage
-                username.text = conversation.username
-                conversationListContainer.setOnClickListener {
-                    WebViewActivity.startWebViewWith(
-                        SERVER_BASE_URL + conversation.replyUrl,
-                        root.context
-                    )
+                    lastMessage.text = conversation.lastMessage
+                    username.text = conversation.username
+                    conversationListContainer.setOnClickListener {
+                        WebViewActivity.startWebViewWith(
+                            SERVER_BASE_URL + conversation.replyUrl,
+                            root.context
+                        )
+                    }
                 }
             }
         }
-    }
 
     inner class EmptyViewHolder(view: View) : BaseViewHolder(view) {
         override fun onBind(position: Int) {}
@@ -107,11 +107,11 @@ class ConversationListAdapter(
 
     inner class LoadMoreViewHolder internal constructor(private val binding: ItemLoadMoreViewBinding) :
         BaseViewHolder(binding.root) {
-        override fun onBind(position: Int) {
-            // TODO add fetch more in the future
-            binding.loading.visibility = View.GONE
+            override fun onBind(position: Int) {
+                // TODO add fetch more in the future
+                binding.loading.visibility = View.GONE
+            }
         }
-    }
 
     companion object {
         private const val VIEW_TYPE_EMPTY = 0

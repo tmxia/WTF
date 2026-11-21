@@ -112,7 +112,7 @@ class HtmlCoilImageGetter(
 
     private inner class BitmapDrawablePlaceholder :
         BitmapDrawable(context.resources, Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565)) {
-            private var drawable: Drawable? = null
+        private var drawable: Drawable? = null
 
         override fun draw(canvas: Canvas) {
             drawable?.draw(canvas)

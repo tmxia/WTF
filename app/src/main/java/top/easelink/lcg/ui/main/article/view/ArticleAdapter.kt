@@ -94,7 +94,7 @@ class ArticleAdapter(
         else -> mPostList.size
     }
 
-        override fun getItemViewType(position: Int) = when {
+    override fun getItemViewType(position: Int) = when {
         mPostList.isEmpty() -> VIEW_TYPE_EMPTY
         position == mPostList.size -> VIEW_TYPE_LOAD_MORE
         isFiltering -> VIEW_TYPE_REPLY
@@ -431,9 +431,9 @@ class ArticleAdapter(
                             } else {
                                 replyBtnThumbUp.visibility = View.VISIBLE
                                 replyBtnThumbUp.setOnClickListener(this@ReplyViewHolder)
-                            val isLikedColor = ContextCompat.getColor(root.context, R.color.colorAccent)
-                            val normalColor = ContextCompat.getColor(root.context, R.color.gray)
-                            replyBtnThumbUp.setColorFilter(if (p.isLiked) isLikedColor else normalColor)
+                                val isLikedColor = ContextCompat.getColor(root.context, R.color.colorAccent)
+                                val normalColor = ContextCompat.getColor(root.context, R.color.gray)
+                                replyBtnThumbUp.setColorFilter(if (p.isLiked) isLikedColor else normalColor)
                             }
                             replyBtnCopy.setOnClickListener(this@ReplyViewHolder)
                         } else {
@@ -488,11 +488,11 @@ class ArticleAdapter(
 
     inner class LoadMoreViewHolder internal constructor(private val binding: ItemLoadMoreViewBinding) :
         BaseViewHolder(binding.root) {
-        override fun onBind(position: Int) {
-            binding.root.visibility = View.VISIBLE
-            mListener.fetchArticlePost(ArticleAdapterListener.FETCH_POST_MORE, null)
+            override fun onBind(position: Int) {
+                binding.root.visibility = View.VISIBLE
+                mListener.fetchArticlePost(ArticleAdapterListener.FETCH_POST_MORE, null)
+            }
         }
-    }
 
     override fun onViewRecycled(holder: BaseViewHolder) {
         super.onViewRecycled(holder)

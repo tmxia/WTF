@@ -330,23 +330,23 @@ fun ArticleScreen(
                                     })
 
                                     val inputCard = com.google.android.material.card.MaterialCardView(context).apply {
-                                            radius = 8f * density
-                                            setCardBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
-                                            strokeWidth = (1 * density).toInt()
-                                            strokeColor = android.graphics.Color.parseColor("#E0E0E0")
-                                            elevation = 0f
-                                        }
-                                        val input = android.widget.EditText(context).apply {
-                                            setText(customSpamKeywords.joinToString(","))
-                                            setSelection(text.length)
-                                            setBackgroundColor(android.graphics.Color.TRANSPARENT)
-                                            hint = "输入过滤词（多个用逗号隔开）"
-                                            inputType = android.text.InputType.TYPE_CLASS_TEXT
-                                            val pad = (12 * density).toInt()
-                                            setPadding(pad, pad, pad, pad)
-                                        }
-                                        inputCard.addView(input)
-                                        layout.addView(inputCard)
+                                        radius = 8f * density
+                                        setCardBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
+                                        strokeWidth = (1 * density).toInt()
+                                        strokeColor = android.graphics.Color.parseColor("#E0E0E0")
+                                        elevation = 0f
+                                    }
+                                    val input = android.widget.EditText(context).apply {
+                                        setText(customSpamKeywords.joinToString(","))
+                                        setSelection(text.length)
+                                        setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                        hint = "输入过滤词（多个用逗号隔开）"
+                                        inputType = android.text.InputType.TYPE_CLASS_TEXT
+                                        val pad = (12 * density).toInt()
+                                        setPadding(pad, pad, pad, pad)
+                                    }
+                                    inputCard.addView(input)
+                                    layout.addView(inputCard)
 
                                     val btnLayout = android.widget.LinearLayout(context).apply {
                                         orientation = android.widget.LinearLayout.HORIZONTAL
@@ -518,43 +518,43 @@ fun ArticleScreen(
             )
         },
         floatingActionButton = {
-                if (searchKeyword.isNotBlank() || filterSpam || showOpOnly) {
-                    return@Scaffold
+            if (searchKeyword.isNotBlank() || filterSpam || showOpOnly) {
+                return@Scaffold
+            }
+
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (showBackToTop && searchKeyword.isBlank() && !filterSpam && !showOpOnly) {
+                    FloatingActionButton(
+                        onClick = { recyclerView?.smoothScrollToPosition(0) },
+                        containerColor = Color.White,
+                        contentColor = Color.Gray,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "回到顶部", modifier = Modifier.size(20.dp))
+                    }
                 }
 
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    if (showBackToTop && searchKeyword.isBlank() && !filterSpam && !showOpOnly) {
-                        FloatingActionButton(
-                            onClick = { recyclerView?.smoothScrollToPosition(0) },
-                            containerColor = Color.White,
-                            contentColor = Color.Gray,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "回到顶部", modifier = Modifier.size(20.dp))
-                        }
-                    }
-
-                    val replyUrl = posts.firstOrNull()?.replyUrl
-                    if (!isLoading && replyUrl != null && shouldDisplayPosts) {
-                        FloatingActionButton(
-                            onClick = {
-                                if (fragment.isAdded) {
-                                    CommentArticleDialog.newInstance(replyUrl)
-                                        .show(fragment.parentFragmentManager, "CommentArticleDialog")
-                                }
-                            },
-                            containerColor = Color(0xFF2C2C2C),
-                            contentColor = Color.White,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(Icons.Filled.Edit, contentDescription = "Reply", modifier = Modifier.size(18.dp))
-                        }
+                val replyUrl = posts.firstOrNull()?.replyUrl
+                if (!isLoading && replyUrl != null && shouldDisplayPosts) {
+                    FloatingActionButton(
+                        onClick = {
+                            if (fragment.isAdded) {
+                                CommentArticleDialog.newInstance(replyUrl)
+                                    .show(fragment.parentFragmentManager, "CommentArticleDialog")
+                            }
+                        },
+                        containerColor = Color(0xFF2C2C2C),
+                        contentColor = Color.White,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(Icons.Filled.Edit, contentDescription = "Reply", modifier = Modifier.size(18.dp))
                     }
                 }
             }
+        }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -576,24 +576,24 @@ fun ArticleScreen(
                 }
             } else if (shouldDisplayPosts) {
                 ComposeRecyclerViewBridge(
-                            modifier = Modifier.fillMaxSize(),
-                            viewModel = viewModel,
-                            fragment = fragment,
-                            isReverse = isReverse,
-                            showOpOnly = showOpOnly,
-                            filterSpam = filterSpam,
-                            customSpamKeywords = customSpamKeywords,
-                            searchKeyword = searchKeyword,
-                            onScrollStateChanged = { show -> showBackToTop = show },
-                            onPostClick = { post ->
-                                Timber.d("【跳转】卡片被点击，开始清空搜索条件并跳转")
-                                searchKeyword = ""
-                                filterSpam = false
-                                showOpOnly = false
-                                pendingScrollPost = post
-                            },
-                            onReady = { rv -> recyclerView = rv }
-                        )
+                    modifier = Modifier.fillMaxSize(),
+                    viewModel = viewModel,
+                    fragment = fragment,
+                    isReverse = isReverse,
+                    showOpOnly = showOpOnly,
+                    filterSpam = filterSpam,
+                    customSpamKeywords = customSpamKeywords,
+                    searchKeyword = searchKeyword,
+                    onScrollStateChanged = { show -> showBackToTop = show },
+                    onPostClick = { post ->
+                        Timber.d("【跳转】卡片被点击，开始清空搜索条件并跳转")
+                        searchKeyword = ""
+                        filterSpam = false
+                        showOpOnly = false
+                        pendingScrollPost = post
+                    },
+                    onReady = { rv -> recyclerView = rv }
+                )
             }
         }
     }

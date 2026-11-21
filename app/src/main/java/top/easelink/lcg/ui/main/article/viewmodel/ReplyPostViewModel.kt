@@ -49,8 +49,8 @@ class ReplyPostViewModel : ViewModel() {
         JsoupClient.sendGetRequestWithUrl(CHECK_RULE_URL)
 
         val replyUrl = "${SERVER_BASE_URL}forum.php?mod=post&infloat=yes&action=reply" +
-                "&fid=${queryMap["fid"]}&extra=${queryMap["extra"]}&tid=${queryMap["tid"]}" +
-                "&replysubmit=yes&inajax=1"
+            "&fid=${queryMap["fid"]}&extra=${queryMap["extra"]}&tid=${queryMap["tid"]}" +
+            "&replysubmit=yes&inajax=1"
 
         val response = JsoupClient.sendPostRequestWithUrl(
             replyUrl,

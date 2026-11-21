@@ -62,14 +62,14 @@ fun ForumArticlesScreen(
 
     val pagerState = rememberPagerState(pageCount = { displayTabs.size })
 
-        LaunchedEffect(Unit) {
-            onTabSelected("")
-        }
+    LaunchedEffect(Unit) {
+        onTabSelected("")
+    }
 
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(pagerState.currentPage) {
-            if (pagerState.currentPage > 0) {
+        if (pagerState.currentPage > 0) {
             val index = pagerState.currentPage - 1
             val url = if (index < tabs.filter { it.threadName != "全部" }.size) {
                 tabs.filter { it.threadName != "全部" }[index].threadUrl
@@ -141,10 +141,10 @@ fun ForumArticlesScreen(
             ) { page ->
 
                 val pageListState = rememberLazyListState()
-                    LaunchedEffect(pageListState) {
-                        snapshotFlow { pageListState.firstVisibleItemIndex == 0 && pageListState.firstVisibleItemScrollOffset == 0 }
-                            .collect { isAtTop -> onScrollPositionChanged(isAtTop) }
-                    }
+                LaunchedEffect(pageListState) {
+                    snapshotFlow { pageListState.firstVisibleItemIndex == 0 && pageListState.firstVisibleItemScrollOffset == 0 }
+                        .collect { isAtTop -> onScrollPositionChanged(isAtTop) }
+                }
 
                 LaunchedEffect(pageListState, articles.size, isLoading) {
                     snapshotFlow { pageListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
@@ -219,7 +219,7 @@ fun ArticleCard(
     onLongClick: (String) -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-        Card(
+    Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),

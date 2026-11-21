@@ -133,7 +133,7 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
                                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                                 modifier = Modifier.fillMaxWidth().clickable {
                                     val fragment = top.easelink.lcg.ui.main.article.view.ArticleFragment.newInstance(article.url, article.title)
-                                            (activity as? top.easelink.lcg.ui.main.MainActivity)?.showFragment(fragment)
+                                    (activity as? top.easelink.lcg.ui.main.MainActivity)?.showFragment(fragment)
                                 }
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {

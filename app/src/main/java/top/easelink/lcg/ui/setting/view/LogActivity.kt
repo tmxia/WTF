@@ -103,7 +103,7 @@ class LogActivity : AppCompatActivity() {
 
                 2 ->
                     it.tag.contains("业务层") || it.tag.contains("UI层") || it.tag.contains("Adapter") || it.tag.contains("状态层") || it.tag.contains("任务层") ||
-                    it.message.contains("【业务层】") || it.message.contains("【UI层】") || it.message.contains("【Adapter】") || it.message.contains("【状态层】") || it.message.contains("【任务层】")
+                        it.message.contains("【业务层】") || it.message.contains("【UI层】") || it.message.contains("【Adapter】") || it.message.contains("【状态层】") || it.message.contains("【任务层】")
 
                 3 ->
                     it.level >= Log.WARN

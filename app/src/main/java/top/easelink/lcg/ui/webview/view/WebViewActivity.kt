@@ -182,8 +182,8 @@ class WebViewActivity : AppCompatActivity() {
     private fun isLoginSuccess(doc: org.jsoup.nodes.Document, url: String): Boolean {
         val hasAvatar = doc.selectFirst("div.avt") != null
         val isLoginRequiredPage = doc.getElementById("messagelogin") != null ||
-                doc.getElementById("messagetext")?.text()
-                    ?.contains("您需要先登录才能继续") == true
+            doc.getElementById("messagetext")?.text()
+                ?.contains("您需要先登录才能继续") == true
         return hasAvatar && !isLoginRequiredPage
     }
 

@@ -12,9 +12,9 @@ import top.easelink.framework.topbase.ControllableFragment
  *
  */
 fun addFragmentInActivity(fragmentManager: FragmentManager,
-                          fragment: Fragment,
-                          frameId: Int,
-                          addToBack: Boolean = true) {
+    fragment: Fragment,
+    frameId: Int,
+    addToBack: Boolean = true) {
     var tag = fragment.javaClass.simpleName
     fragmentManager
         .beginTransaction()

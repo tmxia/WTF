@@ -32,12 +32,12 @@ class UserInfo(
 
     override fun equals(other: Any?): Boolean {
         return (other is UserInfo
-                && userName == other.userName
-                && avatarUrl == other.avatarUrl
-                && groupInfo == other.groupInfo
-                && wuaiCoin == other.wuaiCoin
-                && credit == other.credit
-                && signInStateUrl == other.signInStateUrl)
+            && userName == other.userName
+            && avatarUrl == other.avatarUrl
+            && groupInfo == other.groupInfo
+            && wuaiCoin == other.wuaiCoin
+            && credit == other.credit
+            && signInStateUrl == other.signInStateUrl)
     }
 
     override fun hashCode(): Int {

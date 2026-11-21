@@ -95,8 +95,8 @@ object QuickReplyHelper {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
             setOnClickListener {
-            showInputDialog(context, -1, "") { renderQuickReplies(context, container, onPhraseClicked) }
-        }
+                showInputDialog(context, -1, "") { renderQuickReplies(context, container, onPhraseClicked) }
+            }
         }
         container.addView(addBtn)
     }

@@ -20,7 +20,7 @@ import java.util.Collections
 
 class FavoriteArticlesAdapter(private var favoriteArticlesViewModel: FavoriteArticlesViewModel) :
     RecyclerView.Adapter<BaseViewHolder>(), ItemTouchHelperCallback.onMoveAndSwipedListener {
-        private val mArticleEntities: MutableList<ArticleEntity> = mutableListOf()
+    private val mArticleEntities: MutableList<ArticleEntity> = mutableListOf()
 
     override fun getItemCount(): Int {
         return if (mArticleEntities.isEmpty()) {
@@ -79,7 +79,7 @@ class FavoriteArticlesAdapter(private var favoriteArticlesViewModel: FavoriteArt
 
     inner class ArticleViewHolder(private val binding: ItemFavoriteArticleViewV2Binding) :
         BaseViewHolder(binding.root) {
-            private fun onItemClick(url: String) {
+        private fun onItemClick(url: String) {
             EventBus.getDefault().post(OpenArticleEvent(url))
         }
 

@@ -146,12 +146,12 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
 
     private fun shouldShowBottomNavigation(fragment: Fragment): Boolean {
         return fragment is RecommendFragment
-                || fragment is SearchFragment
-                || fragment is DiscoverFragment
-                || fragment is MeFragment
-                || fragment is ForumArticlesFragment
-                || fragment is ForumNavigationFragment
-                || fragment is FavoriteArticlesFragment
+            || fragment is SearchFragment
+            || fragment is DiscoverFragment
+            || fragment is MeFragment
+            || fragment is ForumArticlesFragment
+            || fragment is ForumNavigationFragment
+            || fragment is FavoriteArticlesFragment
     }
 
     private fun restoreCurrentTabFragment() {

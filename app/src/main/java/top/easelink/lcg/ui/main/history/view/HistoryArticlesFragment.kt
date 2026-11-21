@@ -55,7 +55,7 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
             var historyList by remember { mutableStateOf<List<HistoryModel>>(emptyList()) }
             var isLoading by remember { mutableStateOf(true) }
 
-                        val scope = rememberCoroutineScope()
+            val scope = rememberCoroutineScope()
             LaunchedEffect(Unit) {
                 ArticlesDatabase.getInstance().articlesDao().getHistories().observe(viewLifecycleOwner) { list ->
                     historyList = list.map { HistoryModel(url = it.url, author = it.author, title = it.title, timeStamp = it.timestamp) }

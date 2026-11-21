@@ -82,7 +82,7 @@ object LCGSearchService {
         return emptyResult()
     }
 
-fun doSearchNextPage(): LCGSearchResults {
+    fun doSearchNextPage(): LCGSearchResults {
         if (mNextPageUrl.isNullOrEmpty()) {
             return emptyResult()
         }

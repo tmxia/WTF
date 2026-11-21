@@ -26,7 +26,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     val isLoading = MutableLiveData<Boolean>()
     val isLoadingMore = MutableLiveData<Boolean>()
 
-        private val prefs = try {
+    private val prefs = try {
         LCGApp.context.getSharedPreferences("wtf_search_prefs", Context.MODE_PRIVATE)
     } catch (e: Exception) {
         Timber.tag("[SearchProbe]").e(e, "获取 SharedPreferences 崩溃，Context 异常！")

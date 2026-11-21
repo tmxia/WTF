@@ -60,8 +60,8 @@ object ForumNetworkSource {
     private fun isValidForumUrl(href: String): Boolean {
         val isPureForum = href.matches(Regex("forum-\\d+-1\\.html")) || href.contains("forumdisplay&fid=")
         val isJunk = href.contains("newthread") || href.contains("viewthread") || href.contains("mod=post") ||
-                     href.contains("action=") || href.contains("guide") || href.contains("filter=") ||
-                     href.contains("view=") || href.contains("typeid=")
+            href.contains("action=") || href.contains("guide") || href.contains("filter=") ||
+            href.contains("view=") || href.contains("typeid=")
         return isPureForum && !isJunk
     }
 

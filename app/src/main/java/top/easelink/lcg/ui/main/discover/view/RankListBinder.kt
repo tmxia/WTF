@@ -42,7 +42,7 @@ class RankListVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseNavigati
     }
 
     private fun setUp(rankModel: RankListModel) {
-                binding.apply {
+        binding.apply {
             rankTips.text = rankModel.notice
             rankRecyclerView.apply {
                 layoutManager = LinearLayoutManager(context).apply {

@@ -87,29 +87,29 @@ class BaiduSearchResultAdapter(private var mListener: SearchAdapterListener) :
 
     inner class SearchResultViewHolder internal constructor(val view: View) :
         BaseViewHolder(view) {
-        override fun onBind(position: Int) {
-            val searchResult = mBaiduSearchResults[position]
-            view.apply {
-                findViewById<View>(R.id.item_search_result).setOnClickListener {
-                    EventBus.getDefault().post(OpenBaiduSearchResultEvent(searchResult))
+            override fun onBind(position: Int) {
+                val searchResult = mBaiduSearchResults[position]
+                view.apply {
+                    findViewById<View>(R.id.item_search_result).setOnClickListener {
+                        EventBus.getDefault().post(OpenBaiduSearchResultEvent(searchResult))
+                    }
+                    findViewById<TextView>(R.id.content_text_view).text = searchResult.contentAbstract
+                    findViewById<TextView>(R.id.title_text_view).text = searchResult.title
                 }
-                findViewById<TextView>(R.id.content_text_view).text = searchResult.contentAbstract
-                findViewById<TextView>(R.id.title_text_view).text = searchResult.title
             }
         }
-    }
 
     inner class EmptyViewHolder internal constructor(view: View) :
         BaseViewHolder(view) {
-        override fun onBind(position: Int) {}
-    }
+            override fun onBind(position: Int) {}
+        }
 
     inner class LoadMoreViewHolder internal constructor(view: View) :
         BaseViewHolder(view) {
-        override fun onBind(position: Int) {
-            mListener.doSearchQuery(FETCH_MORE)
+            override fun onBind(position: Int) {
+                mListener.doSearchQuery(FETCH_MORE)
+            }
         }
-    }
 
     companion object {
         private const val VIEW_TYPE_EMPTY = 0

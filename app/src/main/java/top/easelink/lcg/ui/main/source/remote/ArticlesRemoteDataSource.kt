@@ -510,7 +510,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             if (inner.isNotEmpty()) {
                 quote.html(
                     "<blockquote style=\"border-left:3px solid #ccc;" +
-                            "padding-left:8px;color:#888\">$inner</blockquote>"
+                        "padding-left:8px;color:#888\">$inner</blockquote>"
                 )
             }
         }
@@ -540,13 +540,13 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                 imgElement.attr("src", attr)
             }
 
-        for (bold in element.select("b, strong")) {
-            bold.unwrap()
-        }
+            for (bold in element.select("b, strong")) {
+                bold.unwrap()
+            }
 
-        for (heading in element.select("h1, h2, h3, h4, h5, h6")) {
-            heading.tagName("p")
-        }
+            for (heading in element.select("h1, h2, h3, h4, h5, h6")) {
+                heading.tagName("p")
+            }
         }
         return element
     }

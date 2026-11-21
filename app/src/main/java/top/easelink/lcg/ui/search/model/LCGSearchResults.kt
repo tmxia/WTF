@@ -16,5 +16,5 @@ data class LCGSearchResultItem(
     val forum: String
 ) {
     val fullUrl: String
-    get() = url.takeIf { it.startsWith("http") } ?: "https://www.52pojie.cn/$url"
+        get() = url.takeIf { it.startsWith("http") } ?: "https://www.52pojie.cn/$url"
 }

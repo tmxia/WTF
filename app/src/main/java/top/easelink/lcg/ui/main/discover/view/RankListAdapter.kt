@@ -78,7 +78,7 @@ class RankListAdapter : RecyclerView.Adapter<BaseViewHolder>() {
             }
             return context.getString(resource, num)
         }
-            }
+    }
 
     companion object {
         const val VIEW_TYPE_NORMAL = 1

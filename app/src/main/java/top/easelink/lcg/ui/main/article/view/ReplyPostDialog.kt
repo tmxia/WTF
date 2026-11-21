@@ -66,7 +66,7 @@ class ReplyPostDialog : DialogFragment() {
             binding.replyContent.setSelection(binding.replyContent.text?.length ?: 0)
         }
 
-binding.btnCancel.setOnClickListener { dismiss() }
+        binding.btnCancel.setOnClickListener { dismiss() }
 
         binding.replyTo.text = getString(R.string.reply_post_dialog_title, arguments?.getString(REPLY_POST_AUTHOR))
 

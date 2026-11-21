@@ -40,7 +40,7 @@ class ForumNavigationVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseN
     }
 
     private fun setUp(listModel: List<ForumNavigationModel>) {
-                binding.apply {
+        binding.apply {
             forumTips.setOnClickListener {
                 navigationGrid.smoothScrollToPosition(
                     (navigationGrid.layoutManager as LinearLayoutManager).findLastVisibleItemPosition() + 1

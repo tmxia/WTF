@@ -80,27 +80,27 @@ class NotificationsAdapter(
 
     inner class ArticleViewHolder internal constructor(private val binding: ItemNotificationViewBinding) :
         BaseViewHolder(binding.root) {
-        override fun onBind(position: Int) {
-            val notification = mNotifications[position]
-            binding.apply {
-                line.visibility = if (position == 0) View.GONE else View.VISIBLE
-                notificationTitle.apply {
-                    setHtml(
-                        notification.content, HtmlCoilImageGetter(
-                            root.context,
-                            this
+            override fun onBind(position: Int) {
+                val notification = mNotifications[position]
+                binding.apply {
+                    line.visibility = if (position == 0) View.GONE else View.VISIBLE
+                    notificationTitle.apply {
+                        setHtml(
+                            notification.content, HtmlCoilImageGetter(
+                                root.context,
+                                this
+                            )
                         )
-                    )
-                    linksClickable = false
-                }
-                dateTime.text = notification.dateTime
-                notificationAvatar.load(notification.avatar) {
-                    transformations(RoundedCornersTransformation(2.dpToPx(root.context)))
-                    placeholder(R.drawable.ic_noavatar_middle_gray)
+                        linksClickable = false
+                    }
+                    dateTime.text = notification.dateTime
+                    notificationAvatar.load(notification.avatar) {
+                        transformations(RoundedCornersTransformation(2.dpToPx(root.context)))
+                        placeholder(R.drawable.ic_noavatar_middle_gray)
+                    }
                 }
             }
         }
-    }
 
     inner class EmptyViewHolder(view: View) : BaseViewHolder(view) {
         override fun onBind(position: Int) {}
@@ -108,15 +108,15 @@ class NotificationsAdapter(
 
     inner class LoadMoreViewHolder internal constructor(private val binding: ItemLoadMoreViewBinding) :
         BaseViewHolder(binding.root) {
-        override fun onBind(position: Int) {
-            binding.loading.visibility = View.VISIBLE
-            notificationViewModel.fetchMoreNotifications {
-                binding.loading.post {
-                    binding.loading.visibility = View.GONE
+            override fun onBind(position: Int) {
+                binding.loading.visibility = View.VISIBLE
+                notificationViewModel.fetchMoreNotifications {
+                    binding.loading.post {
+                        binding.loading.visibility = View.GONE
+                    }
                 }
             }
         }
-    }
 
     companion object {
         private const val VIEW_TYPE_EMPTY = 0

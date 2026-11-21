@@ -28,8 +28,8 @@ object HotTopicCacheManager : ICacheManager {
         File(HOT_TOPIC_CACHE_FOLDER)
             .list { _, name ->
                 name.contains(rankType)
-                        && name.contains(dateType)
-                        && (System.currentTimeMillis() - name.getTimeStamp() <= TIME_INTERVAL)
+                    && name.contains(dateType)
+                    && (System.currentTimeMillis() - name.getTimeStamp() <= TIME_INTERVAL)
             }
             ?.firstOrNull()
             ?.let {
