@@ -10,7 +10,6 @@ import top.easelink.lcg.BuildConfig
 import top.easelink.lcg.account.UserDataRepo
 
 object ShiplyInitialization {
-
     fun init(context: Context) {
         val config = UpgradeConfig.Builder()
             .appId(BuildConfig.SHIPLY_APP_ID)
@@ -61,7 +60,6 @@ object ShiplyInitialization {
                 override fun e(p0: String?, p1: String?, p2: Throwable?) {
                     Timber.tag(p0 ?: "").e(p2, p1 ?: p2?.message ?: "")
                 }
-
             })
             .systemVersion(Build.VERSION.SDK_INT.toString())
             .build()

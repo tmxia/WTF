@@ -9,25 +9,22 @@ import coil.transform.RoundedCornersTransformation
 import top.easelink.framework.base.BaseViewHolder
 import top.easelink.framework.utils.dpToPx
 import top.easelink.lcg.R
+import top.easelink.lcg.databinding.ItemConversationViewBinding
+import top.easelink.lcg.databinding.ItemLoadMoreViewBinding
 import top.easelink.lcg.ui.main.message.viewmodel.ConversationListViewModel
 import top.easelink.lcg.ui.main.model.Conversation
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
-import top.easelink.lcg.databinding.ItemConversationViewBinding
-import top.easelink.lcg.databinding.ItemLoadMoreViewBinding
-
 
 class ConversationListAdapter(
     val mConversationVM: ConversationListViewModel
 ) : RecyclerView.Adapter<BaseViewHolder>() {
-
     private val mConversations: MutableList<Conversation> = mutableListOf()
 
     override fun getItemCount(): Int {
         return if (mConversations.isEmpty()) {
             1
         } else {
-            
             mConversations.size
         }
     }
@@ -97,7 +94,6 @@ class ConversationListAdapter(
                         SERVER_BASE_URL + conversation.replyUrl,
                         root.context
                     )
-
                 }
             }
         }
@@ -110,7 +106,7 @@ class ConversationListAdapter(
     inner class LoadMoreViewHolder internal constructor(private val binding: ItemLoadMoreViewBinding) :
         BaseViewHolder(binding.root) {
         override fun onBind(position: Int) {
-            //TODO add fetch more in the future
+            // TODO add fetch more in the future
             binding.loading.visibility = View.GONE
         }
     }

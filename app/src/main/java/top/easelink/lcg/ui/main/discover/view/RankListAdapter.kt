@@ -4,8 +4,8 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.recyclerview.widget.RecyclerView
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.base.BaseViewHolder
 import top.easelink.lcg.R
@@ -13,7 +13,6 @@ import top.easelink.lcg.databinding.ItemRankArticleViewBinding
 import top.easelink.lcg.ui.main.discover.model.RankModel
 import top.easelink.lcg.ui.main.discover.source.RankType
 import top.easelink.lcg.ui.main.model.OpenArticleEvent
-
 
 class RankListAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     private val mRankItems: MutableList<RankModel> = mutableListOf()
@@ -51,7 +50,7 @@ class RankListAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                 if (model.index in 1..3) {
                     index.visibility = View.VISIBLE
                     index.text = model.index.toString()
-                    
+
                     params.marginStart = (8 * num.context.resources.displayMetrics.density).toInt()
                 } else {
                     index.visibility = View.GONE
@@ -79,7 +78,6 @@ class RankListAdapter : RecyclerView.Adapter<BaseViewHolder>() {
             }
             return context.getString(resource, num)
         }
-
             }
 
     companion object {

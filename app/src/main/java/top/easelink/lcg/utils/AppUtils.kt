@@ -40,13 +40,7 @@ fun getScreenHeightDp(context: Context): Int {
     return (displayMetrics.heightPixels / displayMetrics.density).toInt()
 }
 
-
-
-
-
 fun getDeviceUserAgent(context: Context): String {
-    
-    
     return WebSettings.getDefaultUserAgent(context)
 }
 

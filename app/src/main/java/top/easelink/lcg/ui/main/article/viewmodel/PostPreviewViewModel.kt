@@ -11,7 +11,6 @@ import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource
 
 class PostPreviewViewModel : ViewModel() {
-
     private val _author = MutableLiveData<String>()
     private val _avatar = MutableLiveData<String>()
     private val _date = MutableLiveData<String>()

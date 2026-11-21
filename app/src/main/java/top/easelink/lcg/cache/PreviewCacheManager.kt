@@ -13,14 +13,11 @@ import timber.log.Timber
 import top.easelink.lcg.appinit.LCGApp
 import java.io.File
 
-object PreviewCacheManager: ICacheManager {
+object PreviewCacheManager : ICacheManager {
     private val cacheScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val PREVIEW_CACHE_FOLDER = "${LCGApp.context.cacheDir}/preview_articles"
     private const val CONFIG_FILE_NAME = "PreviewCacheConfig"
-
-    
-
 
     fun saveToDisk(url: String, content: String) {
         cacheScope.launch {
@@ -35,9 +32,6 @@ object PreviewCacheManager: ICacheManager {
         }
     }
 
-    
-
-
     fun findDocOrNull(url: String): Document? {
         val file: File? = findInDisk("$PREVIEW_CACHE_FOLDER/${getCacheFileName(url)}")
         if (file != null && file.exists()) {
@@ -49,9 +43,6 @@ object PreviewCacheManager: ICacheManager {
         }
         return null
     }
-
-    
-
 
     override suspend fun clearAllCaches() = withContext(Dispatchers.IO) {
         if (checkShouldCache()) {
@@ -81,10 +72,6 @@ object PreviewCacheManager: ICacheManager {
     private fun getCacheFileName(url: String): String {
         return url.hashCode().toString()
     }
-
-    
-
-
 
     private fun checkShouldCache(): Boolean {
         val last = getConfigSp().getLong(KEY_LAST_CLEAN_TIME, 0L)

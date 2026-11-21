@@ -41,12 +41,12 @@ object JsoupClient : ApiRequest {
     private const val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
     private val sessionExpiredFiredOnce = AtomicBoolean(false)
-    private const val MIN_INTERVAL_MS = 300L 
+    private const val MIN_INTERVAL_MS = 300L
     private val lastRequestAt = AtomicLong(0L)
     private val BACKOFF_CODES = setOf(403, 429, 514)
+
     @Volatile private var blockedUntil = 0L
 
-    
     private var pendingVerification: CompletableDeferred<String?>? = null
     private const val VERIFY_TIMEOUT_MS = 3 * 60 * 1000L
 
@@ -88,9 +88,6 @@ object JsoupClient : ApiRequest {
         return sendGetRequestWithUrl(url, enableWafPopup = true)
     }
 
-    
-
-
     @Throws(SocketTimeoutException::class, IOException::class)
     fun sendGetRequestWithUrl(url: String, enableWafPopup: Boolean): Document {
         var response = getConnection(url)
@@ -101,17 +98,16 @@ object JsoupClient : ApiRequest {
         updateCookies(response.cookies())
 
         if (isWafPage(response.body())) {
-            
             if (!enableWafPopup || url.contains("home.php?mod=task")) {
                 throw IOException("WAF_VERIFICATION_REQUIRED")
             }
-            
+
             Timber.w("网络层：命中高级 JS WAF 盾，触发 URL: $url")
             EventBus.getDefault().post(WafVerificationEvent(url))
-            
+
             val deferred = CompletableDeferred<String?>()
             synchronized(this) { pendingVerification = deferred }
-            
+
             val verifiedCookie = runBlocking { withTimeoutOrNull(VERIFY_TIMEOUT_MS) { deferred.await() } }
             synchronized(this) { pendingVerification = null }
 
@@ -146,16 +142,15 @@ object JsoupClient : ApiRequest {
         updateCookies(response.cookies())
 
         if (isWafPage(response.body())) {
-            
             if (!enableWafPopup || url.contains("home.php?mod=task")) {
                 throw IOException("WAF_VERIFICATION_REQUIRED")
             }
             Timber.w("网络层：POST 命中 WAF 盾，触发 URL: $url")
             EventBus.getDefault().post(WafVerificationEvent(url))
-            
+
             val deferred = CompletableDeferred<String?>()
             synchronized(this) { pendingVerification = deferred }
-            
+
             val verifiedCookie = runBlocking { withTimeoutOrNull(VERIFY_TIMEOUT_MS) { deferred.await() } }
             synchronized(this) { pendingVerification = null }
 
@@ -203,7 +198,6 @@ object JsoupClient : ApiRequest {
             .header("sec-ch-ua-platform", "Windows")
     }
 
-    
     fun forceReleasePendingVerification() {
         try {
             synchronized(this) {

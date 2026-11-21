@@ -20,7 +20,7 @@ object AppLogManager {
     var isCollecting = false
 
     private val IGNORED_TAGS = listOf(
-        "UpgradeCommonTag", "RDelivery", "RDeliveryHelper", 
+        "UpgradeCommonTag", "RDelivery", "RDeliveryHelper",
         "RDelivery_UpdateManager", "RDelivery_Reporter", "Bugly",
         "libc", "OpenGLRenderer", "EGL_emulation", "chatty"
     )
@@ -29,21 +29,20 @@ object AppLogManager {
         if (!isCollecting) return
         val safeTag = tag ?: "App"
         if (IGNORED_TAGS.any { safeTag.contains(it) }) return
-        
+
         if (logs.size >= MAX_LOG_SIZE) {
             logs.removeFirst()
         }
         val time = formatter.format(Date())
         val threadName = Thread.currentThread().name
         val stackTraceStr = if (throwable != null) Log.getStackTraceString(throwable) else null
-        
+
         logs.add(LogItem(time, priority, "[$threadName] $safeTag", message, stackTraceStr))
     }
 
     fun getLogs(): List<LogItem> = logs.toList()
     fun clearLogs() = logs.clear()
-    
-    
+
     fun removeLog(time: String) {
         logs.removeAll { it.time == time }
     }

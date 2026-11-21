@@ -11,17 +11,15 @@ import top.easelink.framework.base.BaseViewHolder
 import top.easelink.framework.customview.htmltextview.HtmlCoilImageGetter
 import top.easelink.framework.utils.dpToPx
 import top.easelink.lcg.R
+import top.easelink.lcg.databinding.ItemLoadMoreViewBinding
+import top.easelink.lcg.databinding.ItemNotificationViewBinding
 import top.easelink.lcg.ui.main.message.viewmodel.NotificationViewModel
 import top.easelink.lcg.ui.main.model.BaseNotification
-import top.easelink.lcg.databinding.ItemNotificationViewBinding
-import top.easelink.lcg.databinding.ItemLoadMoreViewBinding
-
 
 class NotificationsAdapter(
     private val notificationViewModel: NotificationViewModel,
     private val mFragment: Fragment
 ) : RecyclerView.Adapter<BaseViewHolder>() {
-
     private val mNotifications: MutableList<BaseNotification> = mutableListOf()
 
     override fun getItemCount(): Int {
@@ -95,12 +93,11 @@ class NotificationsAdapter(
                 }
                 dateTime.text = notification.dateTime
                 notificationAvatar.load(notification.avatar) {
-                    transformations(RoundedCornersTransformation(2.dpToPx(root.context))) 
+                    transformations(RoundedCornersTransformation(2.dpToPx(root.context)))
                     placeholder(R.drawable.ic_noavatar_middle_gray)
                 }
             }
         }
-
     }
 
     inner class EmptyViewHolder(view: View) : BaseViewHolder(view) {
@@ -124,5 +121,4 @@ class NotificationsAdapter(
         private const val VIEW_TYPE_NORMAL = 1
         private const val VIEW_TYPE_LOAD_MORE = 2
     }
-
 }

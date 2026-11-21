@@ -1,17 +1,6 @@
 package top.easelink.lcg.ui.main.source.model
 
-
-
-
-
-
 class PreviewPost
-
-
-
-
-
-
 (
     val author: String,
     val avatar: String,

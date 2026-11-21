@@ -11,12 +11,6 @@ import top.easelink.lcg.utils.WebsiteConstant
 import top.easelink.lcg.utils.showMessage
 import java.net.SocketTimeoutException
 
-
-
-
-
-
-
 object LCGSearchService {
     private const val MIN_REQUEST_INTERVAL = 1000L
     private var lastRequestTime: Long = 0L
@@ -28,7 +22,7 @@ object LCGSearchService {
         mNextPageUrl = null
         mTotalResults = null
         if (keyword.isBlank()) return null
-        
+
         if (!canSendRequest()) {
             top.easelink.lcg.utils.showMessage("搜索太频繁，请稍后再试")
             return null
@@ -43,9 +37,7 @@ object LCGSearchService {
 
                 val fidList = fid?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
                 if (fidList.isEmpty()) {
-                    
                 } else {
-                    
                     put("srhfid", fidList.joinToString(","))
                 }
 
@@ -55,7 +47,6 @@ object LCGSearchService {
                 put("searchsubmit", "true")
             }
 
-            
             val response = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = true)
 
             Timber.tag("[SearchProbe]").d("HTTP 响应码: ${response.statusCode()}")
@@ -65,7 +56,7 @@ object LCGSearchService {
             if (response.statusCode() in 200..299) {
                 val doc = response.parse()
                 Timber.tag("[SearchProbe]").d("返回 HTML 前 200 字: ${doc.html().take(200).replace("\n", " ")}")
-                
+
                 // 核心修复：检查服务器返回的错误提示并抛给上层
                 val errorNode = doc.selectFirst(".alert_error, .alert_info, .alert_msg")
                 if (errorNode != null) {
@@ -96,7 +87,6 @@ fun doSearchNextPage(): LCGSearchResults {
             return emptyResult()
         }
         try {
-            
             return parseSearchResults(JsoupClient.sendGetRequestWithQuery(mNextPageUrl!!))
         } catch (e: SocketTimeoutException) {
             showMessage(R.string.network_error)
@@ -115,13 +105,12 @@ fun doSearchNextPage(): LCGSearchResults {
                     val aNode = it.selectFirst("a")
                     val pNode = it.selectFirst("p.xg1")
 
-                    
                     if (aNode != null && pNode != null && spans.isNotEmpty() && spans.size == 3) {
                         return@mapNotNull LCGSearchResultItem(
                             title = aNode.html(),
                             url = aNode.attr("href"),
                             replyView = pNode.text(),
-                            
+
                             content = pNode.nextElementSibling()?.html().orEmpty(),
                             author = spans[1].text(),
                             date = spans[0].text(),
@@ -135,7 +124,6 @@ fun doSearchNextPage(): LCGSearchResults {
             }
         return LCGSearchResults(results).also {
             mNextPageUrl = try {
-                
                 doc.selectFirst("a.nxt")?.attr("href")
             } catch (e: Exception) {
                 Timber.w(e)
@@ -146,7 +134,7 @@ fun doSearchNextPage(): LCGSearchResults {
 
     private fun canSendRequest(): Boolean {
         return if (System.currentTimeMillis() - lastRequestTime < MIN_REQUEST_INTERVAL) {
-            false 
+            false
         } else {
             lastRequestTime = System.currentTimeMillis()
             true

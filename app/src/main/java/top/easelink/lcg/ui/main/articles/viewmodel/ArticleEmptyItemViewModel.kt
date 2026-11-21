@@ -8,5 +8,4 @@ class ArticleEmptyItemViewModel internal constructor(private val mListener: Arti
     interface ArticleEmptyItemViewModelListener {
         fun onRetryClick()
     }
-
 }

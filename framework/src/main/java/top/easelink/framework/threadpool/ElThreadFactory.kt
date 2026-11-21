@@ -8,8 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class ElThreadFactory(
     private val mName: String,
     private val mPriority: ELThreadPriority
-): ThreadFactory {
-
+) : ThreadFactory {
     private val sCount = AtomicInteger(0)
 
     override fun newThread(r: Runnable): Thread {

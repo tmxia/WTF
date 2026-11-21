@@ -16,7 +16,6 @@ package top.easelink.framework.customview.htmltextview
 import android.text.Html
 
 class HtmlFormatterBuilder {
-
     var html: String? = null
         private set
     var imageGetter: Html.ImageGetter? = null

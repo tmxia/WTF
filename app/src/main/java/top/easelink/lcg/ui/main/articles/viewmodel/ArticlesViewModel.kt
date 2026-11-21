@@ -35,7 +35,7 @@ class ArticlesViewModel : ViewModel(), ArticleFetcher {
                     } else {
                         articles.postValue(it)
                     }
-                    
+
                     mCurrentPage = pageNum
                 }
             }

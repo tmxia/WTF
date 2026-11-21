@@ -12,7 +12,7 @@ class ELThreadPoolExecutor constructor(
     workQueue: BlockingQueue<Runnable>,
     factory: ThreadFactory = Executors.defaultThreadFactory(),
     handler: RejectedExecutionHandler = AbortPolicy()
-): ThreadPoolExecutor(
+) : ThreadPoolExecutor(
     corePoolSize,
     maximumPoolSize,
     keepAliveTime,
@@ -21,7 +21,6 @@ class ELThreadPoolExecutor constructor(
     factory,
     handler
 ) {
-
     override fun afterExecute(r: Runnable?, t: Throwable?) {
         super.afterExecute(r, t)
         if (t == null && r is Future<*>) {
@@ -40,6 +39,4 @@ class ELThreadPoolExecutor constructor(
             }
         }
     }
-
-
 }

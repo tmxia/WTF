@@ -9,8 +9,6 @@ import top.easelink.lcg.ui.main.MainActivity
 
 class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        
-        
         super.onCreate(savedInstanceState)
         Handler().postDelayed({
             startActivity(Intent(baseContext, MainActivity::class.java))

@@ -4,12 +4,6 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
-
-
-
-
-
-
 fun toTimeStamp(date: String): Long {
     return try {
         SimpleDateFormat.getDateTimeInstance().parse(date)?.time ?: System.currentTimeMillis()

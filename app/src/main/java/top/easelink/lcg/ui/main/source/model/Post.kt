@@ -3,19 +3,8 @@ package top.easelink.lcg.ui.main.source.model
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 
-
-
-
-
-
 @Parcelize
 class Post
-
-
-
-
-
-
 (
     val author: String,
     val avatar: String,

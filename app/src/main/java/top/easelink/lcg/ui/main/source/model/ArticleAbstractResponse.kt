@@ -3,10 +3,6 @@ package top.easelink.lcg.ui.main.source.model
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
-
-
-
-
 class ArticleAbstractResponse {
     @Expose
     @SerializedName("title")

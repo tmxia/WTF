@@ -45,15 +45,15 @@ class LCGSearchResultAdapter(
         return when (viewType) {
             VIEW_TYPE_NORMAL -> SearchResultViewHolder(
                 ItemLcgSearchResultViewBinding.inflate(
-                    LayoutInflater.from(parent.context), parent, false 
+                    LayoutInflater.from(parent.context), parent, false
                 )
             )
             VIEW_TYPE_LOAD_MORE -> LoadMoreViewHolder(
                 ItemLoadMoreViewBinding.inflate(
-                    LayoutInflater.from(parent.context), parent, false 
+                    LayoutInflater.from(parent.context), parent, false
                 )
             )
-            
+
             else -> EmptyViewHolder(
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_empty_view, parent, false)
@@ -82,7 +82,7 @@ class LCGSearchResultAdapter(
     private inner class SearchResultViewHolder(private val binding: ItemLcgSearchResultViewBinding) : BaseViewHolder(binding.root) {
         override fun onBind(position: Int) {
             val searchResult = mSearchResults[position].also {
-                Log.d("Leon406",it.toString())
+                Log.d("Leon406", it.toString())
             }
             binding.apply {
                 titleTv.text = Html.fromHtml(searchResult.title)

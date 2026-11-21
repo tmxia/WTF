@@ -18,7 +18,6 @@ import top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher
 import top.easelink.lcg.ui.main.articles.viewmodel.ArticlesViewModel
 
 class ArticlesFragment : BaseFragment<FragmentArticlesBinding, ArticlesViewModel>() {
-
     private var _binding: FragmentArticlesBinding? = null
     private val binding get() = _binding!!
 

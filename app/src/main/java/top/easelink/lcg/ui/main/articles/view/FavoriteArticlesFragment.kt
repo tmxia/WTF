@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+
 package top.easelink.lcg.ui.main.articles.view
 
 import android.os.Bundle
@@ -32,8 +33,8 @@ import top.easelink.lcg.R
 import top.easelink.lcg.databinding.FragmentFavoriteArticlesBinding
 import top.easelink.lcg.ui.main.articles.viewmodel.FavoriteArticlesViewModel
 import top.easelink.lcg.ui.webview.view.WebViewActivity
-import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 import top.easelink.lcg.utils.WebsiteConstant.GET_FAVORITE_QUERY
+import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 
 class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, FavoriteArticlesViewModel>() {
     private var _binding: FragmentFavoriteArticlesBinding? = null
@@ -57,10 +58,9 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        
+
         viewModel.fetchArticles(top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher.FetchType.FETCH_INIT) {}
-        
+
         (view as ComposeView).setContent {
             val articles by viewModel.articles.observeAsState(initial = emptyList())
             val isLoading by viewModel.isLoading.observeAsState(initial = false)
@@ -81,7 +81,7 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
                                 IconButton(onClick = { showMenu = true }) {
                                     Icon(Icons.Filled.MoreVert, contentDescription = "菜单", tint = Color.Black)
                                 }
-                                
+
                                 DropdownMenu(
                                     expanded = showMenu,
                                     onDismissRequest = { showMenu = false },
@@ -115,7 +115,7 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
                         windowInsets = WindowInsets(0, 0, 0, 0)
                     )
                 }
-                
+
                 if (isLoading) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(modifier = Modifier.size(32.dp), color = Color(0xFFE53935), strokeWidth = 3.dp)

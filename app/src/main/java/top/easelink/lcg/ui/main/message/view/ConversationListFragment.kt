@@ -16,10 +16,9 @@ import top.easelink.lcg.databinding.FragmentConversationListBinding
 import top.easelink.lcg.ui.main.message.viewmodel.ConversationListViewModel
 
 class ConversationListFragment : TopFragment() {
-
     private lateinit var mConversationVM: ConversationListViewModel
     private var _binding: FragmentConversationListBinding? = null
-    
+
     private val binding get() = _binding!!
 
     override fun onAttach(context: Context) {
@@ -32,7 +31,6 @@ class ConversationListFragment : TopFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         _binding = FragmentConversationListBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -46,10 +44,9 @@ class ConversationListFragment : TopFragment() {
 
     private fun setUpSwipeRefresh() {
         binding.conversationSwipeRefresh.setOnRefreshListener {
-            
             (binding.conversationList.adapter as ConversationListAdapter).clearItems()
             mConversationVM.fetchConversations()
-            
+
             mConversationVM.conversations.observe(viewLifecycleOwner, Observer {
                 binding.conversationSwipeRefresh.isRefreshing = false
             })

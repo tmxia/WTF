@@ -14,7 +14,6 @@ import top.easelink.lcg.utils.showMessage
 import java.net.SocketTimeoutException
 
 class MeViewModel : ViewModel() {
-
     @Suppress("BlockingMethodInNonBlockingContext")
     fun fetchUserInfoDirect() {
         if (UserDataRepo.isLoggedIn) {
@@ -34,19 +33,18 @@ class MeViewModel : ViewModel() {
         viewModelScope.launch(IOPool) {
             try {
                 val userInfo = UserInfoRepo.requestUserInfo()
-                
+
                 if (userInfo == null || userInfo == UserInfo.getDefaultUserInfo()) {
                     Timber.w("【安全防御】拦截了非法的 clearAll 调用，保留 CK！")
                 } else {
-                    
                     UserDataRepo.isLoggedIn = true
                     UserDataRepo.updateUserInfo(userInfo)
                 }
             } catch (e: Exception) {
                 Timber.e(e)
                 when (e) {
-                    is SocketTimeoutException -> R.string.network_error 
-                    is AntiScrapingException -> R.string.anti_scraping_error 
+                    is SocketTimeoutException -> R.string.network_error
+                    is AntiScrapingException -> R.string.anti_scraping_error
                     else -> R.string.general_error
                 }.let {
                     showMessage(it)

@@ -18,13 +18,12 @@ import top.easelink.lcg.utils.showMessage
 const val DEFAULT_ORDER = ""
 
 class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
-
     private var mUrl: String? = null
     private var mFetchType = ArticleFetcher.FetchType.FETCH_INIT
     private var orderType = DEFAULT_ORDER
     private var mCurrentPage = 1
     private var isTabSet = false
-    private var fetching = false 
+    private var fetching = false
 
     val title = MutableLiveData<String>()
     val articles = MutableLiveData<List<Article>>()
@@ -36,11 +35,9 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         fetchType: ArticleFetcher.FetchType,
         order: String = DEFAULT_ORDER
     ) {
-        
         val baseUrl = if (url.contains("?")) url.substringBefore("?") else url
         val params = if (url.contains("?")) url.substringAfter("?") else ""
-        
-        
+
         val cleanParams = params.split("&").filter { it.isNotBlank() && !it.startsWith("page=") }
         val paramString = if (cleanParams.isNotEmpty()) cleanParams.joinToString("&") else ""
 
@@ -77,7 +74,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
             ArticleFetcher.FetchType.FETCH_INIT -> rewindPageNum()
             ArticleFetcher.FetchType.FETCH_MORE -> nextPage()
         }
-        
+
         val finalUrl = mUrl?.replace(Regex("&?page=\\d+"), "") ?: ""
         return "$finalUrl&page=$mCurrentPage$orderType"
     }
@@ -89,22 +86,21 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         }
         fetching = true
         isLoading.value = true
-        
+
         viewModelScope.launch(IOPool) {
             try {
                 val query = composeUrlByRequestType(fetchType)
-                
+
                 val forumPage = getForumArticles(query, fetchType == ArticleFetcher.FetchType.FETCH_INIT)
-                
+
                 if (forumPage == null || forumPage.articleList.isEmpty()) {
-                    
                     if (fetchType == ArticleFetcher.FetchType.FETCH_MORE) {
                         showMessage(R.string.no_more_content)
                     }
                     callback(false)
                 } else {
                     handleArticleList(fetchType, forumPage.articleList, callback)
-                    
+
                     if (!isTabSet) {
                         threadList.postValue(forumPage.threadList.ifEmpty { emptyList() })
                         isTabSet = true
@@ -118,7 +114,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
                 callback(false)
             } finally {
                 fetching = false
-                isLoading.postValue(false) 
+                isLoading.postValue(false)
             }
         }
     }
@@ -129,14 +125,13 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         callback: (Boolean) -> Unit
     ) {
         val currentList = articles.value
-        
+
         when {
-            
             fetchType != ArticleFetcher.FetchType.FETCH_MORE || currentList.isNullOrEmpty() -> {
                 articles.postValue(newList)
                 callback(true)
             }
-            
+
             newList.lastOrNull()?.title == currentList.lastOrNull()?.title -> {
                 showMessage(R.string.no_more_content)
                 callback(false)

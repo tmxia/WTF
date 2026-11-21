@@ -5,7 +5,6 @@ import androidx.fragment.app.FragmentActivity
 import top.easelink.framework.customview.htmltextview.ClickablePreCodeSpan
 
 internal class ClickablePreCodeSpanImpl : ClickablePreCodeSpan {
-
     constructor()
 
     private constructor(html: String?) {

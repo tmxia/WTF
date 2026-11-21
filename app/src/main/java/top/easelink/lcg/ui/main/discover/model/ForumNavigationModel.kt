@@ -7,5 +7,4 @@ data class ForumNavigationModel(
     @field:DrawableRes val drawableRes: Int,
     val url: String,
     val isSubForum: Boolean = false,
-    val parentTitle: String? = null
-, val fid: String? = null)
+    val parentTitle: String? = null, val fid: String? = null)

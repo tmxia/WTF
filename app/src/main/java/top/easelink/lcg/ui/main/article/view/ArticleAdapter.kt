@@ -3,8 +3,8 @@ package top.easelink.lcg.ui.main.article.view
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.graphics.Canvas
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.text.Html
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -54,16 +54,11 @@ class ArticleAdapter(
     private val mFragment: Fragment,
     private val onItemClick: ((Post) -> Unit)? = null
 ) : RecyclerView.Adapter<BaseViewHolder>() {
-
     private val mPostList: MutableList<Post> = ArrayList()
 
-    
-
-
-
     fun getPositionForPost(target: Post): Int {
-        return mPostList.indexOfFirst { 
-            it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl) 
+        return mPostList.indexOfFirst {
+            it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl)
         }
     }
     private var hasMoreItem: Boolean = false
@@ -81,7 +76,7 @@ class ArticleAdapter(
             }
             if (isSame) return
         }
-        
+
         mPostList.clear()
         mPostList.addAll(posts)
         this.hasMoreItem = hasMore
@@ -100,7 +95,7 @@ class ArticleAdapter(
 
         override fun getItemViewType(position: Int) = when {
         mPostList.isEmpty() -> VIEW_TYPE_EMPTY
-        
+
         position == mPostList.size -> VIEW_TYPE_LOAD_MORE
         isFiltering -> VIEW_TYPE_REPLY
         position == 0 -> VIEW_TYPE_POST
@@ -167,14 +162,13 @@ class ArticleAdapter(
     inner class PostViewHolder internal constructor(
         private val binding: ItemPostViewBinding
     ) : BaseViewHolder(binding.root), View.OnClickListener {
-
         private var post: Post? = null
         private val htmlHttpImageGetter: Html.ImageGetter = HtmlCoilImageGetter(binding.root.context, binding.contentTextView, mFragment)
 
         override fun onBind(position: Int) {
             val p = mPostList.getOrNull(position) ?: return
             post = p
-            
+
             itemView.isClickable = true
             itemView.setOnClickListener { onItemClick?.invoke(p) }
             binding.root.isClickable = true
@@ -210,7 +204,7 @@ class ArticleAdapter(
                         requestFocus()
                         setOnClickListener { onItemClick?.invoke(p) }
                         minHeight = (60 * context.resources.displayMetrics.density).toInt()
-                        
+
                         if (AppConfig.articleHandlePreTag) {
                             setClickablePreCodeSpan(ClickablePreCodeSpanImpl())
                             setDrawPreCodeSpan(DrawPreCodeSpan().apply {
@@ -230,7 +224,7 @@ class ArticleAdapter(
                                 WebViewActivity.startWebViewWith(url, c)
                             }
                         }
-                        
+
                         if (isFiltering) {
                             val plainText = org.jsoup.Jsoup.parse(p.content ?: "").text()
                             var snippet = plainText
@@ -265,7 +259,7 @@ class ArticleAdapter(
                         } else {
                             postBtnThumbUp.visibility = View.VISIBLE
                             postBtnThumbUp.setOnClickListener(this@PostViewHolder)
-                            
+
                             val isLikedColor = ContextCompat.getColor(root.context, R.color.colorAccent)
                             val normalColor = ContextCompat.getColor(root.context, R.color.gray)
                             postBtnThumbUp.setColorFilter(if (p.isLiked) isLikedColor else normalColor)
@@ -296,11 +290,11 @@ class ArticleAdapter(
                             return
                         }
                         p.replyAddUrl?.let { url ->
-                            
+
                             p.isLiked = true
                             val isLikedColor = ContextCompat.getColor(itemView.context, R.color.colorAccent)
                             binding.postBtnThumbUp.setColorFilter(isLikedColor)
-                            
+
                             mListener.replyAdd(url)
                         }
                     }
@@ -329,7 +323,6 @@ class ArticleAdapter(
     inner class ReplyViewHolder internal constructor(
         private val binding: ItemReplyViewBinding
     ) : BaseViewHolder(binding.root), View.OnClickListener {
-
         private var post: Post? = null
         private val htmlHttpImageGetter: Html.ImageGetter by lazy {
             HtmlCoilImageGetter(binding.root.context, binding.replyContentTextView, mFragment)
@@ -381,7 +374,7 @@ class ArticleAdapter(
                         replyContentTextView.run {
                             setOnClickListener { onItemClick?.invoke(p) }
                             minHeight = (60 * context.resources.displayMetrics.density).toInt()
-                            
+
                             if (AppConfig.articleHandlePreTag) {
                                 setClickablePreCodeSpan(ClickablePreCodeSpanImpl())
                                 val drawTableLinkSpan = DrawPreCodeSpan().also {
@@ -402,7 +395,7 @@ class ArticleAdapter(
                                     WebViewActivity.startWebViewWith(url, c)
                                 }
                             }
-                            
+
                             if (isFiltering) {
                                 val plainText = org.jsoup.Jsoup.parse(p.content ?: "").text()
                                 var snippet = plainText
@@ -510,14 +503,14 @@ class ArticleAdapter(
             val widthSpec = View.MeasureSpec.makeMeasureSpec(view.width, View.MeasureSpec.EXACTLY)
             val heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
             view.measure(widthSpec, heightSpec)
-            
+
             var width = view.measuredWidth
             var height = view.measuredHeight
             if (width <= 0 || height <= 0) return null
 
             val maxHeight = 8000
             var scale = 1.0f
-            
+
             if (height > maxHeight) {
                 scale = maxHeight.toFloat() / height.toFloat()
                 height = maxHeight
@@ -527,7 +520,7 @@ class ArticleAdapter(
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
             canvas.drawColor(android.graphics.Color.WHITE)
-            
+
             if (scale < 1.0f) {
                 canvas.scale(scale, scale)
                 view.measure(
@@ -555,7 +548,6 @@ class ArticleAdapter(
         }
     }
 
-
     fun markAsLiked(url: String) {
         val index = mPostList.indexOfFirst { it.replyAddUrl == url }
         if (index != -1) {
@@ -563,5 +555,4 @@ class ArticleAdapter(
             notifyItemChanged(index, "like_status_changed")
         }
     }
-
 }

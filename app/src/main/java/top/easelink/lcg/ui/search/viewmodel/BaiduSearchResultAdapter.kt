@@ -94,7 +94,6 @@ class BaiduSearchResultAdapter(private var mListener: SearchAdapterListener) :
                 findViewById<TextView>(R.id.title_text_view).text = searchResult.title
             }
         }
-
     }
 
     inner class EmptyViewHolder internal constructor(view: View) :
@@ -114,5 +113,4 @@ class BaiduSearchResultAdapter(private var mListener: SearchAdapterListener) :
         private const val VIEW_TYPE_NORMAL = 1
         private const val VIEW_TYPE_LOAD_MORE = 2
     }
-
 }

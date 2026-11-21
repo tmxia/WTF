@@ -12,7 +12,6 @@ class FollowViewPagerAdapter(
     fragmentActivity: FragmentActivity,
     context: Context
 ) : FragmentStateAdapter(fragmentActivity) {
-
     private val tabModels: List<MessageTabModel> = listOf(
         MessageTabModel(context.getString(R.string.tab_title_following_feed), ""),
         MessageTabModel(

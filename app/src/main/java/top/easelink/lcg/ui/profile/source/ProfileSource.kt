@@ -11,7 +11,5 @@ object ProfileSource {
     }
 
     suspend fun parseUserInfo(doc: Document) {
-
     }
-
 }

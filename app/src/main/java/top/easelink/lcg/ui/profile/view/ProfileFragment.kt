@@ -35,7 +35,6 @@ class ProfileFragment : TopFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        
         return ComposeView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -73,23 +72,21 @@ class ProfileFragment : TopFragment() {
 fun ProfileScreen(onBackClick: () -> Unit) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
-             
+
     ) {
-        
         Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        text = "我的信息", 
-                        fontSize = 18.sp, 
-                        fontWeight = FontWeight.Bold, 
+                        text = "我的信息",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
                         color = Color.Black
-                    ) 
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -97,9 +94,9 @@ fun ProfileScreen(onBackClick: () -> Unit) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
-                windowInsets = WindowInsets(0, 0, 0, 0) 
+                windowInsets = WindowInsets(0, 0, 0, 0)
             )
-            
+
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.White,
@@ -124,7 +121,6 @@ fun ProfileScreen(onBackClick: () -> Unit) {
             }
         }
 
-        
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center

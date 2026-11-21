@@ -21,9 +21,6 @@ class RecommendFragment : Fragment(R.layout.fragment_recommend) {
 
         binding.viewPager.setCurrentItem(2, false)
 
-         
-                 
-
         TabLayoutMediator(binding.mainTab, binding.viewPager) { tab, position ->
             tab.text = adapter.getTabTitle(position)
             tab.contentDescription = "Tab ${position + 1}"

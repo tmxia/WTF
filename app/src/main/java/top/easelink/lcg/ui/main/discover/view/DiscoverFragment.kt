@@ -11,14 +11,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.topbase.ControllableFragment
-import top.easelink.lcg.ui.main.discover.viewmodel.DiscoverViewModel
 import top.easelink.lcg.ui.main.article.view.PostPreviewDialog
-import top.easelink.lcg.ui.main.model.OpenArticleEvent
+import top.easelink.lcg.ui.main.discover.viewmodel.DiscoverViewModel
 import top.easelink.lcg.ui.main.forumnav.view.ForumNavigationFragment
+import top.easelink.lcg.ui.main.model.OpenArticleEvent
 import top.easelink.lcg.ui.main.model.OpenForumEvent
 
 class DiscoverFragment : Fragment(), ControllableFragment {
-
     private val viewModel: DiscoverViewModel by viewModels()
 
     override fun isControllable(): Boolean = true
@@ -39,7 +38,7 @@ class DiscoverFragment : Fragment(), ControllableFragment {
         composeView.setContent {
             val models by viewModel.aggregationModels.observeAsState(initial = emptyList())
             val isLoading by viewModel.isLoading.observeAsState(initial = false)
-            
+
             DiscoverScreenCompose(
                 models = models,
                 onForumClick = { title, url -> EventBus.getDefault().post(OpenForumEvent(title, url, true)) },

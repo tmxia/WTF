@@ -13,7 +13,6 @@ import top.easelink.lcg.ui.main.follow.model.FollowInfo
 import top.easelink.lcg.ui.main.follow.model.FollowResult
 
 class FollowListViewModel : ViewModel() {
-
     val follows = MutableLiveData<FollowResult>()
     val isLoading = MutableLiveData<Boolean>()
     val isLoadingForLoadMore = MutableLiveData<Boolean>()

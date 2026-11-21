@@ -6,11 +6,6 @@ import top.easelink.lcg.ui.main.source.model.ArticleDetail
 import top.easelink.lcg.ui.main.source.model.ForumPage
 import top.easelink.lcg.ui.main.source.model.PreviewPost
 
-
-
-
-
-
 interface ArticlesDataSource {
     @WorkerThread
     fun getForumArticles(query: String, processThreadList: Boolean): ForumPage?

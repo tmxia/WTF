@@ -29,30 +29,21 @@ class LCGApp : Application() {
         instance = this
         if (BuildConfig.DEBUG) Timber.plant(DebugTree())
         Timber.plant(AppLogManager.LogTree())
-        
+
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         AppLogManager.isCollecting = prefs.getBoolean("debug_mode_enabled", false)
 
         initCoil()
         AppGuardStarter.init(this)
         ShiplyInitialization.init(this@LCGApp)
-        
+
         applicationScope.launch {
-            
             LCGCookieJar.syncToWebView()
-            
-            
-            
         }
-        
+
         trySignIn()
         CacheCleanerTask.clearCachesIfNeeded()
     }
-
-    
-
-
-    
 
     private fun trySignIn() {
         applicationScope.launch {

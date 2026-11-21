@@ -5,9 +5,7 @@ import android.content.SharedPreferences
 import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.appinit.LCGApp
 
-
 object AppConfig {
-
     private const val CONFIG_SP = "config_sp"
 
     private const val CONFIG_APP_RELEASE_URL = "app_release_page"
@@ -20,7 +18,6 @@ object AppConfig {
     private const val CONFIG_DEFAULT_SEARCH_ENGINE = "default_search_engine"
     private const val CONFIG_AUTO_SIGN_IN = "auto_sign_in"
     private const val CONFIG_SYNC_FAVORITES = "sync_favorites"
-
 
     private const val CONFIG_SEARCH_ENGINE_BAIDU = 1
     private const val CONFIG_SEARCH_ENGINE_WUAI = 0
@@ -64,7 +61,6 @@ object AppConfig {
         get() = get(CONFIG_SYNC_FAVORITES, true)
         set(value) = put(CONFIG_SYNC_FAVORITES, value)
 
-
     private fun getConfigSp(): SharedPreferences {
         return LCGApp.instance.getSharedPreferences(CONFIG_SP, Context.MODE_PRIVATE)
     }
@@ -96,5 +92,4 @@ object AppConfig {
             }
             .apply()
     }
-
 }

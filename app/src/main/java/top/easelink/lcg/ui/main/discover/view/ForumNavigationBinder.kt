@@ -1,17 +1,15 @@
 package top.easelink.lcg.ui.main.discover.view
 
 import android.view.LayoutInflater
-import android.view.ViewGroup
 import android.view.View
+import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import top.easelink.lcg.databinding.FragmentForumsNavigationBinding
 import top.easelink.lcg.ui.main.discover.model.ForumListModel
 import top.easelink.lcg.ui.main.discover.model.ForumNavigationModel
 
-
 class ForumNavigationBinder : BaseNavigationBinder<ForumListModel, ForumNavigationVH>() {
-
     override fun onBindViewHolder(holder: ForumNavigationVH, item: ForumListModel) {
         holder.onBind(item, null)
     }
@@ -42,7 +40,6 @@ class ForumNavigationVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseN
     }
 
     private fun setUp(listModel: List<ForumNavigationModel>) {
-        
                 binding.apply {
             forumTips.setOnClickListener {
                 navigationGrid.smoothScrollToPosition(
@@ -60,4 +57,3 @@ class ForumNavigationVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseN
         }
     }
 }
-

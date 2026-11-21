@@ -12,11 +12,8 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 object OkApiClient : ApiRequest {
-
     private const val FOLLOW_REDIRECTS = true
 
-    
-    
     private const val CONNECT_TIMEOUT = 10L
     private const val READ_WRITE_TIMEOUT = 15L
     private const val CALL_TIMEOUT = 30L

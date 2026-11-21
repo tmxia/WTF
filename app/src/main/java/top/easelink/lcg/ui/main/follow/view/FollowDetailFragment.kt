@@ -15,7 +15,6 @@ import top.easelink.lcg.databinding.FragmentFollowingBinding
 import top.easelink.lcg.ui.main.follow.viewmodel.FollowListViewModel
 
 class FollowDetailFragment(private val url: String) : TopFragment() {
-
     private lateinit var mFollowVM: FollowListViewModel
     private var _binding: FragmentFollowingBinding? = null
     private val binding get() = _binding!!

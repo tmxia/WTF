@@ -11,11 +11,11 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.updatePadding
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
@@ -28,8 +28,6 @@ import top.easelink.framework.topbase.TopFragment
 import top.easelink.framework.utils.WRITE_EXTERNAL_CODE
 import top.easelink.lcg.BuildConfig
 import top.easelink.lcg.R
-import top.easelink.lcg.utils.WebsiteConstant.URL_KEY
-import top.easelink.lcg.ui.search.view.BaiduSearchActivity
 import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.databinding.ActivityMainBinding
 import top.easelink.lcg.ui.main.about.view.AboutFragment
@@ -37,24 +35,25 @@ import top.easelink.lcg.ui.main.article.view.ArticleFragment
 import top.easelink.lcg.ui.main.articles.view.FavoriteArticlesFragment
 import top.easelink.lcg.ui.main.articles.view.ForumArticlesFragment
 import top.easelink.lcg.ui.main.discover.view.DiscoverFragment
+import top.easelink.lcg.ui.main.follow.view.FollowFragment
 import top.easelink.lcg.ui.main.forumnav.view.ForumNavigationFragment
+import top.easelink.lcg.ui.main.history.view.HistoryArticlesFragment
 import top.easelink.lcg.ui.main.largeimg.view.LargeImageDialog
 import top.easelink.lcg.ui.main.me.view.MeFragment
-import top.easelink.lcg.ui.profile.view.ProfileFragment
-import top.easelink.lcg.ui.main.history.view.HistoryArticlesFragment
-import top.easelink.lcg.ui.main.follow.view.FollowFragment
-import top.easelink.lcg.ui.search.view.SearchFragment
-import top.easelink.lcg.ui.main.recommand.view.RecommendFragment
-import top.easelink.lcg.ui.main.model.*
 import top.easelink.lcg.ui.main.message.view.MessageFragment
+import top.easelink.lcg.ui.main.model.*
+import top.easelink.lcg.ui.main.recommand.view.RecommendFragment
+import top.easelink.lcg.ui.profile.view.ProfileFragment
+import top.easelink.lcg.ui.search.view.BaiduSearchActivity
+import top.easelink.lcg.ui.search.view.SearchFragment
 import top.easelink.lcg.ui.setting.view.SettingActivity
 import top.easelink.lcg.ui.webview.view.HalfScreenWebViewFragment
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
+import top.easelink.lcg.utils.WebsiteConstant.URL_KEY
 import top.easelink.lcg.utils.showMessage
 
 class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
-
     private var lastBackPressed = 0L
     private lateinit var binding: ActivityMainBinding
     private var currentTabId: Int = R.id.action_home
@@ -87,7 +86,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     private fun setupWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            
+
             binding.statusBarBackground.apply {
                 layoutParams.height = systemBars.top
                 setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.white))
@@ -176,7 +175,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     private fun setupDrawer(toolbar: Toolbar) {
         val header = layoutInflater.inflate(R.layout.nav_header, binding.navigationView, false)
         binding.navigationView.addHeaderView(header)
-        
+
         binding.appVersion.text = BuildConfig.VERSION_NAME
         setSupportActionBar(toolbar)
 
@@ -235,10 +234,10 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 show(fragment)
             } else {
                 add(R.id.fragment_container, fragment, tag)
-                
-                if (fragment !is RecommendFragment && 
-                    fragment !is SearchFragment && 
-                    fragment !is DiscoverFragment && 
+
+                if (fragment !is RecommendFragment &&
+                    fragment !is SearchFragment &&
+                    fragment !is DiscoverFragment &&
                     fragment !is MeFragment) {
                     addToBackStack(tag)
                 }
@@ -262,10 +261,10 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 show(fragment)
             } else {
                 add(R.id.fragment_container, fragment, tag)
-                
-                if (fragment !is RecommendFragment && 
-                    fragment !is SearchFragment && 
-                    fragment !is DiscoverFragment && 
+
+                if (fragment !is RecommendFragment &&
+                    fragment !is SearchFragment &&
+                    fragment !is DiscoverFragment &&
                     fragment !is MeFragment) {
                     addToBackStack(tag)
                 }
@@ -311,9 +310,8 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             else -> View.GONE
         }
 
-        
         toggleBottomNavScrollBehavior(true)
-        
+
         syncBottomNavigation()
     }
 
@@ -410,7 +408,6 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     fun onNewMessageEvent(event: NewMessageEvent) {
         if (event.notificationInfo.isNotEmpty()) {
             showMessage(getString(R.string.notification_arrival))
-            
         }
     }
 

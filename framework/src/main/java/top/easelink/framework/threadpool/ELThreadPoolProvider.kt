@@ -5,7 +5,6 @@ import kotlin.math.max
 import kotlin.math.min
 
 object ELThreadPoolProvider {
-
     private val CPU_COUNT = Runtime.getRuntime().availableProcessors()
     private val CORE_POOL_SIZE = max(4, min(CPU_COUNT + 1, 9))
     private val MAXIMUM_POOL_SIZE = CPU_COUNT * 2 + 1

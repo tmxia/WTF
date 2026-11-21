@@ -11,7 +11,6 @@ class MessageViewPagerAdapter internal constructor(
     fragmentActivity: FragmentActivity,
     context: Context
 ) : FragmentStateAdapter(fragmentActivity) {
-
     private val tabModels: List<MessageTabModel> = listOf(
         MessageTabModel(context.getString(R.string.tab_title_notification), ""),
         MessageTabModel(context.getString(R.string.tab_title_private_message), "")
@@ -28,5 +27,4 @@ class MessageViewPagerAdapter internal constructor(
             else -> throw IllegalStateException("can't reach here")
         }
     }
-
 }

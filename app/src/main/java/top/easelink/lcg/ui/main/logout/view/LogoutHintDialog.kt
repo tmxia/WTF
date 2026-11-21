@@ -13,7 +13,6 @@ class LogoutHintDialog(
     private val positive: (() -> Unit)? = null,
     private val negative: (() -> Unit)? = null
 ) : TopDialog() {
-
     private var _binding: DialogLogoutHintBinding? = null
     private val binding get() = _binding!!
 

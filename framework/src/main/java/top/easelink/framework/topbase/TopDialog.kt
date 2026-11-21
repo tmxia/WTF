@@ -7,13 +7,12 @@ import android.os.Bundle
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.RelativeLayout
+import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import timber.log.Timber
-import androidx.core.graphics.drawable.toDrawable
 
 abstract class TopDialog : DialogFragment() {
-
     lateinit var mContext: Context
     companion object {
         @Volatile
@@ -50,7 +49,7 @@ abstract class TopDialog : DialogFragment() {
     }
 
     private fun safelyShow(fragmentManager: FragmentManager, tag: String?) {
-        //debounce
+        // debounce
         val curTime = System.currentTimeMillis()
         if ((curTime - lastTryShowTime) < 500) {
             return
@@ -89,12 +88,10 @@ abstract class TopDialog : DialogFragment() {
             } catch (e: Exception) {
                 Timber.e(e)
             }
-
         }
     }
 
     protected fun dismissDialog() {
         dismissAllowingStateLoss()
     }
-
 }

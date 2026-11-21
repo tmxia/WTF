@@ -34,15 +34,12 @@ class DiscoverViewModel : ViewModel() {
         Timber.d("【发现页】开始刷新热榜与板块数据...")
         viewModelScope.launch(IOPool) {
             runCatching {
-                
                 Timber.d("【发现页】开始拉取板块数据...")
                 val apiForums = ForumNetworkSource.fetchAllForumsFromApi()
-                
-                
+
                 val ranks = fetchRank(RankType.HEAT, DateType.TODAY)
                 Timber.d("【发现页】热榜请求成功，获取到 ${ranks.listModel.size} 条热榜")
 
-                
                 val newList = mutableListOf<DiscoverModel>()
                 if (apiForums.isNotEmpty()) {
                     Timber.d("【发现页】使用 API 返回的 ${apiForums.size} 个板块")
@@ -52,7 +49,7 @@ class DiscoverViewModel : ViewModel() {
                     newList.add(ForumListModel(generateAllForums(context)))
                 }
                 newList.add(ranks)
-                
+
                 aggregationModels.postValue(newList.toMutableList())
             }.getOrElse {
                 Timber.e(it, "【发现页】数据拉取异常")
@@ -61,7 +58,6 @@ class DiscoverViewModel : ViewModel() {
                     else -> showMessage(R.string.error)
                 }
             }.also {
-                
                 kotlinx.coroutines.delay(800)
                 isLoading.postValue(false)
             }

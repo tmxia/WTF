@@ -4,13 +4,11 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.GridView
 
-
 class WrapFixGridView(
     context: Context,
     set: AttributeSet?,
     defStyle: Int
 ) : GridView(context, set, defStyle) {
-
     constructor(context: Context, set: AttributeSet?) : this(context, set, 0)
 
     constructor(context: Context) : this(context, null, 0)

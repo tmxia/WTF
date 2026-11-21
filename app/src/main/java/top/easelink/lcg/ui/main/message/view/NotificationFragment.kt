@@ -11,14 +11,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import top.easelink.framework.topbase.TopFragment
 import top.easelink.lcg.R
-import top.easelink.lcg.ui.main.message.viewmodel.NotificationViewModel
 import top.easelink.lcg.databinding.FragmentNotificationBinding
+import top.easelink.lcg.ui.main.message.viewmodel.NotificationViewModel
 
 class NotificationFragment : TopFragment() {
-
     private lateinit var notificationViewModel: NotificationViewModel
     private var _binding: FragmentNotificationBinding? = null
-    
+
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -40,7 +39,6 @@ class NotificationFragment : TopFragment() {
 
     private fun setUpSwipeRefresh() {
         binding.notificationSwipeRefresh.setOnRefreshListener {
-            
             (binding.notificationRecyclerView.adapter as NotificationsAdapter).clearItems()
             notificationViewModel.fetchNotifications()
         }

@@ -1,14 +1,13 @@
 package top.easelink.lcg.ui.main.discover.source
 
+import timber.log.Timber
 import top.easelink.lcg.R
 import top.easelink.lcg.network.JsoupClient
 import top.easelink.lcg.ui.main.discover.model.ForumNavigationModel
-import timber.log.Timber
 
 object ForumNetworkSource {
-
     private val BLACKLIST = listOf(
-        "新帖", "新贴", "举报", "投诉", "管理", "公告", "活动", "大赛", "竞赛", 
+        "新帖", "新贴", "举报", "投诉", "管理", "公告", "活动", "大赛", "竞赛",
         "招募", "欢迎", "处理", "站务", "福利", "建议", "申请", "专帖", "置顶", "版规", "指引", "办公区", "证据区"
     )
 
@@ -30,9 +29,9 @@ object ForumNetworkSource {
                 val standardUrl = if (href.startsWith("http")) href else href
                 if (uniqueUrls.add(standardUrl)) {
                     val isSub = link.parents().any { it.tagName() == "dd" }
-                    
+
                     val parentTitle = link.parent()?.parent()?.previousElementSibling()?.selectFirst("dt a")?.text()?.let { cleanTitle(it) }
-                    
+
                     list.add(
                         ForumNavigationModel(
                             title = cleanTitle(title),
@@ -61,7 +60,7 @@ object ForumNetworkSource {
     private fun isValidForumUrl(href: String): Boolean {
         val isPureForum = href.matches(Regex("forum-\\d+-1\\.html")) || href.contains("forumdisplay&fid=")
         val isJunk = href.contains("newthread") || href.contains("viewthread") || href.contains("mod=post") ||
-                     href.contains("action=") || href.contains("guide") || href.contains("filter=") || 
+                     href.contains("action=") || href.contains("guide") || href.contains("filter=") ||
                      href.contains("view=") || href.contains("typeid=")
         return isPureForum && !isJunk
     }
@@ -79,15 +78,15 @@ object ForumNetworkSource {
 
     private fun getIconByFid(fid: Int?, title: String): Int {
         return when (fid) {
-            2 -> R.drawable.ic_creator      
-            16 -> R.drawable.ic_software    
-            65 -> R.drawable.ic_sercurite   
-            5 -> R.drawable.ic_sercurite    
-            4 -> R.drawable.ic_creator      
-            24 -> R.drawable.ic_message_black_24dp 
-            6 -> R.drawable.ic_message_black_24dp  
-            10 -> R.drawable.ic_water       
-            66 -> R.drawable.ic_welfare     
+            2 -> R.drawable.ic_creator
+            16 -> R.drawable.ic_software
+            65 -> R.drawable.ic_sercurite
+            5 -> R.drawable.ic_sercurite
+            4 -> R.drawable.ic_creator
+            24 -> R.drawable.ic_message_black_24dp
+            6 -> R.drawable.ic_message_black_24dp
+            10 -> R.drawable.ic_water
+            66 -> R.drawable.ic_welfare
             else -> when {
                 title.contains("安全") || title.contains("逆向") || title.contains("病毒") || title.contains("破解") -> R.drawable.ic_sercurite
                 title.contains("软件") || title.contains("程序") || title.contains("工具") || title.contains("资源") || title.contains("原创") -> R.drawable.ic_software

@@ -1,12 +1,11 @@
 package top.easelink.lcg.account
 
-import top.easelink.lcg.utils.SharedPreferencesHelper
-import timber.log.Timber
-import top.easelink.lcg.utils.clearCookies
 import androidx.core.content.edit
+import timber.log.Timber
+import top.easelink.lcg.utils.SharedPreferencesHelper
+import top.easelink.lcg.utils.clearCookies
 
 object UserDataRepo {
-
     var avatar: String
         get() = get(SP_KEY_USER_AVATAR, "")
         set(value) = put(SP_KEY_USER_AVATAR, value)
@@ -99,6 +98,4 @@ object UserDataRepo {
             }
             .apply()
     }
-
 }
-

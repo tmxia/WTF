@@ -9,7 +9,6 @@ import top.easelink.lcg.R
 import top.easelink.lcg.databinding.DialogLargeImageBinding
 
 class LargeImageDialog : TopDialog() {
-
     private var _binding: DialogLargeImageBinding? = null
     private val binding get() = _binding!!
 
@@ -42,10 +41,10 @@ class LargeImageDialog : TopDialog() {
                 size(Size.ORIGINAL)
             }
         }
-        
+
         binding.photo.setOnClickListener { dismissDialog() }
         binding.root.setOnClickListener { dismissDialog() }
-        
+
         binding.exit.setOnClickListener {
             dismissDialog()
         }

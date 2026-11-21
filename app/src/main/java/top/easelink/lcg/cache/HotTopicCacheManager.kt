@@ -8,14 +8,10 @@ import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.appinit.LCGApp
 import java.io.File
 
-object HotTopicCacheManager: ICacheManager {
-
+object HotTopicCacheManager : ICacheManager {
     private const val SPLITERATOR = "-"
     private const val TIME_INTERVAL = 6 * 60 * 60 * 1000
     private val HOT_TOPIC_CACHE_FOLDER = "${LCGApp.context.cacheDir}/hot_topic_articles"
-
-    
-
 
     suspend fun saveToDisk(rankType: String, dateType: String, timeStamp: Long, content: String) = withContext(IOPool) {
         checkDirs()
@@ -27,9 +23,6 @@ object HotTopicCacheManager: ICacheManager {
             file.delete()
         }
     }
-
-    
-
 
     fun findTodayHotTopic(rankType: String, dateType: String): Document? {
         File(HOT_TOPIC_CACHE_FOLDER)
@@ -49,22 +42,15 @@ object HotTopicCacheManager: ICacheManager {
         return null
     }
 
-    
-
-
     override suspend fun clearAllCaches() = withContext(IOPool) {
         checkDirs()
     }
-
-    
-
 
     private fun checkDirs() {
         val parent = File(HOT_TOPIC_CACHE_FOLDER)
         if (!parent.exists()) {
             parent.mkdirs()
         } else {
-            
             parent.list()
                 ?.asSequence()
                 ?.filter {
@@ -79,7 +65,6 @@ object HotTopicCacheManager: ICacheManager {
                     File(it).delete()
                 }
         }
-
     }
 
     private fun String.getTimeStamp(): Long {

@@ -16,7 +16,6 @@ import com.google.android.material.textfield.TextInputLayout
 import org.json.JSONArray
 
 object QuickReplyHelper {
-
     private fun getQuickReplies(context: Context): MutableList<String> {
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val json = prefs.getString("quick_replies_json", null)
@@ -57,12 +56,12 @@ object QuickReplyHelper {
                 val padH = (12 * density).toInt()
                 val padV = (6 * density).toInt()
                 setPadding(padH, padV, padH, padV)
-                
+
                 background = GradientDrawable().apply {
                     setColor(Color.parseColor("#F5F5F5"))
                     cornerRadius = 16f * density
                 }
-                
+
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
@@ -85,12 +84,12 @@ object QuickReplyHelper {
             val padH = (12 * density).toInt()
             val padV = (6 * density).toInt()
             setPadding(padH, padV, padH, padV)
-            
+
             background = GradientDrawable().apply {
                 setColor(Color.parseColor("#F5F5F5"))
                 cornerRadius = 16f * density
             }
-            
+
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -102,16 +101,15 @@ object QuickReplyHelper {
         container.addView(addBtn)
     }
 
-    
     private fun showEditDeleteDialog(context: Context, index: Int, phrase: String, onUpdated: () -> Unit) {
         val items = if (index == -1) arrayOf("新增短语") else arrayOf("编辑短语", "删除短语")
         val titleStr = if (index == -1) "新增快捷短语" else "操作: $phrase"
-        
+
         val dialog = AlertDialog.Builder(context).create()
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
         val density = context.resources.displayMetrics.density
-        
+
         val card = MaterialCardView(context).apply {
             radius = 16f * density
             setCardBackgroundColor(Color.WHITE)
@@ -155,8 +153,7 @@ object QuickReplyHelper {
         card.addView(layout)
         dialog.setView(card)
         dialog.show()
-        
-        
+
         val width = (280 * density).toInt()
         dialog.window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
     }
@@ -242,8 +239,7 @@ object QuickReplyHelper {
         card.addView(layout)
         dialog.setView(card)
         dialog.show()
-        
-        
+
         val width = (280 * density).toInt()
         dialog.window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
     }

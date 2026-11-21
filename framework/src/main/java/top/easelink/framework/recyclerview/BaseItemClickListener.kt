@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.RecyclerView
 open class BaseItemClickListener(
     private val listener: OnItemClickListener
 ) : RecyclerView.SimpleOnItemTouchListener() {
-
     private var gestureDetector: GestureDetector? = null
 
     override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {

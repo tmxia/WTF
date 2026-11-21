@@ -5,7 +5,6 @@ class Box<out T>(private val value: T) {
 }
 
 class TemplateTest {
-
     val box: Box<Int> = Box(1)
 
     @org.junit.Test

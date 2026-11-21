@@ -15,7 +15,6 @@ import top.easelink.lcg.databinding.FragmentFollowingBinding
 import top.easelink.lcg.ui.main.follow.viewmodel.FollowingFeedViewModel
 
 class FollowingContentFragment : TopFragment() {
-
     private lateinit var mFollowVM: FollowingFeedViewModel
     private var _binding: FragmentFollowingBinding? = null
     private val binding get() = _binding!!

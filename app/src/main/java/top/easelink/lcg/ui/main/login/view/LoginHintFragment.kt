@@ -10,7 +10,6 @@ import top.easelink.lcg.databinding.FragmentLoginHintBinding
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 
 class LoginHintFragment : TopFragment() {
-
     private var _binding: FragmentLoginHintBinding? = null
     private val binding get() = _binding!!
 

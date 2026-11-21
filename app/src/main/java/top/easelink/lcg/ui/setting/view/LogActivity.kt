@@ -21,11 +21,10 @@ import top.easelink.lcg.utils.LogItem
 import java.io.File
 
 class LogActivity : AppCompatActivity() {
-
     private lateinit var adapter: LogAdapter
     private lateinit var tvEmpty: TextView
     private var allLogs: List<LogItem> = emptyList()
-    private var currentFilter = 0 
+    private var currentFilter = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,8 +69,7 @@ class LogActivity : AppCompatActivity() {
             }
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.setPrimaryClip(ClipData.newPlainText("AppLogs", logText))
-            
-            
+
             try {
                 val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
                 if (!downloadsDir.exists()) {
@@ -82,7 +80,6 @@ class LogActivity : AppCompatActivity() {
                 file.writeText(logText)
                 Toast.makeText(this, "已复制到剪贴板\n并保存至：Download/$fileName", Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
-                
                 val fallbackFile = File(getExternalFilesDir(null), "wtf_debug_log.txt")
                 fallbackFile.writeText(logText)
                 Toast.makeText(this, "系统目录不可写，已保存至：\n${fallbackFile.absolutePath}", Toast.LENGTH_LONG).show()
@@ -101,12 +98,12 @@ class LogActivity : AppCompatActivity() {
     private fun applyFilter() {
         val filtered = allLogs.filter {
             when (currentFilter) {
-                1 -> 
+                1 ->
                     it.tag.contains("网络层") || it.tag.contains("详情页") || it.message.contains("【网络层】") || it.message.contains("【详情页】")
-                2 -> 
+                2 ->
                     it.tag.contains("业务层") || it.tag.contains("UI层") || it.tag.contains("Adapter") || it.tag.contains("状态层") || it.tag.contains("任务层") ||
                     it.message.contains("【业务层】") || it.message.contains("【UI层】") || it.message.contains("【Adapter】") || it.message.contains("【状态层】") || it.message.contains("【任务层】")
-                3 -> 
+                3 ->
                     it.level >= Log.WARN
                 else -> true
             }
@@ -114,8 +111,6 @@ class LogActivity : AppCompatActivity() {
         adapter.submit(filtered)
         tvEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
     }
-
-    
 
     inner class LogAdapter : RecyclerView.Adapter<LogAdapter.ViewHolder>() {
         private var list: List<LogItem> = emptyList()

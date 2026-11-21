@@ -25,7 +25,6 @@ import top.easelink.lcg.utils.showMessage
 import java.lang.ref.WeakReference
 
 class HistoryArticlesAdapter : RecyclerView.Adapter<BaseViewHolder>() {
-
     private var mFragmentManager: WeakReference<FragmentManager>? = null
     private val job = Job()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
@@ -43,7 +42,6 @@ class HistoryArticlesAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     override fun getItemCount(): Int {
         return differ.currentList.size.takeIf { it > 0 } ?: 1
     }
-
 
     override fun getItemViewType(position: Int): Int {
         return if (differ.currentList.isEmpty()) VIEW_TYPE_EMPTY else VIEW_TYPE_NORMAL
@@ -95,14 +93,12 @@ class HistoryArticlesAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     inner class ArticleViewHolder(
         private val binding: ItemHistoryArticleViewBinding
     ) : BaseViewHolder(binding.root) {
-
         fun bind(item: HistoryModel) {
             with(binding) {
                 titleTextView.text = item.title
                 authorTextView.text = item.author
                 dateTextView.text = formatRelativeTime(item.timeStamp)
 
-                
                 layout.setOnClickListener {
                     EventBus.getDefault().post(OpenArticleEvent(item.url))
                 }

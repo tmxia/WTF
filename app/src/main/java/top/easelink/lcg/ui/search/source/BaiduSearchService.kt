@@ -12,9 +12,7 @@ import top.easelink.lcg.ui.search.model.BaiduSearchResults
 import top.easelink.lcg.ui.search.model.RequestTooOftenException
 import top.easelink.lcg.utils.showMessage
 
-
 object BaiduSearchService {
-
     suspend fun doSearchRequest(requestUrl: String, retryTime: Int): BaiduSearchResults {
         return try {
             if (retryTime <= 3) {
@@ -50,7 +48,6 @@ object BaiduSearchService {
                 ?.filterNotNull()
                 .orEmpty()
             if (list.isNullOrEmpty()) {
-
                 return BaiduSearchResults(emptyList())
             }
             return BaiduSearchResults(list).also {
@@ -61,7 +58,7 @@ object BaiduSearchService {
                         ?.getElementsByClass("support-text-top")
                         ?.first()
                         ?.text()
-                } catch (e: Exception) { 
+                } catch (e: Exception) {
                     it.nextPageUrl = null
                 }
             }

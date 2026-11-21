@@ -16,7 +16,6 @@ import top.easelink.lcg.databinding.DialogPostPreviewBinding
 import top.easelink.lcg.ui.main.article.viewmodel.PostPreviewViewModel
 
 class PostPreviewDialog : TopDialog() {
-
     private lateinit var mViewModel: PostPreviewViewModel
     private var _binding: DialogPostPreviewBinding? = null
     private val binding get() = _binding!!
@@ -52,7 +51,6 @@ class PostPreviewDialog : TopDialog() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        
         binding.root.visibility = View.INVISIBLE
 
         dialog?.window?.apply {
@@ -65,7 +63,6 @@ class PostPreviewDialog : TopDialog() {
             attributes = params
         }
 
-        
         binding.dialogRoot.setOnClickListener {
             dismissDialog()
         }
@@ -74,7 +71,6 @@ class PostPreviewDialog : TopDialog() {
             dismissDialog()
         }
 
-        
         initView()
     }
 
@@ -86,14 +82,14 @@ class PostPreviewDialog : TopDialog() {
                 ?.let { query ->
                     mViewModel.content.observe(viewLifecycleOwner, Observer { contentHtml ->
                         binding.contentTextView.setHtml(
-                            contentHtml, 
+                            contentHtml,
                             HtmlCoilImageGetter(
                                 binding.contentTextView.context,
                                 binding.contentTextView,
                                 this
                             )
                         )
-                        
+
                         binding.root.visibility = View.VISIBLE
                     })
                     mViewModel.author.observe(viewLifecycleOwner, Observer {
@@ -105,17 +101,15 @@ class PostPreviewDialog : TopDialog() {
                     mViewModel.date.observe(viewLifecycleOwner, Observer {
                         binding.dateTextView.text = it
                     })
-                    
-                    
+
                     mViewModel.loadingResult.observe(viewLifecycleOwner, Observer { status ->
                         if (status == -1) {
                             binding.root.visibility = View.VISIBLE
                         } else if (status != R.string.preview_loading) {
-                            
                             dismissDialog()
                         }
                     })
-                    
+
                     mViewModel.initUrl(query)
                 }
         } catch (e: Exception) {

@@ -5,7 +5,6 @@ import androidx.annotation.MainThread
 import top.easelink.framework.utils.isOnMainThread
 
 object AppGuardStarter {
-
     @MainThread
     fun init(context: Context) {
         if (!isOnMainThread()) {
@@ -14,6 +13,5 @@ object AppGuardStarter {
         Thread.setDefaultUncaughtExceptionHandler(
             AppGuard(context, Thread.getDefaultUncaughtExceptionHandler())
         )
-
     }
 }

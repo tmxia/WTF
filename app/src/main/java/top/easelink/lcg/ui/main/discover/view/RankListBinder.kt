@@ -1,15 +1,14 @@
 package top.easelink.lcg.ui.main.discover.view
 
 import android.view.LayoutInflater
-import android.view.ViewGroup
 import android.view.View
+import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import top.easelink.lcg.databinding.FragmentRankListBinding
 import top.easelink.lcg.ui.main.discover.model.RankListModel
 
 class RankListBinder : BaseNavigationBinder<RankListModel, RankListVH>() {
-
     override fun onBindViewHolder(holder: RankListVH, item: RankListModel) {
         holder.onBind(item, null)
     }
@@ -43,7 +42,6 @@ class RankListVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseNavigati
     }
 
     private fun setUp(rankModel: RankListModel) {
-        
                 binding.apply {
             rankTips.text = rankModel.notice
             rankRecyclerView.apply {
@@ -58,4 +56,3 @@ class RankListVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseNavigati
         }
     }
 }
-

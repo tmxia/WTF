@@ -12,13 +12,12 @@ import androidx.fragment.app.viewModels
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.topbase.ControllableFragment
+import top.easelink.lcg.ui.main.article.view.PostPreviewDialog
 import top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher
 import top.easelink.lcg.ui.main.articles.viewmodel.ForumArticlesViewModel
 import top.easelink.lcg.ui.main.model.OpenArticleEvent
-import top.easelink.lcg.ui.main.article.view.PostPreviewDialog
 
 class ForumArticlesFragment : Fragment(), ControllableFragment {
-
     private val viewModel: ForumArticlesViewModel by viewModels()
     private var isListAtTop = true
 
@@ -29,8 +28,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         savedInstanceState: Bundle?
     ): View {
         val context = requireContext()
-        
-        
+
         val composeView = ComposeView(context).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,

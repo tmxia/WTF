@@ -7,11 +7,10 @@ import androidx.lifecycle.ViewModelProvider
 import top.easelink.lcg.R
 import top.easelink.lcg.databinding.DialogReplyPostBinding
 import top.easelink.lcg.ui.main.article.viewmodel.ReplyPostViewModel
-import top.easelink.lcg.utils.showMessage
 import top.easelink.lcg.utils.QuickReplyHelper
+import top.easelink.lcg.utils.showMessage
 
 class ReplyPostDialog : DialogFragment() {
-
     private lateinit var replyPostViewModel: ReplyPostViewModel
     private var _binding: DialogReplyPostBinding? = null
     private val binding get() = _binding!!
@@ -36,19 +35,16 @@ class ReplyPostDialog : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         dialog?.setCanceledOnTouchOutside(true)
         super.onViewCreated(view, savedInstanceState)
         replyPostViewModel = ViewModelProvider(this)[ReplyPostViewModel::class.java]
 
-        
-        
         val prefs = requireContext().getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
         var isExpanded = prefs.getBoolean("quick_reply_expanded", false)
         binding.quickReplyScroll.visibility = if (isExpanded) android.view.View.VISIBLE else android.view.View.GONE
         binding.quickReplyArrow.text = if (isExpanded) "▲" else "▼"
 
-        
         top.easelink.lcg.utils.QuickReplyHelper.renderQuickReplies(requireContext(), binding.quickReplyContainer) { phrase ->
             val current = binding.replyContent.text?.toString() ?: ""
             if (current.isEmpty()) binding.replyContent.setText(phrase)
@@ -63,7 +59,6 @@ class ReplyPostDialog : DialogFragment() {
             prefs.edit().putBoolean("quick_reply_expanded", isExpanded).apply()
         }
 
-        
         QuickReplyHelper.renderQuickReplies(requireContext(), binding.quickReplyContainer) { phrase ->
             val current = binding.replyContent.text?.toString() ?: ""
             if (current.isEmpty()) binding.replyContent.setText(phrase)
@@ -72,11 +67,7 @@ class ReplyPostDialog : DialogFragment() {
         }
 
 binding.btnCancel.setOnClickListener { dismiss() }
-        
-        
 
-        
-        
         binding.replyTo.text = getString(R.string.reply_post_dialog_title, arguments?.getString(REPLY_POST_AUTHOR))
 
         replyPostViewModel.sending.observe(viewLifecycleOwner) { isSending ->
@@ -100,15 +91,13 @@ binding.btnCancel.setOnClickListener { dismiss() }
     override fun onStart() {
         super.onStart()
         dialog?.window?.apply {
-            
             setBackgroundDrawableResource(android.R.color.transparent)
-            
+
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             setGravity(Gravity.BOTTOM)
             val params = attributes
-            
-            
+
             attributes = params
         }
     }

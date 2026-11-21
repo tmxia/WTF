@@ -119,6 +119,5 @@ internal class ForumsSecondaryAdapterConfig :
         holder: LinkageSecondaryFooterViewHolder,
         item: BaseGroupedItem<ForumGroupedItem.ItemInfo>
     ) {
-        
     }
 }

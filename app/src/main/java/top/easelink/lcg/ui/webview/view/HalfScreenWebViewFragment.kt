@@ -6,11 +6,10 @@ import android.view.*
 import android.webkit.WebSettings
 import top.easelink.framework.topbase.TopDialog
 import top.easelink.lcg.R
-import top.easelink.lcg.utils.getScreenHeight
 import top.easelink.lcg.databinding.DialogHalfScreenWebviewBinding
+import top.easelink.lcg.utils.getScreenHeight
 
 class HalfScreenWebViewFragment : TopDialog() {
-
     private var _binding: DialogHalfScreenWebviewBinding? = null
     private val binding get() = _binding!!
 

@@ -46,8 +46,8 @@ import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.ui.main.articles.view.FavoriteArticlesFragment
 import top.easelink.lcg.ui.main.follow.view.FollowFragment
 import top.easelink.lcg.ui.main.history.view.HistoryArticlesFragment
-import top.easelink.lcg.ui.main.message.view.MessageFragment
 import top.easelink.lcg.ui.main.me.viewmodel.MeViewModel
+import top.easelink.lcg.ui.main.message.view.MessageFragment
 import top.easelink.lcg.ui.main.model.OpenForumEvent
 import top.easelink.lcg.ui.main.model.SignInSuccessEvent
 import top.easelink.lcg.ui.setting.view.SettingActivity
@@ -57,7 +57,6 @@ import top.easelink.lcg.utils.WebsiteConstant.MY_ARTICLES_QUERY
 import java.util.Calendar
 
 class MeFragment : TopFragment(), ControllableFragment {
-
     private lateinit var viewModel: MeViewModel
 
     companion object {
@@ -104,7 +103,7 @@ class MeFragment : TopFragment(), ControllableFragment {
     private fun showFragment(fragment: Fragment) {
         activity?.let {
             if (it is top.easelink.lcg.ui.main.MainActivity) {
-                it.showFragment(fragment) 
+                it.showFragment(fragment)
             } else {
                 top.easelink.framework.utils.addFragmentInActivity(it.supportFragmentManager, fragment, R.id.clRootView)
             }
@@ -128,8 +127,7 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
             signInColor = Color(0xFF999999)
             return@LaunchedEffect
         }
-        
-        
+
         if (SignInManager.isSignedToday()) {
             signInText = "✅ 已签到"
             signInColor = Color(0xFF4CAF50)
@@ -138,7 +136,6 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
             signInColor = Color(0xFFE53935)
         }
 
-        
         SignInManager.checkSignInStatus(context) { isSigned ->
             if (isSigned) {
                 signInText = "✅ 已签到"
@@ -151,7 +148,6 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
     }
     var tick by remember { mutableStateOf(System.currentTimeMillis()) }
 
-    
     DisposableEffect(Unit) {
         val subscriber = object {
             @Subscribe(threadMode = ThreadMode.MAIN)
@@ -163,12 +159,6 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
         EventBus.getDefault().register(subscriber)
         onDispose { EventBus.getDefault().unregister(subscriber) }
     }
-
-    
-    
-
-    
-
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5)).verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)) {
         Card(shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), modifier = Modifier.fillMaxWidth()) {

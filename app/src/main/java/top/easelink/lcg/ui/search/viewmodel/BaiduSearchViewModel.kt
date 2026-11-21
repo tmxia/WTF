@@ -48,6 +48,5 @@ class BaiduSearchViewModel : ViewModel(), SearchAdapterListener {
                 isLoading.postValue(false)
             }
         }
-
     }
 }

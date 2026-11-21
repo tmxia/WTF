@@ -19,6 +19,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,7 +28,6 @@ import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.topbase.TopActivity
 import top.easelink.lcg.R
 import top.easelink.lcg.account.UserDataRepo
-import androidx.lifecycle.lifecycleScope
 import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.databinding.ActivitySettingsBinding
 import top.easelink.lcg.network.LCGCookieJar
@@ -42,7 +42,6 @@ import top.easelink.lcg.utils.setStatusBarPadding
 import top.easelink.lcg.utils.showMessage
 
 class SettingActivity : TopActivity() {
-
     private lateinit var mViewModel: SettingViewModel
     private lateinit var binding: ActivitySettingsBinding
 
@@ -93,19 +92,18 @@ class SettingActivity : TopActivity() {
 
             checkUpdateBtn.setOnClickListener { showMessage(R.string.app_is_latest) }
 
-            
             btnViewCookie.setOnClickListener {
                 val cookies = top.easelink.lcg.network.LCGCookieJar.cookiesForUrl(top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL)
                 if (cookies.isEmpty()) {
                     showMessage("本地暂无 Cookie 数据")
                     return@setOnClickListener
                 }
-                
+
                 val cookieStr = cookies.entries.joinToString(";\n") { "${it.key} = ${it.value}" }
                 val clipboard = this@SettingActivity.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 val clip = android.content.ClipData.newPlainText("Cookie", cookieStr)
                 clipboard.setPrimaryClip(clip)
-                
+
                 com.google.android.material.dialog.MaterialAlertDialogBuilder(this@SettingActivity)
                     .setTitle("当前 Cookie (已复制)")
                     .setMessage(cookieStr)
@@ -120,8 +118,7 @@ class SettingActivity : TopActivity() {
                 batteryPrefs.edit().putBoolean("battery_state", isChecked).apply()
                 if (isChecked) {
                     if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
-                        try { startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply { data = Uri.parse("package:$packageName") }) }
-                        catch (e: Exception) { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }
+                        try { startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply { data = Uri.parse("package:$packageName") }) } catch (e: Exception) { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }
                     }
                 } else {
                     startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
@@ -172,7 +169,7 @@ class SettingActivity : TopActivity() {
 
     private fun updateAccountButton(isLoggedIn: Boolean) {
         binding.btnViewCookie.visibility = if (isLoggedIn) View.VISIBLE else View.GONE
-        
+
         if (!isLoggedIn) {
             with(binding) {
                 syncFavoritesSwitch.isEnabled = false
@@ -192,7 +189,6 @@ class SettingActivity : TopActivity() {
     }
 
     private fun tryLocalCookieLoginFirst() {
-        
         val cookies = LCGCookieJar.cookiesForUrl("https://www.52pojie.cn")
         if (cookies.isEmpty()) {
             showLoginOptionsDialog()
@@ -210,7 +206,6 @@ class SettingActivity : TopActivity() {
                         showMessage("本地登录成功！欢迎回来，${userInfo.userName}")
                         updateAccountButton(true)
                     } else {
-                        
                         showMessage("本地登录已失效，请重新登录")
                         showLoginOptionsDialog()
                     }

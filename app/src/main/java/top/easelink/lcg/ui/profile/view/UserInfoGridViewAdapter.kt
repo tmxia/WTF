@@ -14,7 +14,6 @@ class UserInfoGridViewAdapter internal constructor(
     context: Context,
     @field:LayoutRes @param:LayoutRes private val mLayoutRes: Int
 ) : ArrayAdapter<ExtraUserInfo>(context, mLayoutRes) {
-
     override fun getView(
         position: Int,
         convertView: View?,
@@ -45,5 +44,4 @@ class UserInfoGridViewAdapter internal constructor(
         var titleText: TextView? = null
         var valueText: TextView? = null
     }
-
 }

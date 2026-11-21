@@ -72,7 +72,7 @@ class ScreenCaptureDialog : DialogFragment() {
             while (options.outWidth / inSampleSize > 1080) { inSampleSize *= 2 }
             options.inJustDecodeBounds = false
             options.inSampleSize = inSampleSize
-            
+
             val bitmap = BitmapFactory.decodeFile(file.absolutePath, options)
             if (bitmap != null) {
                 binding.imgScreenCapture.setImageBitmap(bitmap)

@@ -16,7 +16,6 @@ import top.easelink.lcg.utils.QuickReplyHelper
 import top.easelink.lcg.utils.showMessage
 
 class CommentArticleDialog : TopDialog() {
-
     companion object {
         private val TAG = CommentArticleDialog::class.java.simpleName
         private const val REPLY_POST_URL = "reply_article_url"
@@ -51,7 +50,7 @@ class CommentArticleDialog : TopDialog() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         dialog?.setCanceledOnTouchOutside(true)
         super.onViewCreated(view, savedInstanceState)
         replyPostViewModel = ViewModelProvider(this)[ReplyPostViewModel::class.java]
@@ -72,14 +71,9 @@ class CommentArticleDialog : TopDialog() {
     }
 
     private fun setupUI() {
-        
-
-        
-
-        
         val prefs = requireContext().getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
         var isExpanded = prefs.getBoolean("quick_reply_expanded", false)
-        
+
         binding.quickReplyScroll.visibility = if (isExpanded) View.VISIBLE else View.GONE
         binding.quickReplyArrow.text = if (isExpanded) "▲" else "▼"
 
@@ -90,7 +84,6 @@ class CommentArticleDialog : TopDialog() {
             prefs.edit().putBoolean("quick_reply_expanded", isExpanded).apply()
         }
 
-        
         QuickReplyHelper.renderQuickReplies(requireContext(), binding.quickReplyContainer) { phrase ->
             val current = binding.replyContent.text?.toString() ?: ""
             if (current.isEmpty()) {
@@ -142,11 +135,11 @@ class CommentArticleDialog : TopDialog() {
     }
 
     private fun createPost(content: String) = Post(
-        UserDataRepo.username, 
+        UserDataRepo.username,
         UserDataRepo.avatar,
-        CommonUtils.getCurrentDate(), 
-        content, 
-        null, 
+        CommonUtils.getCurrentDate(),
+        content,
+        null,
         null
     )
 

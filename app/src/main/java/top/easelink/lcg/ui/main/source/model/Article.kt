@@ -1,10 +1,5 @@
 package top.easelink.lcg.ui.main.source.model
 
-
-
-
-
-
 class Article(
     val title: String,
     val author: String,

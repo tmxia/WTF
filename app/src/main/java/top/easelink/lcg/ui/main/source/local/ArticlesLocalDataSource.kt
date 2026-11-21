@@ -4,11 +4,6 @@ import androidx.annotation.WorkerThread
 import top.easelink.lcg.ui.main.source.FavoritesLocalDataSource
 import top.easelink.lcg.ui.main.source.model.ArticleEntity
 
-
-
-
-
-
 object ArticlesLocalDataSource : FavoritesLocalDataSource {
     private val mArticlesDao = ArticlesDatabase.getInstance().articlesDao()
 

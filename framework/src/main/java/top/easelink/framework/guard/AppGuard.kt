@@ -12,7 +12,6 @@ class AppGuard(
     private var mContext: Context,
     private val mDefaultUncaughtExceptionHandler: Thread.UncaughtExceptionHandler? = null
 ) : Thread.UncaughtExceptionHandler {
-
     override fun uncaughtException(t: Thread, e: Throwable) {
         if (!BuildConfig.DEBUG) {
             restartApp(mContext)

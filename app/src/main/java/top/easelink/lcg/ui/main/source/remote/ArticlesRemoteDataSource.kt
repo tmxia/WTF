@@ -29,11 +29,6 @@ import top.easelink.lcg.utils.WebsiteConstant.REMOVE_FAVORITE_QUERY
 import java.net.SocketTimeoutException
 import java.util.*
 
-
-
-
-
-
 object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource {
     private const val USER_NAME = "name"
     private const val USER_AVATAR = "avatar"
@@ -119,7 +114,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             val replyAddUrls = getReplyAddUrl(doc)
             val userInfos = getUserInfo(doc)
             val contents = getContents(doc)
-            
+
             if (isFirstFetch) {
                 GlobalScope.launch(BackGroundPool) {
                     addToHistory(
@@ -149,7 +144,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                         replyUrls[i]
                     }
                     val post = Post(
-                        
+
                         author = userInfos[i][USER_NAME].orEmpty(),
                         avatar = userInfos[i][USER_AVATAR].orEmpty(),
                         date = dateTimes[i],
@@ -169,7 +164,6 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             return ArticleDetail(title, postList, nextPageUrl, fromHash, articleAbstract)
         } catch (e: Exception) {
             when (e) {
-                
                 is SocketTimeoutException -> throw NetworkException()
                 is BlockException -> throw e
                 else -> throw e
@@ -293,48 +287,42 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         processThreadList: Boolean
     ): ForumPage? {
         try {
-            
             var elements = doc.select("tbody[id^=normal]")
             if (elements.isEmpty()) {
                 elements = doc.select("tbody[id^=normalthread]")
             }
 
-            
             if (elements.isEmpty()) {
-                
                 return ForumPage(emptyList(), emptyList())
             }
 
             val articleList: List<Article> = elements.mapNotNull { e ->
                 try {
-                    
                     val reply = extractFrom(e, "td.num", "a.xi2")
                         .ifBlank { "0" }
                         .filter { it.isDigit() }
                         .toIntOrNull() ?: 0
-                        
+
                     val view = extractFrom(e, "td.num", "em")
                         .ifBlank { "0" }
                         .filter { it.isDigit() }
                         .toIntOrNull() ?: 0
-                        
-                    
+
                     val title = e.selectFirst("th.common > .xst")?.text().orEmpty()
                         .ifBlank { e.selectFirst("th.new > .xst")?.text().orEmpty() }
                         .ifBlank { e.selectFirst("a.xst")?.text().orEmpty() }
-                        
+
                     val author = extractFrom(e, "td.by", "a[href*=uid]")
-                        .ifBlank { "匿名" } 
-                        
+                        .ifBlank { "匿名" }
+
                     val date = extractFrom(e, "td.by", "span")
-                    
+
                     val url = extractAttrFrom(e, "href", "th.common", "a.xst")
                         .ifBlank { extractAttrFrom(e, "href", "th.new", "a.xst") }
                         .ifBlank { e.selectFirst("a.xst")?.attr("href").orEmpty() }
-                        
+
                     val origin = e.selectFirst("td.by > a[target]")?.text().orEmpty()
-                    
-                    
+
                     if (title.isNotBlank() && url.isNotBlank()) {
                         Article(title, author, date, url, view, reply, origin)
                     } else {
@@ -350,7 +338,6 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                 return ForumPage(emptyList(), emptyList())
             }
 
-            
             var threadList: List<ForumThread>? = null
             if (processThreadList) {
                 doc.getElementById("thread_types")?.let { threadTypes ->
@@ -424,9 +411,6 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         }
         return list
     }
-
-    
-
 
     private fun getUserInfo(document: Document): List<Map<String, String>> {
         val list: MutableList<Map<String, String>> = ArrayList(12)
@@ -517,11 +501,9 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
 
     private fun processContentElement(element: Element): Element {
         element.select("div.tip").remove()
-        
+
         element.select("script").remove()
 
-        
-        
         for (quote in element.select("div.quote")) {
             val inner = quote.selectFirst("blockquote")?.html().orEmpty()
             if (inner.isNotEmpty()) {
@@ -532,7 +514,6 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             }
         }
 
-        
         for (e in element.getElementsByTag("pre")) {
             val s = e.html()
                 .replace("\r\n", "<br/>")
@@ -541,13 +522,12 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                 .replace(" ", "&nbsp;")
             e.html(s)
         }
-        
+
         val imgElements = element.getElementsByTag("img")
         for (i in imgElements.indices) {
             val imgElement = imgElements[i]
             val src = imgElement.attr("src")
-            
-            
+
             if (src.contains("static.52pojie.cn/static/image/") &&
                 !src.contains("smiley") &&
                 !src.contains("none")
@@ -559,16 +539,13 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                 imgElement.attr("src", attr)
             }
 
-        
-        
         for (bold in element.select("b, strong")) {
             bold.unwrap()
         }
-        
+
         for (heading in element.select("h1, h2, h3, h4, h5, h6")) {
             heading.tagName("p")
         }
-        
         }
         return element
     }
@@ -596,8 +573,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             val doc = JsoupClient.sendGetRequestWithQuery(
                 String.format(REMOVE_FAVORITE_QUERY, threadId, formHash)
             )
-            
-            
+
             val msg = doc.getElementById("messagetext")?.text().orEmpty()
             val hasError = doc.select(".alert_error").isNotEmpty()
             !hasError && (msg.isEmpty() || msg.contains("成功") || msg.contains("删除"))
@@ -606,11 +582,6 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             false
         }
     }
-
-    
-
-
-
 
     @WorkerThread
     fun replyAdd(query: String): String {

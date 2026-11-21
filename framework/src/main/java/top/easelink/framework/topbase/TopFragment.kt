@@ -8,7 +8,6 @@ import top.easelink.framework.threadpool.Main
 import kotlin.coroutines.CoroutineContext
 
 abstract class TopFragment : Fragment(), CoroutineScope {
-
     override val coroutineContext: CoroutineContext = SupervisorJob() + Main + CoroutineExceptionHandler { _, throwable ->
         Timber.e(throwable)
     }

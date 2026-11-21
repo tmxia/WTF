@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+
 package top.easelink.lcg.ui.main.history.view
 
 import android.os.Bundle
@@ -13,8 +14,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rememberCoroutineScope
@@ -27,8 +28,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.framework.topbase.TopFragment
@@ -39,7 +40,6 @@ import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 
 class HistoryArticlesFragment : TopFragment(), ControllableFragment {
-
     override fun isControllable(): Boolean = true
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -50,7 +50,7 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         (view as ComposeView).setContent {
             var historyList by remember { mutableStateOf<List<HistoryModel>>(emptyList()) }
             var isLoading by remember { mutableStateOf(true) }
@@ -59,7 +59,7 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
             LaunchedEffect(Unit) {
                 ArticlesDatabase.getInstance().articlesDao().getHistories().observe(viewLifecycleOwner) { list ->
                     historyList = list.map { HistoryModel(url = it.url, author = it.author, title = it.title, timeStamp = it.timestamp) }
-                    
+
                     scope.launch {
                         delay(400)
                         isLoading = false
@@ -77,7 +77,7 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
                             }
                         },
                         actions = {
-                            IconButton(onClick = { 
+                            IconButton(onClick = {
                                 lifecycleScope.launch(IOPool) {
                                     ArticlesDatabase.getInstance().articlesDao().deleteHistories()
                                 }
@@ -121,7 +121,7 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
                                                 imageVector = Icons.Filled.Close,
                                                 contentDescription = "删除",
                                                 tint = Color.LightGray,
-                                                modifier = Modifier.size(16.dp).clickable { 
+                                                modifier = Modifier.size(16.dp).clickable {
                                                     lifecycleScope.launch(IOPool) {
                                                         ArticlesDatabase.getInstance().articlesDao().deleteHistory(item.url)
                                                     }

@@ -12,9 +12,7 @@ import top.easelink.lcg.databinding.FragmentAboutBinding
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import java.util.*
 
-
 class AboutFragment : TopFragment(), ControllableFragment {
-
     private var _binding: FragmentAboutBinding? = null
     private val binding get() = _binding!!
 
@@ -43,7 +41,7 @@ class AboutFragment : TopFragment(), ControllableFragment {
         binding.authorEmail.setOnClickListener {
             val intent = Intent(Intent.ACTION_SEND)
             intent.type = "text/plain"
-            intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(getString(R.string.author_email))) 
+            intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(getString(R.string.author_email)))
             intent.putExtra(Intent.EXTRA_SUBJECT, "问题反馈")
             startActivity(Intent.createChooser(intent, "发送反馈邮件"))
         }

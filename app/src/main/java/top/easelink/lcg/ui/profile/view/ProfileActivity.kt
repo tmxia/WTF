@@ -17,7 +17,6 @@ import top.easelink.lcg.utils.setStatusBarPadding
 const val KEY_PROFILE_URL = "profile_url"
 
 class ProfileActivity : TopActivity() {
-
     private lateinit var mViewModel: ProfileViewModel
     private lateinit var binding: ActivityProfileBinding
 
@@ -44,7 +43,6 @@ class ProfileActivity : TopActivity() {
     }
 
     private fun setupToolBar() {
-        
         binding.toolbar.setStatusBarPadding()
         ViewCompat.setOnApplyWindowInsetsListener(binding.profileRoot) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())

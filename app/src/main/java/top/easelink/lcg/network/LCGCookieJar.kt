@@ -1,6 +1,7 @@
 package top.easelink.lcg.network
 
 import android.webkit.CookieManager
+import androidx.core.content.edit
 import com.franmontiel.persistentcookiejar.ClearableCookieJar
 import com.franmontiel.persistentcookiejar.PersistentCookieJar
 import com.franmontiel.persistentcookiejar.cache.SetCookieCache
@@ -12,21 +13,8 @@ import timber.log.Timber
 import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.utils.SharedPreferencesHelper
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
-import androidx.core.content.edit
-
-
-
-
-
-
-
-
-
-
-
 
 object LCGCookieJar {
-
     private const val LEGACY_MIGRATED_KEY = "lcg_cookie_migrated_v1"
 
     val jar: ClearableCookieJar by lazy {
@@ -35,11 +23,6 @@ object LCGCookieJar {
             migrateLegacyCookiesIfNeeded(it)
         }
     }
-
-    
-
-    
-
 
     fun hasLoginCookie(): Boolean {
         return cookiesForUrl(SERVER_BASE_URL).keys.any { it.contains("auth") }
@@ -50,10 +33,6 @@ object LCGCookieJar {
         return jar.loadForRequest(httpUrl).associate { it.name to it.value }
     }
 
-    
-
-
-
     fun saveCookiesFromJsoup(url: String, cookies: Map<String, String>) {
         if (cookies.isEmpty()) return
         val httpUrl = url.toHttpUrlOrNull() ?: return
@@ -62,10 +41,6 @@ object LCGCookieJar {
         }
         if (list.isNotEmpty()) jar.saveFromResponse(httpUrl, list)
     }
-
-    
-
-
 
     fun syncFromWebView(url: String) {
         val httpUrl = url.toHttpUrlOrNull() ?: return
@@ -80,10 +55,6 @@ object LCGCookieJar {
         if (list.isNotEmpty()) jar.saveFromResponse(httpUrl, list)
     }
 
-    
-
-
-
     fun syncToWebView() {
         val httpUrl = SERVER_BASE_URL.toHttpUrlOrNull() ?: return
         val cm = CookieManager.getInstance()
@@ -93,7 +64,6 @@ object LCGCookieJar {
         cm.flush()
     }
 
-    
     fun clearAll() {
         jar.clear()
         runCatching { CookieManager.getInstance().removeAllCookies(null) }
@@ -109,10 +79,6 @@ object LCGCookieJar {
             .expiresAt(System.currentTimeMillis() + DEFAULT_COOKIE_TTL_MS)
             .build()
     }.onFailure { Timber.w(it, "build cookie failed: %s=%s", name, value) }.getOrNull()
-
-    
-
-
 
     private fun migrateLegacyCookiesIfNeeded(target: ClearableCookieJar) {
         val userSp = SharedPreferencesHelper.getUserSp()

@@ -15,7 +15,6 @@ import top.easelink.lcg.R
 import top.easelink.lcg.utils.AppLogManager
 
 class LogDetailActivity : AppCompatActivity() {
-
     private lateinit var timeStr: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,7 +39,6 @@ class LogDetailActivity : AppCompatActivity() {
         val tvStackTitle = findViewById<TextView>(R.id.tv_stack_title)
         val tvStack = findViewById<TextView>(R.id.tv_stack)
 
-        
         when (level) {
             Log.ERROR -> { tvLevel.text = "E"; tvLevel.setTextColor(android.graphics.Color.parseColor("#F44336")) }
             Log.WARN -> { tvLevel.text = "W"; tvLevel.setTextColor(android.graphics.Color.parseColor("#FF9800")) }
@@ -58,7 +56,6 @@ class LogDetailActivity : AppCompatActivity() {
         tvTime.text = timeStr
         tvMessage.text = message
 
-        
         if (!stack.isNullOrBlank()) {
             tvStackTitle.visibility = View.VISIBLE
             tvStack.visibility = View.VISIBLE
@@ -68,7 +65,6 @@ class LogDetailActivity : AppCompatActivity() {
             tvStack.visibility = View.GONE
         }
 
-        
         findViewById<View>(R.id.btn_copy).setOnClickListener {
             val fullText = "$levelName · $tag\n$timeStr\n\n$message\n\n${stack ?: ""}"
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

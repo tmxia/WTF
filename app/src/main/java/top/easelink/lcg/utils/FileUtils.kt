@@ -12,7 +12,6 @@ import timber.log.Timber
 import top.easelink.lcg.appinit.LCGApp
 import java.io.*
 
-
 fun saveImageToGallery(bmp: Bitmap, bitName: String): String {
     val appDir = File(LCGApp.context.externalCacheDir, "lcg")
     if (!appDir.exists()) {
@@ -62,7 +61,6 @@ fun saveBmp2Gallery(context: Context, bmp: Bitmap, picName: String) {
     showMessage(context, "图片保存成功")
 }
 
-
 fun syncSystemGallery(context: Context, path: String, fileName: String) {
     val file = File(path)
     if (!file.exists()) {
@@ -96,13 +94,6 @@ fun syncSystemGallery(context: Context, path: String, fileName: String) {
         context.sendBroadcast(intent)
     }
 }
-
-
-
-
-
-
-
 
 fun getJsonStringFromAssets(fileName: String, context: Context): String {
     val stringBuilder = StringBuilder()

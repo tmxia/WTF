@@ -66,7 +66,6 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (ArticlesLocalDataSource.delArticleFromFavorite(articleEntity.id)) {
-                    
                     val currentList = articles.value.orEmpty().toMutableList()
                     currentList.remove(articleEntity)
                     articles.postValue(currentList)

@@ -13,7 +13,6 @@ class UserInfo(
     enthusiasticValue: String? = null,
     signInStateUrl: String? = null
 ) {
-
     var userName: String? = userName
         private set
     var avatarUrl: String? = avatarUrl
@@ -52,11 +51,10 @@ class UserInfo(
     }
 
     companion object {
-
         fun getDefaultUserInfo(): UserInfo {
             val context = LCGApp.context
             val placeholder = context.getString(R.string.me_tab_placeholder)
-            return  UserInfo(
+            return UserInfo(
                 userName = context.getString(R.string.me_tab_group_placeholder),
                 groupInfo = context.getString(R.string.me_tab_group_placeholder),
                 avatarUrl = "",
@@ -68,5 +66,4 @@ class UserInfo(
             )
         }
     }
-
 }

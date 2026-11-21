@@ -40,7 +40,6 @@ fun popBackFragmentInclusive(fragmentManager: FragmentManager, tag: String): Boo
     return fragmentManager.popBackStackImmediate(tag, POP_BACK_STACK_INCLUSIVE)
 }
 
-
 fun addFragmentInFragment(fragmentManager: FragmentManager, fragment: Fragment, frameId: Int) {
     val transaction = fragmentManager
         .beginTransaction()

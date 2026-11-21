@@ -23,24 +23,24 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import com.airbnb.lottie.LottieAnimationView
 import com.airbnb.lottie.LottieDrawable
-import androidx.core.content.ContextCompat
+import kotlinx.coroutines.launch
 import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -48,26 +48,24 @@ fun ForumArticlesScreen(
     title: String,
     tabs: List<ForumThread>,
     articles: List<Article>,
-    isLoading: Boolean, 
+    isLoading: Boolean,
     onBackClick: () -> Unit,
     onTabSelected: (String) -> Unit,
     onArticleClick: (String) -> Unit,
     onLoadMore: () -> Unit,
-    onArticleLongClick: (String) -> Unit
-, onScrollPositionChanged: (Boolean) -> Unit = {}) {
+    onArticleLongClick: (String) -> Unit, onScrollPositionChanged: (Boolean) -> Unit = {}) {
     val displayTabs = remember(tabs) {
         val list = mutableListOf("全部")
         tabs.filter { it.threadName != "全部" }.forEach { list.add(it.threadName) }
         list
     }
-    
+
     val pagerState = rememberPagerState(pageCount = { displayTabs.size })
-    
-        
+
         LaunchedEffect(Unit) {
             onTabSelected("")
         }
-        
+
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(pagerState.currentPage) {
@@ -78,7 +76,6 @@ fun ForumArticlesScreen(
             } else { "" }
             onTabSelected(url)
         }
-        
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
@@ -116,13 +113,13 @@ fun ForumArticlesScreen(
                             Tab(
                                 selected = pagerState.currentPage == index,
                                 onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                                
-                                interactionSource = remember { MutableInteractionSource() }.also { 
-                                    LaunchedEffect(it) { 
-                                        it.interactions.collect { 
+
+                                interactionSource = remember { MutableInteractionSource() }.also {
+                                    LaunchedEffect(it) {
+                                        it.interactions.collect {
                                             if (it is PressInteraction.Release || it is PressInteraction.Cancel) { }
-                                        } 
-                                    } 
+                                        }
+                                    }
                                 },
                                 text = {
                                     Text(
@@ -143,14 +140,13 @@ fun ForumArticlesScreen(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 beyondBoundsPageCount = 1
             ) { page ->
-                
+
                 val pageListState = rememberLazyListState()
                     LaunchedEffect(pageListState) {
                         snapshotFlow { pageListState.firstVisibleItemIndex == 0 && pageListState.firstVisibleItemScrollOffset == 0 }
                             .collect { isAtTop -> onScrollPositionChanged(isAtTop) }
                     }
-                
-                
+
                 LaunchedEffect(pageListState, articles.size, isLoading) {
                     snapshotFlow { pageListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
                         .collect { lastIndex ->
@@ -160,7 +156,6 @@ fun ForumArticlesScreen(
                         }
                 }
 
-                
                 val showBackToTop by remember {
                     derivedStateOf { pageListState.firstVisibleItemIndex > 30 }
                 }
@@ -175,7 +170,7 @@ fun ForumArticlesScreen(
                         items(articles) { article ->
                             ArticleCard(article, onArticleClick, onArticleLongClick)
                         }
-                        
+
                         item {
                             if (isLoading && articles.isNotEmpty()) {
                                 Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
@@ -206,7 +201,7 @@ fun ForumArticlesScreen(
                                 }
                             },
                             update = { lottieView ->
-                                
+
                                 lottieView.playAnimation()
                             }
                         )
@@ -220,8 +215,8 @@ fun ForumArticlesScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ArticleCard(
-    article: Article, 
-    onItemClick: (String) -> Unit, 
+    article: Article,
+    onItemClick: (String) -> Unit,
     onLongClick: (String) -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }

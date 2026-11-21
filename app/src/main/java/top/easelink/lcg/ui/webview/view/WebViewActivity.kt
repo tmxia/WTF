@@ -34,8 +34,8 @@ import top.easelink.lcg.account.UserDataRepo.updateUserInfo
 import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.network.LCGCookieJar
 import top.easelink.lcg.service.web.HookInterface
-import top.easelink.lcg.ui.main.me.source.UserInfoRepo.requestUserInfo
 import top.easelink.lcg.ui.main.MainActivity
+import top.easelink.lcg.ui.main.me.source.UserInfoRepo.requestUserInfo
 import top.easelink.lcg.ui.webview.FORCE_ENABLE_JS_KEY
 import top.easelink.lcg.ui.webview.OPEN_LOGIN_PAGE
 import top.easelink.lcg.ui.webview.TITLE_KEY
@@ -44,11 +44,10 @@ import top.easelink.lcg.utils.WebsiteConstant.LOGIN_QUERY
 import top.easelink.lcg.utils.WebsiteConstant.QQ_LOGIN_URL
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 import top.easelink.lcg.utils.WebsiteConstant.URL_KEY
-import top.easelink.lcg.utils.showMessage
 import top.easelink.lcg.utils.setStatusBarPadding
+import top.easelink.lcg.utils.showMessage
 
 class WebViewActivity : AppCompatActivity() {
-
     private lateinit var mWebView: WebView
     private lateinit var animationView: LottieAnimationView
     private lateinit var videoLayout: FrameLayout
@@ -129,15 +128,12 @@ class WebViewActivity : AppCompatActivity() {
                     mWebView.removeJavascriptInterface(HOOK_NAME)
                     mWebView.addJavascriptInterface(WebViewHook(), HOOK_NAME)
                 }
-                
-                
+
                 try {
-                    
                     val savedCookies = LCGCookieJar.cookiesForUrl(SERVER_BASE_URL)
                     if (savedCookies.isNotEmpty()) {
-                        
                         val cookieStr = savedCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
-                        
+
                         CookieManager.getInstance().setCookie(SERVER_BASE_URL, cookieStr)
                         CookieManager.getInstance().flush()
                         Timber.d("已成功注入持久化 Cookie 到 WebView")
@@ -145,7 +141,6 @@ class WebViewActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     Timber.e(e, "注入 Cookie 失败")
                 }
-                
 
                 mWebView.loadUrl(mUrl!!)
             }
@@ -164,7 +159,7 @@ class WebViewActivity : AppCompatActivity() {
                 val doc = Jsoup.parse(html)
                 val currentUrl = withContext(Main) { mWebView.url } ?: return@launch
                 if (!isLoginSuccess(doc, currentUrl)) return@launch
-                
+
                 LCGCookieJar.syncFromWebView(currentUrl)
                 UserDataRepo.isLoggedIn = true
                 isLoggedIn.postValue(true)
@@ -182,15 +177,6 @@ class WebViewActivity : AppCompatActivity() {
             }
         }
     }
-
-    
-
-
-
-
-
-
-
 
     private fun isLoginSuccess(doc: org.jsoup.nodes.Document, url: String): Boolean {
         val hasAvatar = doc.selectFirst("div.avt") != null
@@ -268,7 +254,6 @@ class WebViewActivity : AppCompatActivity() {
                 insetsController.show(WindowInsetsCompat.Type.systemBars())
             }
             else -> {
-                
             }
         }
     }
@@ -355,7 +340,7 @@ class WebViewActivity : AppCompatActivity() {
     private inner class InnerWebViewClient : WebViewClient() {
         override fun onPageCommitVisible(view: WebView, url: String) {
             setLoading(false)
-            
+
             LCGCookieJar.syncFromWebView(url)
             if (isOpenLoginEvent) {
                 view.loadUrl("javascript:$HOOK_NAME.processHtml(document.documentElement.outerHTML);")
@@ -369,8 +354,7 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
-            
-            handler.cancel() 
+            handler.cancel()
         }
 
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {

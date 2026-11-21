@@ -8,8 +8,8 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import timber.log.Timber
 import top.easelink.lcg.R
-import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.account.UserInfo
+import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.ui.main.model.AntiScrapingException
 import top.easelink.lcg.ui.main.model.NewMessageEvent
 import top.easelink.lcg.ui.main.model.NotificationInfo
@@ -109,7 +109,6 @@ fun parseNotificationInfo(doc: Document): NotificationInfo {
                                 url.contains("pm") -> message++
                                 url.contains("system") -> systemNotifs++
                                 else -> {
-                                    
                                 }
                             }
                         }

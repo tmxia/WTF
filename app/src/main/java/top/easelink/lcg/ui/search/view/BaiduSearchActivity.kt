@@ -18,6 +18,7 @@ import top.easelink.framework.topbase.TopActivity
 import top.easelink.framework.utils.addFragmentInActivity
 import top.easelink.lcg.R
 import top.easelink.lcg.config.AppConfig.searchResultShowInWebView
+import top.easelink.lcg.databinding.ActivityBaiduSearchBinding
 import top.easelink.lcg.ui.main.article.view.ArticleFragment
 import top.easelink.lcg.ui.search.model.OpenBaiduSearchResultEvent
 import top.easelink.lcg.ui.search.viewmodel.BaiduSearchResultAdapter
@@ -25,12 +26,9 @@ import top.easelink.lcg.ui.search.viewmodel.BaiduSearchResultAdapter.SearchAdapt
 import top.easelink.lcg.ui.search.viewmodel.BaiduSearchViewModel
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant.URL_KEY
-import top.easelink.lcg.databinding.ActivityBaiduSearchBinding
 import top.easelink.lcg.utils.setStatusBarPadding
 
-
 class BaiduSearchActivity : TopActivity() {
-
     private lateinit var mViewModelBaidu: BaiduSearchViewModel
     private lateinit var binding: ActivityBaiduSearchBinding
 
@@ -49,7 +47,7 @@ class BaiduSearchActivity : TopActivity() {
         EventBus.getDefault().register(this)
         mViewModelBaidu = ViewModelProvider(this)[BaiduSearchViewModel::class.java]
         setUp()
-        
+
         val startUrl = intent.getStringExtra(URL_KEY) ?: "https://www.baidu.com"
         mViewModelBaidu.initUrl(startUrl)
     }
@@ -60,7 +58,6 @@ class BaiduSearchActivity : TopActivity() {
     }
 
     private fun setUp() {
-        
         binding.totalInfo.setStatusBarPadding()
         ViewCompat.setOnApplyWindowInsetsListener(binding.refreshLayout) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -97,7 +94,7 @@ class BaiduSearchActivity : TopActivity() {
                 ContextCompat.getColor(this@BaiduSearchActivity, R.color.colorPrimaryDark)
             )
             setScrollUpChild(binding.recyclerView)
-            
+
             setOnRefreshListener {
                 mViewModelBaidu.doSearchQuery(SearchAdapterListener.FETCH_INIT)
             }

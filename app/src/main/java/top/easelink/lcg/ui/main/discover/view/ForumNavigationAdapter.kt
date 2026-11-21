@@ -12,7 +12,6 @@ import top.easelink.lcg.ui.main.discover.model.ForumNavigationModel
 import top.easelink.lcg.ui.main.forumnav.view.ForumNavigationFragment
 import top.easelink.lcg.ui.main.model.OpenForumEvent
 
-
 class ForumNavigationAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     private val mForumItems: MutableList<ForumNavigationModel> = mutableListOf()
     override fun getItemCount(): Int {
@@ -52,7 +51,6 @@ class ForumNavigationAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     }
 
     inner class ForumViewHolder internal constructor(private val binding: ItemForumsGridBinding) : BaseViewHolder(binding.root) {
-
         private fun onItemClick(title: String, url: String) {
             EventBus.getDefault().post(OpenForumEvent(title, url, true))
         }

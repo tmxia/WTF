@@ -1,69 +1,66 @@
 package top.easelink.lcg.ui.main.article.view
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
-import top.easelink.lcg.utils.SharedPreferencesHelper
-import androidx.core.content.edit
-
-
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
-import timber.log.Timber
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.appbar.AppBarLayout
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import timber.log.Timber
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.lcg.R
+import top.easelink.lcg.ui.main.article.view.ScreenCaptureDialog.Companion.TAG
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener
-import top.easelink.lcg.ui.main.source.model.Post
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
-import top.easelink.lcg.ui.main.model.ReplyPostEvent
 import top.easelink.lcg.ui.main.model.LikeSuccessEvent
+import top.easelink.lcg.ui.main.model.ReplyPostEvent
 import top.easelink.lcg.ui.main.model.ScreenCaptureEvent
+import top.easelink.lcg.ui.main.source.model.Post
 import top.easelink.lcg.ui.webview.view.WebViewActivity
+import top.easelink.lcg.utils.SharedPreferencesHelper
 import top.easelink.lcg.utils.WebsiteConstant
 import top.easelink.lcg.ui.main.article.view.DownloadLinkDialog.Companion.newInstance as newDownloadLinkDialog
 import top.easelink.lcg.ui.main.article.view.ReplyPostDialog.Companion.newInstance as newReplyPostDialog
-import top.easelink.lcg.ui.main.article.view.ScreenCaptureDialog.Companion.TAG
 
 class ArticleFragment : Fragment(), ControllableFragment {
-
     var title: String = ""
     var url: String = ""
 
@@ -91,23 +88,22 @@ class ArticleFragment : Fragment(), ControllableFragment {
     }
 
     override fun onCreateView(
-        inflater: android.view.LayoutInflater, 
+        inflater: android.view.LayoutInflater,
         container: android.view.ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         val context = requireContext()
-        
-        
+
         val composeView = ComposeView(context).apply {
             setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
             layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 
+                ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         }
-        
+
         composeView.setContent {
             val isLoading by viewModel.isLoading.observeAsState(initial = false)
             ArticleScreen(
@@ -118,7 +114,7 @@ class ArticleFragment : Fragment(), ControllableFragment {
                 onBackClick = { handleBackClick() }
             )
         }
-        
+
         requireActivity().onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 handleBackClick()
@@ -126,10 +122,8 @@ class ArticleFragment : Fragment(), ControllableFragment {
         })
         return composeView
     }
-    
-    
+
     private fun handleBackClick() {
-        
         requireActivity().supportFragmentManager.popBackStack()
     }
 
@@ -182,7 +176,6 @@ fun ArticleScreen(
     var customSpamKeywords by remember { mutableStateOf(sp.getStringSet("custom_spam_keywords", emptySet())?.toList() ?: emptyList()) }
     var searchKeyword by remember { mutableStateOf("") }
 
-    
     LaunchedEffect(articleUrl) {
         searchKeyword = ""
         showOpOnly = false
@@ -191,25 +184,21 @@ fun ArticleScreen(
     }
 
     var recyclerView by remember { mutableStateOf<androidx.recyclerview.widget.RecyclerView?>(null) }
-    
+
     val prefs = remember { context.getSharedPreferences("article_settings", android.content.Context.MODE_PRIVATE) }
 
-    
     LaunchedEffect(posts, pendingScrollPost, searchKeyword) {
         val target = pendingScrollPost ?: return@LaunchedEffect
-        
+
         if (searchKeyword.isBlank() && !filterSpam && !showOpOnly) {
-            
-            
             kotlinx.coroutines.delay(150)
-            
+
             val adapter = recyclerView?.adapter as? ArticleAdapter
-            
+
             val index = adapter?.getPositionForPost(target) ?: -1
-            
+
             Timber.d("【跳转】触发定位，目标真实索引: $index")
             if (index != -1) {
-                
                 recyclerView?.post {
                     recyclerView?.smoothScrollToPosition(index)
                 }
@@ -228,6 +217,7 @@ fun ArticleScreen(
                         .show(fragment.parentFragmentManager, "ReplyPostDialog")
                 }
             }
+
             @Subscribe(threadMode = ThreadMode.MAIN)
             fun onLikeSuccess(event: LikeSuccessEvent) {
                 recyclerView?.adapter?.let { adapter ->
@@ -250,19 +240,19 @@ fun ArticleScreen(
     }
 
     Scaffold(
-        
+
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 windowInsets = WindowInsets(0, 0, 0, 0),
-                title = { 
+                title = {
                     Text(
-                        text = title, 
-                        maxLines = 1, 
+                        text = title,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium
-                    ) 
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -279,10 +269,9 @@ fun ArticleScreen(
                             onDismissRequest = { showMenu = false },
                             modifier = Modifier
                                 .background(Color.White)
-                                .wrapContentWidth() 
+                                .wrapContentWidth()
                                 .padding(vertical = 4.dp)
                         ) {
-                            
                             @Composable
                             @OptIn(ExperimentalFoundationApi::class)
                             fun MiniMenuRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, isActive: Boolean = false, onLongClick: (() -> Unit)? = null, onClick: () -> Unit) {
@@ -297,25 +286,24 @@ fun ArticleScreen(
                                     Icon(
                                         imageVector = icon,
                                         contentDescription = null,
-                                        modifier = Modifier.size(16.dp), 
+                                        modifier = Modifier.size(16.dp),
                                         tint = if (isActive) Color(0xFFE53935) else Color.Gray
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = text,
-                                        fontSize = 13.sp, 
+                                        fontSize = 13.sp,
                                         color = if (isActive) Color(0xFFE53935) else Color.DarkGray,
                                         fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal
                                     )
                                 }
                             }
 
-                            
                             MiniMenuRow(Icons.Default.Person, if (showOpOnly) "显示全部" else "只看楼主", showOpOnly) {
                                 showMenu = false
                                 showOpOnly = !showOpOnly
                             }
-                            MiniMenuRow(Icons.Default.Star, if (filterSpam) "关闭灌水" else "过滤灌水", filterSpam, 
+                            MiniMenuRow(Icons.Default.Star, if (filterSpam) "关闭灌水" else "过滤灌水", filterSpam,
                                 onLongClick = {
                                     showMenu = false
                                     val density = context.resources.displayMetrics.density
@@ -395,7 +383,7 @@ fun ArticleScreen(
                                     dialog.setView(card)
                                     dialog.show()
                                     dialog.window?.setLayout((300 * density).toInt(), android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
-                                }, 
+                                },
                                 onClick = {
                                     showMenu = false
                                     filterSpam = !filterSpam
@@ -493,7 +481,6 @@ fun ArticleScreen(
                                 color = Color.LightGray.copy(alpha = 0.5f)
                             )
 
-                            
                             MiniMenuRow(Icons.Default.Refresh, "刷新帖子") {
                                 showMenu = false
                                 viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
@@ -532,7 +519,6 @@ fun ArticleScreen(
             )
         },
         floatingActionButton = {
-                
                 if (searchKeyword.isNotBlank() || filterSpam || showOpOnly) {
                     return@Scaffold
                 }
@@ -551,7 +537,7 @@ fun ArticleScreen(
                             Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "回到顶部", modifier = Modifier.size(20.dp))
                         }
                     }
-                    
+
                     val replyUrl = posts.firstOrNull()?.replyUrl
                     if (!isLoading && replyUrl != null && shouldDisplayPosts) {
                         FloatingActionButton(

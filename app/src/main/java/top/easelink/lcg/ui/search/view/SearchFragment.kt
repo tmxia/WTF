@@ -10,18 +10,18 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -84,7 +84,7 @@ class SearchFragment : TopFragment(), ControllableFragment {
             SearchScreen(
                 viewModel = viewModel,
                 onNavigate = { fragment ->
-                    
+
                     (activity as? top.easelink.lcg.ui.main.MainActivity)?.showFragment(fragment)
                 }
             )
@@ -105,17 +105,16 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
     val selectedFidName by viewModel.selectedFidName.observeAsState(initial = "全部板块")
     val selectedSortName by viewModel.selectedSortName.observeAsState(initial = "按相关度")
 
-    
     var keyword by remember { mutableStateOf(viewModel.lastSearchKeyword) }
     var hasSearched by remember { mutableStateOf(viewModel.hasSearchedOnce) }
     var showBoardDialog by remember { mutableStateOf(false) }
     var isBoardMultiMode by remember { mutableStateOf(false) }
     var tempSelectedFids by remember { mutableStateOf(setOf<String>()) }
     var showSortDialog by remember { mutableStateOf(false) }
-    
+
     val prefs = remember { context.getSharedPreferences("wtf_search_prefs", Context.MODE_PRIVATE) }
     var historyList by remember { mutableStateOf(loadHistory(prefs)) }
-    
+
     val defaultHotWords = listOf("微信", "逆向破解", "Magisk", "Xposed", "Dex修复", "汉化教程", "自动化脚本", "Arsc")
     var hotSearchWords by remember { mutableStateOf(loadHotWords(prefs, defaultHotWords)) }
     var showCustomHotDialog by remember { mutableStateOf(false) }
@@ -126,12 +125,11 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
         Color(0xFFE53935), Color(0xFF1E88E5), Color(0xFF43A047),
         Color(0xFFFB8C00), Color(0xFF8E24AA), Color(0xFF00ACC1)
     )
-    
-    val primaryColor = Color(0xFFE53935) 
-    val bgColor = Color(0xFFF5F5F5)      
-    val inputBgColor = Color(0xFFF2F3F5) 
 
-    
+    val primaryColor = Color(0xFFE53935)
+    val bgColor = Color(0xFFF5F5F5)
+    val inputBgColor = Color(0xFFF2F3F5)
+
     BackHandler(enabled = keyword.isNotEmpty()) {
         keyword = ""
         hasSearched = false
@@ -142,17 +140,15 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
 
     fun performSearch(query: String) {
         if (query.isNotBlank()) {
-            
             if (AppConfig.defaultSearchEngine == 1) {
                 keyboardController?.hide()
-                
+
                 val encodedQuery = java.net.URLEncoder.encode("${query} site:52pojie.cn", "UTF-8")
                 val bingUrl = "https://cn.bing.com/search?q=${encodedQuery}"
                 WebViewActivity.startWebViewWith(bingUrl, context)
                 return
             }
 
-            
             keyword = query
             hasSearched = true
             keyboardController?.hide()
@@ -168,14 +164,10 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
     }
 
     Column(modifier = Modifier.fillMaxSize().background(bgColor)) {
-        
         Row(
             modifier = Modifier.fillMaxWidth().background(Color.White).padding(top = 40.dp, bottom = 10.dp, start = 16.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            
-            
-            
             Row(
                 modifier = Modifier.weight(1f).height(40.dp).clip(RoundedCornerShape(20.dp)).background(inputBgColor).padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -184,9 +176,9 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                 Spacer(modifier = Modifier.width(8.dp))
                 BasicTextField(
                     value = keyword,
-                    onValueChange = { 
+                    onValueChange = {
                         keyword = it
-                        if (it.isEmpty()) { hasSearched = false; viewModel.lastSearchKeyword = ""; viewModel.hasSearchedOnce = false } 
+                        if (it.isEmpty()) { hasSearched = false; viewModel.lastSearchKeyword = ""; viewModel.hasSearchedOnce = false }
                     },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
@@ -213,8 +205,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                 }
             }
             Spacer(modifier = Modifier.width(10.dp))
-            
-            
+
             val isButtonActive = keyword.isNotBlank()
             Box(
                 modifier = Modifier
@@ -223,38 +214,34 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                     .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 Text(
-                    text = "搜索", 
-                    fontSize = 15.sp, 
-                    fontWeight = FontWeight.Medium, 
+                    text = "搜索",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
                     color = if (isButtonActive) primaryColor else Color.Gray
                 )
             }
         }
 
-        
         Row(
             modifier = Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(bgColor)
-                    .clickable { 
-                        
+                    .clickable {
                         tempSelectedFids = viewModel.currentFids.toSet()
                         isBoardMultiMode = tempSelectedFids.size > 1
-                        showBoardDialog = true 
+                        showBoardDialog = true
                     }
                     .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
                 Text("范围：$selectedFidName", fontSize = 12.sp, color = Color.DarkGray)
                 Text(" ▾", fontSize = 10.sp, color = Color.DarkGray)
             }
-            
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -268,7 +255,6 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
             }
         }
 
-        
         Box(modifier = Modifier.fillMaxSize()) {
             if (!hasSearched) {
                 Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
@@ -276,18 +262,18 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Text("搜索历史", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.Black)
                             Box(
-                                modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable { 
+                                modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable {
                                     historyList = emptyList()
-                                    saveHistory(prefs, emptyList()) 
+                                    saveHistory(prefs, emptyList())
                                 }.padding(horizontal = 6.dp, vertical = 4.dp)
                             ) {
                                 Text("清空", fontSize = 12.sp, color = Color.Gray)
                             }
                         }
                         FlowRow(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            historyList.forEach { tag -> 
+                            historyList.forEach { tag ->
                                 SearchChip(
-                                    text = tag, 
+                                    text = tag,
                                     chipBgColor = Color.White,
                                     onClick = { performSearch(tag) },
                                     onLongClick = {
@@ -296,7 +282,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                                         saveHistory(prefs, updated)
                                         Toast.makeText(context, "已删除「$tag」", Toast.LENGTH_SHORT).show()
                                     }
-                                ) 
+                                )
                             }
                         }
                     }
@@ -304,20 +290,20 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                         Text("热门搜索 (长按可自定义)", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primaryColor)
                     }
                     FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        hotSearchWords.forEachIndexed { index, tag -> 
+                        hotSearchWords.forEachIndexed { index, tag ->
                             val color = chipColors[index % chipColors.size]
                             SearchChip(
-                                text = tag, 
-                                chipBgColor = color.copy(alpha = 0.1f), 
-                                isHot = true, 
-                                textColor = color, 
+                                text = tag,
+                                chipBgColor = color.copy(alpha = 0.1f),
+                                isHot = true,
+                                textColor = color,
                                 onClick = { performSearch(tag) },
                                 onLongClick = {
                                     editingHotIndex = index
                                     editingHotText = tag
                                     showCustomHotDialog = true
                                 }
-                            ) 
+                            )
                         }
                     }
                 }
@@ -367,7 +353,6 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
         }
     }
 
-    
     if (showBoardDialog) {
         Dialog(
             onDismissRequest = { showBoardDialog = false; isBoardMultiMode = false },
@@ -383,12 +368,11 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                
-                
+
                 Box(
                     modifier = Modifier.fillMaxWidth().height(48.dp).clip(RoundedCornerShape(12.dp))
                         .background(if (selectedFidName == "全部板块" && !isBoardMultiMode) primaryColor.copy(alpha = 0.1f) else bgColor)
-                        .clickable { 
+                        .clickable {
                             viewModel.selectFids(emptyList(), "全部板块")
                             showBoardDialog = false
                             isBoardMultiMode = false
@@ -399,12 +383,12 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                 }
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(if (isBoardMultiMode) "已选 ${tempSelectedFids.size} 个板块" else "常用板块 (长按多选)", fontSize = 13.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 10.dp))
-                
+
                 Column(modifier = Modifier.weight(1f, fill = false).heightIn(max = 380.dp).verticalScroll(rememberScrollState())) {
                     forumList.forEach { forum ->
                         val fidStr = forum.fid ?: ""
                         val isSelected = if (isBoardMultiMode) tempSelectedFids.contains(fidStr) else selectedFidName == forum.title
-                        
+
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(RoundedCornerShape(12.dp))
                                 .background(if (isSelected) primaryColor.copy(alpha = 0.1f) else bgColor)
@@ -430,8 +414,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                         }
                     }
                 }
-                
-                
+
                 if (isBoardMultiMode) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Box(
@@ -457,8 +440,6 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
         }
     }
 
-
-    
     if (showSortDialog) {
         Dialog(
             onDismissRequest = { showSortDialog = false },
@@ -474,24 +455,23 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                
-                
+
                 val sortOptions = listOf(
                     "按相关度" to null,
                     "按发布时间" to "dateline",
                     "按最后回复" to "lastpost",
                     "按回复热度" to "replies"
                 )
-                
+
                 Column(modifier = Modifier.fillMaxWidth()) {
                     sortOptions.forEach { (name, orderby) ->
                         val isSelected = selectedSortName == name
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(RoundedCornerShape(12.dp))
                                 .background(if (isSelected) primaryColor.copy(alpha = 0.1f) else bgColor)
-                                .clickable { 
+                                .clickable {
                                     viewModel.selectSort(orderby, name)
-                                    showSortDialog = false 
+                                    showSortDialog = false
                                 }
                                 .padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -505,7 +485,6 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
         }
     }
 
-    
     if (showCustomHotDialog) {
         Dialog(onDismissRequest = { showCustomHotDialog = false }) {
             Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White).padding(20.dp)) {
@@ -541,10 +520,10 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SearchChip(
-    text: String, 
-    chipBgColor: Color, 
-    isHot: Boolean = false, 
-    textColor: Color = Color.DarkGray, 
+    text: String,
+    chipBgColor: Color,
+    isHot: Boolean = false,
+    textColor: Color = Color.DarkGray,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null
 ) {
@@ -562,9 +541,9 @@ fun SearchChip(
 @Composable
 fun SearchResultCard(item: LCGSearchResultItem, onClick: () -> Unit) {
     Card(
-        shape = RoundedCornerShape(12.dp), 
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), 
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onClick() }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -572,10 +551,8 @@ fun SearchResultCard(item: LCGSearchResultItem, onClick: () -> Unit) {
             Spacer(modifier = Modifier.height(6.dp))
             Text(text = parseHtmlHighlight(item.content), fontSize = 13.sp, color = Color.Gray, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Spacer(modifier = Modifier.height(10.dp))
-            
-            
+
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                
                 Box(
                     modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Color(0xFFF2F3F5)).padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
@@ -583,10 +560,9 @@ fun SearchResultCard(item: LCGSearchResultItem, onClick: () -> Unit) {
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(item.author, fontSize = 11.sp, color = Color.Gray, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                
+
                 Spacer(modifier = Modifier.weight(1f))
-                
-                
+
                 val replyMatch = Regex("(\\d+)\\s*个?回复").find(item.replyView)?.groupValues?.get(1)
                 val viewMatch = Regex("(\\d+)\\s*次?查看").find(item.replyView)?.groupValues?.get(1)
                 val statText = if (replyMatch != null && viewMatch != null) "$replyMatch/$viewMatch" else item.replyView.replace(" ", "")
@@ -618,7 +594,6 @@ private fun loadHotWords(prefs: android.content.SharedPreferences, defaults: Lis
 private fun saveHotWords(prefs: android.content.SharedPreferences, list: List<String>) {
     prefs.edit().putString("hot_words", list.joinToString("|||")).apply()
 }
-
 
 fun parseHtmlHighlight(html: String): AnnotatedString {
     return buildAnnotatedString {

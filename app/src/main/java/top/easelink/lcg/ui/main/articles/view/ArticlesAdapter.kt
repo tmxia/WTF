@@ -24,7 +24,6 @@ import java.lang.ref.WeakReference
 class ArticlesAdapter(
     private var articleFetcher: ArticleFetcher
 ) : RecyclerView.Adapter<BaseViewHolder>() {
-
     private var fragmentManager: WeakReference<FragmentManager>? = null
     private val mArticleList: MutableList<Article> = mutableListOf()
 
@@ -173,13 +172,13 @@ class ArticlesAdapter(
     }
 
     inner class LoadMoreViewHolder internal constructor(
-        private val binding: ItemLoadMoreViewBinding 
-    ) : BaseViewHolder(binding.root) { 
+        private val binding: ItemLoadMoreViewBinding
+    ) : BaseViewHolder(binding.root) {
         override fun onBind(position: Int) {
-            binding.loading.visibility = View.VISIBLE 
+            binding.loading.visibility = View.VISIBLE
             articleFetcher.fetchArticles(ArticleFetcher.FetchType.FETCH_MORE) {
-                binding.root.post { 
-                    binding.loading.visibility = View.GONE 
+                binding.root.post {
+                    binding.loading.visibility = View.GONE
                 }
             }
         }

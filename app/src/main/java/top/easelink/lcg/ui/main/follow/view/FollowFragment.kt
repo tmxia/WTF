@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+
 package top.easelink.lcg.ui.main.follow.view
 
 import android.os.Bundle
@@ -24,7 +25,6 @@ import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.framework.topbase.TopFragment
 
 class FollowFragment : TopFragment(), ControllableFragment {
-
     private var pager: ViewPager2? = null
 
     override fun isControllable(): Boolean = true
@@ -37,7 +37,7 @@ class FollowFragment : TopFragment(), ControllableFragment {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         (view as ComposeView).setContent {
             var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -53,7 +53,7 @@ class FollowFragment : TopFragment(), ControllableFragment {
                         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
                         windowInsets = WindowInsets(0, 0, 0, 0)
                     )
-                    
+
                     ScrollableTabRow(
                         selectedTabIndex = selectedTab,
                         edgePadding = 16.dp,
@@ -84,12 +84,11 @@ class FollowFragment : TopFragment(), ControllableFragment {
                         )
                     }
                 }
-                
+
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { context ->
                         ViewPager2(context).apply {
-                            
                             adapter = FollowViewPagerAdapter(requireActivity(), requireContext())
                             pager = this
                             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {

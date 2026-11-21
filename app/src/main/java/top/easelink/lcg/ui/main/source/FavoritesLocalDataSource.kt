@@ -2,11 +2,6 @@ package top.easelink.lcg.ui.main.source
 
 import top.easelink.lcg.ui.main.source.model.ArticleEntity
 
-
-
-
-
-
 interface FavoritesLocalDataSource {
     fun getAllFavoriteArticles(): List<ArticleEntity>
     fun addAllArticleToFavorite(articleEntities: List<ArticleEntity>): Boolean

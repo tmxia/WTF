@@ -13,7 +13,6 @@ import top.easelink.lcg.utils.WebsiteConstant.FOLLOW_FEED_QUERY
 import java.util.Locale
 
 class FollowingFeedViewModel : ViewModel() {
-
     val follows = MutableLiveData<List<FeedInfo>>()
     val isLoading = MutableLiveData<Boolean>()
     val isLoadingForLoadMore = MutableLiveData<Boolean>()

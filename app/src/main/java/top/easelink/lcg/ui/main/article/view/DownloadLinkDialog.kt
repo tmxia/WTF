@@ -17,7 +17,6 @@ import top.easelink.lcg.R
 import top.easelink.lcg.databinding.DialogDownloadLinkBinding
 
 class DownloadLinkDialog : TopDialog() {
-
     private var _binding: DialogDownloadLinkBinding? = null
     private val binding get() = _binding!!
 
@@ -33,7 +32,6 @@ class DownloadLinkDialog : TopDialog() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        
         dialog?.window?.apply {
             setBackgroundDrawableResource(android.R.color.transparent)
             val params = attributes
@@ -48,9 +46,8 @@ class DownloadLinkDialog : TopDialog() {
                 val padding = (12 * density).toInt()
                 val marginBottom = (10 * density).toInt()
 
-                
-                val allCodes = linkList.filter { 
-                    it.contains("提取码") || it.contains("密码") || it.contains("访问码") || it.contains("口令") 
+                val allCodes = linkList.filter {
+                    it.contains("提取码") || it.contains("密码") || it.contains("访问码") || it.contains("口令")
                 }.joinToString(" ") { it.trim() }
 
                 linkList.forEach { link ->
@@ -73,13 +70,12 @@ class DownloadLinkDialog : TopDialog() {
                         }
                         layoutParams = params
 
-                        
-                        setOnClickListener { 
+                        setOnClickListener {
                             val copyText = buildSmartLink(link, linkList, allCodes)
-                            copy(copyText) 
+                            copy(copyText)
                         }
-                        
-                        setOnLongClickListener { 
+
+                        setOnLongClickListener {
                             val copyText = buildSmartLink(link, linkList, allCodes)
                             copy(copyText)
                             true
@@ -93,7 +89,6 @@ class DownloadLinkDialog : TopDialog() {
         binding.exit.setOnClickListener { dismissDialog() }
     }
 
-    
     private fun buildSmartLink(targetLink: String, allLinks: List<String>, allCodes: String): String {
         return targetLink.trim()
     }
@@ -111,8 +106,7 @@ class DownloadLinkDialog : TopDialog() {
         val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val mClipData = ClipData.newPlainText("DownloadLink", clipString)
         cm.setPrimaryClip(mClipData)
-        
-        
+
         val toastMsg = if (clipString.contains("提取码") || clipString.contains("密码")) {
             "已复制（含提取码），可直接粘贴"
         } else {

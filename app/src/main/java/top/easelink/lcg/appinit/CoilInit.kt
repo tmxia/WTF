@@ -14,7 +14,6 @@ fun initCoil() {
 }
 
 object LCGImageLoaderFactory : ImageLoaderFactory {
-
     override fun newImageLoader(): ImageLoader {
         return ImageLoader
             .Builder(LCGApp.context)
@@ -23,7 +22,6 @@ object LCGImageLoaderFactory : ImageLoaderFactory {
     }
 
     private fun buildClient(): OkHttpClient {
-        
         val headerInterceptor = Interceptor { chain ->
             val original = chain.request()
             if (original.url.host.contains("attach")) {
@@ -41,7 +39,7 @@ object LCGImageLoaderFactory : ImageLoaderFactory {
                         "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
                     )
                     .header("Accept-Encoding", "gzip, deflate")
-                    
+
                     .header(
                         "User-Agent",
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +

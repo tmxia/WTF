@@ -17,12 +17,10 @@ import top.easelink.lcg.databinding.ItemLoadMoreViewBinding
 import top.easelink.lcg.ui.main.follow.model.FollowInfo
 import top.easelink.lcg.ui.main.follow.viewmodel.FollowListViewModel
 
-
 class FollowListAdapter(
     private val followListViewModel: FollowListViewModel,
     private val lifecycleOwner: LifecycleOwner
 ) : RecyclerView.Adapter<BaseViewHolder>() {
-
     private val mFollowing: MutableList<FollowInfo> = mutableListOf()
     var nextPageUrl: String? = null
 
@@ -59,7 +57,7 @@ class FollowListAdapter(
                 val binding = ItemLoadMoreViewBinding.inflate(inflater, parent, false)
                 LoadMoreViewHolder(binding, lifecycleOwner, followListViewModel)
             }
-            else -> { 
+            else -> {
                 val binding = ItemEmptyViewBinding.inflate(inflater, parent, false)
                 EmptyViewHolder(binding)
             }
@@ -107,7 +105,6 @@ class FollowListAdapter(
                 followingNum.text =
                     root.context.getString(R.string.following_num_template, follow.followingNum)
                 followListContainer.setOnClickListener {
-                    
                 }
             }
         }
@@ -122,7 +119,6 @@ class FollowListAdapter(
         private val lifecycleOwner: LifecycleOwner,
         private val followListViewModel: FollowListViewModel
     ) : BaseViewHolder(binding.root) {
-
         private val observer: Observer<Boolean> = Observer {
             binding.loading.apply {
                 if (it) {

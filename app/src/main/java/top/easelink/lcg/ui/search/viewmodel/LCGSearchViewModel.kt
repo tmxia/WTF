@@ -1,18 +1,17 @@
 package top.easelink.lcg.ui.search.viewmodel
 
 import android.content.Context
-import timber.log.Timber
-import top.easelink.lcg.appinit.LCGApp
-
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
+import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.ui.main.discover.model.ForumNavigationModel
 import top.easelink.lcg.ui.main.discover.source.ForumNetworkSource
 import top.easelink.lcg.ui.search.model.LCGSearchResultItem
@@ -26,7 +25,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     val totalResult = MutableLiveData<String?>()
     val isLoading = MutableLiveData<Boolean>()
     val isLoadingMore = MutableLiveData<Boolean>()
-    
+
         private val prefs = try {
         LCGApp.context.getSharedPreferences("wtf_search_prefs", Context.MODE_PRIVATE)
     } catch (e: Exception) {
@@ -39,13 +38,11 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     val isMultiSelect = MutableLiveData<Boolean>(false)
     private var mFids: List<String> = prefs.getString("search_fids", "")?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
     private var mSortOrder: String? = prefs.getString("search_sort_order", null)
-    
-    
+
     val currentFids: List<String> get() = mFids
     val forumList = MutableLiveData<List<ForumNavigationModel>>()
-    
+
     override fun fetch(type: LCGSearchResultAdapter.ContentFetcher.Type, callback: ((Boolean) -> Unit)?) {
-        
     }
 
     private var mKeyWord: String? = null
@@ -90,20 +87,17 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
         if (keyword.isNullOrBlank()) return
         isLoading.value = true
         hasMore = true
-        
-        
+
         searchJob?.cancel()
         searchJob = viewModelScope.launch(IOPool) {
             try {
                 val result = doSearchWith(keyword, mFids.joinToString(","), mSortOrder)
                 if (result != null) {
-                    
                     Timber.tag("[SearchProbe]").d("收到搜索结果: 数量=${result.searchResultList.size}")
                     searchResults.postValue(result.searchResultList)
                     totalResult.postValue(result.totalResult)
                     hasMore = result.searchResultList.isNotEmpty()
                 } else {
-                    
                     Timber.tag("SearchDebug").d("搜索被限流，忽略此次请求")
                 }
             } catch (e: Exception) {
@@ -125,9 +119,8 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     }
 
     fun loadNextPage() {
-        
         if (isLoadingMore.value == true || !hasMore) return
-        
+
         isLoadingMore.value = true
         viewModelScope.launch(IOPool) {
             try {
@@ -142,7 +135,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                     }
                     if (!result.totalResult.isNullOrEmpty()) totalResult.postValue(result.totalResult)
                 } else {
-                    hasMore = false 
+                    hasMore = false
                 }
             } catch (e: Exception) {
                 Timber.tag("SearchDebug").e(e, "搜索异常：${e.message}")
@@ -157,7 +150,6 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                     }
                 }
             } finally {
-                
                 isLoadingMore.postValue(false)
             }
         }

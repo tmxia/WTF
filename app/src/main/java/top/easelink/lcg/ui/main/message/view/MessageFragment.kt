@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+
 package top.easelink.lcg.ui.main.message.view
 
 import android.os.Bundle
@@ -41,16 +42,14 @@ import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 
 class MessageFragment : TopFragment(), ControllableFragment {
-
     private lateinit var notificationViewModel: NotificationViewModel
     private lateinit var conversationViewModel: ConversationListViewModel
 
     override fun isControllable(): Boolean = true
 
-    
     override fun onResume() {
         super.onResume()
-        
+
         val window = requireActivity().window
         androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
     }
@@ -71,7 +70,7 @@ class MessageFragment : TopFragment(), ControllableFragment {
                 val conversations by conversationViewModel.conversations.observeAsState()
                 val isNotifLoading by notificationViewModel.isLoading.observeAsState(initial = false)
                 val isConvLoading by conversationViewModel.isLoading.observeAsState(initial = false)
-                
+
                 var selectedTab by remember { mutableIntStateOf(0) }
 
                 Column(
@@ -95,7 +94,7 @@ class MessageFragment : TopFragment(), ControllableFragment {
                                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
                                 windowInsets = WindowInsets(0, 0, 0, 0)
                             )
-                            
+
                             ScrollableTabRow(
                                 selectedTabIndex = selectedTab,
                                 edgePadding = 16.dp,

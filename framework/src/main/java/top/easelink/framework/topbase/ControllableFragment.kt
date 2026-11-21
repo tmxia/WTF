@@ -8,5 +8,4 @@ interface ControllableFragment {
     fun getBackStackTag(): String {
         return this.javaClass.simpleName
     }
-
 }

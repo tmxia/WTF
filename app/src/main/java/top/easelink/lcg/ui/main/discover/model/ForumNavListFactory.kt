@@ -31,15 +31,15 @@ fun generateAllForums(context: Context): List<ForumNavigationModel> {
     )
         list.add(
             ForumNavigationModel(
-                "脱壳破解区", 
-                R.drawable.ic_software, 
+                "脱壳破解区",
+                R.drawable.ic_software,
                 WebsiteConstant.UNPACK_QUERY
             )
         )
         list.add(
             ForumNavigationModel(
-                context.getString(R.string.forum_reverse_resource), 
-                R.drawable.ic_creator, 
+                context.getString(R.string.forum_reverse_resource),
+                R.drawable.ic_creator,
                 WebsiteConstant.REVERSE_RESOURCE_QUERY
             )
         )

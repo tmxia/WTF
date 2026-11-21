@@ -16,9 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.fragment.app.Fragment
 import kotlinx.coroutines.delay
 import timber.log.Timber
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener
@@ -64,8 +64,7 @@ fun ComposeRecyclerViewBridge(
 
     if (searchKeyword.isNotBlank()) {
         filteredPosts = filteredPosts.filter { post ->
-            
-            
+
             val plainText = org.jsoup.Jsoup.parse(post.content ?: "").text()
             plainText.contains(searchKeyword, ignoreCase = true)
         }
@@ -79,11 +78,10 @@ fun ComposeRecyclerViewBridge(
 
     val isFiltering = showOpOnly || filterSpam || searchKeyword.isNotBlank()
 
-    
     LaunchedEffect(isFiltering, searchKeyword, posts.size, hasMore) {
         if (isFiltering && hasMore) {
             delay(1500)
-            
+
             if (isFiltering && hasMore) {
                 Timber.d("【全量搜索】自动拉取下一页...")
                 viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_MORE, null)
@@ -125,7 +123,6 @@ fun ComposeRecyclerViewBridge(
             }
         )
 
-        
         if (isFiltering && displayPosts.isEmpty() && hasMore) {
             Box(
                 modifier = Modifier
@@ -142,7 +139,6 @@ fun ComposeRecyclerViewBridge(
             }
         }
 
-        
         if (isFiltering && displayPosts.isEmpty() && !hasMore) {
             Box(
                 modifier = Modifier

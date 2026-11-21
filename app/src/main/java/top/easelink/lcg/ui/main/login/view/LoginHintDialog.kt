@@ -8,7 +8,6 @@ import top.easelink.lcg.databinding.DialogLoginHintBinding
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 
 class LoginHintDialog : TopDialog() {
-
     private var _binding: DialogLoginHintBinding? = null
     private val binding get() = _binding!!
 

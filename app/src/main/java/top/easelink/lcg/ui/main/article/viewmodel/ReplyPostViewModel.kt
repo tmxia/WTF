@@ -12,7 +12,6 @@ import top.easelink.lcg.utils.WebsiteConstant.CHECK_RULE_URL
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 
 class ReplyPostViewModel : ViewModel() {
-
     val sending = MutableLiveData<Boolean>()
 
     fun sendReply(query: String?, content: String, callback: (Boolean) -> Unit) {
@@ -26,7 +25,6 @@ class ReplyPostViewModel : ViewModel() {
         }
     }
 
-    
     private fun sendReplyAsync(query: String?, content: String): Boolean {
         Timber.d(content)
         if (query.isNullOrEmpty() || content.isBlank()) return false
@@ -48,7 +46,6 @@ class ReplyPostViewModel : ViewModel() {
         val reppost = formDoc.selectFirst("input[name=reppost]")?.attr("value").orEmpty()
         val formHash = formDoc.selectFirst("input[name=formhash]")?.attr("value").orEmpty()
 
-        
         JsoupClient.sendGetRequestWithUrl(CHECK_RULE_URL)
 
         val replyUrl = "${SERVER_BASE_URL}forum.php?mod=post&infloat=yes&action=reply" +

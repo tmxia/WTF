@@ -29,7 +29,6 @@ import top.easelink.lcg.ui.main.model.OpenLargeImageViewEvent
 class FollowingFeedAdapter(
     private val followingFeedViewModel: FollowingFeedViewModel
 ) : RecyclerView.Adapter<BaseViewHolder>() {
-
     private val mFeeds: MutableList<FeedInfo> = mutableListOf()
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
@@ -179,7 +178,6 @@ class FollowingFeedAdapter(
         private val binding: ItemLoadMoreViewBinding,
         private val followingFeedViewModel: FollowingFeedViewModel
     ) : BaseViewHolder(binding.root) {
-
         private val observer: Observer<Boolean> = Observer {
             binding.loading.apply {
                 if (it) {

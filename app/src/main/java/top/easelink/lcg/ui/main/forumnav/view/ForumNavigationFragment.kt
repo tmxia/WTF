@@ -45,7 +45,6 @@ class ForumNavigationFragment : TopFragment(), ControllableFragment {
             if (items != null) {
                 it.findViewById<LinkageRecyclerView<ForumGroupedItem.ItemInfo>>(R.id.linkageRV)
                     .init(items, ForumsPrimaryAdapterConfig(), ForumsSecondaryAdapterConfig())
-
             }
         }
     }

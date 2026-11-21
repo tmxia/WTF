@@ -4,7 +4,6 @@ import android.view.View
 import timber.log.Timber
 
 open class SimpleOnItemClickListener : OnItemClickListener {
-
     override fun onItemClick(view: View, position: Int) {
         Timber.d("onItemClick pos=$position")
     }

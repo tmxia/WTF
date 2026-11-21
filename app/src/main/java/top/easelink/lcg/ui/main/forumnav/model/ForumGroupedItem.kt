@@ -24,7 +24,6 @@ class ForumGroupedItem : BaseGroupedItem<ForumGroupedItem.ItemInfo> {
     ) : BaseGroupedItem.ItemInfo(title, group)
 }
 
-
 data class ChildForumItemInfo(
     @SerializedName("page_url")
     var pageUrl: String,
@@ -35,4 +34,3 @@ data class ChildForumItemInfo(
     @SerializedName("desc")
     var desc: String? = null
 ) : Serializable
-

@@ -1,14 +1,8 @@
 package top.easelink.lcg.utils
 
-
-
-
-
-
 object WebsiteConstant {
     const val URL_KEY = "URL_KEY"
     const val EXTRA_TABLE_HTML = "EXTRA_TABLE_HTML"
-
 
     const val SERVER_HOST = "www.52pojie.cn"
     const val SERVER_BASE_URL = "https://$SERVER_HOST/"
@@ -20,7 +14,6 @@ object WebsiteConstant {
     const val MOB_SECURITY_QUERY = "forum-65-%d.html"
     const val SOFTWARE_QUERY = "forum-16-%d.html"
 
-    
     const val FORUM_URL_QUERY = "forum.php?mod=forumdisplay&fid=%s"
 
     const val ORIGINAL_RELEASE_QUERY = "forum-2-%d.html"
@@ -43,20 +36,16 @@ object WebsiteConstant {
     const val CHECK_RULE_URL =
         SERVER_BASE_URL + "forum.php?mod=ajax&action=checkpostrule&inajax=yes&ac=reply&infloat=yes&handlekey=reply"
 
-    
     const val NOTIFICATION_HOME_QUERY = "home.php?mod=space&do=notice"
     const val SYSTEM_NOTIFICATION_QUERY = "home.php?mod=space&do=notice&view=system"
     const val MYPOST_NOTIFICATION_QUERY = "home.php?mod=space&do=notice&view=mypost"
 
-    
     const val PRIVATE_MESSAGE_QUERY = "home.php?mod=space&do=pm"
 
-    
     const val HOME_QUERY = "home.php?mod=spacecp&ac=credit&showcredit=1"
     const val PROFILE_QUERY = "home.php?mod=space&do=profile&from=space"
     const val LOGIN_QUERY = "member.php?mod=logging&action=login"
 
-    
     const val UNFOLLOW_URL = "home.php?mod=spacecp&ac=follow&op=del&fuid=123456"
     const val FOLLOW_PAGE_URL = "home.php?mod=follow"
     const val FOLLOW_FEED_QUERY =
@@ -64,10 +53,7 @@ object WebsiteConstant {
     const val FOLLOWING_USERS_QUERY = "home.php?mod=follow&do=following"
     const val FOLLOWER_USERS_QUERY = "home.php?mod=follow&do=follower"
 
-    
     const val RANK_QUERY = "misc.php?mod=ranklist&type=thread&view=%s&orderby=%s"
 
-    
     const val QQ_LOGIN_URL = SERVER_BASE_URL + "connect.php?mod=login&op=init&referer=index.php&statfrom=login_simple"
-
 }
