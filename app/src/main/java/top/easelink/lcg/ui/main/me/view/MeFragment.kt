@@ -32,7 +32,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import kotlinx.coroutines.delay
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -42,7 +41,6 @@ import top.easelink.framework.utils.addFragmentInActivity
 import top.easelink.lcg.R
 import top.easelink.lcg.account.AccountManager
 import top.easelink.lcg.account.UserDataRepo
-import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.ui.main.articles.view.FavoriteArticlesFragment
 import top.easelink.lcg.ui.main.follow.view.FollowFragment
 import top.easelink.lcg.ui.main.history.view.HistoryArticlesFragment
@@ -51,10 +49,8 @@ import top.easelink.lcg.ui.main.message.view.MessageFragment
 import top.easelink.lcg.ui.main.model.OpenForumEvent
 import top.easelink.lcg.ui.main.model.SignInSuccessEvent
 import top.easelink.lcg.ui.setting.view.SettingActivity
-import top.easelink.lcg.utils.SharedPreferencesHelper
 import top.easelink.lcg.utils.SignInManager
 import top.easelink.lcg.utils.WebsiteConstant.MY_ARTICLES_QUERY
-import java.util.Calendar
 
 class MeFragment : TopFragment(), ControllableFragment {
     private lateinit var viewModel: MeViewModel

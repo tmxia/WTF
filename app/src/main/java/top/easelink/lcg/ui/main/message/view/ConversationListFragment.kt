@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import top.easelink.framework.topbase.TopFragment
-import top.easelink.lcg.R
 import top.easelink.lcg.databinding.FragmentConversationListBinding
 import top.easelink.lcg.ui.main.message.viewmodel.ConversationListViewModel
 

@@ -44,13 +44,11 @@ import top.easelink.lcg.ui.main.message.view.MessageFragment
 import top.easelink.lcg.ui.main.model.*
 import top.easelink.lcg.ui.main.recommand.view.RecommendFragment
 import top.easelink.lcg.ui.profile.view.ProfileFragment
-import top.easelink.lcg.ui.search.view.BaiduSearchActivity
 import top.easelink.lcg.ui.search.view.SearchFragment
 import top.easelink.lcg.ui.setting.view.SettingActivity
 import top.easelink.lcg.ui.webview.view.HalfScreenWebViewFragment
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
-import top.easelink.lcg.utils.WebsiteConstant.URL_KEY
 import top.easelink.lcg.utils.showMessage
 
 class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {

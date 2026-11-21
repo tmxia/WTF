@@ -9,7 +9,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.lcg.ui.main.article.view.PostPreviewDialog

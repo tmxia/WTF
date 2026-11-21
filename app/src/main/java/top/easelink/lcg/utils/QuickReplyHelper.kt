@@ -12,7 +12,6 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.textfield.TextInputLayout
 import org.json.JSONArray
 
 object QuickReplyHelper {

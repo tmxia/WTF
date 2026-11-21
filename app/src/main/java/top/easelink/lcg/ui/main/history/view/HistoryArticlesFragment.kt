@@ -33,7 +33,6 @@ import kotlinx.coroutines.launch
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.framework.topbase.TopFragment
-import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.history.model.HistoryModel
 import top.easelink.lcg.ui.main.source.local.ArticlesDatabase
 import top.easelink.lcg.ui.webview.view.WebViewActivity

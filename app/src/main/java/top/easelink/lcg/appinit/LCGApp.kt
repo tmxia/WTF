@@ -2,7 +2,6 @@ package top.easelink.lcg.appinit
 
 import android.app.Application
 import android.content.Context
-import androidx.core.content.edit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -15,9 +14,7 @@ import top.easelink.lcg.BuildConfig
 import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.network.LCGCookieJar
-import top.easelink.lcg.ui.main.me.source.UserInfoRepo
 import top.easelink.lcg.utils.AppLogManager
-import top.easelink.lcg.utils.SharedPreferencesHelper
 import top.easelink.lcg.utils.SignInManager
 
 class LCGApp : Application() {
