@@ -24,12 +24,10 @@ class RankListBinder : BaseNavigationBinder<RankListModel, RankListVH>() {
     override fun onCreateViewHolder(
         inflater: LayoutInflater,
         parent: ViewGroup
-    ): RankListVH {
-        return RankListVH(
+    ): RankListVH = RankListVH(
             inflater,
             parent
         )
-    }
 }
 
 class RankListVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseNavigationViewHolder(

@@ -22,13 +22,9 @@ object AppConfig {
     private const val CONFIG_SEARCH_ENGINE_BAIDU = 1
     private const val CONFIG_SEARCH_ENGINE_WUAI = 0
 
-    fun getAppReleaseUrl(): String {
-        return "thread-1073834-1-1.html"
-    }
+    fun getAppReleaseUrl(): String = "thread-1073834-1-1.html"
 
-    fun followRedirectsEnable(): Boolean {
-        return true
-    }
+    fun followRedirectsEnable(): Boolean = true
 
     var searchResultShowInWebView: Boolean
         get() = get(CONFIG_SEARCH_OPEN_RESULT_IN_WEBVIEW, false)
@@ -61,9 +57,7 @@ object AppConfig {
         get() = get(CONFIG_SYNC_FAVORITES, true)
         set(value) = put(CONFIG_SYNC_FAVORITES, value)
 
-    private fun getConfigSp(): SharedPreferences {
-        return LCGApp.instance.getSharedPreferences(CONFIG_SP, Context.MODE_PRIVATE)
-    }
+    private fun getConfigSp(): SharedPreferences = LCGApp.instance.getSharedPreferences(CONFIG_SP, Context.MODE_PRIVATE)
 
     @Suppress("UNCHECKED_CAST", "IMPLICIT_CAST_TO_ANY")
     private fun <T : Any> get(key: String, default: T): T {

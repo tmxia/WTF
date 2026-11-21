@@ -144,15 +144,13 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         }
     }
 
-    private fun shouldShowBottomNavigation(fragment: Fragment): Boolean {
-        return fragment is RecommendFragment
+    private fun shouldShowBottomNavigation(fragment: Fragment): Boolean = fragment is RecommendFragment
             || fragment is SearchFragment
             || fragment is DiscoverFragment
             || fragment is MeFragment
             || fragment is ForumArticlesFragment
             || fragment is ForumNavigationFragment
             || fragment is FavoriteArticlesFragment
-    }
 
     private fun restoreCurrentTabFragment() {
         if (supportFragmentManager.backStackEntryCount > 0) {
@@ -194,8 +192,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         }
     }
 
-    private fun handleNavigationItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
+    private fun handleNavigationItemSelected(item: MenuItem): Boolean = when (item.itemId) {
             R.id.nav_item_about -> {
                 showFragment(AboutFragment())
                 true
@@ -220,7 +217,6 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 false
             }
         }
-    }
 
     private fun setupBottomNavMenu() {
         binding.bottomNavigation.setOnItemSelectedListener(this)

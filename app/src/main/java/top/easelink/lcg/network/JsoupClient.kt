@@ -84,9 +84,7 @@ object JsoupClient : ApiRequest {
     }
 
     @Throws(SocketTimeoutException::class, IOException::class)
-    override fun sendGetRequestWithUrl(url: String): Document {
-        return sendGetRequestWithUrl(url, enableWafPopup = true)
-    }
+    override fun sendGetRequestWithUrl(url: String): Document = sendGetRequestWithUrl(url, enableWafPopup = true)
 
     @Throws(SocketTimeoutException::class, IOException::class)
     fun sendGetRequestWithUrl(url: String, enableWafPopup: Boolean): Document {
@@ -128,9 +126,7 @@ object JsoupClient : ApiRequest {
         return response.parse().also { checkResponse(it) }
     }
 
-    override fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?): Connection.Response {
-        return sendPostRequestWithUrl(url, form, enableWafPopup = true)
-    }
+    override fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?): Connection.Response = sendPostRequestWithUrl(url, form, enableWafPopup = true)
 
     fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?, enableWafPopup: Boolean): Connection.Response {
         var response = getConnection(url)

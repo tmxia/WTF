@@ -25,13 +25,11 @@ class PostPreviewDialog : TopDialog() {
         private const val ARTICLE_QUERY = "article_query"
 
         @JvmStatic
-        fun newInstance(url: String): PostPreviewDialog {
-            return PostPreviewDialog().apply {
+        fun newInstance(url: String): PostPreviewDialog = PostPreviewDialog().apply {
                 arguments = Bundle().apply {
                     putString(ARTICLE_QUERY, url)
                 }
             }
-        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -22,16 +22,13 @@ class NotificationsAdapter(
 ) : RecyclerView.Adapter<BaseViewHolder>() {
     private val mNotifications: MutableList<BaseNotification> = mutableListOf()
 
-    override fun getItemCount(): Int {
-        return if (mNotifications.isEmpty()) {
+    override fun getItemCount(): Int = if (mNotifications.isEmpty()) {
             1
         } else {
             mNotifications.size + 1
         }
-    }
 
-    override fun getItemViewType(position: Int): Int {
-        return if (mNotifications.isEmpty()) {
+    override fun getItemViewType(position: Int): Int = if (mNotifications.isEmpty()) {
             VIEW_TYPE_EMPTY
         } else {
             if (position == mNotifications.size) {
@@ -40,7 +37,6 @@ class NotificationsAdapter(
                 VIEW_TYPE_NORMAL
             }
         }
-    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)

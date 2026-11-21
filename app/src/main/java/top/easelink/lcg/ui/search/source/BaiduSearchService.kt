@@ -13,8 +13,7 @@ import top.easelink.lcg.ui.search.model.RequestTooOftenException
 import top.easelink.lcg.utils.showMessage
 
 object BaiduSearchService {
-    suspend fun doSearchRequest(requestUrl: String, retryTime: Int): BaiduSearchResults {
-        return try {
+    suspend fun doSearchRequest(requestUrl: String, retryTime: Int): BaiduSearchResults = try {
             if (retryTime <= 3) {
                 doSearchRequest(requestUrl)
             } else {
@@ -24,7 +23,6 @@ object BaiduSearchService {
             delay(1000)
             doSearchRequest(requestUrl, retryTime + 1)
         }
-    }
 
     @WorkerThread
     @Throws(RequestTooOftenException::class)

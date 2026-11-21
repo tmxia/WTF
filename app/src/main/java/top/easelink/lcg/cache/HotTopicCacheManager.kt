@@ -67,11 +67,7 @@ object HotTopicCacheManager : ICacheManager {
         }
     }
 
-    private fun String.getTimeStamp(): Long {
-        return this.split(SPLITERATOR)[2].toLong()
-    }
+    private fun String.getTimeStamp(): Long = this.split(SPLITERATOR)[2].toLong()
 
-    private fun toFileName(rankType: String, dateType: String, timeStamp: Long): String {
-        return "$rankType$SPLITERATOR$dateType$SPLITERATOR$timeStamp"
-    }
+    private fun toFileName(rankType: String, dateType: String, timeStamp: Long): String = "$rankType$SPLITERATOR$dateType$SPLITERATOR$timeStamp"
 }

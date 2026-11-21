@@ -23,23 +23,15 @@ class ArticlesFragment : BaseFragment<FragmentArticlesBinding, ArticlesViewModel
 
     var controllableFlag: Boolean = true
 
-    override fun isControllable(): Boolean {
-        return controllableFlag
-    }
+    override fun isControllable(): Boolean = controllableFlag
 
-    override fun getLayoutId(): Int {
-        return R.layout.fragment_articles
-    }
+    override fun getLayoutId(): Int = R.layout.fragment_articles
 
-    override fun initViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentArticlesBinding {
-        return FragmentArticlesBinding.inflate(inflater, container, false).also {
+    override fun initViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentArticlesBinding = FragmentArticlesBinding.inflate(inflater, container, false).also {
             _binding = it
         }
-    }
 
-    override fun getViewModel(): ArticlesViewModel {
-        return ViewModelProvider(this)[ArticlesViewModel::class.java]
-    }
+    override fun getViewModel(): ArticlesViewModel = ViewModelProvider(this)[ArticlesViewModel::class.java]
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -142,13 +134,11 @@ class ArticlesFragment : BaseFragment<FragmentArticlesBinding, ArticlesViewModel
         private const val ARG_PARAM = "param"
 
         @JvmStatic
-        fun newInstance(param: String, isControllable: Boolean = true): ArticlesFragment {
-            return ArticlesFragment().apply {
+        fun newInstance(param: String, isControllable: Boolean = true): ArticlesFragment = ArticlesFragment().apply {
                 arguments = Bundle().also {
                     it.putString(ARG_PARAM, param)
                 }
                 controllableFlag = isControllable
             }
-        }
     }
 }

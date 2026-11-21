@@ -18,13 +18,9 @@ class ForumNavigationFragment : TopFragment(), ControllableFragment {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_forums_navigation_v3, container, false)
-    }
+    ): View? = inflater.inflate(R.layout.fragment_forums_navigation_v3, container, false)
 
-    override fun isControllable(): Boolean {
-        return true
-    }
+    override fun isControllable(): Boolean = true
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

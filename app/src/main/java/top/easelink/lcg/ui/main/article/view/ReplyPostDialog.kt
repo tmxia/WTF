@@ -111,13 +111,11 @@ class ReplyPostDialog : DialogFragment() {
         private const val REPLY_POST_URL = "reply_post_url"
         private const val REPLY_POST_AUTHOR = "reply_post_author"
 
-        fun newInstance(replyPostUrl: String, author: String): ReplyPostDialog {
-            return ReplyPostDialog().apply {
+        fun newInstance(replyPostUrl: String, author: String): ReplyPostDialog = ReplyPostDialog().apply {
                 arguments = Bundle().apply {
                     putString(REPLY_POST_URL, replyPostUrl)
                     putString(REPLY_POST_AUTHOR, author)
                 }
             }
-        }
     }
 }

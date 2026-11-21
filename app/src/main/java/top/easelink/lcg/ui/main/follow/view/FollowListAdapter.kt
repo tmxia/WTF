@@ -24,16 +24,13 @@ class FollowListAdapter(
     private val mFollowing: MutableList<FollowInfo> = mutableListOf()
     var nextPageUrl: String? = null
 
-    override fun getItemCount(): Int {
-        return if (mFollowing.isEmpty()) {
+    override fun getItemCount(): Int = if (mFollowing.isEmpty()) {
             1
         } else {
             mFollowing.size + 1
         }
-    }
 
-    override fun getItemViewType(position: Int): Int {
-        return if (mFollowing.isEmpty()) {
+    override fun getItemViewType(position: Int): Int = if (mFollowing.isEmpty()) {
             VIEW_TYPE_EMPTY
         } else {
             if (position == mFollowing.size) {
@@ -42,7 +39,6 @@ class FollowListAdapter(
                 VIEW_TYPE_NORMAL
             }
         }
-    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)

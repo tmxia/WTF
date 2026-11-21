@@ -20,9 +20,7 @@ fun Int.dpToPx(context: Context) = TypedValue.applyDimension(
 fun Float.dpToPx(context: Context) =
     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this, context.resources.displayMetrics)
 
-fun dp2px(context: Context, dp: Float): Float {
-    return dp * context.resources.displayMetrics.density
-}
+fun dp2px(context: Context, dp: Float): Float = dp * context.resources.displayMetrics.density
 
 fun convertViewToBitmap(view: View?, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -45,6 +43,4 @@ fun convertViewToBitmap(view: View?, config: Bitmap.Config = Bitmap.Config.ARGB_
 }
 
 @RequiresApi(Build.VERSION_CODES.R)
-fun getStatusBarHeight(view: View): Int {
-    return view.rootWindowInsets?.getInsets(WindowInsets.Type.statusBars())?.top ?: 0
-}
+fun getStatusBarHeight(view: View): Int = view.rootWindowInsets?.getInsets(WindowInsets.Type.statusBars())?.top ?: 0

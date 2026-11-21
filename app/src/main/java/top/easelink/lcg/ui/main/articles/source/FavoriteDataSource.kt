@@ -20,8 +20,7 @@ object FavoriteDataSource {
         return favorites
     }
 
-    private fun parseFavorites(doc: Document): List<ArticleEntity> {
-        return doc.getElementById("favorite_ul")
+    private fun parseFavorites(doc: Document): List<ArticleEntity> = doc.getElementById("favorite_ul")
             ?.children()
             ?.mapNotNull {
                 val delUrl = it.selectFirst("a.y")?.attr("href").orEmpty()
@@ -44,5 +43,4 @@ object FavoriteDataSource {
                     null
                 }
             }.orEmpty()
-    }
 }

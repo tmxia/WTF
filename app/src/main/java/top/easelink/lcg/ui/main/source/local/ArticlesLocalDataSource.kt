@@ -8,9 +8,7 @@ object ArticlesLocalDataSource : FavoritesLocalDataSource {
     private val mArticlesDao = ArticlesDatabase.getInstance().articlesDao()
 
     @WorkerThread
-    override fun getAllFavoriteArticles(): List<ArticleEntity> {
-        return mArticlesDao.getArticles()
-    }
+    override fun getAllFavoriteArticles(): List<ArticleEntity> = mArticlesDao.getArticles()
 
     @WorkerThread
     override fun addAllArticleToFavorite(articleEntities: List<ArticleEntity>): Boolean {
@@ -25,9 +23,7 @@ object ArticlesLocalDataSource : FavoritesLocalDataSource {
     }
 
     @WorkerThread
-    override fun delArticleFromFavorite(id: String): Boolean {
-        return mArticlesDao.deleteArticleById(id) == 1
-    }
+    override fun delArticleFromFavorite(id: String): Boolean = mArticlesDao.deleteArticleById(id) == 1
 
     @WorkerThread
     override fun delAllArticlesFromFavorite(): Boolean {
@@ -36,7 +32,5 @@ object ArticlesLocalDataSource : FavoritesLocalDataSource {
     }
 
     @WorkerThread
-    override fun isArticleInFavorites(id: String): Boolean {
-        return mArticlesDao.isArticleInFavorites(id) > 0
-    }
+    override fun isArticleInFavorites(id: String): Boolean = mArticlesDao.isArticleInFavorites(id) > 0
 }

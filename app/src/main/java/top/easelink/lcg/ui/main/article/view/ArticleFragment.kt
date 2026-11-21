@@ -138,14 +138,12 @@ class ArticleFragment : Fragment(), ControllableFragment {
         private const val ARG_TITLE = "title"
 
         @JvmStatic
-        fun newInstance(url: String, title: String = ""): ArticleFragment {
-            return ArticleFragment().apply {
+        fun newInstance(url: String, title: String = ""): ArticleFragment = ArticleFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_URL, url)
                     putString(ARG_TITLE, title)
                 }
             }
-        }
     }
 }
 

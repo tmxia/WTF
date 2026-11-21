@@ -32,13 +32,9 @@ fun addFragmentInActivity(fragmentManager: FragmentManager,
         .commitAllowingStateLoss()
 }
 
-fun popBackFragmentUntil(fragmentManager: FragmentManager, tag: String): Boolean {
-    return fragmentManager.popBackStackImmediate(tag, 0)
-}
+fun popBackFragmentUntil(fragmentManager: FragmentManager, tag: String): Boolean = fragmentManager.popBackStackImmediate(tag, 0)
 
-fun popBackFragmentInclusive(fragmentManager: FragmentManager, tag: String): Boolean {
-    return fragmentManager.popBackStackImmediate(tag, POP_BACK_STACK_INCLUSIVE)
-}
+fun popBackFragmentInclusive(fragmentManager: FragmentManager, tag: String): Boolean = fragmentManager.popBackStackImmediate(tag, POP_BACK_STACK_INCLUSIVE)
 
 fun addFragmentInFragment(fragmentManager: FragmentManager, fragment: Fragment, frameId: Int) {
     val transaction = fragmentManager
@@ -60,6 +56,4 @@ fun replaceFragmentInActivity(fragmentManager: FragmentManager, fragment: Fragme
     transaction.commitNow()
 }
 
-fun isOnMainThread(): Boolean {
-    return Looper.myLooper() == Looper.getMainLooper()
-}
+fun isOnMainThread(): Boolean = Looper.myLooper() == Looper.getMainLooper()

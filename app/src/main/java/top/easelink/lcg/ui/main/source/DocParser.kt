@@ -17,13 +17,11 @@ import top.easelink.lcg.ui.profile.model.ExtraUserInfo
 import top.easelink.lcg.utils.showMessage
 
 @WorkerThread
-fun parseExtraUserInfoProfilePage(content: String): List<ExtraUserInfo> {
-    return Jsoup.parse(content).let {
+fun parseExtraUserInfoProfilePage(content: String): List<ExtraUserInfo> = Jsoup.parse(content).let {
         it.getElementsByTag("dt").zip(it.getElementsByTag("dd")).map { pairs ->
             ExtraUserInfo(pairs.first.text(), pairs.second.text())
         }
     }
-}
 
 @WorkerThread
 @Throws(NullPointerException::class, AntiScrapingException::class)
@@ -85,9 +83,7 @@ fun checkMessages(doc: Document) {
 }
 
 @WorkerThread
-fun extractFormHash(doc: Document): String? {
-    return doc.selectFirst("input[name=formhash]")?.attr("value")
-}
+fun extractFormHash(doc: Document): String? = doc.selectFirst("input[name=formhash]")?.attr("value")
 
 @WorkerThread
 fun parseNotificationInfo(doc: Document): NotificationInfo {

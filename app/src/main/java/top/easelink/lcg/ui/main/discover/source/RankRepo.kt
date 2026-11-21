@@ -26,8 +26,7 @@ fun fetchRank(rankType: RankType, dateType: DateType): RankListModel {
     return parseRankModelInfo(doc, rankType)
 }
 
-fun parseRankModelInfo(document: Document, rankType: RankType): RankListModel {
-    return with(document) {
+fun parseRankModelInfo(document: Document, rankType: RankType): RankListModel = with(document) {
         val time = selectFirst("div.notice")?.text().orEmpty()
         val list = getElementsByTag("table")
             .select("tbody")
@@ -65,7 +64,6 @@ fun parseRankModelInfo(document: Document, rankType: RankType): RankListModel {
             }
         RankListModel(list, time)
     }
-}
 
 enum class DateType(val value: String) {
     TODAY("today"),

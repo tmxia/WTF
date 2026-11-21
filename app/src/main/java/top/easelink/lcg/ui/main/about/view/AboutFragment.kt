@@ -25,9 +25,7 @@ class AboutFragment : TopFragment(), ControllableFragment {
         return binding.root
     }
 
-    override fun isControllable(): Boolean {
-        return true
-    }
+    override fun isControllable(): Boolean = true
 
     override fun onViewCreated(
         view: View,

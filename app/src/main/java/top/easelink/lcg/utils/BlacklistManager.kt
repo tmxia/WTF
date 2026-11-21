@@ -11,9 +11,7 @@ object BlacklistManager {
         LCGApp.context.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE)
     }
 
-    fun isBlacklisted(uid: String): Boolean {
-        return prefs.getStringSet(KEY_BLACKLIST, emptySet())?.contains(uid) == true
-    }
+    fun isBlacklisted(uid: String): Boolean = prefs.getStringSet(KEY_BLACKLIST, emptySet())?.contains(uid) == true
 
     fun addToBlacklist(uid: String) {
         val set = prefs.getStringSet(KEY_BLACKLIST, emptySet())?.toMutableSet() ?: mutableSetOf()

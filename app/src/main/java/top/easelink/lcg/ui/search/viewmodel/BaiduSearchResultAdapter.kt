@@ -17,16 +17,13 @@ class BaiduSearchResultAdapter(private var mListener: SearchAdapterListener) :
     RecyclerView.Adapter<BaseViewHolder>() {
     private val mBaiduSearchResults: MutableList<BaiduSearchResult> = ArrayList()
 
-    override fun getItemCount(): Int {
-        return if (mBaiduSearchResults.isEmpty()) {
+    override fun getItemCount(): Int = if (mBaiduSearchResults.isEmpty()) {
             1
         } else {
             mBaiduSearchResults.size + 1
         }
-    }
 
-    override fun getItemViewType(position: Int): Int {
-        return if (mBaiduSearchResults.isEmpty()) {
+    override fun getItemViewType(position: Int): Int = if (mBaiduSearchResults.isEmpty()) {
             VIEW_TYPE_EMPTY
         } else {
             if (position == mBaiduSearchResults.size) {
@@ -35,14 +32,12 @@ class BaiduSearchResultAdapter(private var mListener: SearchAdapterListener) :
                 VIEW_TYPE_NORMAL
             }
         }
-    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
-        return when (viewType) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder = when (viewType) {
             VIEW_TYPE_NORMAL -> SearchResultViewHolder(
                 LayoutInflater.from(parent.context)
                     .inflate(
@@ -67,7 +62,6 @@ class BaiduSearchResultAdapter(private var mListener: SearchAdapterListener) :
                     .inflate(R.layout.item_empty_view, parent, false)
             )
         }
-    }
 
     fun addItems(baiduSearchResults: List<BaiduSearchResult>) {
         mBaiduSearchResults.addAll(baiduSearchResults)

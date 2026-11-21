@@ -15,17 +15,13 @@ import top.easelink.lcg.ui.main.model.OpenForumEvent
 class ForumNavigationAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     private val mForumItems: MutableList<ForumNavigationModel> = mutableListOf()
 
-    override fun getItemCount(): Int {
-        return mForumItems.size + 1
-    }
+    override fun getItemCount(): Int = mForumItems.size + 1
 
-    override fun getItemViewType(position: Int): Int {
-        return if (position == mForumItems.size) {
+    override fun getItemViewType(position: Int): Int = if (position == mForumItems.size) {
             VIEW_TYPE_LOAD_MORE
         } else {
             VIEW_TYPE_NORMAL
         }
-    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)

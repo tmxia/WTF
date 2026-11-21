@@ -15,17 +15,11 @@ internal class ForumsPrimaryAdapterConfig : ILinkagePrimaryAdapterConfig {
         mContext = context
     }
 
-    override fun getLayoutId(): Int {
-        return R.layout.item_forum_primary_linear
-    }
+    override fun getLayoutId(): Int = R.layout.item_forum_primary_linear
 
-    override fun getGroupTitleViewId(): Int {
-        return R.id.primary_title
-    }
+    override fun getGroupTitleViewId(): Int = R.id.primary_title
 
-    override fun getRootViewId(): Int {
-        return R.id.primary_container
-    }
+    override fun getRootViewId(): Int = R.id.primary_container
 
     override fun onBindViewHolder(
         holder: LinkagePrimaryViewHolder,

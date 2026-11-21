@@ -57,21 +57,15 @@ object PreviewCacheManager : ICacheManager {
         if (!parent.exists()) parent.mkdirs()
     }
 
-    private fun findInDisk(url: String): File? {
-        return if (isLocalFile(url)) {
+    private fun findInDisk(url: String): File? = if (isLocalFile(url)) {
             File(url)
         } else {
             null
         }
-    }
 
-    private fun isLocalFile(url: String): Boolean {
-        return url.startsWith("/")
-    }
+    private fun isLocalFile(url: String): Boolean = url.startsWith("/")
 
-    private fun getCacheFileName(url: String): String {
-        return url.hashCode().toString()
-    }
+    private fun getCacheFileName(url: String): String = url.hashCode().toString()
 
     private fun checkShouldCache(): Boolean {
         val last = getConfigSp().getLong(KEY_LAST_CLEAN_TIME, 0L)

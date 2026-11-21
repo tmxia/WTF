@@ -42,11 +42,9 @@ import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 class HistoryArticlesFragment : TopFragment(), ControllableFragment {
     override fun isControllable(): Boolean = true
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return ComposeView(requireContext()).apply {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -139,8 +137,6 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
     }
 
     companion object {
-        fun newInstance(): HistoryArticlesFragment {
-            return HistoryArticlesFragment()
-        }
+        fun newInstance(): HistoryArticlesFragment = HistoryArticlesFragment()
     }
 }

@@ -24,9 +24,7 @@ object LCGCookieJar {
         }
     }
 
-    fun hasLoginCookie(): Boolean {
-        return cookiesForUrl(SERVER_BASE_URL).keys.any { it.contains("auth") }
-    }
+    fun hasLoginCookie(): Boolean = cookiesForUrl(SERVER_BASE_URL).keys.any { it.contains("auth") }
 
     fun cookiesForUrl(url: String): Map<String, String> {
         val httpUrl = url.toHttpUrlOrNull() ?: return emptyMap()

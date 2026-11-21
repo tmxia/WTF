@@ -41,21 +41,17 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
 
     @WorkerThread
     @Throws(LoginRequiredException::class, SocketTimeoutException::class)
-    override fun getForumArticles(query: String, processThreadList: Boolean): ForumPage? {
-        return processForumArticlesDocument(
+    override fun getForumArticles(query: String, processThreadList: Boolean): ForumPage? = processForumArticlesDocument(
             JsoupClient.sendGetRequestWithQuery(query),
             processThreadList
         )
-    }
 
     @WorkerThread
-    override fun getHomePageArticles(param: String, pageNum: Int): List<Article> {
-        return try {
+    override fun getHomePageArticles(param: String, pageNum: Int): List<Article> = try {
             getArticles("$FORUM_BASE_QUERY$param&page=$pageNum")
         } catch (_: Exception) {
             emptyList()
         }
-    }
 
     @Throws(BlockException::class, HttpStatusException::class)
     @WorkerThread
@@ -438,11 +434,9 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         return list
     }
 
-    private fun getDateTime(document: Document): List<String> {
-        return document.select("div.authi").select("em").map {
+    private fun getDateTime(document: Document): List<String> = document.select("div.authi").select("em").map {
             it.text()
         }
-    }
 
     @Throws(BlockException::class)
     private fun getFirstPost(document: Document): PreviewPost {
@@ -472,18 +466,15 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         )
     }
 
-    private fun getFirstContent(doc: Document): String {
-        return doc.selectFirst("div.pcb")
+    private fun getFirstContent(doc: Document): String = doc.selectFirst("div.pcb")
             .let { element ->
                 element?.selectFirst("td.t_f")?.let { tmp ->
                     processContentElement(tmp).html()
                 }
                     ?: element?.selectFirst("div.locked")?.html().orEmpty()
             }.orEmpty()
-    }
 
-    private fun getContents(doc: Document): List<String> {
-        return doc.select("div.pcb")
+    private fun getContents(doc: Document): List<String> = doc.select("div.pcb")
             .filterNotNull()
             .mapTo(ArrayList<String>()) {
                 it.selectFirst("td.t_f")?.let { tmp ->
@@ -497,13 +488,10 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                     res.html()
                 } ?: it.selectFirst("div.locked")?.html().orEmpty()
             }
-    }
 
-    private fun getReplyUrls(doc: Document): List<String> {
-        return doc.getElementsByClass("fastre").map {
+    private fun getReplyUrls(doc: Document): List<String> = doc.getElementsByClass("fastre").map {
             it.attr("href")
         }
-    }
 
     private fun processContentElement(element: Element): Element {
         element.select("div.tip").remove()
@@ -557,8 +545,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     }
 
     @WorkerThread
-    override fun addFavorites(threadId: String, formHash: String): Boolean {
-        return try {
+    override fun addFavorites(threadId: String, formHash: String): Boolean = try {
             JsoupClient.sendGetRequestWithQuery(
                 String.format(
                     ADD_TO_FAVORITE_QUERY,
@@ -571,11 +558,9 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             Timber.e(e)
             false
         }
-    }
 
     @WorkerThread
-    override fun removeFavorites(threadId: String, formHash: String): Boolean {
-        return try {
+    override fun removeFavorites(threadId: String, formHash: String): Boolean = try {
             val doc = JsoupClient.sendGetRequestWithQuery(
                 String.format(REMOVE_FAVORITE_QUERY, threadId, formHash)
             )
@@ -587,11 +572,9 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             Timber.e(e)
             false
         }
-    }
 
     @WorkerThread
-    fun replyAdd(query: String): String {
-        return try {
+    fun replyAdd(query: String): String = try {
             val doc = JsoupClient.sendGetRequestWithQuery(query)
             val message = doc.getElementsByClass("nfl").firstOrNull()?.text().orEmpty()
             message
@@ -599,5 +582,4 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             Timber.e(e)
             "Error"
         }
-    }
 }

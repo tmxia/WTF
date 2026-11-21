@@ -26,29 +26,17 @@ internal class ForumsSecondaryAdapterConfig :
         mContext = context
     }
 
-    override fun getGridLayoutId(): Int {
-        return 0
-    }
+    override fun getGridLayoutId(): Int = 0
 
-    override fun getLinearLayoutId(): Int {
-        return R.layout.item_forum_secondary_linear
-    }
+    override fun getLinearLayoutId(): Int = R.layout.item_forum_secondary_linear
 
-    override fun getHeaderLayoutId(): Int {
-        return R.layout.item_forum_secondary_header
-    }
+    override fun getHeaderLayoutId(): Int = R.layout.item_forum_secondary_header
 
-    override fun getFooterLayoutId(): Int {
-        return R.layout.item_forum_secondary_footer
-    }
+    override fun getFooterLayoutId(): Int = R.layout.item_forum_secondary_footer
 
-    override fun getHeaderTextViewId(): Int {
-        return R.id.secondary_header
-    }
+    override fun getHeaderTextViewId(): Int = R.id.secondary_header
 
-    override fun getSpanCountOfGridMode(): Int {
-        return 0
-    }
+    override fun getSpanCountOfGridMode(): Int = 0
 
     override fun onBindViewHolder(
         holder: LinkageSecondaryViewHolder,

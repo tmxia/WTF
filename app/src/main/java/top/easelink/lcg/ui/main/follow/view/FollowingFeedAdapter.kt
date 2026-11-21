@@ -32,16 +32,13 @@ class FollowingFeedAdapter(
     private val mFeeds: MutableList<FeedInfo> = mutableListOf()
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
-    override fun getItemCount(): Int {
-        return if (mFeeds.isEmpty()) {
+    override fun getItemCount(): Int = if (mFeeds.isEmpty()) {
             1
         } else {
             mFeeds.size + 1
         }
-    }
 
-    override fun getItemViewType(position: Int): Int {
-        return if (mFeeds.isEmpty()) {
+    override fun getItemViewType(position: Int): Int = if (mFeeds.isEmpty()) {
             VIEW_TYPE_EMPTY
         } else {
             if (position == mFeeds.size) {
@@ -50,7 +47,6 @@ class FollowingFeedAdapter(
                 VIEW_TYPE_NORMAL
             }
         }
-    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)

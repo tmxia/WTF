@@ -24,13 +24,11 @@ class CommentArticleDialog : TopDialog() {
         const val REPLY_POST_RESULT_FAILED = 0
 
         @JvmStatic
-        fun newInstance(replyPostUrl: String): CommentArticleDialog {
-            return CommentArticleDialog().apply {
+        fun newInstance(replyPostUrl: String): CommentArticleDialog = CommentArticleDialog().apply {
                 arguments = Bundle().apply {
                     putString(REPLY_POST_URL, replyPostUrl)
                 }
             }
-        }
     }
 
     private lateinit var replyPostViewModel: ReplyPostViewModel

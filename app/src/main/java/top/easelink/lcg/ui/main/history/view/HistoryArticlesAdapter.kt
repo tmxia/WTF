@@ -30,22 +30,14 @@ class HistoryArticlesAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
 
     private val differ = AsyncListDiffer(this, object : DiffUtil.ItemCallback<HistoryModel>() {
-        override fun areItemsTheSame(oldItem: HistoryModel, newItem: HistoryModel): Boolean {
-            return oldItem.url == newItem.url
-        }
+        override fun areItemsTheSame(oldItem: HistoryModel, newItem: HistoryModel): Boolean = oldItem.url == newItem.url
 
-        override fun areContentsTheSame(oldItem: HistoryModel, newItem: HistoryModel): Boolean {
-            return oldItem == newItem
-        }
+        override fun areContentsTheSame(oldItem: HistoryModel, newItem: HistoryModel): Boolean = oldItem == newItem
     })
 
-    override fun getItemCount(): Int {
-        return differ.currentList.size.takeIf { it > 0 } ?: 1
-    }
+    override fun getItemCount(): Int = differ.currentList.size.takeIf { it > 0 } ?: 1
 
-    override fun getItemViewType(position: Int): Int {
-        return if (differ.currentList.isEmpty()) VIEW_TYPE_EMPTY else VIEW_TYPE_NORMAL
-    }
+    override fun getItemViewType(position: Int): Int = if (differ.currentList.isEmpty()) VIEW_TYPE_EMPTY else VIEW_TYPE_NORMAL
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         when (holder) {
@@ -61,8 +53,7 @@ class HistoryArticlesAdapter : RecyclerView.Adapter<BaseViewHolder>() {
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
-        return when (viewType) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder = when (viewType) {
             VIEW_TYPE_NORMAL -> ArticleViewHolder(
                 ItemHistoryArticleViewBinding.inflate(
                     LayoutInflater.from(parent.context),
@@ -79,7 +70,6 @@ class HistoryArticlesAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                 )
             )
         }
-    }
 
     fun submitList(newList: List<HistoryModel>) {
         differ.submitList(if (newList.isEmpty()) emptyList() else ArrayList(newList))

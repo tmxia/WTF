@@ -42,19 +42,13 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
 
     override fun getLayoutId(): Int = R.layout.fragment_favorite_articles
 
-    override fun initViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentFavoriteArticlesBinding {
-        return FragmentFavoriteArticlesBinding.inflate(inflater, container, false).also { _binding = it }
-    }
+    override fun initViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentFavoriteArticlesBinding = FragmentFavoriteArticlesBinding.inflate(inflater, container, false).also { _binding = it }
 
-    override fun getViewModel(): FavoriteArticlesViewModel {
-        return ViewModelProvider(this)[FavoriteArticlesViewModel::class.java]
-    }
+    override fun getViewModel(): FavoriteArticlesViewModel = ViewModelProvider(this)[FavoriteArticlesViewModel::class.java]
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return ComposeView(requireContext()).apply {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

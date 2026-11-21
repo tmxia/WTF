@@ -1,11 +1,7 @@
 package top.easelink.framework.topbase
 
 interface ControllableFragment {
-    fun isControllable(): Boolean {
-        return false
-    }
+    fun isControllable(): Boolean = false
 
-    fun getBackStackTag(): String {
-        return this.javaClass.simpleName
-    }
+    fun getBackStackTag(): String = this.javaClass.simpleName
 }

@@ -89,9 +89,7 @@ class DownloadLinkDialog : TopDialog() {
         binding.exit.setOnClickListener { dismissDialog() }
     }
 
-    private fun buildSmartLink(targetLink: String, allLinks: List<String>, allCodes: String): String {
-        return targetLink.trim()
-    }
+    private fun buildSmartLink(targetLink: String, allLinks: List<String>, allCodes: String): String = targetLink.trim()
 
     override fun onDestroyView() {
         super.onDestroyView()

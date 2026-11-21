@@ -16,13 +16,11 @@ class HalfScreenWebViewFragment : TopDialog() {
     companion object {
         private const val HTML = "html"
 
-        fun newInstance(html: String): HalfScreenWebViewFragment {
-            return HalfScreenWebViewFragment().apply {
+        fun newInstance(html: String): HalfScreenWebViewFragment = HalfScreenWebViewFragment().apply {
                 arguments = Bundle().apply {
                     putString(HTML, html)
                 }
             }
-        }
     }
 
     override fun onCreateView(

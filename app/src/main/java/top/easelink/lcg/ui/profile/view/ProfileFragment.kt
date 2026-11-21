@@ -34,8 +34,7 @@ class ProfileFragment : TopFragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
+    ): View = ComposeView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -46,7 +45,6 @@ class ProfileFragment : TopFragment() {
                 )
             }
         }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -57,13 +55,11 @@ class ProfileFragment : TopFragment() {
         private const val PROFILE_URL = "profile_url"
 
         @JvmStatic
-        fun newInstance(profileUrl: String): ProfileFragment {
-            return ProfileFragment().also {
+        fun newInstance(profileUrl: String): ProfileFragment = ProfileFragment().also {
                 it.arguments = Bundle().apply {
                     putString(PROFILE_URL, profileUrl)
                 }
             }
-        }
     }
 }
 

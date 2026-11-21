@@ -25,9 +25,7 @@ class ForumNavigationBinder : BaseNavigationBinder<ForumListModel, ForumNavigati
     override fun onCreateViewHolder(
         inflater: LayoutInflater,
         parent: ViewGroup
-    ): ForumNavigationVH {
-        return ForumNavigationVH(inflater, parent)
-    }
+    ): ForumNavigationVH = ForumNavigationVH(inflater, parent)
 }
 
 class ForumNavigationVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseNavigationViewHolder(

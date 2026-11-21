@@ -11,9 +11,7 @@ internal class ClickablePreCodeSpanImpl : ClickablePreCodeSpan {
         this.html = html
     }
 
-    override fun newInstance(): ClickablePreCodeSpan {
-        return ClickablePreCodeSpanImpl(getHtml())
-    }
+    override fun newInstance(): ClickablePreCodeSpan = ClickablePreCodeSpanImpl(getHtml())
 
     override fun onClick(view: View) {
         val codeHtml = html ?: return

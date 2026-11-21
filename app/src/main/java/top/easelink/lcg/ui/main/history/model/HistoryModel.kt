@@ -14,7 +14,5 @@ data class HistoryModel(
         return url == other.url
     }
 
-    override fun hashCode(): Int {
-        return url.hashCode()
-    }
+    override fun hashCode(): Int = url.hashCode()
 }

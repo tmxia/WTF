@@ -67,11 +67,9 @@ class SearchFragment : TopFragment(), ControllableFragment {
 
     override fun isControllable(): Boolean = true
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return ComposeView(requireContext()).apply {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         timber.log.Timber.tag("[SearchProbe]").d("SearchFragment onViewCreated 触发，准备初始化 ViewModel")
@@ -597,8 +595,7 @@ private fun saveHotWords(prefs: android.content.SharedPreferences, list: List<St
     prefs.edit().putString("hot_words", list.joinToString("|||")).apply()
 }
 
-fun parseHtmlHighlight(html: String): AnnotatedString {
-    return buildAnnotatedString {
+fun parseHtmlHighlight(html: String): AnnotatedString = buildAnnotatedString {
         val parts = html.split(Regex("(<font color=\"#ff0000\">|</font>|<strong>|</strong>)", RegexOption.IGNORE_CASE))
         var isRed = false
         var isBold = false
@@ -635,4 +632,3 @@ fun parseHtmlHighlight(html: String): AnnotatedString {
             }
         }
     }
-}

@@ -19,16 +19,13 @@ class LCGSearchResultAdapter(
 ) : RecyclerView.Adapter<BaseViewHolder>() {
     private val mSearchResults: MutableList<LCGSearchResultItem> = mutableListOf()
 
-    override fun getItemCount(): Int {
-        return if (mSearchResults.isEmpty()) {
+    override fun getItemCount(): Int = if (mSearchResults.isEmpty()) {
             1
         } else {
             mSearchResults.size + 1
         }
-    }
 
-    override fun getItemViewType(position: Int): Int {
-        return if (mSearchResults.isEmpty()) {
+    override fun getItemViewType(position: Int): Int = if (mSearchResults.isEmpty()) {
             VIEW_TYPE_EMPTY
         } else {
             if (position == mSearchResults.size) {
@@ -37,14 +34,12 @@ class LCGSearchResultAdapter(
                 VIEW_TYPE_NORMAL
             }
         }
-    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
-        return when (viewType) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder = when (viewType) {
             VIEW_TYPE_NORMAL -> SearchResultViewHolder(
                 ItemLcgSearchResultViewBinding.inflate(
                     LayoutInflater.from(parent.context), parent, false
@@ -62,7 +57,6 @@ class LCGSearchResultAdapter(
                     .inflate(R.layout.item_empty_view, parent, false)
             )
         }
-    }
 
     fun addItems(LCGSearchResults: List<LCGSearchResultItem>) {
         mSearchResults.addAll(LCGSearchResults)

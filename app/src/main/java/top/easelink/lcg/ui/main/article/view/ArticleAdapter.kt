@@ -56,11 +56,9 @@ class ArticleAdapter(
 ) : RecyclerView.Adapter<BaseViewHolder>() {
     private val mPostList: MutableList<Post> = ArrayList()
 
-    fun getPositionForPost(target: Post): Int {
-        return mPostList.indexOfFirst {
+    fun getPositionForPost(target: Post): Int = mPostList.indexOfFirst {
             it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl)
         }
-    }
 
     private var hasMoreItem: Boolean = false
     var isFiltering: Boolean = false
@@ -84,9 +82,7 @@ class ArticleAdapter(
         notifyDataSetChanged()
     }
 
-    private fun getRealPost(position: Int): Post? {
-        return mPostList.getOrNull(position)
-    }
+    private fun getRealPost(position: Int): Post? = mPostList.getOrNull(position)
 
     override fun getItemCount() = when {
         mPostList.isEmpty() -> 0

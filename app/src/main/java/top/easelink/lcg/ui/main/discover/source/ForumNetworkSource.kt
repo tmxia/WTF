@@ -71,13 +71,10 @@ object ForumNetworkSource {
         return BLACKLIST.none { title.contains(it) }
     }
 
-    private fun cleanTitle(raw: String): String {
-        return raw.replace("『", "").replace("』", "").replace("《", "").replace("》", "")
+    private fun cleanTitle(raw: String): String = raw.replace("『", "").replace("』", "").replace("《", "").replace("》", "")
             .replace("【", "").replace("】", "").replace("\n", "").replace(" ", "").trim()
-    }
 
-    private fun getIconByFid(fid: Int?, title: String): Int {
-        return when (fid) {
+    private fun getIconByFid(fid: Int?, title: String): Int = when (fid) {
             2 -> R.drawable.ic_creator
 
             16 -> R.drawable.ic_software
@@ -103,5 +100,4 @@ object ForumNetworkSource {
                 else -> R.drawable.ic_creator
             }
         }
-    }
 }

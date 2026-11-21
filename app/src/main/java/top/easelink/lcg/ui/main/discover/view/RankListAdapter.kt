@@ -17,13 +17,9 @@ import top.easelink.lcg.ui.main.model.OpenArticleEvent
 class RankListAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     private val mRankItems: MutableList<RankModel> = mutableListOf()
 
-    override fun getItemCount(): Int {
-        return mRankItems.size
-    }
+    override fun getItemCount(): Int = mRankItems.size
 
-    override fun getItemViewType(position: Int): Int {
-        return VIEW_TYPE_NORMAL
-    }
+    override fun getItemViewType(position: Int): Int = VIEW_TYPE_NORMAL
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)

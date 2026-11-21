@@ -131,14 +131,12 @@ object LCGSearchService {
         }
     }
 
-    private fun canSendRequest(): Boolean {
-        return if (System.currentTimeMillis() - lastRequestTime < MIN_REQUEST_INTERVAL) {
+    private fun canSendRequest(): Boolean = if (System.currentTimeMillis() - lastRequestTime < MIN_REQUEST_INTERVAL) {
             false
         } else {
             lastRequestTime = System.currentTimeMillis()
             true
         }
-    }
 
     private fun emptyResult(): LCGSearchResults {
         mNextPageUrl = null

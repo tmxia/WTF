@@ -27,11 +27,9 @@ class ScreenCaptureDialog : DialogFragment() {
         const val TAG = "ScreenCaptureDialog"
         private const val IMAGE_PATH = "image_path"
 
-        fun newInstance(imagePath: String): ScreenCaptureDialog {
-            return ScreenCaptureDialog().apply {
+        fun newInstance(imagePath: String): ScreenCaptureDialog = ScreenCaptureDialog().apply {
                 arguments = Bundle().apply { putString(IMAGE_PATH, imagePath) }
             }
-        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,8 +97,7 @@ class ScreenCaptureDialog : DialogFragment() {
         }
     }
 
-    private fun saveImageToGalleryAndroid10(file: File, fileName: String): Boolean {
-        return try {
+    private fun saveImageToGalleryAndroid10(file: File, fileName: String): Boolean = try {
             val resolver = requireContext().contentResolver
             val contentValues = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
@@ -125,7 +122,6 @@ class ScreenCaptureDialog : DialogFragment() {
             Timber.e(e, "保存相册失败")
             false
         }
-    }
 
     override fun onStart() {
         super.onStart()

@@ -22,16 +22,13 @@ class FavoriteArticlesAdapter(private var favoriteArticlesViewModel: FavoriteArt
     RecyclerView.Adapter<BaseViewHolder>(), ItemTouchHelperCallback.onMoveAndSwipedListener {
     private val mArticleEntities: MutableList<ArticleEntity> = mutableListOf()
 
-    override fun getItemCount(): Int {
-        return if (mArticleEntities.isEmpty()) {
+    override fun getItemCount(): Int = if (mArticleEntities.isEmpty()) {
             1
         } else {
             mArticleEntities.size + 1
         }
-    }
 
-    override fun getItemViewType(position: Int): Int {
-        return if (mArticleEntities.isEmpty()) {
+    override fun getItemViewType(position: Int): Int = if (mArticleEntities.isEmpty()) {
             VIEW_TYPE_EMPTY
         } else {
             if (position == mArticleEntities.size) {
@@ -40,7 +37,6 @@ class FavoriteArticlesAdapter(private var favoriteArticlesViewModel: FavoriteArt
                 VIEW_TYPE_NORMAL
             }
         }
-    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)
