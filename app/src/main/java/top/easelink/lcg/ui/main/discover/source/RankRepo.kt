@@ -85,7 +85,13 @@ fun parseRankModelInfo(document: Document, rankType: RankType): RankListModel = 
         }
     }.filterNotNull()
 
-    RankListModel(list, time)
+    // 站点返回顺序不等于热度降序；按热度数值降序重排并重算名次序号，
+    // 使界面序号与红/橙/绿圆点颜色跟随新排名；解析失败兜底为 0 的条目自然排到末尾。
+    val sorted = list.sortedByDescending { it.num }.mapIndexed { index, model ->
+        model.copy(index = index + 1)
+    }
+
+    RankListModel(sorted, time)
 }
 
 enum class DateType(val value: String) {
