@@ -18,8 +18,11 @@ class ElThreadFactory(
             override fun run() {
                 val priority = when (mPriority) {
                     ELThreadPriority.LOW -> Process.THREAD_PRIORITY_BACKGROUND
+
                     ELThreadPriority.HIGH -> Process.THREAD_PRIORITY_DISPLAY
+
                     ELThreadPriority.IMMEDIATE -> Process.THREAD_PRIORITY_URGENT_DISPLAY
+
                     // ELThreadPriority.NORMAL
                     else -> Process.THREAD_PRIORITY_DEFAULT
                 }

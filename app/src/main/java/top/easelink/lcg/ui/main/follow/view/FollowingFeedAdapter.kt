@@ -61,10 +61,12 @@ class FollowingFeedAdapter(
                 val binding = ItemFollowContentViewBinding.inflate(inflater, parent, false)
                 ArticleViewHolder(binding)
             }
+
             VIEW_TYPE_LOAD_MORE -> {
                 val binding = ItemLoadMoreViewBinding.inflate(inflater, parent, false)
                 LoadMoreViewHolder(binding, followingFeedViewModel)
             }
+
             else -> {
                 val binding = ItemEmptyViewBinding.inflate(inflater, parent, false)
                 EmptyViewHolder(binding)

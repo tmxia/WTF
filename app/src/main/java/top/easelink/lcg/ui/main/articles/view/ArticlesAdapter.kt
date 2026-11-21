@@ -56,14 +56,17 @@ class ArticlesAdapter(
                 val binding = ItemArticleViewBinding.inflate(inflater, parent, false)
                 ArticleViewHolder(binding)
             }
+
             VIEW_TYPE_LOAD_MORE -> {
                 val binding = ItemLoadMoreViewBinding.inflate(inflater, parent, false)
                 LoadMoreViewHolder(binding)
             }
+
             VIEW_TYPE_EMPTY -> {
                 val binding = ItemArticleEmptyViewBinding.inflate(inflater, parent, false)
                 EmptyViewHolder(binding)
             }
+
             else -> {
                 val binding = ItemArticleEmptyViewBinding.inflate(inflater, parent, false)
                 EmptyViewHolder(binding)
@@ -131,6 +134,7 @@ class ArticlesAdapter(
                 } else {
                     when (article.helpCoin) {
                         0 -> stamp.visibility = View.GONE
+
                         -1 -> stamp.apply {
                             setDrawSpotEnable(true)
                             setStampColor(ContextCompat.getColor(root.context, R.color.light_gray))
@@ -138,6 +142,7 @@ class ArticlesAdapter(
                             visibility = View.VISIBLE
                             reDraw()
                         }
+
                         else -> stamp.apply {
                             stamp.setDrawSpotEnable(true)
                             stamp.setStampColor(

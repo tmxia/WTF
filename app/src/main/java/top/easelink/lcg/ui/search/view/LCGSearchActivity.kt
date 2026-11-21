@@ -140,10 +140,12 @@ class LCGSearchActivity : TopActivity() {
                     showFragment(ArticleFragment.newInstance(event.url))
                 }
             }
+
             event.url.startsWith("http") ||
                     event.url.startsWith(SERVER_BASE_URL) -> {
                 WebViewActivity.startWebViewWith(event.url, this)
             }
+
             else -> showMessage(R.string.general_error)
         }
     }

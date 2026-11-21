@@ -136,6 +136,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
                 showMessage(R.string.no_more_content)
                 callback(false)
             }
+
             else -> {
                 articles.postValue(currentList + newList)
                 callback(true)

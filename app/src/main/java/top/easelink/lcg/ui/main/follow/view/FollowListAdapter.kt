@@ -53,10 +53,12 @@ class FollowListAdapter(
                 val binding = ItemFollowViewBinding.inflate(inflater, parent, false)
                 ArticleViewHolder(binding)
             }
+
             VIEW_TYPE_LOAD_MORE -> {
                 val binding = ItemLoadMoreViewBinding.inflate(inflater, parent, false)
                 LoadMoreViewHolder(binding, lifecycleOwner, followListViewModel)
             }
+
             else -> {
                 val binding = ItemEmptyViewBinding.inflate(inflater, parent, false)
                 EmptyViewHolder(binding)

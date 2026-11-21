@@ -200,18 +200,22 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 showFragment(AboutFragment())
                 true
             }
+
             R.id.nav_item_release -> {
                 onOpenArticleEvent(OpenArticleEvent(AppConfig.getAppReleaseUrl()))
                 true
             }
+
             R.id.nav_item_portal -> {
                 WebViewActivity.startWebViewWith(SERVER_BASE_URL, this)
                 true
             }
+
             R.id.nav_item_setting -> {
                 startActivity(Intent(this, SettingActivity::class.java))
                 true
             }
+
             else -> false
         }
     }
@@ -301,6 +305,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             is FollowFragment,
             is HistoryArticlesFragment,
             is ProfileFragment, is MessageFragment -> true
+
             else -> false
         }
         setStatusBarAppearance(isLightStatusBar)
@@ -455,18 +460,22 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 showFragment(SearchFragment::class.java)
                 true
             }
+
             R.id.action_forum_navigation -> {
                 showFragment(DiscoverFragment::class.java)
                 true
             }
+
             R.id.action_about_me -> {
                 showFragment(MeFragment::class.java)
                 true
             }
+
             R.id.action_home -> {
                 showFragment(RecommendFragment::class.java)
                 true
             }
+
             else -> false
         }
     }

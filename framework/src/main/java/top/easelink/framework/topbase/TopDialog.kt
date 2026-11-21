@@ -14,6 +14,7 @@ import timber.log.Timber
 
 abstract class TopDialog : DialogFragment() {
     lateinit var mContext: Context
+
     companion object {
         @Volatile
         var lastTryShowTime: Long = 0L

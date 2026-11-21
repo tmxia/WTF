@@ -60,6 +60,7 @@ class ProfileActivity : TopActivity() {
                 onBackPressed()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }

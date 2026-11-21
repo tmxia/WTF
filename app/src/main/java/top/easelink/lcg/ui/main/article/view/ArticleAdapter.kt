@@ -61,6 +61,7 @@ class ArticleAdapter(
             it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl)
         }
     }
+
     private var hasMoreItem: Boolean = false
     var isFiltering: Boolean = false
     var searchKeyword: String = ""
@@ -95,7 +96,6 @@ class ArticleAdapter(
 
         override fun getItemViewType(position: Int) = when {
         mPostList.isEmpty() -> VIEW_TYPE_EMPTY
-
         position == mPostList.size -> VIEW_TYPE_LOAD_MORE
         isFiltering -> VIEW_TYPE_REPLY
         position == 0 -> VIEW_TYPE_POST
@@ -279,7 +279,9 @@ class ArticleAdapter(
             post?.let { p ->
                 when (v.id) {
                     R.id.post_btn_reply -> p.replyUrl?.let { EventBus.getDefault().post(ReplyPostEvent(it, p.author)) }
+
                     R.id.post_btn_copy -> if (copyContent(p.content, p.author)) showMessage(R.string.copy_succeed) else showMessage(R.string.copy_failed)
+
                     R.id.post_btn_thumb_up -> {
                         if (p.isLiked) {
                             showMessage("您已经赞过该楼层了")
@@ -298,6 +300,7 @@ class ArticleAdapter(
                             mListener.replyAdd(url)
                         }
                     }
+
                     R.id.post_btn_capture -> {
                         showMessage("正在生成截图，请稍候...")
                         itemView.postDelayed({
@@ -461,15 +464,19 @@ class ArticleAdapter(
             val diff = System.currentTimeMillis() - it
             when (val minutesDiff = diff / 1000 / 60) {
                 in 0..1 -> return "${tips}1 分钟前"
-                in 1..60 -> return "${tips}${minutesDiff} 分钟前"
+
+                in 1..60 -> return "${tips}$minutesDiff 分钟前"
+
                 in 60..24 * 60 -> {
                     val hoursDiff = diff / 1000 / 60 / 60
-                    return "${tips}${hoursDiff} 小时前"
+                    return "${tips}$hoursDiff 小时前"
                 }
+
                 in 24 * 60..7 * 24 * 60 -> {
                     val dayDiff = diff / 1000 / 60 / 60 / 24
-                    return "${tips}${dayDiff} 天前"
+                    return "${tips}$dayDiff 天前"
                 }
+
                 else -> date
             }
         } ?: date

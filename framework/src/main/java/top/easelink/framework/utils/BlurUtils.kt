@@ -26,6 +26,7 @@ object BlurUtils {
             when {
                 useRenderEffect && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
                     renderEffectBlur(source, safeRadius.toFloat())
+
                 else -> optimizedFastBlur(source, safeRadius)
             }
         } catch (e: Exception) {
@@ -147,6 +148,7 @@ object BlurUtils {
         }
 
         private fun clampX(x: Int) = max(0, min(width - 1, x))
+
         private fun clampY(y: Int) = max(0, min(height - 1, y))
     }
 }

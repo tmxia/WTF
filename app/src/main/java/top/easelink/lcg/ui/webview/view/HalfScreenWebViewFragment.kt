@@ -15,6 +15,7 @@ class HalfScreenWebViewFragment : TopDialog() {
 
     companion object {
         private const val HTML = "html"
+
         fun newInstance(html: String): HalfScreenWebViewFragment {
             return HalfScreenWebViewFragment().apply {
                 arguments = Bundle().apply {

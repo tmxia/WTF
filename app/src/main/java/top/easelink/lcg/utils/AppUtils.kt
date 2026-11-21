@@ -35,6 +35,7 @@ fun getScreenWidthDp(context: Context): Int {
     val displayMetrics = context.resources.displayMetrics
     return (displayMetrics.widthPixels / displayMetrics.density).toInt()
 }
+
 fun getScreenHeightDp(context: Context): Int {
     val displayMetrics = context.resources.displayMetrics
     return (displayMetrics.heightPixels / displayMetrics.density).toInt()
@@ -45,4 +46,5 @@ fun getDeviceUserAgent(context: Context): String {
 }
 
 fun getScreenWidth(context: Context): Int = context.resources.displayMetrics.widthPixels
+
 fun getScreenHeight(context: Context): Int = context.resources.displayMetrics.heightPixels

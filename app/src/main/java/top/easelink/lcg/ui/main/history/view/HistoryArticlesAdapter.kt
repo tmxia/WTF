@@ -54,6 +54,7 @@ class HistoryArticlesAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                     holder.bind(differ.currentList[position])
                 }
             }
+
             is EmptyViewHolder -> holder.onBind(position)
         }
     }
@@ -67,6 +68,7 @@ class HistoryArticlesAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                     false
                 )
             )
+
             else -> EmptyViewHolder(
                 ItemArticleEmptyViewBinding.inflate(
                     LayoutInflater.from(parent.context),
@@ -125,9 +127,13 @@ class HistoryArticlesAdapter : RecyclerView.Adapter<BaseViewHolder>() {
             val minutes = diff / 1000 / 60
             return when {
                 minutes < 1L -> "刚刚"
-                minutes < 60L -> "${minutes} 分钟前"
+
+                minutes < 60L -> "$minutes 分钟前"
+
                 minutes < 24 * 60L -> "${minutes / 60} 小时前"
+
                 minutes < 30 * 24 * 60L -> "${minutes / 60 / 24} 天前"
+
                 else -> {
                     val fmt = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
                     fmt.format(java.util.Date(timestamp))

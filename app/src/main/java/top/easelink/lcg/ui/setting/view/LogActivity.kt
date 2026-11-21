@@ -100,11 +100,14 @@ class LogActivity : AppCompatActivity() {
             when (currentFilter) {
                 1 ->
                     it.tag.contains("网络层") || it.tag.contains("详情页") || it.message.contains("【网络层】") || it.message.contains("【详情页】")
+
                 2 ->
                     it.tag.contains("业务层") || it.tag.contains("UI层") || it.tag.contains("Adapter") || it.tag.contains("状态层") || it.tag.contains("任务层") ||
                     it.message.contains("【业务层】") || it.message.contains("【UI层】") || it.message.contains("【Adapter】") || it.message.contains("【状态层】") || it.message.contains("【任务层】")
+
                 3 ->
                     it.level >= Log.WARN
+
                 else -> true
             }
         }
@@ -114,6 +117,7 @@ class LogActivity : AppCompatActivity() {
 
     inner class LogAdapter : RecyclerView.Adapter<LogAdapter.ViewHolder>() {
         private var list: List<LogItem> = emptyList()
+
         fun submit(newList: List<LogItem>) {
             list = newList
             notifyDataSetChanged()

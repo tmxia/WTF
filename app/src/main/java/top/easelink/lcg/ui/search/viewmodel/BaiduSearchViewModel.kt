@@ -28,9 +28,11 @@ class BaiduSearchViewModel : ViewModel(), SearchAdapterListener {
             type == SearchAdapterListener.FETCH_MORE && mNextPageUrl?.isNotBlank() ?: false -> {
                 WebsiteConstant.BING_SEARCH_BASE_URL + mNextPageUrl
             }
+
             type == SearchAdapterListener.FETCH_INIT -> {
                 mUrl!!
             }
+
             else -> return
         }
         GlobalScope.launch(IOPool) {

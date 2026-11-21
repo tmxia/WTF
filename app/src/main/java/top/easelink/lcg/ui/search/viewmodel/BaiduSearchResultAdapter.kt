@@ -47,16 +47,19 @@ class BaiduSearchResultAdapter(private var mListener: SearchAdapterListener) :
                         R.layout.item_search_result_view, parent, false
                     )
             )
+
             VIEW_TYPE_LOAD_MORE -> LoadMoreViewHolder(
                 LayoutInflater.from(parent.context)
                     .inflate(
                         R.layout.item_search_load_more_view, parent, false
                     )
             )
+
             VIEW_TYPE_EMPTY -> EmptyViewHolder(
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_empty_view, parent, false)
             )
+
             else -> EmptyViewHolder(
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_empty_view, parent, false)

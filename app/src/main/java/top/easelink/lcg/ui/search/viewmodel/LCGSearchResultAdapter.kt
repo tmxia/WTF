@@ -48,6 +48,7 @@ class LCGSearchResultAdapter(
                     LayoutInflater.from(parent.context), parent, false
                 )
             )
+
             VIEW_TYPE_LOAD_MORE -> LoadMoreViewHolder(
                 ItemLoadMoreViewBinding.inflate(
                     LayoutInflater.from(parent.context), parent, false

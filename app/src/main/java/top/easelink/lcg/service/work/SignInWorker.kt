@@ -46,6 +46,7 @@ class SignInWorker(context: Context, workerParams: WorkerParameters) :
                                     markSignInDone()
                                     Result.success()
                                 }
+
                                 else -> Result.retry()
                             }
                             continuation.resume(result)

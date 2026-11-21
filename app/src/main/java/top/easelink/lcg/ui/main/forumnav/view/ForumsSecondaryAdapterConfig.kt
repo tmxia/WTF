@@ -21,6 +21,7 @@ import top.easelink.lcg.ui.webview.view.WebViewActivity
 internal class ForumsSecondaryAdapterConfig :
     ILinkageSecondaryAdapterConfig<ForumGroupedItem.ItemInfo> {
     private lateinit var mContext: Context
+
     override fun setContext(context: Context) {
         mContext = context
     }

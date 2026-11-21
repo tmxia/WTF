@@ -56,6 +56,7 @@ class HtmlCoilImageGetter(
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         textView.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(v: View) = Unit
+
             override fun onViewDetachedFromWindow(v: View) {
                 scope.cancel()
                 textView.removeOnAttachStateChangeListener(this)

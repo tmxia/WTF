@@ -51,10 +51,12 @@ class NotificationsAdapter(
                 val binding = ItemNotificationViewBinding.inflate(inflater, parent, false)
                 ArticleViewHolder(binding)
             }
+
             VIEW_TYPE_LOAD_MORE -> {
                 val binding = ItemLoadMoreViewBinding.inflate(inflater, parent, false)
                 LoadMoreViewHolder(binding)
             }
+
             else -> EmptyViewHolder(
                 inflater.inflate(R.layout.item_empty_view, parent, false)
             )

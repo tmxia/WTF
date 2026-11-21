@@ -79,14 +79,23 @@ object ForumNetworkSource {
     private fun getIconByFid(fid: Int?, title: String): Int {
         return when (fid) {
             2 -> R.drawable.ic_creator
+
             16 -> R.drawable.ic_software
+
             65 -> R.drawable.ic_sercurite
+
             5 -> R.drawable.ic_sercurite
+
             4 -> R.drawable.ic_creator
+
             24 -> R.drawable.ic_message_black_24dp
+
             6 -> R.drawable.ic_message_black_24dp
+
             10 -> R.drawable.ic_water
+
             66 -> R.drawable.ic_welfare
+
             else -> when {
                 title.contains("安全") || title.contains("逆向") || title.contains("病毒") || title.contains("破解") -> R.drawable.ic_sercurite
                 title.contains("软件") || title.contains("程序") || title.contains("工具") || title.contains("资源") || title.contains("原创") -> R.drawable.ic_software

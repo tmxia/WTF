@@ -30,6 +30,7 @@ abstract class TopFragment : Fragment(), CoroutineScope {
 
     interface Callback {
         fun onFragmentAttached(tag: String)
+
         fun onFragmentDetached(tag: String): Boolean
     }
 }

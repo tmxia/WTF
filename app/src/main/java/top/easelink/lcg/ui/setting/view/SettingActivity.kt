@@ -145,6 +145,7 @@ class SettingActivity : TopActivity() {
 
             searchEngineSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+
                 override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) { AppConfig.defaultSearchEngine = position }
             }
             showSearchResultInWebview.setOnCheckedChangeListener { _, isChecked -> AppConfig.searchResultShowInWebView = isChecked }

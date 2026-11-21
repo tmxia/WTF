@@ -17,6 +17,7 @@ class TemplateTest {
 }
 
 open class A
+
 class B : A()
 
 fun fill(dest: MutableList<in A>, value: MutableList<out A>) {

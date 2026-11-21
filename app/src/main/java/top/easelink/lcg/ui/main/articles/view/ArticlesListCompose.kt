@@ -113,7 +113,6 @@ fun ForumArticlesScreen(
                             Tab(
                                 selected = pagerState.currentPage == index,
                                 onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-
                                 interactionSource = remember { MutableInteractionSource() }.also {
                                     LaunchedEffect(it) {
                                         it.interactions.collect {

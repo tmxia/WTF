@@ -53,18 +53,23 @@ class AboutFragment : TopFragment(), ControllableFragment {
             hour < 7 -> {
                 binding.me.setAnimation(R.raw.moon_stars)
             }
+
             hour < 12 -> {
                 binding.me.setAnimation(R.raw.personal_mac_daytime)
             }
+
             hour == 12 -> {
                 binding.me.setAnimation(R.raw.sun)
             }
+
             hour < 18 -> {
                 binding.me.setAnimation(R.raw.personal_phone_daytime)
             }
+
             hour < 22 -> {
                 binding.me.setAnimation(R.raw.personal_mac_night)
             }
+
             else -> {
                 binding.me.setAnimation(R.raw.personal_phone_night)
             }

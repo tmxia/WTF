@@ -41,6 +41,7 @@ object AppLogManager {
     }
 
     fun getLogs(): List<LogItem> = logs.toList()
+
     fun clearLogs() = logs.clear()
 
     fun removeLog(time: String) {

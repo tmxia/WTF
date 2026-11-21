@@ -144,6 +144,7 @@ class WebViewActivity : AppCompatActivity() {
 
                 mWebView.loadUrl(mUrl!!)
             }
+
             !mHtml.isNullOrEmpty() -> {
                 updateWebViewSettingsLocal()
                 mWebView.loadDataWithBaseURL("", mHtml!!, "text/html", "UTF-8", "")
@@ -210,14 +211,17 @@ class WebViewActivity : AppCompatActivity() {
                 startActivity(Intent.createChooser(shareIntent, getString(R.string.share_title)))
                 true
             }
+
             R.id.action_open_in_webview -> {
                 mWebView.url?.let(::openInSystemBrowser) ?: showMessage(R.string.general_error)
                 true
             }
+
             android.R.id.home -> {
                 finish()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -250,9 +254,11 @@ class WebViewActivity : AppCompatActivity() {
             Configuration.ORIENTATION_LANDSCAPE -> {
                 insetsController.hide(WindowInsetsCompat.Type.systemBars())
             }
+
             Configuration.ORIENTATION_PORTRAIT -> {
                 insetsController.show(WindowInsetsCompat.Type.systemBars())
             }
+
             else -> {
             }
         }
@@ -363,6 +369,7 @@ class WebViewActivity : AppCompatActivity() {
                     url.startsWith("wtloginmqq://ptlogin/qlogin") -> runCatching {
                         startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
                     }
+
                     url.startsWith("bdnetdisk") -> showMessage(R.string.baidu_net_disk_not_support)
                 }
             }

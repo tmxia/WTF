@@ -10,6 +10,7 @@ import top.easelink.lcg.cache.PreviewCacheManager
 
 object CacheCleanerTask {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
     fun clearCachesIfNeeded() {
         scope.launch {
             delay(5000)

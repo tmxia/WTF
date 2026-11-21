@@ -40,9 +40,11 @@ fun parseUserInfo(doc: Document): UserInfo {
                     return UserInfo.getDefaultUserInfo()
                 }
             }
+
             userName == LCGApp.context.getString(R.string.login_or_register) -> {
                 return UserInfo.getDefaultUserInfo()
             }
+
             else -> {
                 val avatar = selectFirst("div.avt > a > img")?.attr("src")
                 val groupInfo = getElementById("g_upmine")?.text()
@@ -105,9 +107,13 @@ fun parseNotificationInfo(doc: Document): NotificationInfo {
                             requestList.add(url)
                             when {
                                 url.contains("mypost") -> myPost++
+
                                 url.contains("follower") -> follower++
+
                                 url.contains("pm") -> message++
+
                                 url.contains("system") -> systemNotifs++
+
                                 else -> {
                                 }
                             }

@@ -24,6 +24,7 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
                 // TODO add pagination
                 return
             }
+
             ArticleFetcher.FetchType.FETCH_INIT -> rewindPageNum()
         }
 

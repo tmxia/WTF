@@ -14,6 +14,7 @@ import top.easelink.lcg.ui.main.model.OpenForumEvent
 
 class ForumNavigationAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     private val mForumItems: MutableList<ForumNavigationModel> = mutableListOf()
+
     override fun getItemCount(): Int {
         return mForumItems.size + 1
     }
@@ -37,10 +38,12 @@ class ForumNavigationAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                 val binding = ItemForumsGridBinding.inflate(inflater, parent, false)
                 ForumViewHolder(binding)
             }
+
             VIEW_TYPE_LOAD_MORE -> {
                 val binding = ItemForumsGridBinding.inflate(inflater, parent, false)
                 LoadMoreViewHolder(binding)
             }
+
             else -> throw IllegalStateException()
         }
     }

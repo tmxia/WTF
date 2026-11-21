@@ -144,7 +144,6 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                         replyUrls[i]
                     }
                     val post = Post(
-
                         author = userInfos[i][USER_NAME].orEmpty(),
                         avatar = userInfos[i][USER_AVATAR].orEmpty(),
                         date = dateTimes[i],
@@ -243,12 +242,14 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                                                 .toIntOrNull()
                                                 ?.let { it >= HOT_LIMIT }
                                                 ?: false
+
                                         s.contains(RECOMMENDED_PATTERN) ->
                                             s.replace(RECOMMENDED_PATTERN, "")
                                                 .trim()
                                                 .toIntOrNull()
                                                 ?.let { it >= RECOMMENDED_LIMIT }
                                                 ?: false
+
                                         else -> false
                                     }
                                 } ?: false

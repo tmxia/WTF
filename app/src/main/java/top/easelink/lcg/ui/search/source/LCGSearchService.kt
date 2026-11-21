@@ -110,7 +110,6 @@ fun doSearchNextPage(): LCGSearchResults {
                             title = aNode.html(),
                             url = aNode.attr("href"),
                             replyView = pNode.text(),
-
                             content = pNode.nextElementSibling()?.html().orEmpty(),
                             author = spans[1].text(),
                             date = spans[0].text(),

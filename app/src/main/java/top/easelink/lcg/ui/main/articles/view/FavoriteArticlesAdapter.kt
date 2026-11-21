@@ -53,14 +53,17 @@ class FavoriteArticlesAdapter(private var favoriteArticlesViewModel: FavoriteArt
                 val binding = ItemFavoriteArticleViewV2Binding.inflate(inflater, parent, false)
                 ArticleViewHolder(binding)
             }
+
             VIEW_TYPE_LOAD_MORE -> {
                 val binding = ItemLoadMoreViewBinding.inflate(inflater, parent, false)
                 LoadMoreViewHolder(binding)
             }
+
             VIEW_TYPE_EMPTY -> {
                 val binding = ItemFavoriteArticleEmptyViewBinding.inflate(inflater, parent, false)
                 EmptyViewHolder(binding)
             }
+
             else -> throw IllegalStateException()
         }
     }

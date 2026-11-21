@@ -143,8 +143,8 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
             if (AppConfig.defaultSearchEngine == 1) {
                 keyboardController?.hide()
 
-                val encodedQuery = java.net.URLEncoder.encode("${query} site:52pojie.cn", "UTF-8")
-                val bingUrl = "https://cn.bing.com/search?q=${encodedQuery}"
+                val encodedQuery = java.net.URLEncoder.encode("$query site:52pojie.cn", "UTF-8")
+                val bingUrl = "https://cn.bing.com/search?q=$encodedQuery"
                 WebViewActivity.startWebViewWith(bingUrl, context)
                 return
             }
@@ -583,6 +583,7 @@ private fun loadHistory(prefs: android.content.SharedPreferences): List<String> 
     val raw = prefs.getString("history", "") ?: ""
     return if (raw.isBlank()) emptyList() else raw.split("|||")
 }
+
 private fun saveHistory(prefs: android.content.SharedPreferences, list: List<String>) {
     prefs.edit().putString("history", list.joinToString("|||")).apply()
 }
@@ -591,6 +592,7 @@ private fun loadHotWords(prefs: android.content.SharedPreferences, defaults: Lis
     val raw = prefs.getString("hot_words", "") ?: ""
     return if (raw.isBlank()) defaults else raw.split("|||")
 }
+
 private fun saveHotWords(prefs: android.content.SharedPreferences, list: List<String>) {
     prefs.edit().putString("hot_words", list.joinToString("|||")).apply()
 }
@@ -603,9 +605,13 @@ fun parseHtmlHighlight(html: String): AnnotatedString {
         for (part in parts) {
             when (part.lowercase()) {
                 "<font color=\"#ff0000\">" -> isRed = true
+
                 "</font>" -> isRed = false
+
                 "<strong>" -> isBold = true
+
                 "</strong>" -> isBold = false
+
                 else -> {
                     if (part.isNotEmpty()) {
                         withStyle(
