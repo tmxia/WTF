@@ -18,10 +18,10 @@ import top.easelink.lcg.utils.showMessage
 
 @WorkerThread
 fun parseExtraUserInfoProfilePage(content: String): List<ExtraUserInfo> = Jsoup.parse(content).let {
-        it.getElementsByTag("dt").zip(it.getElementsByTag("dd")).map { pairs ->
-            ExtraUserInfo(pairs.first.text(), pairs.second.text())
-        }
+    it.getElementsByTag("dt").zip(it.getElementsByTag("dd")).map { pairs ->
+        ExtraUserInfo(pairs.first.text(), pairs.second.text())
     }
+}
 
 @WorkerThread
 @Throws(NullPointerException::class, AntiScrapingException::class)

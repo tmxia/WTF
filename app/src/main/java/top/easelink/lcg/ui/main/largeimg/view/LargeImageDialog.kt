@@ -16,10 +16,10 @@ class LargeImageDialog : TopDialog() {
         private const val IMAGE_URL = "image_url"
 
         fun newInstance(imageUrl: String): LargeImageDialog = LargeImageDialog().also {
-                it.arguments = Bundle().apply {
-                    putString(IMAGE_URL, imageUrl)
-                }
+            it.arguments = Bundle().apply {
+                putString(IMAGE_URL, imageUrl)
             }
+        }
     }
 
     override fun onCreateView(

@@ -139,11 +139,11 @@ class ArticleFragment : Fragment(), ControllableFragment {
 
         @JvmStatic
         fun newInstance(url: String, title: String = ""): ArticleFragment = ArticleFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_URL, url)
-                    putString(ARG_TITLE, title)
-                }
+            arguments = Bundle().apply {
+                putString(ARG_URL, url)
+                putString(ARG_TITLE, title)
             }
+        }
     }
 }
 

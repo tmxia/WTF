@@ -92,7 +92,7 @@ class MeFragment : TopFragment(), ControllableFragment {
             try {
                 viewModel.fetchUserInfoDirect()
             } catch (e: Exception) {
-                }
+            }
         }
 
         AccountManager.isLoggedIn.observe(viewLifecycleOwner) {

@@ -54,22 +54,22 @@ class HistoryArticlesAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder = when (viewType) {
-            VIEW_TYPE_NORMAL -> ArticleViewHolder(
-                ItemHistoryArticleViewBinding.inflate(
-                    LayoutInflater.from(parent.context),
-                    parent,
-                    false
-                )
+        VIEW_TYPE_NORMAL -> ArticleViewHolder(
+            ItemHistoryArticleViewBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false
             )
+        )
 
-            else -> EmptyViewHolder(
-                ItemArticleEmptyViewBinding.inflate(
-                    LayoutInflater.from(parent.context),
-                    parent,
-                    false
-                )
+        else -> EmptyViewHolder(
+            ItemArticleEmptyViewBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false
             )
-        }
+        )
+    }
 
     fun submitList(newList: List<HistoryModel>) {
         differ.submitList(if (newList.isEmpty()) emptyList() else ArrayList(newList))

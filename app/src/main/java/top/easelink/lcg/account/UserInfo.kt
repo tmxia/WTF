@@ -31,12 +31,12 @@ class UserInfo(
         private set
 
     override fun equals(other: Any?): Boolean = (other is UserInfo
-            && userName == other.userName
-            && avatarUrl == other.avatarUrl
-            && groupInfo == other.groupInfo
-            && wuaiCoin == other.wuaiCoin
-            && credit == other.credit
-            && signInStateUrl == other.signInStateUrl)
+        && userName == other.userName
+        && avatarUrl == other.avatarUrl
+        && groupInfo == other.groupInfo
+        && wuaiCoin == other.wuaiCoin
+        && credit == other.credit
+        && signInStateUrl == other.signInStateUrl)
 
     override fun hashCode(): Int {
         var result = userName?.hashCode() ?: 0

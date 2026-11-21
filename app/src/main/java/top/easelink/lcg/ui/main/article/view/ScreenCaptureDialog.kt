@@ -28,8 +28,8 @@ class ScreenCaptureDialog : DialogFragment() {
         private const val IMAGE_PATH = "image_path"
 
         fun newInstance(imagePath: String): ScreenCaptureDialog = ScreenCaptureDialog().apply {
-                arguments = Bundle().apply { putString(IMAGE_PATH, imagePath) }
-            }
+            arguments = Bundle().apply { putString(IMAGE_PATH, imagePath) }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,30 +98,30 @@ class ScreenCaptureDialog : DialogFragment() {
     }
 
     private fun saveImageToGalleryAndroid10(file: File, fileName: String): Boolean = try {
-            val resolver = requireContext().contentResolver
-            val contentValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM + "/Camera")
-                }
+        val resolver = requireContext().contentResolver
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM + "/Camera")
             }
+        }
 
-            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-            if (uri != null) {
-                resolver.openOutputStream(uri)?.use { outputStream ->
-                    FileInputStream(file).use { inputStream ->
-                        inputStream.copyTo(outputStream)
-                    }
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+        if (uri != null) {
+            resolver.openOutputStream(uri)?.use { outputStream ->
+                FileInputStream(file).use { inputStream ->
+                    inputStream.copyTo(outputStream)
                 }
-                true
-            } else {
-                false
             }
-        } catch (e: Exception) {
-            Timber.e(e, "保存相册失败")
+            true
+        } else {
             false
         }
+    } catch (e: Exception) {
+        Timber.e(e, "保存相册失败")
+        false
+    }
 
     override fun onStart() {
         super.onStart()

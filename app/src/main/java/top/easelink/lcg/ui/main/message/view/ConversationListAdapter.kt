@@ -22,20 +22,20 @@ class ConversationListAdapter(
     private val mConversations: MutableList<Conversation> = mutableListOf()
 
     override fun getItemCount(): Int = if (mConversations.isEmpty()) {
-            1
-        } else {
-            mConversations.size
-        }
+        1
+    } else {
+        mConversations.size
+    }
 
     override fun getItemViewType(position: Int): Int = if (mConversations.isEmpty()) {
-            VIEW_TYPE_EMPTY
+        VIEW_TYPE_EMPTY
+    } else {
+        if (position == mConversations.size) {
+            VIEW_TYPE_LOAD_MORE
         } else {
-            if (position == mConversations.size) {
-                VIEW_TYPE_LOAD_MORE
-            } else {
-                VIEW_TYPE_NORMAL
-            }
+            VIEW_TYPE_NORMAL
         }
+    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)
@@ -56,8 +56,8 @@ class ConversationListAdapter(
 
             else -> {
                 EmptyViewHolder(
-                inflater.inflate(R.layout.item_empty_view, parent, false)
-            )
+                    inflater.inflate(R.layout.item_empty_view, parent, false)
+                )
             }
         }
     }

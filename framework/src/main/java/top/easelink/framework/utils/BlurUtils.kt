@@ -39,24 +39,24 @@ object BlurUtils {
 
     @RequiresApi(Build.VERSION_CODES.S)
     private fun renderEffectBlur(source: Bitmap, radius: Float): Bitmap = createBitmap(source.width, source.height).applyCanvas {
-            val paint = Paint().apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    val renderEffect = android.graphics.RenderEffect.createBlurEffect(
-                        radius, radius,
-                        android.graphics.Shader.TileMode.CLAMP
-                    )
-                    try {
-                        javaClass.getMethod(
-                            "setRenderEffect",
-                            android.graphics.RenderEffect::class.java
-                        ).invoke(this, renderEffect)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+        val paint = Paint().apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val renderEffect = android.graphics.RenderEffect.createBlurEffect(
+                    radius, radius,
+                    android.graphics.Shader.TileMode.CLAMP
+                )
+                try {
+                    javaClass.getMethod(
+                        "setRenderEffect",
+                        android.graphics.RenderEffect::class.java
+                    ).invoke(this, renderEffect)
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
-            drawBitmap(source, 0f, 0f, paint)
         }
+        drawBitmap(source, 0f, 0f, paint)
+    }
 
     private fun optimizedFastBlur(original: Bitmap, radius: Int): Bitmap {
         val scaledWidth = max((original.width * BITMAP_SCALE).roundToInt(), 1)

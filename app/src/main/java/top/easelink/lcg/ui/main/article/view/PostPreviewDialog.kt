@@ -26,10 +26,10 @@ class PostPreviewDialog : TopDialog() {
 
         @JvmStatic
         fun newInstance(url: String): PostPreviewDialog = PostPreviewDialog().apply {
-                arguments = Bundle().apply {
-                    putString(ARTICLE_QUERY, url)
-                }
+            arguments = Bundle().apply {
+                putString(ARTICLE_QUERY, url)
             }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

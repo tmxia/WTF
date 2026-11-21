@@ -27,7 +27,7 @@ class FollowViewPagerAdapter(
     override fun getItemCount(): Int = tabModels.size
 
     override fun createFragment(position: Int): Fragment = when (position) {
-            0 -> FollowingContentFragment()
-            else -> FollowDetailFragment(tabModels[position].url)
-        }
+        0 -> FollowingContentFragment()
+        else -> FollowDetailFragment(tabModels[position].url)
+    }
 }

@@ -21,26 +21,26 @@ object FavoriteDataSource {
     }
 
     private fun parseFavorites(doc: Document): List<ArticleEntity> = doc.getElementById("favorite_ul")
-            ?.children()
-            ?.mapNotNull {
-                val delUrl = it.selectFirst("a.y")?.attr("href").orEmpty()
-                val dateAdded = it.selectFirst("span.xg1")?.text().orEmpty()
+        ?.children()
+        ?.mapNotNull {
+            val delUrl = it.selectFirst("a.y")?.attr("href").orEmpty()
+            val dateAdded = it.selectFirst("span.xg1")?.text().orEmpty()
 
-                val targetElement = it.getElementsByAttribute("target").firstOrNull()
+            val targetElement = it.getElementsByAttribute("target").firstOrNull()
 
-                if (targetElement != null) {
-                    val title = targetElement.text().orEmpty()
-                    val articleUrl = targetElement.attr("href").orEmpty()
-                    ArticleEntity(
-                        title = title,
-                        author = "",
-                        url = articleUrl,
-                        content = "",
-                        timestamp = toTimeStamp(dateAdded),
-                        delUrl = delUrl
-                    )
-                } else {
-                    null
-                }
-            }.orEmpty()
+            if (targetElement != null) {
+                val title = targetElement.text().orEmpty()
+                val articleUrl = targetElement.attr("href").orEmpty()
+                ArticleEntity(
+                    title = title,
+                    author = "",
+                    url = articleUrl,
+                    content = "",
+                    timestamp = toTimeStamp(dateAdded),
+                    delUrl = delUrl
+                )
+            } else {
+                null
+            }
+        }.orEmpty()
 }

@@ -19,8 +19,8 @@ class MessageViewPagerAdapter internal constructor(
     override fun getItemCount(): Int = tabModels.size
 
     override fun createFragment(position: Int): Fragment = when (position) {
-            0 -> NotificationFragment()
-            1 -> ConversationListFragment()
-            else -> throw IllegalStateException("can't reach here")
-        }
+        0 -> NotificationFragment()
+        1 -> ConversationListFragment()
+        else -> throw IllegalStateException("can't reach here")
+    }
 }

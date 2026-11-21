@@ -68,8 +68,8 @@ class SearchFragment : TopFragment(), ControllableFragment {
     override fun isControllable(): Boolean = true
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext()).apply {
-            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-        }
+        layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         timber.log.Timber.tag("[SearchProbe]").d("SearchFragment onViewCreated 触发，准备初始化 ViewModel")
@@ -596,39 +596,39 @@ private fun saveHotWords(prefs: android.content.SharedPreferences, list: List<St
 }
 
 fun parseHtmlHighlight(html: String): AnnotatedString = buildAnnotatedString {
-        val parts = html.split(Regex("(<font color=\"#ff0000\">|</font>|<strong>|</strong>)", RegexOption.IGNORE_CASE))
-        var isRed = false
-        var isBold = false
-        for (part in parts) {
-            when (part.lowercase()) {
-                "<font color=\"#ff0000\">" -> {
-                    isRed = true
-                }
+    val parts = html.split(Regex("(<font color=\"#ff0000\">|</font>|<strong>|</strong>)", RegexOption.IGNORE_CASE))
+    var isRed = false
+    var isBold = false
+    for (part in parts) {
+        when (part.lowercase()) {
+            "<font color=\"#ff0000\">" -> {
+                isRed = true
+            }
 
-                "</font>" -> {
-                    isRed = false
-                }
+            "</font>" -> {
+                isRed = false
+            }
 
-                "<strong>" -> {
-                    isBold = true
-                }
+            "<strong>" -> {
+                isBold = true
+            }
 
-                "</strong>" -> {
-                    isBold = false
-                }
+            "</strong>" -> {
+                isBold = false
+            }
 
-                else -> {
-                    if (part.isNotEmpty()) {
-                        withStyle(
-                            SpanStyle(
-                                color = if (isRed) Color(0xFFE53935) else Color.Unspecified,
-                                fontWeight = if (isBold) FontWeight.Bold else null
-                            )
-                        ) {
-                            append(android.text.Html.fromHtml(part).toString())
-                        }
+            else -> {
+                if (part.isNotEmpty()) {
+                    withStyle(
+                        SpanStyle(
+                            color = if (isRed) Color(0xFFE53935) else Color.Unspecified,
+                            fontWeight = if (isBold) FontWeight.Bold else null
+                        )
+                    ) {
+                        append(android.text.Html.fromHtml(part).toString())
                     }
                 }
             }
         }
     }
+}

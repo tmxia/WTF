@@ -23,20 +23,20 @@ class NotificationsAdapter(
     private val mNotifications: MutableList<BaseNotification> = mutableListOf()
 
     override fun getItemCount(): Int = if (mNotifications.isEmpty()) {
-            1
-        } else {
-            mNotifications.size + 1
-        }
+        1
+    } else {
+        mNotifications.size + 1
+    }
 
     override fun getItemViewType(position: Int): Int = if (mNotifications.isEmpty()) {
-            VIEW_TYPE_EMPTY
+        VIEW_TYPE_EMPTY
+    } else {
+        if (position == mNotifications.size) {
+            VIEW_TYPE_LOAD_MORE
         } else {
-            if (position == mNotifications.size) {
-                VIEW_TYPE_LOAD_MORE
-            } else {
-                VIEW_TYPE_NORMAL
-            }
+            VIEW_TYPE_NORMAL
         }
+    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)
@@ -57,8 +57,8 @@ class NotificationsAdapter(
 
             else -> {
                 EmptyViewHolder(
-                inflater.inflate(R.layout.item_empty_view, parent, false)
-            )
+                    inflater.inflate(R.layout.item_empty_view, parent, false)
+                )
             }
         }
     }

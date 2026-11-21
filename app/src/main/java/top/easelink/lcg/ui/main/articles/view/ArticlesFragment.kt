@@ -28,8 +28,8 @@ class ArticlesFragment : BaseFragment<FragmentArticlesBinding, ArticlesViewModel
     override fun getLayoutId(): Int = R.layout.fragment_articles
 
     override fun initViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentArticlesBinding = FragmentArticlesBinding.inflate(inflater, container, false).also {
-            _binding = it
-        }
+        _binding = it
+    }
 
     override fun getViewModel(): ArticlesViewModel = ViewModelProvider(this)[ArticlesViewModel::class.java]
 
@@ -135,10 +135,10 @@ class ArticlesFragment : BaseFragment<FragmentArticlesBinding, ArticlesViewModel
 
         @JvmStatic
         fun newInstance(param: String, isControllable: Boolean = true): ArticlesFragment = ArticlesFragment().apply {
-                arguments = Bundle().also {
-                    it.putString(ARG_PARAM, param)
-                }
-                controllableFlag = isControllable
+            arguments = Bundle().also {
+                it.putString(ARG_PARAM, param)
             }
+            controllableFlag = isControllable
+        }
     }
 }

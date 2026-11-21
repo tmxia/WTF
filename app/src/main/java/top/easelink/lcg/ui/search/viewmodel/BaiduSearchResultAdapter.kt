@@ -18,50 +18,50 @@ class BaiduSearchResultAdapter(private var mListener: SearchAdapterListener) :
     private val mBaiduSearchResults: MutableList<BaiduSearchResult> = ArrayList()
 
     override fun getItemCount(): Int = if (mBaiduSearchResults.isEmpty()) {
-            1
-        } else {
-            mBaiduSearchResults.size + 1
-        }
+        1
+    } else {
+        mBaiduSearchResults.size + 1
+    }
 
     override fun getItemViewType(position: Int): Int = if (mBaiduSearchResults.isEmpty()) {
-            VIEW_TYPE_EMPTY
+        VIEW_TYPE_EMPTY
+    } else {
+        if (position == mBaiduSearchResults.size) {
+            VIEW_TYPE_LOAD_MORE
         } else {
-            if (position == mBaiduSearchResults.size) {
-                VIEW_TYPE_LOAD_MORE
-            } else {
-                VIEW_TYPE_NORMAL
-            }
+            VIEW_TYPE_NORMAL
         }
+    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder = when (viewType) {
-            VIEW_TYPE_NORMAL -> SearchResultViewHolder(
-                LayoutInflater.from(parent.context)
-                    .inflate(
-                        R.layout.item_search_result_view, parent, false
-                    )
-            )
+        VIEW_TYPE_NORMAL -> SearchResultViewHolder(
+            LayoutInflater.from(parent.context)
+                .inflate(
+                    R.layout.item_search_result_view, parent, false
+                )
+        )
 
-            VIEW_TYPE_LOAD_MORE -> LoadMoreViewHolder(
-                LayoutInflater.from(parent.context)
-                    .inflate(
-                        R.layout.item_search_load_more_view, parent, false
-                    )
-            )
+        VIEW_TYPE_LOAD_MORE -> LoadMoreViewHolder(
+            LayoutInflater.from(parent.context)
+                .inflate(
+                    R.layout.item_search_load_more_view, parent, false
+                )
+        )
 
-            VIEW_TYPE_EMPTY -> EmptyViewHolder(
-                LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_empty_view, parent, false)
-            )
+        VIEW_TYPE_EMPTY -> EmptyViewHolder(
+            LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_empty_view, parent, false)
+        )
 
-            else -> EmptyViewHolder(
-                LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_empty_view, parent, false)
-            )
-        }
+        else -> EmptyViewHolder(
+            LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_empty_view, parent, false)
+        )
+    }
 
     fun addItems(baiduSearchResults: List<BaiduSearchResult>) {
         mBaiduSearchResults.addAll(baiduSearchResults)

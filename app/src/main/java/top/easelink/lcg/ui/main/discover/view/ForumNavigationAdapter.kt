@@ -18,10 +18,10 @@ class ForumNavigationAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     override fun getItemCount(): Int = mForumItems.size + 1
 
     override fun getItemViewType(position: Int): Int = if (position == mForumItems.size) {
-            VIEW_TYPE_LOAD_MORE
-        } else {
-            VIEW_TYPE_NORMAL
-        }
+        VIEW_TYPE_LOAD_MORE
+    } else {
+        VIEW_TYPE_NORMAL
+    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)

@@ -25,20 +25,20 @@ class FollowListAdapter(
     var nextPageUrl: String? = null
 
     override fun getItemCount(): Int = if (mFollowing.isEmpty()) {
-            1
-        } else {
-            mFollowing.size + 1
-        }
+        1
+    } else {
+        mFollowing.size + 1
+    }
 
     override fun getItemViewType(position: Int): Int = if (mFollowing.isEmpty()) {
-            VIEW_TYPE_EMPTY
+        VIEW_TYPE_EMPTY
+    } else {
+        if (position == mFollowing.size) {
+            VIEW_TYPE_LOAD_MORE
         } else {
-            if (position == mFollowing.size) {
-                VIEW_TYPE_LOAD_MORE
-            } else {
-                VIEW_TYPE_NORMAL
-            }
+            VIEW_TYPE_NORMAL
         }
+    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)

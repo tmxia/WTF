@@ -25,10 +25,10 @@ class CommentArticleDialog : TopDialog() {
 
         @JvmStatic
         fun newInstance(replyPostUrl: String): CommentArticleDialog = CommentArticleDialog().apply {
-                arguments = Bundle().apply {
-                    putString(REPLY_POST_URL, replyPostUrl)
-                }
+            arguments = Bundle().apply {
+                putString(REPLY_POST_URL, replyPostUrl)
             }
+        }
     }
 
     private lateinit var replyPostViewModel: ReplyPostViewModel

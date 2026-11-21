@@ -15,9 +15,9 @@ fun initCoil() {
 
 object LCGImageLoaderFactory : ImageLoaderFactory {
     override fun newImageLoader(): ImageLoader = ImageLoader
-            .Builder(LCGApp.context)
-            .okHttpClient(buildClient())
-            .build()
+        .Builder(LCGApp.context)
+        .okHttpClient(buildClient())
+        .build()
 
     private fun buildClient(): OkHttpClient {
         val headerInterceptor = Interceptor { chain ->

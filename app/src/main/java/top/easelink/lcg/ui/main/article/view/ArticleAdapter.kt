@@ -57,8 +57,8 @@ class ArticleAdapter(
     private val mPostList: MutableList<Post> = ArrayList()
 
     fun getPositionForPost(target: Post): Int = mPostList.indexOfFirst {
-            it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl)
-        }
+        it === target || (it.replyUrl != null && it.replyUrl == target.replyUrl)
+    }
 
     private var hasMoreItem: Boolean = false
     var isFiltering: Boolean = false

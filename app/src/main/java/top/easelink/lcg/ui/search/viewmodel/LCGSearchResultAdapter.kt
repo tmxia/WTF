@@ -20,43 +20,43 @@ class LCGSearchResultAdapter(
     private val mSearchResults: MutableList<LCGSearchResultItem> = mutableListOf()
 
     override fun getItemCount(): Int = if (mSearchResults.isEmpty()) {
-            1
-        } else {
-            mSearchResults.size + 1
-        }
+        1
+    } else {
+        mSearchResults.size + 1
+    }
 
     override fun getItemViewType(position: Int): Int = if (mSearchResults.isEmpty()) {
-            VIEW_TYPE_EMPTY
+        VIEW_TYPE_EMPTY
+    } else {
+        if (position == mSearchResults.size) {
+            VIEW_TYPE_LOAD_MORE
         } else {
-            if (position == mSearchResults.size) {
-                VIEW_TYPE_LOAD_MORE
-            } else {
-                VIEW_TYPE_NORMAL
-            }
+            VIEW_TYPE_NORMAL
         }
+    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder = when (viewType) {
-            VIEW_TYPE_NORMAL -> SearchResultViewHolder(
-                ItemLcgSearchResultViewBinding.inflate(
-                    LayoutInflater.from(parent.context), parent, false
-                )
+        VIEW_TYPE_NORMAL -> SearchResultViewHolder(
+            ItemLcgSearchResultViewBinding.inflate(
+                LayoutInflater.from(parent.context), parent, false
             )
+        )
 
-            VIEW_TYPE_LOAD_MORE -> LoadMoreViewHolder(
-                ItemLoadMoreViewBinding.inflate(
-                    LayoutInflater.from(parent.context), parent, false
-                )
+        VIEW_TYPE_LOAD_MORE -> LoadMoreViewHolder(
+            ItemLoadMoreViewBinding.inflate(
+                LayoutInflater.from(parent.context), parent, false
             )
+        )
 
-            else -> EmptyViewHolder(
-                LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_empty_view, parent, false)
-            )
-        }
+        else -> EmptyViewHolder(
+            LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_empty_view, parent, false)
+        )
+    }
 
     fun addItems(LCGSearchResults: List<LCGSearchResultItem>) {
         mSearchResults.addAll(LCGSearchResults)

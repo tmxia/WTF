@@ -25,9 +25,9 @@ class RankListBinder : BaseNavigationBinder<RankListModel, RankListVH>() {
         inflater: LayoutInflater,
         parent: ViewGroup
     ): RankListVH = RankListVH(
-            inflater,
-            parent
-        )
+        inflater,
+        parent
+    )
 }
 
 class RankListVH(inflater: LayoutInflater, parentView: ViewGroup) : BaseNavigationViewHolder(

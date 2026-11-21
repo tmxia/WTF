@@ -28,20 +28,20 @@ class ArticlesAdapter(
     private val mArticleList: MutableList<Article> = mutableListOf()
 
     override fun getItemCount(): Int = when {
-            mArticleList.isEmpty() -> 1
-            mArticleList.size > 10 -> mArticleList.size + 1
-            else -> mArticleList.size
-        }
+        mArticleList.isEmpty() -> 1
+        mArticleList.size > 10 -> mArticleList.size + 1
+        else -> mArticleList.size
+    }
 
     override fun getItemViewType(position: Int): Int = if (mArticleList.isEmpty()) {
-            VIEW_TYPE_EMPTY
+        VIEW_TYPE_EMPTY
+    } else {
+        if (position == mArticleList.size) {
+            VIEW_TYPE_LOAD_MORE
         } else {
-            if (position == mArticleList.size) {
-                VIEW_TYPE_LOAD_MORE
-            } else {
-                VIEW_TYPE_NORMAL
-            }
+            VIEW_TYPE_NORMAL
         }
+    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)

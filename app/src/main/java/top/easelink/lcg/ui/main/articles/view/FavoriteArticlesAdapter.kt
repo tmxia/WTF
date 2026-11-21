@@ -23,20 +23,20 @@ class FavoriteArticlesAdapter(private var favoriteArticlesViewModel: FavoriteArt
     private val mArticleEntities: MutableList<ArticleEntity> = mutableListOf()
 
     override fun getItemCount(): Int = if (mArticleEntities.isEmpty()) {
-            1
-        } else {
-            mArticleEntities.size + 1
-        }
+        1
+    } else {
+        mArticleEntities.size + 1
+    }
 
     override fun getItemViewType(position: Int): Int = if (mArticleEntities.isEmpty()) {
-            VIEW_TYPE_EMPTY
+        VIEW_TYPE_EMPTY
+    } else {
+        if (position == mArticleEntities.size) {
+            VIEW_TYPE_LOAD_MORE
         } else {
-            if (position == mArticleEntities.size) {
-                VIEW_TYPE_LOAD_MORE
-            } else {
-                VIEW_TYPE_NORMAL
-            }
+            VIEW_TYPE_NORMAL
         }
+    }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.onBind(position)

@@ -58,10 +58,10 @@ object PreviewCacheManager : ICacheManager {
     }
 
     private fun findInDisk(url: String): File? = if (isLocalFile(url)) {
-            File(url)
-        } else {
-            null
-        }
+        File(url)
+    } else {
+        null
+    }
 
     private fun isLocalFile(url: String): Boolean = url.startsWith("/")
 

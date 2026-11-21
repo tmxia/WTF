@@ -35,16 +35,16 @@ class ProfileFragment : TopFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View = ComposeView(requireContext()).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        setContent {
+            ProfileScreen(
+                onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }
             )
-            setContent {
-                ProfileScreen(
-                    onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() }
-                )
-            }
         }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -56,10 +56,10 @@ class ProfileFragment : TopFragment() {
 
         @JvmStatic
         fun newInstance(profileUrl: String): ProfileFragment = ProfileFragment().also {
-                it.arguments = Bundle().apply {
-                    putString(PROFILE_URL, profileUrl)
-                }
+            it.arguments = Bundle().apply {
+                putString(PROFILE_URL, profileUrl)
             }
+        }
     }
 }
 

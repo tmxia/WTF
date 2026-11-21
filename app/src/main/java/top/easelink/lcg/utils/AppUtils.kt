@@ -9,11 +9,11 @@ import android.webkit.WebSettings
 import top.easelink.lcg.R
 
 fun isApplicationAvailable(context: Context, packageName: String): Boolean = try {
-        context.packageManager.getPackageInfo(packageName, 0)
-        true
-    } catch (e: PackageManager.NameNotFoundException) {
-        false
-    }
+    context.packageManager.getPackageInfo(packageName, 0)
+    true
+} catch (e: PackageManager.NameNotFoundException) {
+    false
+}
 
 const val WECHAT_PACKAGE_NAME = "com.tencent.mm"
 

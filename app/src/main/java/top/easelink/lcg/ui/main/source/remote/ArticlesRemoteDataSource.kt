@@ -42,16 +42,16 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     @WorkerThread
     @Throws(LoginRequiredException::class, SocketTimeoutException::class)
     override fun getForumArticles(query: String, processThreadList: Boolean): ForumPage? = processForumArticlesDocument(
-            JsoupClient.sendGetRequestWithQuery(query),
-            processThreadList
-        )
+        JsoupClient.sendGetRequestWithQuery(query),
+        processThreadList
+    )
 
     @WorkerThread
     override fun getHomePageArticles(param: String, pageNum: Int): List<Article> = try {
-            getArticles("$FORUM_BASE_QUERY$param&page=$pageNum")
-        } catch (_: Exception) {
-            emptyList()
-        }
+        getArticles("$FORUM_BASE_QUERY$param&page=$pageNum")
+    } catch (_: Exception) {
+        emptyList()
+    }
 
     @Throws(BlockException::class, HttpStatusException::class)
     @WorkerThread
@@ -357,7 +357,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                                     return@mapNotNull ForumThread(name, threadUrl)
                                 }
                             } catch (_: Exception) {
-                                }
+                            }
                             null
                         }
                 }
@@ -435,8 +435,8 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     }
 
     private fun getDateTime(document: Document): List<String> = document.select("div.authi").select("em").map {
-            it.text()
-        }
+        it.text()
+    }
 
     @Throws(BlockException::class)
     private fun getFirstPost(document: Document): PreviewPost {
@@ -467,31 +467,31 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     }
 
     private fun getFirstContent(doc: Document): String = doc.selectFirst("div.pcb")
-            .let { element ->
-                element?.selectFirst("td.t_f")?.let { tmp ->
-                    processContentElement(tmp).html()
-                }
-                    ?: element?.selectFirst("div.locked")?.html().orEmpty()
-            }.orEmpty()
+        .let { element ->
+            element?.selectFirst("td.t_f")?.let { tmp ->
+                processContentElement(tmp).html()
+            }
+                ?: element?.selectFirst("div.locked")?.html().orEmpty()
+        }.orEmpty()
 
     private fun getContents(doc: Document): List<String> = doc.select("div.pcb")
-            .filterNotNull()
-            .mapTo(ArrayList<String>()) {
-                it.selectFirst("td.t_f")?.let { tmp ->
-                    processContentElement(tmp)
-                }?.let { res ->
-                    it.select("div.savephotop > img")?.forEach { imgElement ->
-                        res.appendChild(
-                            imgElement.attr("src", imgElement.attr("file"))
-                        )
-                    }
-                    res.html()
-                } ?: it.selectFirst("div.locked")?.html().orEmpty()
-            }
+        .filterNotNull()
+        .mapTo(ArrayList<String>()) {
+            it.selectFirst("td.t_f")?.let { tmp ->
+                processContentElement(tmp)
+            }?.let { res ->
+                it.select("div.savephotop > img")?.forEach { imgElement ->
+                    res.appendChild(
+                        imgElement.attr("src", imgElement.attr("file"))
+                    )
+                }
+                res.html()
+            } ?: it.selectFirst("div.locked")?.html().orEmpty()
+        }
 
     private fun getReplyUrls(doc: Document): List<String> = doc.getElementsByClass("fastre").map {
-            it.attr("href")
-        }
+        it.attr("href")
+    }
 
     private fun processContentElement(element: Element): Element {
         element.select("div.tip").remove()
@@ -546,40 +546,40 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
 
     @WorkerThread
     override fun addFavorites(threadId: String, formHash: String): Boolean = try {
-            JsoupClient.sendGetRequestWithQuery(
-                String.format(
-                    ADD_TO_FAVORITE_QUERY,
-                    threadId,
-                    formHash
-                )
+        JsoupClient.sendGetRequestWithQuery(
+            String.format(
+                ADD_TO_FAVORITE_QUERY,
+                threadId,
+                formHash
             )
-            true
-        } catch (e: Exception) {
-            Timber.e(e)
-            false
-        }
+        )
+        true
+    } catch (e: Exception) {
+        Timber.e(e)
+        false
+    }
 
     @WorkerThread
     override fun removeFavorites(threadId: String, formHash: String): Boolean = try {
-            val doc = JsoupClient.sendGetRequestWithQuery(
-                String.format(REMOVE_FAVORITE_QUERY, threadId, formHash)
-            )
+        val doc = JsoupClient.sendGetRequestWithQuery(
+            String.format(REMOVE_FAVORITE_QUERY, threadId, formHash)
+        )
 
-            val msg = doc.getElementById("messagetext")?.text().orEmpty()
-            val hasError = doc.select(".alert_error").isNotEmpty()
-            !hasError && (msg.isEmpty() || msg.contains("成功") || msg.contains("删除"))
-        } catch (e: Exception) {
-            Timber.e(e)
-            false
-        }
+        val msg = doc.getElementById("messagetext")?.text().orEmpty()
+        val hasError = doc.select(".alert_error").isNotEmpty()
+        !hasError && (msg.isEmpty() || msg.contains("成功") || msg.contains("删除"))
+    } catch (e: Exception) {
+        Timber.e(e)
+        false
+    }
 
     @WorkerThread
     fun replyAdd(query: String): String = try {
-            val doc = JsoupClient.sendGetRequestWithQuery(query)
-            val message = doc.getElementsByClass("nfl").firstOrNull()?.text().orEmpty()
-            message
-        } catch (e: Exception) {
-            Timber.e(e)
-            "Error"
-        }
+        val doc = JsoupClient.sendGetRequestWithQuery(query)
+        val message = doc.getElementsByClass("nfl").firstOrNull()?.text().orEmpty()
+        message
+    } catch (e: Exception) {
+        Timber.e(e)
+        "Error"
+    }
 }

@@ -55,13 +55,13 @@ class ProfileActivity : TopActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-            android.R.id.home -> {
-                onBackPressed()
-                true
-            }
-
-            else -> {
-                super.onOptionsItemSelected(item)
-            }
+        android.R.id.home -> {
+            onBackPressed()
+            true
         }
+
+        else -> {
+            super.onOptionsItemSelected(item)
+        }
+    }
 }

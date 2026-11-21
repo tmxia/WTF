@@ -145,12 +145,12 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     }
 
     private fun shouldShowBottomNavigation(fragment: Fragment): Boolean = fragment is RecommendFragment
-            || fragment is SearchFragment
-            || fragment is DiscoverFragment
-            || fragment is MeFragment
-            || fragment is ForumArticlesFragment
-            || fragment is ForumNavigationFragment
-            || fragment is FavoriteArticlesFragment
+        || fragment is SearchFragment
+        || fragment is DiscoverFragment
+        || fragment is MeFragment
+        || fragment is ForumArticlesFragment
+        || fragment is ForumNavigationFragment
+        || fragment is FavoriteArticlesFragment
 
     private fun restoreCurrentTabFragment() {
         if (supportFragmentManager.backStackEntryCount > 0) {
@@ -193,30 +193,30 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     }
 
     private fun handleNavigationItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-            R.id.nav_item_about -> {
-                showFragment(AboutFragment())
-                true
-            }
-
-            R.id.nav_item_release -> {
-                onOpenArticleEvent(OpenArticleEvent(AppConfig.getAppReleaseUrl()))
-                true
-            }
-
-            R.id.nav_item_portal -> {
-                WebViewActivity.startWebViewWith(SERVER_BASE_URL, this)
-                true
-            }
-
-            R.id.nav_item_setting -> {
-                startActivity(Intent(this, SettingActivity::class.java))
-                true
-            }
-
-            else -> {
-                false
-            }
+        R.id.nav_item_about -> {
+            showFragment(AboutFragment())
+            true
         }
+
+        R.id.nav_item_release -> {
+            onOpenArticleEvent(OpenArticleEvent(AppConfig.getAppReleaseUrl()))
+            true
+        }
+
+        R.id.nav_item_portal -> {
+            WebViewActivity.startWebViewWith(SERVER_BASE_URL, this)
+            true
+        }
+
+        R.id.nav_item_setting -> {
+            startActivity(Intent(this, SettingActivity::class.java))
+            true
+        }
+
+        else -> {
+            false
+        }
+    }
 
     private fun setupBottomNavMenu() {
         binding.bottomNavigation.setOnItemSelectedListener(this)

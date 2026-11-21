@@ -5,13 +5,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 fun toTimeStamp(date: String): Long = try {
-        SimpleDateFormat.getDateTimeInstance().parse(date)?.time ?: System.currentTimeMillis()
-    } catch (e: ParseException) {
-        System.currentTimeMillis()
-    }
+    SimpleDateFormat.getDateTimeInstance().parse(date)?.time ?: System.currentTimeMillis()
+} catch (e: ParseException) {
+    System.currentTimeMillis()
+}
 
 fun String.toTimeStamp(): Long? = runCatching {
-        SimpleDateFormat("yyyy-MM-dd hh:mm", Locale.CHINA)
-            .parse(this)
-            ?.time
-    }.getOrNull()
+    SimpleDateFormat("yyyy-MM-dd hh:mm", Locale.CHINA)
+        .parse(this)
+        ?.time
+}.getOrNull()

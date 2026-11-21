@@ -72,32 +72,32 @@ object ForumNetworkSource {
     }
 
     private fun cleanTitle(raw: String): String = raw.replace("『", "").replace("』", "").replace("《", "").replace("》", "")
-            .replace("【", "").replace("】", "").replace("\n", "").replace(" ", "").trim()
+        .replace("【", "").replace("】", "").replace("\n", "").replace(" ", "").trim()
 
     private fun getIconByFid(fid: Int?, title: String): Int = when (fid) {
-            2 -> R.drawable.ic_creator
+        2 -> R.drawable.ic_creator
 
-            16 -> R.drawable.ic_software
+        16 -> R.drawable.ic_software
 
-            65 -> R.drawable.ic_sercurite
+        65 -> R.drawable.ic_sercurite
 
-            5 -> R.drawable.ic_sercurite
+        5 -> R.drawable.ic_sercurite
 
-            4 -> R.drawable.ic_creator
+        4 -> R.drawable.ic_creator
 
-            24 -> R.drawable.ic_message_black_24dp
+        24 -> R.drawable.ic_message_black_24dp
 
-            6 -> R.drawable.ic_message_black_24dp
+        6 -> R.drawable.ic_message_black_24dp
 
-            10 -> R.drawable.ic_water
+        10 -> R.drawable.ic_water
 
-            66 -> R.drawable.ic_welfare
+        66 -> R.drawable.ic_welfare
 
-            else -> when {
-                title.contains("安全") || title.contains("逆向") || title.contains("病毒") || title.contains("破解") -> R.drawable.ic_sercurite
-                title.contains("软件") || title.contains("程序") || title.contains("工具") || title.contains("资源") || title.contains("原创") -> R.drawable.ic_software
-                title.contains("水") || title.contains("闲聊") || title.contains("福利") -> R.drawable.ic_water
-                else -> R.drawable.ic_creator
-            }
+        else -> when {
+            title.contains("安全") || title.contains("逆向") || title.contains("病毒") || title.contains("破解") -> R.drawable.ic_sercurite
+            title.contains("软件") || title.contains("程序") || title.contains("工具") || title.contains("资源") || title.contains("原创") -> R.drawable.ic_software
+            title.contains("水") || title.contains("闲聊") || title.contains("福利") -> R.drawable.ic_water
+            else -> R.drawable.ic_creator
         }
+    }
 }
