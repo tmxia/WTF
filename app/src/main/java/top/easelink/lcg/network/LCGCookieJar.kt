@@ -50,7 +50,9 @@ object LCGCookieJar {
                 val pair = entry.trim().split("=", limit = 2)
                 if (pair.size == 2 && pair[0].isNotBlank()) {
                     buildCookie(httpUrl, pair[0], pair[1])
-                } else null
+                } else {
+                    null
+                }
             }
         if (list.isNotEmpty()) jar.saveFromResponse(httpUrl, list)
     }

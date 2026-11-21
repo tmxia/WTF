@@ -278,9 +278,13 @@ class ArticleAdapter(
         override fun onClick(v: View) {
             post?.let { p ->
                 when (v.id) {
-                    R.id.post_btn_reply -> p.replyUrl?.let { EventBus.getDefault().post(ReplyPostEvent(it, p.author)) }
+                    R.id.post_btn_reply -> {
+                        p.replyUrl?.let { EventBus.getDefault().post(ReplyPostEvent(it, p.author)) }
+                    }
 
-                    R.id.post_btn_copy -> if (copyContent(p.content, p.author)) showMessage(R.string.copy_succeed) else showMessage(R.string.copy_failed)
+                    R.id.post_btn_copy -> {
+                        if (copyContent(p.content, p.author)) showMessage(R.string.copy_succeed) else showMessage(R.string.copy_failed)
+                    }
 
                     R.id.post_btn_thumb_up -> {
                         if (p.isLiked) {
@@ -463,9 +467,13 @@ class ArticleAdapter(
         return date.replace(tips, "").toTimeStamp()?.let {
             val diff = System.currentTimeMillis() - it
             when (val minutesDiff = diff / 1000 / 60) {
-                in 0..1 -> return "${tips}1 分钟前"
+                in 0..1 -> {
+                    return "${tips}1 分钟前"
+                }
 
-                in 1..60 -> return "${tips}$minutesDiff 分钟前"
+                in 1..60 -> {
+                    return "${tips}$minutesDiff 分钟前"
+                }
 
                 in 60..24 * 60 -> {
                     val hoursDiff = diff / 1000 / 60 / 60
@@ -477,7 +485,9 @@ class ArticleAdapter(
                     return "${tips}$dayDiff 天前"
                 }
 
-                else -> date
+                else -> {
+                    date
+                }
             }
         } ?: date
     }

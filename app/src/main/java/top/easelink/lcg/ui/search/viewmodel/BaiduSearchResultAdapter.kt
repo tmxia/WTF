@@ -31,7 +31,9 @@ class BaiduSearchResultAdapter(private var mListener: SearchAdapterListener) :
         } else {
             if (position == mBaiduSearchResults.size) {
                 VIEW_TYPE_LOAD_MORE
-            } else VIEW_TYPE_NORMAL
+            } else {
+                VIEW_TYPE_NORMAL
+            }
         }
     }
 

@@ -138,8 +138,9 @@ object QuickReplyHelper {
                 setPadding(0, (12 * density).toInt(), 0, (12 * density).toInt())
                 setOnClickListener {
                     dialog.dismiss()
-                    if (index == -1 || i == 0) showInputDialog(context, index, phrase, onUpdated)
-                    else {
+                    if (index == -1 || i == 0) {
+                        showInputDialog(context, index, phrase, onUpdated)
+                    } else {
                         val list = getQuickReplies(context)
                         if (index in list.indices) {
                             list.removeAt(index)

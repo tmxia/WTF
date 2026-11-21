@@ -216,7 +216,9 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 true
             }
 
-            else -> false
+            else -> {
+                false
+            }
         }
     }
 
@@ -476,7 +478,9 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                 true
             }
 
-            else -> false
+            else -> {
+                false
+            }
         }
     }
 

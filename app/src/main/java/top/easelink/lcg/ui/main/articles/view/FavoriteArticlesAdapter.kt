@@ -64,7 +64,9 @@ class FavoriteArticlesAdapter(private var favoriteArticlesViewModel: FavoriteArt
                 EmptyViewHolder(binding)
             }
 
-            else -> throw IllegalStateException()
+            else -> {
+                throw IllegalStateException()
+            }
         }
     }
 

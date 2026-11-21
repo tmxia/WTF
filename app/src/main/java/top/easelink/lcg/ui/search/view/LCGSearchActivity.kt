@@ -146,7 +146,9 @@ class LCGSearchActivity : TopActivity() {
                 WebViewActivity.startWebViewWith(event.url, this)
             }
 
-            else -> showMessage(R.string.general_error)
+            else -> {
+                showMessage(R.string.general_error)
+            }
         }
     }
 

@@ -33,7 +33,9 @@ class BaiduSearchViewModel : ViewModel(), SearchAdapterListener {
                 mUrl!!
             }
 
-            else -> return
+            else -> {
+                return
+            }
         }
         GlobalScope.launch(IOPool) {
             doSearchRequest(requestUrl, 0).apply {

@@ -106,13 +106,21 @@ fun parseNotificationInfo(doc: Document): NotificationInfo {
                         it.selectFirst("a")?.attr("href")?.also { url ->
                             requestList.add(url)
                             when {
-                                url.contains("mypost") -> myPost++
+                                url.contains("mypost") -> {
+                                    myPost++
+                                }
 
-                                url.contains("follower") -> follower++
+                                url.contains("follower") -> {
+                                    follower++
+                                }
 
-                                url.contains("pm") -> message++
+                                url.contains("pm") -> {
+                                    message++
+                                }
 
-                                url.contains("system") -> systemNotifs++
+                                url.contains("system") -> {
+                                    systemNotifs++
+                                }
 
                                 else -> {
                                 }

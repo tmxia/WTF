@@ -41,7 +41,9 @@ class ArticlesAdapter(
         } else {
             if (position == mArticleList.size) {
                 VIEW_TYPE_LOAD_MORE
-            } else VIEW_TYPE_NORMAL
+            } else {
+                VIEW_TYPE_NORMAL
+            }
         }
     }
 

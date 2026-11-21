@@ -44,7 +44,9 @@ class ForumNavigationAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                 LoadMoreViewHolder(binding)
             }
 
-            else -> throw IllegalStateException()
+            else -> {
+                throw IllegalStateException()
+            }
         }
     }
 

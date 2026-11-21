@@ -24,10 +24,13 @@ object BlurUtils {
         val safeRadius = min(radius, MAX_RADIUS.toInt())
         return try {
             when {
-                useRenderEffect && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+                useRenderEffect && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                     renderEffectBlur(source, safeRadius.toFloat())
+                }
 
-                else -> optimizedFastBlur(source, safeRadius)
+                else -> {
+                    optimizedFastBlur(source, safeRadius)
+                }
             }
         } catch (e: Exception) {
             null

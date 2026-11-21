@@ -604,13 +604,21 @@ fun parseHtmlHighlight(html: String): AnnotatedString {
         var isBold = false
         for (part in parts) {
             when (part.lowercase()) {
-                "<font color=\"#ff0000\">" -> isRed = true
+                "<font color=\"#ff0000\">" -> {
+                    isRed = true
+                }
 
-                "</font>" -> isRed = false
+                "</font>" -> {
+                    isRed = false
+                }
 
-                "<strong>" -> isBold = true
+                "<strong>" -> {
+                    isBold = true
+                }
 
-                "</strong>" -> isBold = false
+                "</strong>" -> {
+                    isBold = false
+                }
 
                 else -> {
                     if (part.isNotEmpty()) {

@@ -236,21 +236,25 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                                 ?.map { it.attr("title") }
                                 ?.any { s ->
                                     when {
-                                        s.contains(HOT_PATTERN) ->
+                                        s.contains(HOT_PATTERN) -> {
                                             s.replace(HOT_PATTERN, "")
                                                 .trim()
                                                 .toIntOrNull()
                                                 ?.let { it >= HOT_LIMIT }
                                                 ?: false
+                                        }
 
-                                        s.contains(RECOMMENDED_PATTERN) ->
+                                        s.contains(RECOMMENDED_PATTERN) -> {
                                             s.replace(RECOMMENDED_PATTERN, "")
                                                 .trim()
                                                 .toIntOrNull()
                                                 ?.let { it >= RECOMMENDED_LIMIT }
                                                 ?: false
+                                        }
 
-                                        else -> false
+                                        else -> {
+                                            false
+                                        }
                                     }
                                 } ?: false
                         } else {

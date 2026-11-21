@@ -35,7 +35,9 @@ class ConversationListAdapter(
         } else {
             if (position == mConversations.size) {
                 VIEW_TYPE_LOAD_MORE
-            } else VIEW_TYPE_NORMAL
+            } else {
+                VIEW_TYPE_NORMAL
+            }
         }
     }
 
@@ -56,9 +58,11 @@ class ConversationListAdapter(
                 LoadMoreViewHolder(binding)
             }
 
-            else -> EmptyViewHolder(
+            else -> {
+                EmptyViewHolder(
                 inflater.inflate(R.layout.item_empty_view, parent, false)
             )
+            }
         }
     }
 

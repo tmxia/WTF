@@ -118,7 +118,9 @@ class ScreenCaptureDialog : DialogFragment() {
                     }
                 }
                 true
-            } else false
+            } else {
+                false
+            }
         } catch (e: Exception) {
             Timber.e(e, "保存相册失败")
             false

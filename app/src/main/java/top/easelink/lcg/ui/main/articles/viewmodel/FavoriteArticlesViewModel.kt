@@ -25,7 +25,9 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
                 return
             }
 
-            ArticleFetcher.FetchType.FETCH_INIT -> rewindPageNum()
+            ArticleFetcher.FetchType.FETCH_INIT -> {
+                rewindPageNum()
+            }
         }
 
         isLoading.value = true
