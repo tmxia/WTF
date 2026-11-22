@@ -72,6 +72,7 @@ class FollowListAdapter(
 
     fun clearItems() {
         mFollowing.clear()
+        notifyDataSetChanged()
     }
 
     inner class ArticleViewHolder internal constructor(

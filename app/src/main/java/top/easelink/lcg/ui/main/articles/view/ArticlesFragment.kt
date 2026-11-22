@@ -5,8 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -63,19 +65,23 @@ class ArticlesFragment : BaseFragment<FragmentArticlesBinding, ArticlesViewModel
         setupRecyclerView()
         arguments?.getString(ARG_PARAM)?.let {
             viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.articles.collect { articleList ->
-                    val loading = viewModel.isLoading.value
-                    binding.recyclerView.visibility =
-                        if (articleList.isEmpty() && loading) View.GONE else View.VISIBLE
-                    (binding.recyclerView.adapter as? ArticlesAdapter)?.apply {
-                        clearItems()
-                        addItems(articleList)
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.articles.collect { articleList ->
+                        val loading = viewModel.isLoading.value
+                        binding.recyclerView.visibility =
+                            if (articleList.isEmpty() && loading) View.GONE else View.VISIBLE
+                        (binding.recyclerView.adapter as? ArticlesAdapter)?.apply {
+                            clearItems()
+                            addItems(articleList)
+                        }
                     }
                 }
             }
             viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.isLoading.collect { loading ->
-                    binding.refreshLayout.isRefreshing = loading
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.isLoading.collect { loading ->
+                        binding.refreshLayout.isRefreshing = loading
+                    }
                 }
             }
             viewModel.initUrl(it)

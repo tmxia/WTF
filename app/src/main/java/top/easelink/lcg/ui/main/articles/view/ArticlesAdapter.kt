@@ -85,6 +85,7 @@ class ArticlesAdapter(
 
     fun clearItems() {
         mArticleList.clear()
+        notifyDataSetChanged()
     }
 
     fun setFragmentManager(fragmentManager: FragmentManager) {
