@@ -53,6 +53,7 @@ import top.easelink.lcg.ui.main.source.model.Post
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.SharedPreferencesHelper
 import top.easelink.lcg.utils.WebsiteConstant
+import top.easelink.lcg.utils.showMessage
 import top.easelink.lcg.ui.main.article.view.DownloadLinkDialog.Companion.newInstance as newDownloadLinkDialog
 import top.easelink.lcg.ui.main.article.view.ReplyPostDialog.Companion.newInstance as newReplyPostDialog
 
@@ -81,6 +82,19 @@ class ArticleFragment : Fragment(), ControllableFragment {
         title = arguments?.getString(ARG_TITLE) ?: ""
         viewModel.setUrl(url)
         viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
+
+        // 监听跟帖/评论弹窗提交结果：成功后把新楼层插入列表刷新，失败给出提示。
+        parentFragmentManager.setFragmentResultListener(
+            CommentArticleDialog.REPLY_POST_REQUEST_KEY, this
+        ) { _, bundle ->
+            val code = bundle.getInt("result_code", CommentArticleDialog.REPLY_POST_RESULT_FAILED)
+            val newPost = bundle.getParcelable<Post>("post")
+            if (code == CommentArticleDialog.REPLY_POST_RESULT_SUCCESS && newPost != null) {
+                viewModel.appendNewReply(newPost)
+            } else {
+                showMessage(R.string.reply_post_failed)
+            }
+        }
     }
 
     override fun onCreateView(

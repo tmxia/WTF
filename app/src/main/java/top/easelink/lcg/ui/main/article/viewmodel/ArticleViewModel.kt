@@ -319,11 +319,19 @@ fun checkIsFavorited() {
 
     fun addPostToTop(post: Post) {
         posts.value?.let { currentList ->
-            
+
             val insertPos = if (currentList.isEmpty()) 0 else 1
             currentList.add(insertPos, post)
             safeUpdate(postInsertedAt, insertPos to post)
         }
+    }
+
+    /** 回复/跟帖成功后，把本地构造的新楼层追加到列表末尾并刷新。 */
+    fun appendNewReply(post: Post) {
+        val currentList = posts.value?.toMutableList() ?: mutableListOf()
+        currentList.add(post)
+        safeUpdate(posts, currentList)
+        safeUpdate(shouldDisplayPosts, true)
     }
 
     private fun setArticleNotFound() {

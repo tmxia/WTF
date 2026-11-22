@@ -47,7 +47,7 @@ class ReplyPostDialog : DialogFragment() {
         binding.quickReplyScroll.visibility = if (isExpanded) android.view.View.VISIBLE else android.view.View.GONE
         binding.quickReplyArrow.text = if (isExpanded) "▲" else "▼"
 
-        top.easelink.lcg.utils.QuickReplyHelper.renderQuickReplies(requireContext(), binding.quickReplyContainer) { phrase ->
+        QuickReplyHelper.renderQuickReplies(requireContext(), binding.quickReplyContainer) { phrase ->
             val current = binding.replyContent.text?.toString() ?: ""
             if (current.isEmpty()) binding.replyContent.setText(phrase)
             else binding.replyContent.setText("$current $phrase")
@@ -59,13 +59,6 @@ class ReplyPostDialog : DialogFragment() {
             binding.quickReplyScroll.visibility = if (isExpanded) android.view.View.VISIBLE else android.view.View.GONE
             binding.quickReplyArrow.text = if (isExpanded) "▲" else "▼"
             prefs.edit().putBoolean("quick_reply_expanded", isExpanded).apply()
-        }
-
-        QuickReplyHelper.renderQuickReplies(requireContext(), binding.quickReplyContainer) { phrase ->
-            val current = binding.replyContent.text?.toString() ?: ""
-            if (current.isEmpty()) binding.replyContent.setText(phrase)
-            else binding.replyContent.setText("$current $phrase")
-            binding.replyContent.setSelection(binding.replyContent.text?.length ?: 0)
         }
 
         binding.btnCancel.setOnClickListener { dismiss() }
@@ -85,8 +78,12 @@ class ReplyPostDialog : DialogFragment() {
             }
             lastClickTime = System.currentTimeMillis()
             arguments?.getString(REPLY_POST_URL)?.let { url ->
-                replyPostViewModel.sendReply(url, binding.replyContent.text.toString()) {
-                    view?.postDelayed({ dismiss() }, 1000L)
+                replyPostViewModel.sendReply(url, binding.replyContent.text.toString()) { success ->
+                    if (success) {
+                        view?.postDelayed({ dismiss() }, 500L)
+                    } else {
+                        showMessage(R.string.reply_post_failed)
+                    }
                 }
             }
         }

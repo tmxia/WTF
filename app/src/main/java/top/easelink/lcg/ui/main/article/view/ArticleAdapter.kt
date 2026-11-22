@@ -65,10 +65,14 @@ class ArticleAdapter(
     var searchKeyword: String = ""
 
     fun setData(posts: List<Post>, hasMore: Boolean = false, forceRefresh: Boolean = false) {
+        // 同序判定：replyUrl 可能为空（超出回复链接数量的楼层），仅用 replyUrl 判同会在倒序
+        // 仅改变顺序、集合不变时把 null 位置误判为相同而跳过刷新；追加 author 作为非空对照键。
         if (!forceRefresh && mPostList.size == posts.size && this.hasMoreItem == hasMore) {
             var isSame = true
             for (i in posts.indices) {
-                if (mPostList[i].replyUrl != posts[i].replyUrl) {
+                val old = mPostList[i]
+                val new = posts[i]
+                if (old.replyUrl != new.replyUrl || old.author != new.author) {
                     isSame = false
                     break
                 }
