@@ -1,0 +1,27 @@
+package top.easelink.lcg.ui.main.history.source
+
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.map
+import top.easelink.lcg.ui.main.history.model.HistoryModel
+import top.easelink.lcg.ui.main.source.local.ArticlesDatabase
+
+object HistorySource {
+    private val dao get() = ArticlesDatabase.getInstance().articlesDao()
+
+    /** 观察历史记录列表，DAO 实体在上层模型处映射为 [HistoryModel]。 */
+    fun observeHistories(): LiveData<List<HistoryModel>> =
+        dao.getHistories().map { list ->
+            list.map {
+                HistoryModel(
+                    url = it.url,
+                    author = it.author,
+                    title = it.title,
+                    timeStamp = it.timestamp,
+                )
+            }
+        }
+
+    suspend fun clearHistories() = dao.deleteHistories()
+
+    suspend fun deleteHistory(url: String) = dao.deleteHistory(url)
+}

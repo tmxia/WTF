@@ -19,9 +19,6 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.edit
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.network.LCGCookieJar
@@ -418,7 +415,7 @@ object SignInManager {
     }
 
     private fun withResult(onResult: (String, String) -> Unit, status: String, msg: String) {
-        GlobalScope.launch(Dispatchers.Main) { onResult(status, msg) }
+        mainHandler.post { onResult(status, msg) }
     }
 
     private const val MOBILE_UA =

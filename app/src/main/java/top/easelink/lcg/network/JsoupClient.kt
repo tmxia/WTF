@@ -1,12 +1,9 @@
 package top.easelink.lcg.network
 
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
 import org.greenrobot.eventbus.EventBus
 import org.jsoup.Connection
 import org.jsoup.Jsoup
@@ -25,7 +22,6 @@ import top.easelink.lcg.utils.updateCookies
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicLong
 
 object JsoupClient : ApiRequest {
     private val clientScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -48,34 +44,9 @@ object JsoupClient : ApiRequest {
     private val sessionUserAgent: String by lazy { UA_POOL.random() }
 
     private val sessionExpiredFiredOnce = AtomicBoolean(false)
-    private const val MIN_INTERVAL_MS = 300L
-    private val lastRequestAt = AtomicLong(0L)
-    private val BACKOFF_CODES = setOf(403, 429, 514)
-
-    @Volatile private var blockedUntil = 0L
-
-    private var pendingVerification: CompletableDeferred<String?>? = null
-    private const val VERIFY_TIMEOUT_MS = 3 * 60 * 1000L
 
     fun completeVerification(cookieHeader: String?) {
-        val deferred = synchronized(this) { pendingVerification }
-        if (cookieHeader.isNullOrBlank()) {
-            deferred?.complete(null)
-            Timber.w("用户取消了人机验证")
-        } else {
-            val cookies = mutableMapOf<String, String>()
-            for (pair in cookieHeader.split(";")) {
-                val eq = pair.indexOf('=')
-                if (eq > 0) {
-                    val name = pair.substring(0, eq).trim()
-                    val value = pair.substring(eq + 1).trim()
-                    if (name.isNotEmpty() && value.isNotEmpty()) cookies[name] = value
-                }
-            }
-            updateCookies(cookies)
-            deferred?.complete(cookieHeader)
-            Timber.d("真人验证完成，Cookie 已回灌并唤醒网络层")
-        }
+        WafGate.complete(cookieHeader)
     }
 
     @Throws(SocketTimeoutException::class, IOException::class)
@@ -104,17 +75,13 @@ object JsoupClient : ApiRequest {
 
         if (isWafPage(response.body())) {
             if (!enableWafPopup || url.contains("home.php?mod=task")) {
-                throw IOException("WAF_VERIFICATION_REQUIRED")
+                throw NetworkException.WafBlocked("WAF_VERIFICATION_REQUIRED")
             }
 
             Timber.w("网络层：命中高级 JS WAF 盾，触发 URL: $url")
             EventBus.getDefault().post(WafVerificationEvent(url))
 
-            val deferred = CompletableDeferred<String?>()
-            synchronized(this) { pendingVerification = deferred }
-
-            val verifiedCookie = runBlocking { withTimeoutOrNull(VERIFY_TIMEOUT_MS) { deferred.await() } }
-            synchronized(this) { pendingVerification = null }
+            val verifiedCookie = WafGate.awaitVerification()
 
             if (verifiedCookie != null) {
                 Timber.d("真人验证通过，重新发起业务请求...")
@@ -125,11 +92,11 @@ object JsoupClient : ApiRequest {
                 updateCookies(response.cookies())
             } else {
                 Timber.e("网络层：真人验证超时或取消")
-                throw IOException("验证超时或被取消，无法绕过 WAF")
+                throw NetworkException.WafBlocked("验证超时或被取消，无法绕过 WAF")
             }
         }
 
-        if (response.statusCode() in BACKOFF_CODES) blockedUntil = System.currentTimeMillis() + 3000
+        RateLimiter.noteBlocked(response.statusCode())
         return response.parse().also { checkResponse(it) }
     }
 
@@ -146,16 +113,12 @@ object JsoupClient : ApiRequest {
 
         if (isWafPage(response.body())) {
             if (!enableWafPopup || url.contains("home.php?mod=task")) {
-                throw IOException("WAF_VERIFICATION_REQUIRED")
+                throw NetworkException.WafBlocked("WAF_VERIFICATION_REQUIRED")
             }
             Timber.w("网络层：POST 命中 WAF 盾，触发 URL: $url")
             EventBus.getDefault().post(WafVerificationEvent(url))
 
-            val deferred = CompletableDeferred<String?>()
-            synchronized(this) { pendingVerification = deferred }
-
-            val verifiedCookie = runBlocking { withTimeoutOrNull(VERIFY_TIMEOUT_MS) { deferred.await() } }
-            synchronized(this) { pendingVerification = null }
+            val verifiedCookie = WafGate.awaitVerification()
 
             if (verifiedCookie != null) {
                 response = getConnection(url)
@@ -165,11 +128,11 @@ object JsoupClient : ApiRequest {
                     .execute()
                 updateCookies(response.cookies())
             } else {
-                throw IOException("验证超时或被取消，无法绕过 WAF")
+                throw NetworkException.WafBlocked("验证超时或被取消，无法绕过 WAF")
             }
         }
 
-        if (response.statusCode() in BACKOFF_CODES) blockedUntil = System.currentTimeMillis() + 3000
+        RateLimiter.noteBlocked(response.statusCode())
         return response
     }
 
@@ -179,14 +142,7 @@ object JsoupClient : ApiRequest {
     }
 
     private fun getConnection(url: String): Connection {
-        val waitForBlock = blockedUntil - System.currentTimeMillis()
-        if (waitForBlock > 0) Thread.sleep(waitForBlock)
-
-        synchronized(this) {
-            val since = System.currentTimeMillis() - lastRequestAt.get()
-            if (since < MIN_INTERVAL_MS) Thread.sleep(MIN_INTERVAL_MS - since)
-            lastRequestAt.set(System.currentTimeMillis())
-        }
+        RateLimiter.await()
 
         val isLcgHost = url.contains(WebsiteConstant.SERVER_HOST)
         return Jsoup.connect(url)
@@ -204,15 +160,7 @@ object JsoupClient : ApiRequest {
     }
 
     fun forceReleasePendingVerification() {
-        try {
-            synchronized(this) {
-                pendingVerification?.complete(null)
-                pendingVerification = null
-            }
-            Timber.d("强制释放挂起的 WAF 验证")
-        } catch (e: Exception) {
-            Timber.e(e)
-        }
+        WafGate.forceRelease()
     }
 
     fun resetSessionExpiredFlag() { sessionExpiredFiredOnce.set(false) }

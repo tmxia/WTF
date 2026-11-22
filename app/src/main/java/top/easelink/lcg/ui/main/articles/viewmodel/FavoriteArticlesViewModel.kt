@@ -15,13 +15,17 @@ import top.easelink.lcg.utils.showMessage
 class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
     val articles = MutableLiveData<List<ArticleEntity>>()
     val isLoading = MutableLiveData<Boolean>()
+
+    /** 分页骨架：收藏当前为本地全量加载，暂无远端翻页，hasMore 恒为 false。 */
+    val hasMore = MutableLiveData<Boolean>(false)
     private var mCurrentPage = 0
 
     override fun fetchArticles(fetchType: ArticleFetcher.FetchType, callback: (Boolean) -> Unit) {
         when (fetchType) {
             ArticleFetcher.FetchType.FETCH_MORE -> {
+                // TODO 远端收藏分页：解析下一页链接后按 mCurrentPage+1 请求；当前无翻页数据源。
+                hasMore.postValue(false)
                 callback.invoke(false)
-                // TODO add pagination
                 return
             }
 

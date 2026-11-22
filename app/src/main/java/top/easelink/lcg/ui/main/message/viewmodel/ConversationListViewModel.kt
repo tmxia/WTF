@@ -14,6 +14,10 @@ import top.easelink.lcg.utils.WebsiteConstant
 class ConversationListViewModel : ViewModel() {
     val conversations = MutableLiveData<List<Conversation>>()
     val isLoading = MutableLiveData<Boolean>()
+
+    /** 分页骨架：当前为单页解析，暂未提取下一页链接，hasMore 恒为 false。 */
+    val hasMore = MutableLiveData<Boolean>(false)
+    private var page = 1
     private var formHash: String? = null
 
     fun fetchConversations() {
@@ -26,6 +30,11 @@ class ConversationListViewModel : ViewModel() {
             }
             isLoading.postValue(false)
         }
+    }
+
+    fun loadMore() {
+        // TODO 会话分页：解析下一页链接后按 page+1 请求；当前无翻页数据源，直接返回。
+        if (hasMore.value != true) return
     }
 
     private fun parseConversations(doc: Document) {
