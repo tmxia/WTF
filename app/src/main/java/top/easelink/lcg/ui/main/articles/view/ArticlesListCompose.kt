@@ -15,6 +15,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -37,6 +39,15 @@ import top.easelink.lcg.ui.main.common.FullScreenLoading
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
 
+/** 板块列表排序选项：orderby 为 null 表示系统默认顺序 */
+data class ForumSortOption(val orderby: String?, val label: String)
+
+val forumSortOptions = listOf(
+    ForumSortOption(null, "默认顺序"),
+    ForumSortOption("dateline", "按发帖时间"),
+    ForumSortOption("lastpost", "按最后回帖")
+)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ForumArticlesScreen(
@@ -44,10 +55,12 @@ fun ForumArticlesScreen(
     tabs: List<ForumThread>,
     articles: List<Article>,
     isLoading: Boolean,
+    selectedSortName: String,
     onBackClick: () -> Unit,
     onTabSelected: (String) -> Unit,
     onArticleClick: (String) -> Unit,
     onLoadMore: () -> Unit,
+    onSortSelected: (String?, String) -> Unit,
     onArticleLongClick: (String) -> Unit, onScrollPositionChanged: (Boolean) -> Unit = {}) {
     val displayTabs = remember(tabs) {
         val list = mutableListOf("全部")
@@ -82,6 +95,30 @@ fun ForumArticlesScreen(
                     navigationIcon = {
                         IconButton(onClick = onBackClick) {
                             Icon(Icons.Filled.ArrowBack, contentDescription = "返回", tint = Color.Black)
+                        }
+                    },
+                    actions = {
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "排序", tint = Color.Black)
+                        }
+                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            forumSortOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(option.label, modifier = Modifier.weight(1f), color = Color.Black)
+                                            if (selectedSortName == option.label) {
+                                                Icon(Icons.Filled.Check, contentDescription = "已选", tint = Color(0xFFE65100))
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onSortSelected(option.orderby, option.label)
+                                    }
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)

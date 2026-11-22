@@ -1,5 +1,6 @@
 package top.easelink.lcg.ui.main.articles.viewmodel
 
+import android.content.Context
 import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +11,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.R
+import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.ui.main.model.LoginRequiredException
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
@@ -19,16 +21,32 @@ import top.easelink.lcg.utils.showMessage
 
 const val DEFAULT_ORDER = ""
 
+// 板块列表排序白名单（forumdisplay 支持的 orderby 取值）
+private val allowedOrderby = setOf("dateline", "lastpost")
+
 class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
     private var mUrl: String? = null
     private var mFetchType = ArticleFetcher.FetchType.FETCH_INIT
-    private var orderType = DEFAULT_ORDER
     private var mCurrentPage = 1
     private var isTabSet = false
     private var fetching = false
 
+    private val prefs = try {
+        LCGApp.context.getSharedPreferences("wtf_forum_prefs", Context.MODE_PRIVATE)
+    } catch (e: Exception) {
+        Timber.tag("[ForumSort]").e(e, "获取 SharedPreferences 崩溃")
+        throw e
+    }
+
+    private var orderType = restoreOrderType()
+
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
+
+    private val _selectedSortName = MutableStateFlow(
+        prefs.getString("forum_sort_name", "默认顺序") ?: "默认顺序"
+    )
+    val selectedSortName: StateFlow<String> = _selectedSortName.asStateFlow()
 
     private val _articles = MutableStateFlow<List<Article>>(emptyList())
     val articles: StateFlow<List<Article>> = _articles.asStateFlow()
@@ -68,9 +86,31 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         }
 
         mFetchType = fetchType
-        orderType = order
+        if (order != DEFAULT_ORDER) orderType = order
         rewindPageNum()
         fetchArticles(mFetchType) {}
+    }
+
+    private fun restoreOrderType(): String {
+        val orderby = prefs.getString("forum_sort_order", null)
+        return if (orderby in allowedOrderby) "&orderby=$orderby" else DEFAULT_ORDER
+    }
+
+    /**
+     * 切换板块列表排序。白名单校验后持久化选择，重置页码并从第 1 页重新加载。
+     * orderby 为 null 表示恢复系统默认顺序。
+     */
+    fun selectSort(orderby: String?, name: String) {
+        val safe = orderby?.takeIf { it in allowedOrderby }
+        orderType = if (safe != null) "&orderby=$safe" else DEFAULT_ORDER
+        _selectedSortName.value = name
+        prefs.edit()
+            .putString("forum_sort_order", safe)
+            .putString("forum_sort_name", name)
+            .apply()
+        mFetchType = ArticleFetcher.FetchType.FETCH_INIT
+        rewindPageNum()
+        fetchArticles(ArticleFetcher.FetchType.FETCH_INIT) {}
     }
 
     @MainThread
