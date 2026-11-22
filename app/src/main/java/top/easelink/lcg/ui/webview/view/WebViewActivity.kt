@@ -39,6 +39,7 @@ import top.easelink.lcg.ui.main.me.source.UserInfoRepo.requestUserInfo
 import top.easelink.lcg.ui.webview.FORCE_ENABLE_JS_KEY
 import top.easelink.lcg.ui.webview.OPEN_LOGIN_PAGE
 import top.easelink.lcg.ui.webview.TITLE_KEY
+import top.easelink.lcg.ui.webview.WebViewSecurityHelper
 import top.easelink.lcg.utils.WebsiteConstant.EXTRA_TABLE_HTML
 import top.easelink.lcg.utils.WebsiteConstant.LOGIN_QUERY
 import top.easelink.lcg.utils.WebsiteConstant.QQ_LOGIN_URL
@@ -88,6 +89,16 @@ class WebViewActivity : AppCompatActivity() {
                 mWebView.loadUrl(url)
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mWebView.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mWebView.onResume()
     }
 
     override fun onDestroy() {
@@ -284,6 +295,7 @@ class WebViewActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     private fun updateWebViewSettingsLocal() {
         mWebView.settings.apply {
+            WebViewSecurityHelper.applyHardening(this)
             if (mWebView is HorizontalScrollDisableWebView) {
                 (mWebView as HorizontalScrollDisableWebView).setScrollEnable(true)
             }
@@ -302,6 +314,7 @@ class WebViewActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     private fun updateWebViewSettingsRemote() {
         mWebView.settings.apply {
+            WebViewSecurityHelper.applyHardening(this)
             javaScriptEnabled = mForceEnableJs
             domStorageEnabled = true
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
@@ -373,16 +386,34 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-            request.url.toString().let { url ->
-                when {
-                    url.startsWith("wtloginmqq://ptlogin/qlogin") -> runCatching {
-                        startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
-                    }
-
-                    url.startsWith("bdnetdisk") -> showMessage(R.string.baidu_net_disk_not_support)
+            val url = request.url.toString()
+            return when {
+                url.startsWith("wtloginmqq://") -> {
+                    runCatching { startActivity(Intent(Intent.ACTION_VIEW, url.toUri())) }
+                    true
                 }
+
+                url.startsWith("bdnetdisk") -> {
+                    showMessage(R.string.baidu_net_disk_not_support)
+                    true
+                }
+
+                WebViewSecurityHelper.isAllowedUrl(url) -> false
+
+                url.startsWith("http://") || url.startsWith("https://") -> {
+                    openInSystemBrowser(url)
+                    true
+                }
+
+                else -> false
             }
-            return false
+        }
+
+        override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail?): Boolean {
+            Timber.e("WebView 渲染进程退出，priority=${detail?.rendererPriorityAtExit()}")
+            view.destroy()
+            finish()
+            return true
         }
     }
 
