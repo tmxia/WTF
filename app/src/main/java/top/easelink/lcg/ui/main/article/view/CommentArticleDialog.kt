@@ -3,8 +3,9 @@ package top.easelink.lcg.ui.main.article.view
 import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import top.easelink.framework.topbase.TopDialog
 import top.easelink.framework.utils.CommonUtils
 import top.easelink.lcg.R
@@ -97,9 +98,11 @@ class CommentArticleDialog : TopDialog() {
         }
 
         binding.btnConfirm.apply {
-            replyPostViewModel.sending.observe(viewLifecycleOwner, Observer { isSending ->
-                setText(if (isSending) R.string.reply_post_btn_sending else R.string.reply_post_btn_sent)
-            })
+            viewLifecycleOwner.lifecycleScope.launch {
+                replyPostViewModel.sending.collect { isSending ->
+                    setText(if (isSending) R.string.reply_post_btn_sending else R.string.reply_post_btn_sent)
+                }
+            }
 
             setOnClickListener {
                 if (System.currentTimeMillis() - lastClickTime < 2000) {

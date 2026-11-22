@@ -161,14 +161,26 @@ class SettingActivity : TopActivity() {
 
     private fun setupObserver() {
         top.easelink.lcg.account.AccountManager.isLoggedIn.observe(this) { updateAccountButton(it) }
-        mViewModel.apply {
-            syncFavoriteEnable.observe(this@SettingActivity) { binding.syncFavoritesSwitch.isChecked = (UserDataRepo.isLoggedIn && it) }
-            autoSignInEnable.observe(this@SettingActivity) { binding.autoSignSwitch.isChecked = (UserDataRepo.isLoggedIn && it) }
-            searchEngineSelected.observe(this@SettingActivity) { binding.searchEngineSpinner.setSelection(it, true) }
-            openSearchResultInWebView.observe(this@SettingActivity) { binding.showSearchResultInWebview.isChecked = it }
-            openArticleInWebView.observe(this@SettingActivity) { binding.showArticleInWebview.isChecked = it }
-            showRecommendFlag.observe(this@SettingActivity) { binding.showRecommendFlag.isChecked = it }
-            handlePreTagInArticle.observe(this@SettingActivity) { binding.articleHandlePreTag.isChecked = it }
+        lifecycleScope.launch {
+            mViewModel.syncFavoriteEnable.collect { binding.syncFavoritesSwitch.isChecked = (UserDataRepo.isLoggedIn && it) }
+        }
+        lifecycleScope.launch {
+            mViewModel.autoSignInEnable.collect { binding.autoSignSwitch.isChecked = (UserDataRepo.isLoggedIn && it) }
+        }
+        lifecycleScope.launch {
+            mViewModel.searchEngineSelected.collect { binding.searchEngineSpinner.setSelection(it, true) }
+        }
+        lifecycleScope.launch {
+            mViewModel.openSearchResultInWebView.collect { binding.showSearchResultInWebview.isChecked = it }
+        }
+        lifecycleScope.launch {
+            mViewModel.openArticleInWebView.collect { binding.showArticleInWebview.isChecked = it }
+        }
+        lifecycleScope.launch {
+            mViewModel.showRecommendFlag.collect { binding.showRecommendFlag.isChecked = it }
+        }
+        lifecycleScope.launch {
+            mViewModel.handlePreTagInArticle.collect { binding.articleHandlePreTag.isChecked = it }
         }
     }
 

@@ -1,9 +1,11 @@
 package top.easelink.lcg.ui.main.article.viewmodel
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -12,16 +14,17 @@ import top.easelink.lcg.utils.WebsiteConstant.CHECK_RULE_URL
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 
 class ReplyPostViewModel : ViewModel() {
-    val sending = MutableLiveData<Boolean>()
+    private val _sending = MutableStateFlow(false)
+    val sending: StateFlow<Boolean> = _sending.asStateFlow()
 
     fun sendReply(query: String?, content: String, callback: (Boolean) -> Unit) {
-        sending.value = true
+        _sending.value = true
         viewModelScope.launch {
             val ok = runCatching {
                 withContext(Dispatchers.IO) { sendReplyAsync(query, content) }
             }.onFailure { Timber.e(it) }.getOrDefault(false)
             callback(ok)
-            sending.value = false
+            _sending.value = false
         }
     }
 

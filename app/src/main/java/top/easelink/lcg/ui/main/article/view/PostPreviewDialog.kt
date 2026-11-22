@@ -5,8 +5,9 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.framework.customview.htmltextview.HtmlCoilImageGetter
 import top.easelink.framework.topbase.TopDialog
@@ -78,41 +79,51 @@ class PostPreviewDialog : TopDialog() {
                 ?.getString(ARTICLE_QUERY)
                 ?.takeIf { it.isNotBlank() }
                 ?.let { query ->
-                    mViewModel.content.observe(viewLifecycleOwner, Observer { contentHtml ->
-                        binding.contentTextView.setHtml(
-                            contentHtml,
-                            HtmlCoilImageGetter(
-                                binding.contentTextView.context,
-                                binding.contentTextView,
-                                this
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        mViewModel.content.collect { contentHtml ->
+                            binding.contentTextView.setHtml(
+                                contentHtml,
+                                HtmlCoilImageGetter(
+                                    binding.contentTextView.context,
+                                    binding.contentTextView,
+                                    this@PostPreviewDialog
+                                )
                             )
-                        )
 
-                        binding.root.visibility = View.VISIBLE
-                    })
-                    mViewModel.author.observe(viewLifecycleOwner, Observer {
-                        binding.authorTextView.text = it
-                    })
-                    mViewModel.avatar.observe(viewLifecycleOwner, Observer {
-                        ImageLoaderHelper.loadAvatar(
-                            binding.postAvatar,
-                            it,
-                            cornerDp = 0f,
-                            errorRes = 0,
-                            placeholderRes = 0,
-                        )
-                    })
-                    mViewModel.date.observe(viewLifecycleOwner, Observer {
-                        binding.dateTextView.text = it
-                    })
-
-                    mViewModel.loadingResult.observe(viewLifecycleOwner, Observer { status ->
-                        if (status == -1) {
                             binding.root.visibility = View.VISIBLE
-                        } else if (status != R.string.preview_loading) {
-                            dismissDialog()
                         }
-                    })
+                    }
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        mViewModel.author.collect {
+                            binding.authorTextView.text = it
+                        }
+                    }
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        mViewModel.avatar.collect {
+                            ImageLoaderHelper.loadAvatar(
+                                binding.postAvatar,
+                                it,
+                                cornerDp = 0f,
+                                errorRes = 0,
+                                placeholderRes = 0,
+                            )
+                        }
+                    }
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        mViewModel.date.collect {
+                            binding.dateTextView.text = it
+                        }
+                    }
+
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        mViewModel.loadingResult.collect { status ->
+                            if (status == -1) {
+                                binding.root.visibility = View.VISIBLE
+                            } else if (status != R.string.preview_loading) {
+                                dismissDialog()
+                            }
+                        }
+                    }
 
                     mViewModel.initUrl(query)
                 }

@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import top.easelink.lcg.R
 import top.easelink.lcg.databinding.DialogReplyPostBinding
 import top.easelink.lcg.ui.main.article.viewmodel.ReplyPostViewModel
@@ -70,8 +72,10 @@ class ReplyPostDialog : DialogFragment() {
 
         binding.replyTo.text = getString(R.string.reply_post_dialog_title, arguments?.getString(REPLY_POST_AUTHOR))
 
-        replyPostViewModel.sending.observe(viewLifecycleOwner) { isSending ->
-            binding.btnConfirm.setText(if (isSending) R.string.reply_post_btn_sending else R.string.reply_post_btn_sent)
+        viewLifecycleOwner.lifecycleScope.launch {
+            replyPostViewModel.sending.collect { isSending ->
+                binding.btnConfirm.setText(if (isSending) R.string.reply_post_btn_sending else R.string.reply_post_btn_sent)
+            }
         }
 
         binding.btnConfirm.setOnClickListener {
