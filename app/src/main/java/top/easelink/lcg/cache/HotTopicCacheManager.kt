@@ -62,7 +62,7 @@ object HotTopicCacheManager : ICacheManager {
                     }
                 }
                 ?.forEach {
-                    File(it).delete()
+                    File(parent, it).delete()
                 }
         }
     }

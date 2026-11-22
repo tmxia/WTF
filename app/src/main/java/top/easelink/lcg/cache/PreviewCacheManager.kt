@@ -19,6 +19,9 @@ object PreviewCacheManager : ICacheManager {
     private val PREVIEW_CACHE_FOLDER = "${LCGApp.context.cacheDir}/preview_articles"
     private const val CONFIG_FILE_NAME = "PreviewCacheConfig"
 
+    /** 单条预览缓存有效期；过期条目在读取时清理，避免长期展示旧预览内容。 */
+    private const val PREVIEW_TTL_MS = 30 * 60 * 1000L
+
     fun saveToDisk(url: String, content: String) {
         cacheScope.launch {
             checkDirs()
@@ -34,14 +37,17 @@ object PreviewCacheManager : ICacheManager {
 
     fun findDocOrNull(url: String): Document? {
         val file: File? = findInDisk("$PREVIEW_CACHE_FOLDER/${getCacheFileName(url)}")
-        if (file != null && file.exists()) {
-            try {
-                return Jsoup.parse(file, "utf-8")
-            } catch (e: Exception) {
-                Timber.e(e)
-            }
+        if (file == null || !file.exists()) return null
+        if (System.currentTimeMillis() - file.lastModified() > PREVIEW_TTL_MS) {
+            file.delete()
+            return null
         }
-        return null
+        try {
+            return Jsoup.parse(file, "utf-8")
+        } catch (e: Exception) {
+            Timber.e(e)
+            return null
+        }
     }
 
     override suspend fun clearAllCaches() = withContext(Dispatchers.IO) {
