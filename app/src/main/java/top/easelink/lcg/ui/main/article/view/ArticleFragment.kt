@@ -47,6 +47,7 @@ import top.easelink.lcg.ui.main.article.view.ScreenCaptureDialog.Companion.TAG
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
 import top.easelink.lcg.ui.main.common.CompactAnchorMenu
+import top.easelink.lcg.ui.main.common.MenuDisplayMode
 import top.easelink.lcg.ui.main.common.PopoverMenuItem
 import top.easelink.lcg.ui.main.model.LikeSuccessEvent
 import top.easelink.lcg.ui.main.model.ReplyPostEvent
@@ -278,6 +279,8 @@ fun ArticleScreen(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
                             title = "更多操作",
+                            mode = MenuDisplayMode.BottomSheet,
+                            groupTitles = listOf("帖子筛选", "页面操作"),
                             groups = listOf(
                                 listOf(
                             PopoverMenuItem(Icons.Default.Person, if (showOpOnly) "显示全部" else "只看楼主", showOpOnly) {

@@ -11,16 +11,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -28,13 +34,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-/** 锚点紧凑弹出菜单的单一项。 */
+/** 菜单弹出形态：少量选项用窄居中 Dialog；多分组操作项用底部上滑面板。 */
+enum class MenuDisplayMode { CompactDialog, BottomSheet }
+
+/** 紧凑菜单的单一项。 */
 data class PopoverMenuItem(
     val icon: ImageVector? = null,
     val label: String,
@@ -50,14 +61,16 @@ private val MenuAccent = Color(0xFFE53935)
 private val MenuBg = Color(0xFFF5F5F5)
 private val MenuIconTint = Color(0xFF666666)
 private val MenuTextColor = Color(0xFF333333)
+private val MenuGroupTitleColor = Color(0xFF888888)
 
 /**
- * 统一风格的居中选择对话框：与搜索页排序/板块弹窗保持同一套视觉规范——
- * 白色 20dp 圆角卡片、半透明遮罩、标题 + 关闭按钮；选项为 12dp 圆角浅灰长条，
- * 选中/激活项以主色 10% 浅红底 + 主色文字 + 右侧对勾呈现。
+ * 统一风格菜单组件：
+ * - [MenuDisplayMode.CompactDialog]：少量选项（如排序），居中窄面板，尺寸随内容自适应；
+ * - [MenuDisplayMode.BottomSheet]：多分组操作项（如详情更多操作），底部上滑、可滚动，带分组标题。
  *
- * @param title 对话框标题；为 null 时不渲染头部标题栏。
- * @param groups 分组列表，每组若干菜单项；组间自动插入分隔线。
+ * @param groups 分组列表，每组若干菜单项；组间以分隔线/分组标题区分。
+ * @param groupTitles 与 groups 对齐的分组标题；为 null 或空串时不展示该组标题（仅 BottomSheet 生效）。
+ * @param title 顶部标题；为 null 时不渲染头部标题栏。
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -66,81 +79,166 @@ fun CompactAnchorMenu(
     onDismissRequest: () -> Unit,
     groups: List<List<PopoverMenuItem>>,
     title: String? = null,
+    groupTitles: List<String?>? = null,
+    mode: MenuDisplayMode = MenuDisplayMode.CompactDialog,
     modifier: Modifier = Modifier
 ) {
     if (!expanded) return
 
-    Dialog(
+    when (mode) {
+        MenuDisplayMode.CompactDialog -> {
+            Dialog(
+                onDismissRequest = onDismissRequest,
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                Column(
+                    modifier = modifier
+                        .fillMaxWidth(0.74f)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.White)
+                        .padding(horizontal = 18.dp, vertical = 18.dp)
+                ) {
+                    if (!title.isNullOrBlank()) {
+                        MenuHeader(title = title, onDismiss = onDismissRequest)
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        groups.forEachIndexed { groupIndex, group ->
+                            group.forEach { item ->
+                                PopoverMenuItemRow(
+                                    item = item,
+                                    itemHeight = 44.dp,
+                                    verticalPadding = 12.dp
+                                )
+                            }
+                            if (groupIndex < groups.size - 1) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    thickness = 0.5.dp,
+                                    color = Color(0xFFEEEEEE)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        MenuDisplayMode.BottomSheet -> {
+            SheetContent(
+                title = title,
+                groups = groups,
+                groupTitles = groupTitles,
+                onDismissRequest = onDismissRequest,
+                modifier = modifier
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SheetContent(
+    title: String?,
+    groups: List<List<PopoverMenuItem>>,
+    groupTitles: List<String?>?,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val maxSheetHeight = with(LocalConfiguration.current) { screenHeightDp.dp * 0.65f }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        sheetState = sheetState,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     ) {
         Column(
             modifier = modifier
-                .fillMaxWidth(0.88f)
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color.White)
-                .padding(20.dp)
+                .fillMaxWidth()
+                .heightIn(max = maxSheetHeight)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
             if (!title.isNullOrBlank()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                MenuHeader(title = title, onDismiss = onDismissRequest)
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            groups.forEachIndexed { groupIndex, group ->
+                val groupTitle = groupTitles?.getOrNull(groupIndex)
+                if (!groupTitle.isNullOrBlank()) {
                     Text(
-                        text = title,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        text = groupTitle,
+                        fontSize = 13.sp,
+                        color = MenuGroupTitleColor,
+                        modifier = Modifier.padding(start = 4.dp, bottom = 8.dp, top = if (groupIndex > 0) 8.dp else 0.dp)
                     )
-                    Row(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .combinedClickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = LocalIndication.current,
-                                onClick = onDismissRequest
-                            ),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "关闭",
-                            tint = Color.LightGray,
-                            modifier = Modifier.size(20.dp)
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    group.forEach { item ->
+                        PopoverMenuItemRow(
+                            item = item,
+                            itemHeight = 48.dp,
+                            verticalPadding = 14.dp
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            groups.forEachIndexed { groupIndex, group ->
-                if (groupIndex > 0) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        thickness = 0.5.dp,
-                        color = Color(0xFFEEEEEE)
-                    )
-                }
-                group.forEach { item ->
-                    PopoverMenuItemRow(item)
-                }
-            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun PopoverMenuItemRow(item: PopoverMenuItem) {
+private fun MenuHeader(title: String, onDismiss: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+        Row(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = LocalIndication.current,
+                    onClick = onDismiss
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "关闭",
+                tint = Color.LightGray,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun PopoverMenuItemRow(
+    item: PopoverMenuItem,
+    itemHeight: Dp,
+    verticalPadding: Dp
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val highlighted = item.active || item.checked
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 10.dp)
+            .heightIn(min = itemHeight)
             .clip(RoundedCornerShape(12.dp))
             .background(if (highlighted) MenuAccent.copy(alpha = 0.1f) else MenuBg)
             .combinedClickable(
@@ -149,7 +247,7 @@ private fun PopoverMenuItemRow(item: PopoverMenuItem) {
                 onClick = item.onClick,
                 onLongClick = item.onLongClick
             )
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = verticalPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (item.icon != null) {
