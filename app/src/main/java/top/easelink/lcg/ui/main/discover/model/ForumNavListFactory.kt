@@ -6,41 +6,45 @@ import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.utils.WebsiteConstant
 import java.util.*
 
+/** 板块 URL 模板中的 %d 为分页占位符，默认取第 1 页；未格式化会得到非法地址并导致导航匹配失败。 */
+private fun forumUrl(template: String): String =
+    if (template.contains("%d")) template.format(1) else template
+
 fun generateAllForums(context: Context): List<ForumNavigationModel> {
     val list: MutableList<ForumNavigationModel> = ArrayList()
     list.add(
         ForumNavigationModel(
             context.getString(R.string.forum_mobile_security),
             R.drawable.ic_sercurite,
-            WebsiteConstant.MOB_SECURITY_QUERY
+            forumUrl(WebsiteConstant.MOB_SECURITY_QUERY)
         )
     )
     list.add(
         ForumNavigationModel(
             context.getString(R.string.forum_software),
             R.drawable.ic_software,
-            WebsiteConstant.SOFTWARE_QUERY
+            forumUrl(WebsiteConstant.SOFTWARE_QUERY)
         )
     )
     list.add(
         ForumNavigationModel(
             context.getString(R.string.forum_original_release),
             R.drawable.ic_creator,
-            WebsiteConstant.ORIGINAL_RELEASE_QUERY
+            forumUrl(WebsiteConstant.ORIGINAL_RELEASE_QUERY)
         )
     )
     list.add(
         ForumNavigationModel(
             "脱壳破解区",
             R.drawable.ic_software,
-            WebsiteConstant.UNPACK_QUERY
+            forumUrl(WebsiteConstant.UNPACK_QUERY)
         )
     )
     list.add(
         ForumNavigationModel(
             context.getString(R.string.forum_reverse_resource),
             R.drawable.ic_creator,
-            WebsiteConstant.REVERSE_RESOURCE_QUERY
+            forumUrl(WebsiteConstant.REVERSE_RESOURCE_QUERY)
         )
     )
     if (UserDataRepo.isLoggedIn) {
@@ -68,28 +72,28 @@ fun generateOptionalList(context: Context): List<ForumNavigationModel> {
         ForumNavigationModel(
             context.getString(R.string.forum_program_language),
             R.drawable.ic_message_black_24dp,
-            WebsiteConstant.PROGRAM_LANGUAGE_QUERY
+            forumUrl(WebsiteConstant.PROGRAM_LANGUAGE_QUERY)
         )
     )
     list.add(
         ForumNavigationModel(
             context.getString(R.string.forum_animation_release),
             R.drawable.ic_message_black_24dp,
-            WebsiteConstant.ANIMATION_RELEASE_QUERY
+            forumUrl(WebsiteConstant.ANIMATION_RELEASE_QUERY)
         )
     )
     list.add(
         ForumNavigationModel(
             context.getString(R.string.forum_reverse_resource),
             R.drawable.ic_message_black_24dp,
-            WebsiteConstant.REVERSE_RESOURCE_QUERY
+            forumUrl(WebsiteConstant.REVERSE_RESOURCE_QUERY)
         )
     )
     list.add(
         ForumNavigationModel(
             context.getString(R.string.forum_qa),
             R.drawable.ic_message_black_24dp,
-            WebsiteConstant.QA_QUERY
+            forumUrl(WebsiteConstant.QA_QUERY)
         )
     )
     if (UserDataRepo.isLoggedIn) {
@@ -97,21 +101,21 @@ fun generateOptionalList(context: Context): List<ForumNavigationModel> {
             ForumNavigationModel(
                 context.getString(R.string.forum_virus_analysis),
                 R.drawable.ic_message_black_24dp,
-                WebsiteConstant.VIRUS_ANALYSIS_QUERY
+                forumUrl(WebsiteConstant.VIRUS_ANALYSIS_QUERY)
             )
         )
         list.add(
             ForumNavigationModel(
                 context.getString(R.string.forum_virus_rescue),
                 R.drawable.ic_message_black_24dp,
-                WebsiteConstant.VIRUS_RESCUE_QUERY
+                forumUrl(WebsiteConstant.VIRUS_RESCUE_QUERY)
             )
         )
         list.add(
             ForumNavigationModel(
                 context.getString(R.string.forum_virus_sample),
                 R.drawable.ic_message_black_24dp,
-                WebsiteConstant.VIRUS_SAMPLE_QUERY
+                forumUrl(WebsiteConstant.VIRUS_SAMPLE_QUERY)
             )
         )
     }

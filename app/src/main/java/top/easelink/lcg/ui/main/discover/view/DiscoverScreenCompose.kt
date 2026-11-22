@@ -183,16 +183,30 @@ fun DiscoverScreenCompose(
     }
 }
 
+/** 从板块链接中提取 fid，用于在 URL 形态变化（相对地址/查询串/分页占位）时做归一化匹配。 */
+private fun forumFid(url: String): String? =
+    Regex("""(?:forum-|fid=)(\d+)""").find(url)?.groupValues?.get(1)
+
 private fun loadSavedUrls(prefs: android.content.SharedPreferences, allForums: List<ForumNavigationModel>): List<String> {
+    val defaultUrls = allForums.filter { !it.isSubForum }.take(8).map { it.url }
     val saved = prefs.getString("forum_urls", null)
     if (saved != null) {
-        val validUrls = allForums.map { it.url }.toSet()
-        val cleaned = saved.split(",").filter { it.isNotBlank() && it in validUrls }
-        if (cleaned.isNotEmpty()) {
+        val byUrl = allForums.associateBy { it.url }
+        val byFid = allForums
+            .filter { forumFid(it.url) != null }
+            .groupBy { forumFid(it.url)!! }
+        val cleaned = saved.split(",").mapNotNull { raw ->
+            val item = raw.trim()
+            if (item.isEmpty()) return@mapNotNull null
+            byUrl[item]?.url ?: byFid[forumFid(item)]?.firstOrNull()?.url
+        }.distinct()
+        // 历史缓存仅部分命中（如旧版本存下的标准 URL 与当前兜底地址对不上）时，
+        // 视为脏数据回退默认板块，避免常用导航只剩零星一两个入口。
+        if (cleaned.isNotEmpty() && cleaned.size >= defaultUrls.size.coerceAtMost(3)) {
             return cleaned
         }
     }
-    return allForums.filter { !it.isSubForum }.take(8).map { it.url }
+    return defaultUrls
 }
 
 @OptIn(ExperimentalFoundationApi::class)

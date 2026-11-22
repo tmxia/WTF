@@ -26,7 +26,7 @@ object ForumNetworkSource {
         try {
             Timber.d("【板块API】开始解析 forum.php ...")
             val doc = JsoupClient.sendGetRequestWithUrl("https://www.52pojie.cn/forum.php")
-            val allLinks = doc.select("a[href*=forum-], a[href*=forumdisplay]")
+            val allLinks = doc.select("a[href*=forum-], a[href*=forumdisplay], a[href*=fid=]")
 
             for (link in allLinks) {
                 val href = link.attr("href").trim()
@@ -67,11 +67,12 @@ object ForumNetworkSource {
     }
 
     private fun isValidForumUrl(href: String): Boolean {
-        val isPureForum = href.matches(Regex("forum-\\d+-1\\.html")) || href.contains("forumdisplay&fid=")
+        val looksForum = Regex("forum-\\d+-1\\.html").containsMatchIn(href) ||
+            Regex("(?:forumdisplay|mod=forumdisplay)[^\"']*fid=\\d+").containsMatchIn(href)
         val isJunk = href.contains("newthread") || href.contains("viewthread") || href.contains("mod=post") ||
             href.contains("action=") || href.contains("guide") || href.contains("filter=") ||
             href.contains("view=") || href.contains("typeid=")
-        return isPureForum && !isJunk
+        return looksForum && !isJunk
     }
 
     private fun isValidForumTitle(title: String): Boolean {
