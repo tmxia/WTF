@@ -6,11 +6,12 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -64,9 +65,11 @@ class BaiduSearchActivity : TopActivity() {
             v.updatePadding(bottom = bars.bottom)
             insets
         }
-        mViewModelBaidu.mTotalResult.observe(this, Observer {
-            binding.totalInfo.text = it.orEmpty()
-        })
+        lifecycleScope.launch {
+            mViewModelBaidu.mTotalResult.collect {
+                binding.totalInfo.text = it.orEmpty()
+            }
+        }
         setupRecyclerView()
     }
 
@@ -77,16 +80,20 @@ class BaiduSearchActivity : TopActivity() {
             }
             itemAnimator = DefaultItemAnimator()
             adapter = BaiduSearchResultAdapter(mViewModelBaidu)
-            mViewModelBaidu.searchResults.observe(this@BaiduSearchActivity, Observer {
-                (adapter as? BaiduSearchResultAdapter)?.apply {
-                    clearItems()
-                    addItems(it)
+            lifecycleScope.launch {
+                mViewModelBaidu.searchResults.collect {
+                    (adapter as? BaiduSearchResultAdapter)?.apply {
+                        clearItems()
+                        addItems(it)
+                    }
                 }
-            })
+            }
         }
-        mViewModelBaidu.isLoading.observe(this, Observer {
-            binding.refreshLayout.isRefreshing = it
-        })
+        lifecycleScope.launch {
+            mViewModelBaidu.isLoading.collect {
+                binding.refreshLayout.isRefreshing = it
+            }
+        }
         binding.refreshLayout.apply {
             setColorSchemeColors(
                 ContextCompat.getColor(this@BaiduSearchActivity, R.color.colorPrimary),

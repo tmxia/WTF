@@ -1,8 +1,10 @@
 package top.easelink.lcg.ui.search.viewmodel
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.ui.search.model.BaiduSearchResult
@@ -11,9 +13,15 @@ import top.easelink.lcg.ui.search.viewmodel.BaiduSearchResultAdapter.SearchAdapt
 import top.easelink.lcg.utils.WebsiteConstant
 
 class BaiduSearchViewModel : ViewModel(), SearchAdapterListener {
-    val searchResults = MutableLiveData<List<BaiduSearchResult>>()
-    val mTotalResult = MutableLiveData<String?>()
-    val isLoading = MutableLiveData<Boolean>()
+    private val _searchResults = MutableStateFlow<List<BaiduSearchResult>>(emptyList())
+    val searchResults: StateFlow<List<BaiduSearchResult>> = _searchResults.asStateFlow()
+
+    private val _mTotalResult = MutableStateFlow<String?>(null)
+    val mTotalResult: StateFlow<String?> = _mTotalResult.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     private var mUrl: String? = null
     private var mNextPageUrl: String? = null
 
@@ -23,7 +31,7 @@ class BaiduSearchViewModel : ViewModel(), SearchAdapterListener {
     }
 
     override fun doSearchQuery(type: Int) {
-        isLoading.value = true
+        _isLoading.value = true
         val requestUrl: String? = when {
             type == SearchAdapterListener.FETCH_MORE && !mNextPageUrl.isNullOrBlank() -> {
                 WebsiteConstant.BING_SEARCH_BASE_URL + mNextPageUrl.orEmpty()
@@ -38,22 +46,22 @@ class BaiduSearchViewModel : ViewModel(), SearchAdapterListener {
             }
         }
         if (requestUrl.isNullOrBlank()) {
-            isLoading.postValue(false)
+            _isLoading.value = false
             return
         }
         viewModelScope.launch(IOPool) {
             doSearchRequest(requestUrl, 0).apply {
                 if (baiduSearchResultList.isNotEmpty()) {
-                    val list = searchResults.value
+                    val list = _searchResults.value
                     mNextPageUrl = nextPageUrl
-                    mTotalResult.postValue(totalResult)
-                    if (type == SearchAdapterListener.FETCH_MORE && list != null && list.isNotEmpty()) {
-                        searchResults.postValue(list.plus(baiduSearchResultList))
+                    _mTotalResult.value = totalResult
+                    if (type == SearchAdapterListener.FETCH_MORE && list.isNotEmpty()) {
+                        _searchResults.value = list.plus(baiduSearchResultList)
                     } else {
-                        searchResults.postValue(baiduSearchResultList)
+                        _searchResults.value = baiduSearchResultList
                     }
                 }
-                isLoading.postValue(false)
+                _isLoading.value = false
             }
         }
     }
