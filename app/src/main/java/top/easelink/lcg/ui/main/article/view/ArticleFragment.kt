@@ -277,6 +277,7 @@ fun ArticleScreen(
                         CompactAnchorMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
+                            title = "更多操作",
                             groups = listOf(
                                 listOf(
                             PopoverMenuItem(Icons.Default.Person, if (showOpOnly) "显示全部" else "只看楼主", showOpOnly) {

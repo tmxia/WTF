@@ -303,10 +303,10 @@ fun ForumCustomizeDialog(
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.9f)
+                .fillMaxWidth(0.88f)
                 .wrapContentHeight(),
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFF5F5F5),
+            shape = RoundedCornerShape(20.dp),
+            color = Color.White,
             shadowElevation = 0.dp,
             tonalElevation = 0.dp
         ) {
@@ -348,7 +348,7 @@ fun ForumCustomizeDialog(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(6.dp))
-                                        .background(Color.White)
+                                        .background(Color(0xFFF5F5F5))
                                         .clickable(
                                             interactionSource = remember { MutableInteractionSource() },
                                             indication = null
@@ -410,11 +410,11 @@ fun ForumCustomizeDialog(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(6.dp))
-                                        .background(Color.White)
+                                        .background(Color(0xFFF5F5F5))
                                         .clickable(
                                             interactionSource = remember { MutableInteractionSource() },
                                             indication = null
-                                        ) { 
+                                        ) {
                                             if (children.isNotEmpty()) {
                                                 expandedGroups[main.title] = !isExpanded
                                             } else {
@@ -479,7 +479,7 @@ fun ForumCustomizeDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(Color.White)
+                                    .background(Color(0xFFF5F5F5))
                                     .clickable(
                                         interactionSource = remember { MutableInteractionSource() },
                                         indication = null

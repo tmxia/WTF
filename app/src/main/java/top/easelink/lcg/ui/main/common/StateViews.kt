@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -63,8 +64,11 @@ fun ErrorStateView(
             fontSize = 14.sp
         )
         Box(modifier = Modifier.padding(top = 12.dp)) {
-            Button(onClick = onRetry) {
-                Text(text = stringResource(R.string.retry))
+            Button(
+                onClick = onRetry,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935))
+            ) {
+                Text(text = stringResource(R.string.retry), color = Color.White)
             }
         }
     }

@@ -106,6 +106,7 @@ fun ForumArticlesScreen(
                         CompactAnchorMenu(
                             expanded = menuExpanded,
                             onDismissRequest = { menuExpanded = false },
+                            title = "选择排序方式",
                             groups = listOf(
                                 forumSortOptions.map { option ->
                                     PopoverMenuItem(
