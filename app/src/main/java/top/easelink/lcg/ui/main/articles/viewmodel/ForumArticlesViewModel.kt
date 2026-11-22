@@ -65,7 +65,12 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         val baseUrl = if (url.contains("?")) url.substringBefore("?") else url
         val params = if (url.contains("?")) url.substringAfter("?") else ""
 
-        val cleanParams = params.split("&").filter { it.isNotBlank() && !it.startsWith("page=") }
+        val cleanParams = params.split("&").filter {
+            it.isNotBlank() &&
+                !it.startsWith("page=") &&
+                !it.startsWith("orderby=") &&
+                !it.startsWith("ascdesc=")
+        }
         val paramString = if (cleanParams.isNotEmpty()) cleanParams.joinToString("&") else ""
 
         mUrl = if (baseUrl.startsWith("forum-") && baseUrl.endsWith("html")) {
@@ -124,7 +129,11 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
             ArticleFetcher.FetchType.FETCH_MORE -> nextPage()
         }
 
-        val finalUrl = mUrl?.replace(Regex("&?page=\\d+"), "") ?: ""
+        val finalUrl = mUrl
+            ?.replace(Regex("&?page=\\d+"), "")
+            ?.replace(Regex("&?(orderby|ascdesc)=[^&]*"), "")
+            ?.trim('&')
+            ?: ""
         return "$finalUrl&page=$mCurrentPage$orderType"
     }
 
@@ -139,15 +148,37 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         viewModelScope.launch(IOPool) {
             try {
                 val query = composeUrlByRequestType(fetchType)
+                Timber.tag("[ForumSort]").d("请求列表: $query, orderType=$orderType")
 
-                val forumPage = getForumArticles(query, fetchType == ArticleFetcher.FetchType.FETCH_INIT)
+                var forumPage = getForumArticles(query, fetchType == ArticleFetcher.FetchType.FETCH_INIT)
+                var fellBackToDefault = false
+
+                // 首拉且带排序时若返回空，自动降级回系统默认顺序重试一次，避免页面空白卡死
+                if ((forumPage == null || forumPage.articleList.isEmpty()) &&
+                    fetchType == ArticleFetcher.FetchType.FETCH_INIT &&
+                    orderType != DEFAULT_ORDER
+                ) {
+                    val savedOrder = orderType
+                    orderType = DEFAULT_ORDER
+                    val fallbackQuery = composeUrlByRequestType(ArticleFetcher.FetchType.FETCH_INIT)
+                    Timber.tag("[ForumSort]").w("排序结果为空，降级默认顺序重试: $fallbackQuery")
+                    forumPage = getForumArticles(fallbackQuery, true)
+                    fellBackToDefault = forumPage != null && forumPage.articleList.isNotEmpty()
+                    if (!fellBackToDefault) {
+                        orderType = savedOrder
+                    }
+                }
 
                 if (forumPage == null || forumPage.articleList.isEmpty()) {
+                    Timber.tag("[ForumSort]").w("列表为空, query=$query")
                     if (fetchType == ArticleFetcher.FetchType.FETCH_MORE) {
                         showMessage(R.string.no_more_content)
                     }
                     callback(false)
                 } else {
+                    if (fellBackToDefault) {
+                        showMessage(R.string.sort_fallback_tip)
+                    }
                     handleArticleList(fetchType, forumPage.articleList, callback)
 
                     if (!isTabSet) {

@@ -142,6 +142,7 @@
     <!--feed-->
     <string name="load_more">加载更多</string>
     <string name="no_more_content">没有更多了</string>
+    <string name="sort_fallback_tip">当前排序暂无内容，已切回默认顺序</string>
     <string name="tap_for_code">『点击显示代码』</string>
     <string name="tap_for_large_image_failed">查看失败</string>
 

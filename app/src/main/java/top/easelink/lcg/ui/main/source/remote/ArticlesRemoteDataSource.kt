@@ -306,8 +306,11 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             }
 
             if (elements.isEmpty()) {
+                val messageText = doc.getElementById("messagetext")?.text().orEmpty()
+                Timber.tag("[ForumParse]").w("未匹配到帖子节点, messagetext=$messageText, title=${doc.title()}")
                 return ForumPage(emptyList(), emptyList())
             }
+            Timber.tag("[ForumParse]").d("匹配帖子节点 ${elements.size} 个")
 
             val articleList: List<Article> = elements.mapNotNull { e ->
                 try {
@@ -350,6 +353,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             }
 
             if (articleList.isEmpty()) {
+                Timber.tag("[ForumParse]").w("节点命中 ${elements.size} 个但解析出 0 条帖子")
                 return ForumPage(emptyList(), emptyList())
             }
 
