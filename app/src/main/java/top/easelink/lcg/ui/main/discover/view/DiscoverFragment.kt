@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -36,8 +36,8 @@ class DiscoverFragment : Fragment(), ControllableFragment {
         }
 
         composeView.setContent {
-            val models by viewModel.aggregationModels.observeAsState(initial = emptyList())
-            val isLoading by viewModel.isLoading.observeAsState(initial = false)
+            val models by viewModel.aggregationModels.collectAsState()
+            val isLoading by viewModel.isLoading.collectAsState()
 
             DiscoverScreenCompose(
                 models = models,

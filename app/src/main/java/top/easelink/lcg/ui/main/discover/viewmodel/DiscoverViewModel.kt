@@ -2,9 +2,11 @@ package top.easelink.lcg.ui.main.discover.viewmodel
 
 import android.content.Context
 import androidx.annotation.MainThread
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
@@ -20,8 +22,11 @@ import top.easelink.lcg.utils.showMessage
 import java.net.SocketTimeoutException
 
 class DiscoverViewModel : ViewModel() {
-    val aggregationModels = MutableLiveData<MutableList<DiscoverModel>>()
-    val isLoading = MutableLiveData(false)
+    private val _aggregationModels = MutableStateFlow<MutableList<DiscoverModel>>(mutableListOf())
+    val aggregationModels: StateFlow<MutableList<DiscoverModel>> = _aggregationModels.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     @MainThread
     fun initOptions(context: Context) {
@@ -30,7 +35,7 @@ class DiscoverViewModel : ViewModel() {
 
     @MainThread
     fun refreshOptions(context: Context) {
-        isLoading.value = true
+        _isLoading.value = true
         Timber.d("【发现页】开始刷新热榜与板块数据...")
         viewModelScope.launch(IOPool) {
             runCatching {
@@ -50,7 +55,7 @@ class DiscoverViewModel : ViewModel() {
                 }
                 newList.add(ranks)
 
-                aggregationModels.postValue(newList.toMutableList())
+                _aggregationModels.value = newList.toMutableList()
             }.getOrElse {
                 Timber.e(it, "【发现页】数据拉取异常")
                 when (it) {
@@ -59,7 +64,7 @@ class DiscoverViewModel : ViewModel() {
                 }
             }.also {
                 kotlinx.coroutines.delay(800)
-                isLoading.postValue(false)
+                _isLoading.value = false
             }
         }
     }

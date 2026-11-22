@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -36,9 +36,9 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
         }
 
         composeView.setContent {
-            val articles by viewModel.articles.observeAsState(initial = emptyList())
-            val tabs by viewModel.threadList.observeAsState(initial = emptyList())
-            val isLoading by viewModel.isLoading.observeAsState(initial = false)
+            val articles by viewModel.articles.collectAsState()
+            val tabs by viewModel.threadList.collectAsState()
+            val isLoading by viewModel.isLoading.collectAsState()
 
             val title = arguments?.getString("title") ?: "帖子列表"
             ForumArticlesScreen(

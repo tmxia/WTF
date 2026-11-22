@@ -1,9 +1,11 @@
 package top.easelink.lcg.ui.main.articles.viewmodel
 
 import androidx.annotation.MainThread
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
@@ -25,10 +27,17 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
     private var isTabSet = false
     private var fetching = false
 
-    val title = MutableLiveData<String>()
-    val articles = MutableLiveData<List<Article>>()
-    val threadList = MutableLiveData<List<ForumThread>>()
-    val isLoading = MutableLiveData<Boolean>()
+    private val _title = MutableStateFlow("")
+    val title: StateFlow<String> = _title.asStateFlow()
+
+    private val _articles = MutableStateFlow<List<Article>>(emptyList())
+    val articles: StateFlow<List<Article>> = _articles.asStateFlow()
+
+    private val _threadList = MutableStateFlow<List<ForumThread>>(emptyList())
+    val threadList: StateFlow<List<ForumThread>> = _threadList.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     fun initUrlAndFetch(
         url: String,
@@ -66,7 +75,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
 
     @MainThread
     fun setTitle(t: String) {
-        title.value = t
+        _title.value = t
     }
 
     private fun composeUrlByRequestType(type: ArticleFetcher.FetchType): String {
@@ -85,7 +94,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
             return
         }
         fetching = true
-        isLoading.value = true
+        _isLoading.value = true
 
         viewModelScope.launch(IOPool) {
             try {
@@ -102,7 +111,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
                     handleArticleList(fetchType, forumPage.articleList, callback)
 
                     if (!isTabSet) {
-                        threadList.postValue(forumPage.threadList.ifEmpty { emptyList() })
+                        _threadList.value = forumPage.threadList.ifEmpty { emptyList() }
                         isTabSet = true
                     }
                 }
@@ -114,7 +123,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
                 callback(false)
             } finally {
                 fetching = false
-                isLoading.postValue(false)
+                _isLoading.value = false
             }
         }
     }
@@ -124,11 +133,11 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         newList: List<Article>,
         callback: (Boolean) -> Unit
     ) {
-        val currentList = articles.value
+        val currentList = _articles.value
 
         when {
             fetchType != ArticleFetcher.FetchType.FETCH_MORE || currentList.isNullOrEmpty() -> {
-                articles.postValue(newList)
+                _articles.value = newList
                 callback(true)
             }
 
@@ -138,7 +147,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
             }
 
             else -> {
-                articles.postValue(currentList + newList)
+                _articles.value = currentList + newList
                 callback(true)
             }
         }
