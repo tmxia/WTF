@@ -110,7 +110,8 @@ object LCGSearchService {
     }
 
     fun doSearchNextPage(): LCGSearchResults {
-        if (mNextPageUrl.isNullOrEmpty()) return emptyResult()
+        val nextUrl = mNextPageUrl
+        if (nextUrl.isNullOrEmpty()) return emptyResult()
         if (SearchAntiDefense.isFrozen()) {
             showMessage("搜索暂时受限，请稍后再试")
             return emptyResult()
@@ -118,7 +119,7 @@ object LCGSearchService {
         // 翻页随机人型间隔，避免连续翻页触发频控
         SearchAntiDefense.nextPageSleep()
         try {
-            return parseSearchResults(JsoupClient.sendGetRequestWithQuery(mNextPageUrl!!))
+            return parseSearchResults(JsoupClient.sendGetRequestWithQuery(nextUrl))
         } catch (e: SocketTimeoutException) {
             showMessage(R.string.network_error)
         } catch (e: Exception) {

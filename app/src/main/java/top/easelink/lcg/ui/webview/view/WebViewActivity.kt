@@ -121,8 +121,10 @@ class WebViewActivity : AppCompatActivity() {
         isOpenLoginEvent = intent.getBooleanExtra(OPEN_LOGIN_PAGE, false)
         mForceEnableJs = intent.getBooleanExtra(FORCE_ENABLE_JS_KEY, false)
 
+        val url = mUrl
+        val html = mHtml
         when {
-            !mUrl.isNullOrEmpty() -> {
+            !url.isNullOrEmpty() -> {
                 updateWebViewSettingsRemote()
                 if (isOpenLoginEvent) {
                     mWebView.removeJavascriptInterface(HOOK_NAME)
@@ -142,12 +144,17 @@ class WebViewActivity : AppCompatActivity() {
                     Timber.e(e, "注入 Cookie 失败")
                 }
 
-                mWebView.loadUrl(mUrl!!)
+                mWebView.loadUrl(url)
             }
 
-            !mHtml.isNullOrEmpty() -> {
+            !html.isNullOrEmpty() -> {
                 updateWebViewSettingsLocal()
-                mWebView.loadDataWithBaseURL("", mHtml!!, "text/html", "UTF-8", "")
+                mWebView.loadDataWithBaseURL("", html, "text/html", "UTF-8", "")
+            }
+
+            else -> {
+                Timber.w("WebViewActivity 缺少 URL 与 HTML 参数，直接结束")
+                finish()
             }
         }
     }

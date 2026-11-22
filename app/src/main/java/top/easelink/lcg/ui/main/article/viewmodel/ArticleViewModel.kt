@@ -270,8 +270,9 @@ fun checkIsFavorited() {
                 
                 if (AppConfig.syncFavorites && UserDataRepo.isLoggedIn) {
                     val threadId = extractThreadId(mUrl)
-                    if (threadId != null && mFormHash != null) {
-                        val success = ArticlesRemoteDataSource.addFavorites(threadId, mFormHash!!)
+                    val formHash = mFormHash
+                    if (threadId != null && formHash != null) {
+                        val success = ArticlesRemoteDataSource.addFavorites(threadId, formHash)
                         if (!success) {
                             showMessage(R.string.sync_favorite_failed)
                         } else {

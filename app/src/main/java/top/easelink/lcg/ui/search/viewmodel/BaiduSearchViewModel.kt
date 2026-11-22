@@ -2,7 +2,7 @@ package top.easelink.lcg.ui.search.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.GlobalScope
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.ui.search.model.BaiduSearchResult
@@ -24,20 +24,24 @@ class BaiduSearchViewModel : ViewModel(), SearchAdapterListener {
 
     override fun doSearchQuery(type: Int) {
         isLoading.value = true
-        val requestUrl: String = when {
-            type == SearchAdapterListener.FETCH_MORE && mNextPageUrl?.isNotBlank() ?: false -> {
-                WebsiteConstant.BING_SEARCH_BASE_URL + mNextPageUrl
+        val requestUrl: String? = when {
+            type == SearchAdapterListener.FETCH_MORE && !mNextPageUrl.isNullOrBlank() -> {
+                WebsiteConstant.BING_SEARCH_BASE_URL + mNextPageUrl.orEmpty()
             }
 
             type == SearchAdapterListener.FETCH_INIT -> {
-                mUrl!!
+                mUrl
             }
 
             else -> {
-                return
+                null
             }
         }
-        GlobalScope.launch(IOPool) {
+        if (requestUrl.isNullOrBlank()) {
+            isLoading.postValue(false)
+            return
+        }
+        viewModelScope.launch(IOPool) {
             doSearchRequest(requestUrl, 0).apply {
                 if (baiduSearchResultList.isNotEmpty()) {
                     val list = searchResults.value

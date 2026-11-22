@@ -4,7 +4,8 @@ import android.util.ArrayMap
 import androidx.annotation.WorkerThread
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.jsoup.HttpStatusException
 import org.jsoup.nodes.Document
@@ -37,6 +38,10 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     private const val FOLLOW_TITLE = "follow_title"
 
     private val gson: Gson = GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
+
+    // 数据源自有后台作用域：替代 GlobalScope，历史写入不绑定任意调用方生命周期，
+    // 又可在数据源层统一管理；不引入 DI。
+    private val dataSourceScope = CoroutineScope(SupervisorJob() + BackGroundPool)
 
     @WorkerThread
     @Throws(LoginRequiredException::class, SocketTimeoutException::class)
@@ -111,7 +116,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             val contents = getContents(doc)
 
             if (isFirstFetch) {
-                GlobalScope.launch(BackGroundPool) {
+                dataSourceScope.launch {
                     addToHistory(
                         url = query,
                         title = title,

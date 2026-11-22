@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -51,7 +50,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
 
     fun loadForums() {
         if (!forumList.value.isNullOrEmpty()) return
-        GlobalScope.launch(IOPool) {
+        viewModelScope.launch(IOPool) {
             forumList.postValue(ForumNetworkSource.fetchAllForumsFromApi())
         }
     }
@@ -61,8 +60,9 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
         selectedSortName.value = name
         prefs.edit().putString("search_sort_order", orderby)
             .putString("search_sort_name", name).apply()
-        if (!mKeyWord.isNullOrBlank()) {
-            fetchInit(mKeyWord!!)
+        val keyword = mKeyWord
+        if (!keyword.isNullOrBlank()) {
+            fetchInit(keyword)
         }
     }
 
@@ -72,8 +72,9 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
         isMultiSelect.value = fids.size > 1
         prefs.edit().putString("search_fids", fids.joinToString(","))
             .putString("search_fid_name", name).apply()
-        if (!mKeyWord.isNullOrBlank()) {
-            fetchInit(mKeyWord!!)
+        val keyword = mKeyWord
+        if (!keyword.isNullOrBlank()) {
+            fetchInit(keyword)
         }
     }
 

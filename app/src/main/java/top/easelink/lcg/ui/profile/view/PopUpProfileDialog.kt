@@ -13,21 +13,20 @@ import android.view.WindowInsets
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.lifecycleScope
 import coil.load
 import coil.transform.RoundedCornersTransformation
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import top.easelink.framework.utils.dpToPx
 import top.easelink.lcg.R
-import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.databinding.DialogProfileBinding
-import top.easelink.lcg.network.JsoupClient
 import top.easelink.lcg.ui.main.model.SessionExpiredEvent
 import top.easelink.lcg.ui.main.source.parseExtraUserInfoProfilePage
 import top.easelink.lcg.ui.profile.model.PopUpProfileInfo
+import top.easelink.lcg.ui.profile.source.ProfileSource
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.BlacklistManager
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
@@ -53,7 +52,6 @@ class PopUpProfileDialog : DialogFragment() {
     }
 
     private lateinit var mContext: Context
-    private val ioScope = CoroutineScope(Dispatchers.IO)
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -125,24 +123,14 @@ class PopUpProfileDialog : DialogFragment() {
                 val originalText = blacklistBtn.text
                 blacklistBtn.text = "处理中..."
                 
-                ioScope.launch {
+                viewLifecycleOwner.lifecycleScope.launch {
                     val isCurrentlyBlack = BlacklistManager.isBlacklisted(targetUid)
                     try {
                         val op = if (isCurrentlyBlack) "del" else "add"
                         val handlekey = if (isCurrentlyBlack) "delhk_$targetUid" else "addfriendhk_$targetUid"
-                        
-                        val postData = mutableMapOf(
-                            "formhash" to (JsoupClient.formHash ?: ""),
-                            "uid" to targetUid,
-                            "handlekey" to handlekey
-                        )
-                        
-                        val response = JsoupClient.sendPostRequestWithUrl(
-                            "https://www.52pojie.cn/home.php?mod=spacecp&ac=friend&op=$op",
-                            postData
-                        )
 
-                        val responseHtml = response.body()
+                        val responseHtml = ProfileSource.toggleFriend(targetUid, op, handlekey)
+
                         withContext(Dispatchers.Main) {
                             blacklistBtn.isEnabled = true
                             
@@ -215,16 +203,18 @@ class PopUpProfileDialog : DialogFragment() {
     }
 
     private fun onSubscribeClicked(url: String) {
-        ioScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
-                JsoupClient.sendGetRequestWithQuery(url).let {
-                    it.getElementById("messagetext")?.text()?.let { msg ->
+                ProfileSource.subscribe(url)?.let { msg ->
+                    withContext(Dispatchers.Main) {
                         showMessage(msg)
                     }
                 }
             } catch (e: Exception) {
                 Timber.e(e)
-                showMessage(R.string.subscribe_failed)
+                withContext(Dispatchers.Main) {
+                    showMessage(R.string.subscribe_failed)
+                }
             }
         }
     }
