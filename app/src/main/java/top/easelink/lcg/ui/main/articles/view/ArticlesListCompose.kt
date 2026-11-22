@@ -32,6 +32,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.airbnb.lottie.LottieAnimationView
 import kotlinx.coroutines.launch
 import top.easelink.lcg.R
+import top.easelink.lcg.ui.main.common.EmptyStateView
+import top.easelink.lcg.ui.main.common.FullScreenLoading
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
 
@@ -153,20 +155,24 @@ fun ForumArticlesScreen(
                 }
 
                 Box(modifier = Modifier.fillMaxSize()) {
-                    LazyColumn(
-                        state = pageListState,
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
-                    ) {
-                        items(articles) { article ->
-                            ArticleCard(article, onArticleClick, onArticleLongClick)
-                        }
+                    when {
+                        isLoading && articles.isEmpty() -> FullScreenLoading()
+                        articles.isEmpty() -> EmptyStateView()
+                        else -> LazyColumn(
+                            state = pageListState,
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            items(articles) { article ->
+                                ArticleCard(article, onArticleClick, onArticleLongClick)
+                            }
 
-                        item {
-                            if (isLoading && articles.isNotEmpty()) {
-                                Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = Color(0xFFE65100))
+                            item {
+                                if (isLoading && articles.isNotEmpty()) {
+                                    Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = Color(0xFFE65100))
+                                    }
                                 }
                             }
                         }
