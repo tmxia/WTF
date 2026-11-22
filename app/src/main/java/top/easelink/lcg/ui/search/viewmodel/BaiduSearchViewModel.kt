@@ -7,10 +7,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import top.easelink.framework.threadpool.IOPool
+import top.easelink.lcg.R
 import top.easelink.lcg.ui.search.model.BaiduSearchResult
 import top.easelink.lcg.ui.search.source.BaiduSearchService.doSearchRequest
 import top.easelink.lcg.ui.search.viewmodel.BaiduSearchResultAdapter.SearchAdapterListener
 import top.easelink.lcg.utils.WebsiteConstant
+import top.easelink.lcg.utils.showMessage
+import timber.log.Timber
 
 class BaiduSearchViewModel : ViewModel(), SearchAdapterListener {
     private val _searchResults = MutableStateFlow<List<BaiduSearchResult>>(emptyList())
@@ -50,17 +53,23 @@ class BaiduSearchViewModel : ViewModel(), SearchAdapterListener {
             return
         }
         viewModelScope.launch(IOPool) {
-            doSearchRequest(requestUrl, 0).apply {
-                if (baiduSearchResultList.isNotEmpty()) {
-                    val list = _searchResults.value
-                    mNextPageUrl = nextPageUrl
-                    _mTotalResult.value = totalResult
-                    if (type == SearchAdapterListener.FETCH_MORE && list.isNotEmpty()) {
-                        _searchResults.value = list.plus(baiduSearchResultList)
-                    } else {
-                        _searchResults.value = baiduSearchResultList
+            try {
+                doSearchRequest(requestUrl, 0).apply {
+                    if (baiduSearchResultList.isNotEmpty()) {
+                        val list = _searchResults.value
+                        mNextPageUrl = nextPageUrl
+                        _mTotalResult.value = totalResult
+                        if (type == SearchAdapterListener.FETCH_MORE && list.isNotEmpty()) {
+                            _searchResults.value = list.plus(baiduSearchResultList)
+                        } else {
+                            _searchResults.value = baiduSearchResultList
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                Timber.e(e, "baidu search failed")
+                showMessage(R.string.network_error)
+            } finally {
                 _isLoading.value = false
             }
         }
