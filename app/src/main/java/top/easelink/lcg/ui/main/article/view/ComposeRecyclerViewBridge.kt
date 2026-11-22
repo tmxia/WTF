@@ -91,6 +91,11 @@ fun ComposeRecyclerViewBridge(
         }
     }
 
+    // 显式持有适配器引用：倒序/正序切换只改变派生顺序、不改变 posts 集合，
+    // AndroidView 的 update 回调不一定随 isReverse 重组重跑；这里用 LaunchedEffect
+    // 监听 isReverse 变化，强制按当前展示顺序刷新适配器，避免开关无效。
+    var articleAdapter: ArticleAdapter? = null
+
     Box(modifier = modifier) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
@@ -102,7 +107,7 @@ fun ComposeRecyclerViewBridge(
                     setPadding(0, 0, 0, 0)
                     clipToPadding = false
                     overScrollMode = RecyclerView.OVER_SCROLL_NEVER
-                    adapter = ArticleAdapter(viewModel, fragment, onPostClick)
+                    adapter = ArticleAdapter(viewModel, fragment, onPostClick).also { articleAdapter = it }
                     addOnScrollListener(object : RecyclerView.OnScrollListener() {
                         override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
                             super.onScrolled(rv, dx, dy)
@@ -115,6 +120,7 @@ fun ComposeRecyclerViewBridge(
             update = { recyclerView ->
                 val adapter = recyclerView.adapter as? ArticleAdapter
                 if (adapter != null) {
+                    articleAdapter = adapter
                     Timber.d("【UI层】更新数据: 结果=${displayPosts.size} 条, hasMore=$hasMore")
                     adapter.isFiltering = isFiltering
                     adapter.searchKeyword = searchKeyword
@@ -122,6 +128,10 @@ fun ComposeRecyclerViewBridge(
                 }
             }
         )
+
+        LaunchedEffect(isReverse, posts.size, hasMore, searchKeyword, showOpOnly, filterSpam) {
+            articleAdapter?.setData(displayPosts, hasMore, forceRefresh = true)
+        }
 
         if (isFiltering && displayPosts.isEmpty() && hasMore) {
             Box(

@@ -6,9 +6,12 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import top.easelink.framework.utils.CommonUtils
 import top.easelink.lcg.R
+import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.databinding.DialogReplyPostBinding
 import top.easelink.lcg.ui.main.article.viewmodel.ReplyPostViewModel
+import top.easelink.lcg.ui.main.source.model.Post
 import top.easelink.lcg.utils.QuickReplyHelper
 import top.easelink.lcg.utils.showMessage
 
@@ -77,17 +80,44 @@ class ReplyPostDialog : DialogFragment() {
                 return@setOnClickListener
             }
             lastClickTime = System.currentTimeMillis()
+            val content = binding.replyContent.text?.toString()?.trim() ?: ""
             arguments?.getString(REPLY_POST_URL)?.let { url ->
-                replyPostViewModel.sendReply(url, binding.replyContent.text.toString()) { success ->
-                    if (success) {
-                        view?.postDelayed({ dismiss() }, 500L)
-                    } else {
-                        showMessage(R.string.reply_post_failed)
-                    }
+                replyPostViewModel.sendReply(url, content) { success ->
+                    view?.postDelayed({
+                        setResult(content, success)
+                        if (success) {
+                            dismiss()
+                        } else {
+                            showMessage(R.string.reply_post_failed)
+                        }
+                    }, 500L)
                 }
             }
         }
     }
+
+    private fun setResult(content: String, success: Boolean) {
+        parentFragmentManager.setFragmentResult(
+            CommentArticleDialog.REPLY_POST_REQUEST_KEY,
+            Bundle().apply {
+                putInt(
+                    "result_code",
+                    if (success) CommentArticleDialog.REPLY_POST_RESULT_SUCCESS
+                    else CommentArticleDialog.REPLY_POST_RESULT_FAILED
+                )
+                putParcelable("post", createPost(content))
+            }
+        )
+    }
+
+    private fun createPost(content: String) = Post(
+        UserDataRepo.username,
+        UserDataRepo.avatar,
+        CommonUtils.getCurrentDate(),
+        content,
+        null,
+        null
+    )
 
     override fun onStart() {
         super.onStart()
