@@ -1,7 +1,6 @@
 package top.easelink.lcg.ui.main.source.remote
 
 import android.util.ArrayMap
-import androidx.annotation.WorkerThread
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.CoroutineScope
@@ -43,23 +42,20 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     // 又可在数据源层统一管理；不引入 DI。
     private val dataSourceScope = CoroutineScope(SupervisorJob() + BackGroundPool)
 
-    @WorkerThread
     @Throws(LoginRequiredException::class, SocketTimeoutException::class)
-    override fun getForumArticles(query: String, processThreadList: Boolean): ForumPage? = processForumArticlesDocument(
+    override suspend fun getForumArticles(query: String, processThreadList: Boolean): ForumPage? = processForumArticlesDocument(
         JsoupClient.sendGetRequestWithQuery(query),
         processThreadList
     )
 
-    @WorkerThread
-    override fun getHomePageArticles(param: String, pageNum: Int): List<Article> = try {
+    override suspend fun getHomePageArticles(param: String, pageNum: Int): List<Article> = try {
         getArticles("$FORUM_BASE_QUERY$param&page=$pageNum")
     } catch (_: Exception) {
         emptyList()
     }
 
     @Throws(BlockException::class, HttpStatusException::class)
-    @WorkerThread
-    override fun getPostPreview(query: String): PreviewPost? {
+    override suspend fun getPostPreview(query: String): PreviewPost? {
         return try {
             val doc = PreviewCacheManager.findDocOrNull(query) ?: run {
                 val freshDoc = JsoupClient.sendGetRequestWithQuery(query)
@@ -89,8 +85,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     }
 
     @Throws(BlockException::class, NetworkException::class)
-    @WorkerThread
-    override fun getArticleDetail(query: String, isFirstFetch: Boolean): ArticleDetail? {
+    override suspend fun getArticleDetail(query: String, isFirstFetch: Boolean): ArticleDetail? {
         try {
             val doc = JsoupClient.sendGetRequestWithQuery(query)
             val articleAbstract: ArticleAbstractResponse? =
@@ -195,7 +190,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     private const val HOT_LIMIT = 100
     private const val RECOMMENDED_LIMIT = 10
 
-    private fun getArticles(query: String): List<Article> {
+    private suspend fun getArticles(query: String): List<Article> {
         var list: List<Article> = emptyList()
         try {
             list = JsoupClient
@@ -554,8 +549,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         return element
     }
 
-    @WorkerThread
-    override fun addFavorites(threadId: String, formHash: String): Boolean = try {
+    override suspend fun addFavorites(threadId: String, formHash: String): Boolean = try {
         JsoupClient.sendGetRequestWithQuery(
             String.format(
                 ADD_TO_FAVORITE_QUERY,
@@ -569,8 +563,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         false
     }
 
-    @WorkerThread
-    override fun removeFavorites(threadId: String, formHash: String): Boolean = try {
+    override suspend fun removeFavorites(threadId: String, formHash: String): Boolean = try {
         val doc = JsoupClient.sendGetRequestWithQuery(
             String.format(REMOVE_FAVORITE_QUERY, threadId, formHash)
         )
@@ -583,8 +576,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         false
     }
 
-    @WorkerThread
-    fun replyAdd(query: String): String = try {
+    suspend fun replyAdd(query: String): String = try {
         val doc = JsoupClient.sendGetRequestWithQuery(query)
         val message = doc.getElementsByClass("nfl").firstOrNull()?.text().orEmpty()
         message

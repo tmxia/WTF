@@ -1,28 +1,33 @@
 package top.easelink.lcg.network
 
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 import top.easelink.lcg.utils.updateCookies
 
 /**
  * 人机验证挂起闸门：等待内置浏览器 / 外部流程回灌放行 Cookie。
  *
- * 过渡期仍为同步阻塞等待（[runBlocking]），等待句柄集中在此组件内管理；
- * 后续调用链整体协程化后，可将 [awaitVerification] 改为 suspend 并以 `delay`/`await` 替代阻塞。
+ * 等待以协程 [withTimeout] + [CompletableDeferred.await] 挂起实现，不占用阻塞线程；
+ * 调用方需在协程上下文中发起请求。
  */
 internal object WafGate {
     private const val VERIFY_TIMEOUT_MS = 3 * 60 * 1000L
 
     private var pendingVerification: CompletableDeferred<String?>? = null
 
-    /** 注册等待并阻塞直到验证完成 / 超时 / 取消；返回放行 Cookie，`null` 表示未通过。 */
-    fun awaitVerification(): String? {
+    /** 挂起直到验证完成 / 超时 / 取消；返回放行 Cookie，`null` 表示未通过。 */
+    suspend fun awaitVerification(): String? {
         val deferred = CompletableDeferred<String?>()
         synchronized(this) { pendingVerification = deferred }
 
-        val verifiedCookie = runBlocking { withTimeoutOrNull(VERIFY_TIMEOUT_MS) { deferred.await() } }
+        val verifiedCookie = try {
+            withTimeout(VERIFY_TIMEOUT_MS) { deferred.await() }
+        } catch (e: TimeoutCancellationException) {
+            Timber.w("人机验证等待超时")
+            null
+        }
         synchronized(this) { pendingVerification = null }
         return verifiedCookie
     }

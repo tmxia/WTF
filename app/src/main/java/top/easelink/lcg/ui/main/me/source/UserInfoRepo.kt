@@ -6,7 +6,7 @@ import top.easelink.lcg.ui.main.source.parseUserInfo
 import top.easelink.lcg.utils.WebsiteConstant
 
 object UserInfoRepo {
-    fun requestUserInfo(): UserInfo? = runCatching {
+    suspend fun requestUserInfo(): UserInfo? = runCatching {
         JsoupClient
             .sendGetRequestWithQuery(WebsiteConstant.PROFILE_QUERY)
             .let {

@@ -15,7 +15,7 @@ import top.easelink.lcg.utils.WebsiteConstant.RANK_HOT_QUERY
 /** 热榜磁盘缓存写入的受控后台作用域：fire-and-forget，异常不向上传播。 */
 private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-fun fetchRank(rankType: RankType, dateType: DateType): RankListModel {
+suspend fun fetchRank(rankType: RankType, dateType: DateType): RankListModel {
     var doc = HotTopicCacheManager.findTodayHotTopic(rankType = rankType.value, dateType = dateType.value)
     var model = doc?.let { parseRankModelInfo(it, rankType) }
 

@@ -1,5 +1,6 @@
 package top.easelink.lcg.ui.search.source
 
+import kotlinx.coroutines.delay
 import org.jsoup.nodes.Document
 import top.easelink.lcg.ui.search.model.LCGSearchResults
 import kotlin.math.min
@@ -75,17 +76,17 @@ internal object SearchAntiDefense {
         return true
     }
 
-    // ===== 退避 / 随机延迟（调用方运行在 IO 线程） =====
+    // ===== 退避 / 随机延迟（调用方运行在协程 IO 上下文） =====
     /** 指数退避：1s → 2s → 4s，封顶 8s，叠加 0~500ms 抖动 */
-    fun backoffSleep(retry: Int) {
+    suspend fun backoffSleep(retry: Int) {
         val base = 1000L shl min(retry, 3)
         val jitter = (0L..500L).random()
-        Thread.sleep(base + jitter)
+        delay(base + jitter)
     }
 
     /** 翻页随机人型间隔 2.2~4.8s */
-    fun nextPageSleep() {
-        Thread.sleep((2200L..4800L).random())
+    suspend fun nextPageSleep() {
+        delay((2200L..4800L).random())
     }
 
     // ===== 风控判定 =====

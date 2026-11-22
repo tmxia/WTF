@@ -4,9 +4,9 @@ import org.jsoup.Connection
 import org.jsoup.nodes.Document
 
 interface ApiRequest {
-    fun sendGetRequestWithQuery(query: String): Document?
+    suspend fun sendGetRequestWithQuery(query: String): Document?
 
-    fun sendGetRequestWithUrl(url: String): Document?
+    suspend fun sendGetRequestWithUrl(url: String): Document?
 
-    fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?): Connection.Response
+    suspend fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?): Connection.Response
 }

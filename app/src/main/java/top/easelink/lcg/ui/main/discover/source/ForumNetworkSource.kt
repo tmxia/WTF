@@ -11,7 +11,7 @@ object ForumNetworkSource {
         "招募", "欢迎", "处理", "站务", "福利", "建议", "申请", "专帖", "置顶", "版规", "指引", "办公区", "证据区"
     )
 
-    fun fetchAllForumsFromApi(): List<ForumNavigationModel> {
+    suspend fun fetchAllForumsFromApi(): List<ForumNavigationModel> {
         val list = mutableListOf<ForumNavigationModel>()
         val uniqueUrls = mutableSetOf<String>()
 

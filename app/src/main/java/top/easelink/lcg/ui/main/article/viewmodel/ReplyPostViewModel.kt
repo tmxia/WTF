@@ -25,7 +25,7 @@ class ReplyPostViewModel : ViewModel() {
         }
     }
 
-    private fun sendReplyAsync(query: String?, content: String): Boolean {
+    private suspend fun sendReplyAsync(query: String?, content: String): Boolean {
         Timber.d(content)
         if (query.isNullOrEmpty() || content.isBlank()) return false
 

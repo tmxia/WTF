@@ -1,7 +1,7 @@
 package top.easelink.lcg.ui.main.source
 
 interface FavoritesRemoteDataSource {
-    fun addFavorites(threadId: String, formHash: String): Boolean
+    suspend fun addFavorites(threadId: String, formHash: String): Boolean
 
-    fun removeFavorites(threadId: String, formHash: String): Boolean
+    suspend fun removeFavorites(threadId: String, formHash: String): Boolean
 }

@@ -1,6 +1,5 @@
 package top.easelink.lcg.ui.search.source
 
-import androidx.annotation.WorkerThread
 import kotlinx.coroutines.delay
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
@@ -24,9 +23,8 @@ object BaiduSearchService {
         doSearchRequest(requestUrl, retryTime + 1)
     }
 
-    @WorkerThread
     @Throws(RequestTooOftenException::class)
-    fun doSearchRequest(requestUrl: String): BaiduSearchResults {
+    suspend fun doSearchRequest(requestUrl: String): BaiduSearchResults {
         try {
             val doc = JsoupClient.sendGetRequestWithUrl(requestUrl)
             val list: List<BaiduSearchResult> = doc.select("div.result")

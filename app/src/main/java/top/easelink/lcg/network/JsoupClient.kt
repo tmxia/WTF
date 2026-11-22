@@ -50,9 +50,9 @@ object JsoupClient : ApiRequest {
     }
 
     @Throws(SocketTimeoutException::class, IOException::class)
-    override fun sendGetRequestWithQuery(query: String): Document = sendGetRequestWithUrl("$BASE_URL$query", enableWafPopup = true)
+    override suspend fun sendGetRequestWithQuery(query: String): Document = sendGetRequestWithUrl("$BASE_URL$query", enableWafPopup = true)
 
-    fun sendAjaxRequest(query: String): String {
+    suspend fun sendAjaxRequest(query: String): String {
         val url = "$BASE_URL$query"
         return getConnection(url)
             .method(Connection.Method.GET)
@@ -62,10 +62,10 @@ object JsoupClient : ApiRequest {
     }
 
     @Throws(SocketTimeoutException::class, IOException::class)
-    override fun sendGetRequestWithUrl(url: String): Document = sendGetRequestWithUrl(url, enableWafPopup = true)
+    override suspend fun sendGetRequestWithUrl(url: String): Document = sendGetRequestWithUrl(url, enableWafPopup = true)
 
     @Throws(SocketTimeoutException::class, IOException::class)
-    fun sendGetRequestWithUrl(url: String, enableWafPopup: Boolean): Document {
+    suspend fun sendGetRequestWithUrl(url: String, enableWafPopup: Boolean): Document {
         var response = getConnection(url)
             .method(Connection.Method.GET)
             .followRedirects(FOLLOW_REDIRECTS_ENABLE)
@@ -100,9 +100,9 @@ object JsoupClient : ApiRequest {
         return response.parse().also { checkResponse(it) }
     }
 
-    override fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?): Connection.Response = sendPostRequestWithUrl(url, form, enableWafPopup = true)
+    override suspend fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?): Connection.Response = sendPostRequestWithUrl(url, form, enableWafPopup = true)
 
-    fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?, enableWafPopup: Boolean): Connection.Response {
+    suspend fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?, enableWafPopup: Boolean): Connection.Response {
         var response = getConnection(url)
             .apply { if (form != null) data(form) }
             .postDataCharset("gbk")
@@ -141,7 +141,7 @@ object JsoupClient : ApiRequest {
         return html.contains("wzwsquestion") || html.contains("wzws-waf-cgi") || html.contains("waf_zw_verify")
     }
 
-    private fun getConnection(url: String): Connection {
+    private suspend fun getConnection(url: String): Connection {
         RateLimiter.await()
 
         val isLcgHost = url.contains(WebsiteConstant.SERVER_HOST)

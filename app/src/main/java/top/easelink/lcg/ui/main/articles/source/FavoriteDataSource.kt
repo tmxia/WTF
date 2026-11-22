@@ -1,6 +1,5 @@
 package top.easelink.lcg.ui.main.articles.source
 
-import androidx.annotation.WorkerThread
 import org.jsoup.nodes.Document
 import top.easelink.lcg.network.JsoupClient
 import top.easelink.lcg.ui.main.source.model.ArticleEntity
@@ -8,8 +7,7 @@ import top.easelink.lcg.utils.WebsiteConstant.GET_FAVORITE_QUERY
 import top.easelink.lcg.utils.toTimeStamp
 
 object FavoriteDataSource {
-    @WorkerThread
-    fun getAllRemoteFavorites(): List<ArticleEntity> {
+    suspend fun getAllRemoteFavorites(): List<ArticleEntity> {
         val favorites = mutableListOf<ArticleEntity>()
         var nextPageUrl: String? = GET_FAVORITE_QUERY
         while (nextPageUrl != null) {

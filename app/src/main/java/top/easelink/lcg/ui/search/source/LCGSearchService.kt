@@ -19,7 +19,7 @@ object LCGSearchService {
 
     private val allowedOrderby = setOf("dateline", "lastpost", "replies", "views")
 
-    fun doSearchWith(keywordRaw: String, fid: String? = null, orderby: String? = null): LCGSearchResults? {
+    suspend fun doSearchWith(keywordRaw: String, fid: String? = null, orderby: String? = null): LCGSearchResults? {
         mNextPageUrl = null
         mTotalResults = null
 
@@ -109,7 +109,7 @@ object LCGSearchService {
         throw lastError ?: Exception("搜索失败，请稍后再试")
     }
 
-    fun doSearchNextPage(): LCGSearchResults {
+    suspend fun doSearchNextPage(): LCGSearchResults {
         val nextUrl = mNextPageUrl
         if (nextUrl.isNullOrEmpty()) return emptyResult()
         if (SearchAntiDefense.isFrozen()) {
