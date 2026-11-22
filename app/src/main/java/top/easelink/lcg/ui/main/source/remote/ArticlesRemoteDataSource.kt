@@ -193,22 +193,32 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     private suspend fun getArticles(query: String): List<Article> {
         var list: List<Article> = emptyList()
         try {
-            list = JsoupClient
-                .sendGetRequestWithQuery(query)
-                .select("tbody[id^=normal]")
-                .map { e ->
-                    try {
-                        val reply = extractFrom(e, "td.num", "a.xi2")
-                            .ifBlank { return@map null }
-                            .toIntOrNull() ?: 0
-                        val view = extractFrom(e, "td.num", "em")
-                            .ifBlank { return@map null }
-                            .toIntOrNull() ?: 0
-                        val title = e.selectFirst("th.common > .xst")?.text().orEmpty()
-                        val author = extractFrom(e, "td.by", "a[href*=uid]")
-                        val date = extractFrom(e, "td.by", "span")
-                        val url = extractAttrFrom(e, "href", "th.common", "a.xst")
-                        val origin = e.selectFirst("td.by > a[target]")?.text().orEmpty()
+            val doc = JsoupClient.sendGetRequestWithQuery(query)
+            val rows = buildList {
+                addAll(doc.select("tbody[id^=normal]"))
+                if (isEmpty()) addAll(doc.select("tbody[id^=normalthread]"))
+                if (isEmpty()) addAll(doc.select("table tbody tr"))
+            }
+            list = rows.map { e ->
+                try {
+                    val reply = extractFrom(e, "td.num", "a.xi2")
+                        .filter { it.isDigit() }
+                        .toIntOrNull() ?: 0
+                    val view = extractFrom(e, "td.num", "em")
+                        .filter { it.isDigit() }
+                        .toIntOrNull() ?: 0
+                    val title = e.selectFirst("th.common > .xst")?.text()
+                        ?: e.selectFirst("th.new > .xst")?.text()
+                        ?: e.selectFirst("a.xst")?.text()
+                        ?: e.selectFirst("th a[href*=viewthread]")?.text()
+                        ?: ""
+                    val author = extractFrom(e, "td.by", "a[href*=uid]").ifBlank { "匿名" }
+                    val date = extractFrom(e, "td.by", "span")
+                    val url = extractAttrFrom(e, "href", "th.common", "a.xst")
+                        .ifBlank { extractAttrFrom(e, "href", "th.new", "a.xst") }
+                        .ifBlank { e.selectFirst("a.xst")?.attr("href").orEmpty() }
+                        .ifBlank { e.selectFirst("th a[href*=viewthread]")?.attr("href").orEmpty() }
+                    val origin = e.selectFirst("td.by > a[target]")?.text().orEmpty()
                         val helpInfo = e.select("th.common > span.xi1 > span.xw1").firstOrNull()?.text().orEmpty()
                         var helpCoin = 0
                         if (helpInfo.isEmpty()) {
@@ -255,7 +265,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                         } else {
                             false
                         }
-                        if (title.isNotBlank() && author.isNotEmpty()) {
+                        if (title.isNotBlank() && url.isNotBlank()) {
                             return@map Article(
                                 title,
                                 author,
@@ -291,6 +301,9 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             if (elements.isEmpty()) {
                 elements = doc.select("tbody[id^=normalthread]")
             }
+            if (elements.isEmpty()) {
+                elements = doc.select("table tbody tr")
+            }
 
             if (elements.isEmpty()) {
                 return ForumPage(emptyList(), emptyList())
@@ -311,6 +324,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                     val title = e.selectFirst("th.common > .xst")?.text().orEmpty()
                         .ifBlank { e.selectFirst("th.new > .xst")?.text().orEmpty() }
                         .ifBlank { e.selectFirst("a.xst")?.text().orEmpty() }
+                        .ifBlank { e.selectFirst("th a[href*=viewthread]")?.text().orEmpty() }
 
                     val author = extractFrom(e, "td.by", "a[href*=uid]")
                         .ifBlank { "匿名" }
@@ -320,6 +334,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                     val url = extractAttrFrom(e, "href", "th.common", "a.xst")
                         .ifBlank { extractAttrFrom(e, "href", "th.new", "a.xst") }
                         .ifBlank { e.selectFirst("a.xst")?.attr("href").orEmpty() }
+                        .ifBlank { e.selectFirst("th a[href*=viewthread]")?.attr("href").orEmpty() }
 
                     val origin = e.selectFirst("td.by > a[target]")?.text().orEmpty()
 
