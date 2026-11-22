@@ -27,7 +27,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -94,13 +94,13 @@ class SearchFragment : TopFragment(), ControllableFragment {
 fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) {
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
-    val searchResults by viewModel.searchResults.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val isLoadingMore by viewModel.isLoadingMore.collectAsState()
-    val totalResult by viewModel.totalResult.collectAsState()
-    val forumList by viewModel.forumList.collectAsState()
-    val selectedFidName by viewModel.selectedFidName.collectAsState()
-    val selectedSortName by viewModel.selectedSortName.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val isLoadingMore by viewModel.isLoadingMore.collectAsStateWithLifecycle()
+    val totalResult by viewModel.totalResult.collectAsStateWithLifecycle()
+    val forumList by viewModel.forumList.collectAsStateWithLifecycle()
+    val selectedFidName by viewModel.selectedFidName.collectAsStateWithLifecycle()
+    val selectedSortName by viewModel.selectedSortName.collectAsStateWithLifecycle()
 
     var keyword by remember { mutableStateOf(viewModel.lastSearchKeyword) }
     var hasSearched by remember { mutableStateOf(viewModel.hasSearchedOnce) }

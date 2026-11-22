@@ -17,7 +17,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,11 +64,11 @@ class MessageFragment : TopFragment(), ControllableFragment {
             ViewGroup.LayoutParams.MATCH_PARENT
         )
         setContent {
-            val isLoggedIn by AccountManager.isLoggedIn.collectAsState()
-            val notifications by notificationViewModel.notifications.collectAsState()
-            val conversations by conversationViewModel.conversations.collectAsState()
-            val isNotifLoading by notificationViewModel.isLoading.collectAsState()
-            val isConvLoading by conversationViewModel.isLoading.collectAsState()
+            val isLoggedIn by AccountManager.isLoggedIn.collectAsStateWithLifecycle()
+            val notifications by notificationViewModel.notifications.collectAsStateWithLifecycle()
+            val conversations by conversationViewModel.conversations.collectAsStateWithLifecycle()
+            val isNotifLoading by notificationViewModel.isLoading.collectAsStateWithLifecycle()
+            val isConvLoading by conversationViewModel.isLoading.collectAsStateWithLifecycle()
 
             var selectedTab by remember { mutableIntStateOf(0) }
 

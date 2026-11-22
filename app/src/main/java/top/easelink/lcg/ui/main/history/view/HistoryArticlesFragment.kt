@@ -18,7 +18,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,7 +49,7 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
 
         (view as ComposeView).setContent {
             var isLoading by remember { mutableStateOf(true) }
-            val histories by viewModel.histories.collectAsState()
+            val histories by viewModel.histories.collectAsStateWithLifecycle()
 
             LaunchedEffect(Unit) {
                 delay(400)

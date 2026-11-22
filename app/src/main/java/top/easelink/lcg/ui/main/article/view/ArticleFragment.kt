@@ -20,7 +20,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -115,8 +115,8 @@ class ArticleFragment : Fragment(), ControllableFragment {
         }
 
         composeView.setContent {
-            val isLoading by viewModel.isLoading.collectAsState()
-            val articleTitle by viewModel.articleTitle.collectAsState()
+            val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+            val articleTitle by viewModel.articleTitle.collectAsStateWithLifecycle()
             ArticleScreen(
                 title = articleTitle.ifEmpty { title.ifEmpty { "帖子详情" } },
                 articleUrl = url,
@@ -169,12 +169,12 @@ fun ArticleScreen(
 ) {
     val context = LocalContext.current
 
-    val isLoading by viewModel.isLoading.collectAsState()
-    val posts by viewModel.posts.collectAsState()
-    val isFavorited by viewModel.isFavorited.collectAsState()
-    val blockMessage by viewModel.blockMessage.collectAsState()
-    val isNotFound by viewModel.isNotFound.collectAsState()
-    val shouldDisplayPosts by viewModel.shouldDisplayPosts.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val posts by viewModel.posts.collectAsStateWithLifecycle()
+    val isFavorited by viewModel.isFavorited.collectAsStateWithLifecycle()
+    val blockMessage by viewModel.blockMessage.collectAsStateWithLifecycle()
+    val isNotFound by viewModel.isNotFound.collectAsStateWithLifecycle()
+    val shouldDisplayPosts by viewModel.shouldDisplayPosts.collectAsStateWithLifecycle()
 
     var showMenu by remember { mutableStateOf(false) }
     var pendingScrollPost by remember { mutableStateOf<Post?>(null) }

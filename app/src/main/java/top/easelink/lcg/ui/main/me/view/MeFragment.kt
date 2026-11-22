@@ -16,7 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -116,7 +116,7 @@ class MeFragment : TopFragment(), ControllableFragment {
 
 @Composable
 fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNavigate: (Fragment) -> Unit) {
-    val userInfo by AccountManager.userInfo.collectAsState()
+    val userInfo by AccountManager.userInfo.collectAsStateWithLifecycle()
     val isLoggedIn = userInfo != null && !userInfo?.userName.isNullOrBlank()
     val context = LocalContext.current
 

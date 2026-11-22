@@ -6,7 +6,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,8 +39,8 @@ fun ComposeRecyclerViewBridge(
     onScrollStateChanged: (Boolean) -> Unit = {},
     onReady: (RecyclerView) -> Unit = {}
 ) {
-    val posts by viewModel.posts.collectAsState()
-    val hasMore by viewModel.hasMorePages.collectAsState()
+    val posts by viewModel.posts.collectAsStateWithLifecycle()
+    val hasMore by viewModel.hasMorePages.collectAsStateWithLifecycle()
 
     var filteredPosts = if (showOpOnly) {
         val opAuthor = posts.firstOrNull()?.author
