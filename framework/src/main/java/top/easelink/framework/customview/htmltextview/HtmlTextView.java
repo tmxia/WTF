@@ -7,6 +7,7 @@ import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.BackgroundColorSpan;
+import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.UnderlineSpan;
 import android.text.style.URLSpan;
@@ -126,6 +127,9 @@ public class HtmlTextView extends MaterialTextView {
                 builder.setSpan(new UnderlineSpan(), start, end, flags);
             }
 
+            // 裸文本 URL 补挂：原始 HTML 中未用 <a> 包裹的网盘/网页链接，渲染后补为可点击链接
+            linkifyPlainTextUrls(builder);
+
             // 3. 给占位符挂载点击事件
             int searchIndex = 0;
             int blockIndex = 0;
@@ -156,6 +160,59 @@ public class HtmlTextView extends MaterialTextView {
         } catch (Exception e) {
             Timber.e(e);
             setText(R.string.html_general_error);
+        }
+    }
+
+    // 裸文本 http(s) 链接（含百度/夸克/阿里/天翼/迅雷/蓝奏云等网盘地址），排除空白、尖括号、引号与收尾括号
+    private static final Pattern PLAIN_URL_PATTERN = Pattern.compile(
+            "https?://[^\\s<>\"'）)】\\]]+", Pattern.CASE_INSENSITIVE);
+
+    private static boolean isTrailingUrlPunctuation(char c) {
+        return c == '.' || c == ',' || c == '，' || c == '。' || c == '；' || c == ';'
+                || c == '、' || c == '：' || c == ':' || c == ']' || c == '）' || c == ')';
+    }
+
+    /**
+     * 原始 HTML 中未被 <a> 包裹的裸文本链接，Html.fromHtml 不会生成可点击 Span；
+     * 这里扫描已渲染文本，对尚未挂接链接 Span 的裸 URL 补挂 LinkClickSpan，复用现有跳转链路。
+     */
+    private void linkifyPlainTextUrls(SpannableStringBuilder builder) {
+        if (builder == null || builder.length() == 0) return;
+
+        List<int[]> covered = new ArrayList<>();
+        for (ClickableSpan span : builder.getSpans(0, builder.length(), ClickableSpan.class)) {
+            covered.add(new int[]{builder.getSpanStart(span), builder.getSpanEnd(span)});
+        }
+        for (URLSpan span : builder.getSpans(0, builder.length(), URLSpan.class)) {
+            covered.add(new int[]{builder.getSpanStart(span), builder.getSpanEnd(span)});
+        }
+
+        String text = builder.toString();
+        Matcher matcher = PLAIN_URL_PATTERN.matcher(text);
+        while (matcher.find()) {
+            int start = matcher.start();
+            int end = matcher.end();
+            while (end > start && isTrailingUrlPunctuation(text.charAt(end - 1))) {
+                end--;
+            }
+            if (end <= start) continue;
+
+            boolean intersects = false;
+            for (int[] range : covered) {
+                if (start < range[1] && end > range[0]) {
+                    intersects = true;
+                    break;
+                }
+            }
+            if (intersects) continue;
+
+            String url = text.substring(start, end);
+            LinkClickSpan linkSpan = new LinkClickSpan(getContext(), url);
+            linkSpan.setListener(onLinkTagClickListener);
+            builder.setSpan(linkSpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            builder.setSpan(new ForegroundColorSpan(android.graphics.Color.parseColor("#E53935")),
+                    start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            builder.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
     }
 
