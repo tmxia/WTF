@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,8 +55,8 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
         viewModel.fetchArticles(top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher.FetchType.FETCH_INIT) {}
 
         (view as ComposeView).setContent {
-            val articles by viewModel.articles.observeAsState(initial = emptyList())
-            val isLoading by viewModel.isLoading.observeAsState(initial = false)
+            val articles by viewModel.articles.collectAsState()
+            val isLoading by viewModel.isLoading.collectAsState()
             var showMenu by remember { mutableStateOf(false) }
             val context = LocalContext.current
 

@@ -1,9 +1,11 @@
 package top.easelink.lcg.ui.main.articles.viewmodel
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.lcg.R
@@ -13,18 +15,22 @@ import top.easelink.lcg.ui.main.source.model.ArticleEntity
 import top.easelink.lcg.utils.showMessage
 
 class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
-    val articles = MutableLiveData<List<ArticleEntity>>()
-    val isLoading = MutableLiveData<Boolean>()
+    private val _articles = MutableStateFlow<List<ArticleEntity>>(emptyList())
+    val articles: StateFlow<List<ArticleEntity>> = _articles.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     /** 分页骨架：收藏当前为本地全量加载，暂无远端翻页，hasMore 恒为 false。 */
-    val hasMore = MutableLiveData<Boolean>(false)
+    private val _hasMore = MutableStateFlow(false)
+    val hasMore: StateFlow<Boolean> = _hasMore.asStateFlow()
     private var mCurrentPage = 0
 
     override fun fetchArticles(fetchType: ArticleFetcher.FetchType, callback: (Boolean) -> Unit) {
         when (fetchType) {
             ArticleFetcher.FetchType.FETCH_MORE -> {
                 // TODO 远端收藏分页：解析下一页链接后按 mCurrentPage+1 请求；当前无翻页数据源。
-                hasMore.postValue(false)
+                _hasMore.value = false
                 callback.invoke(false)
                 return
             }
@@ -34,28 +40,28 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
             }
         }
 
-        isLoading.value = true
+        _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 ArticlesLocalDataSource.getAllFavoriteArticles().let {
                     if (it.isNotEmpty().also(callback)) {
-                        articles.postValue(it)
+                        _articles.value = it
                     }
                 }
             } catch (e: Exception) {
                 Timber.e(e)
             } finally {
-                isLoading.postValue(false)
+                _isLoading.value = false
             }
         }
     }
 
     fun removeAllFavorites() {
-        isLoading.value = true
+        _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (ArticlesLocalDataSource.delAllArticlesFromFavorite()) {
-                    articles.postValue(emptyList())
+                    _articles.value = emptyList()
                     showMessage(R.string.remove_all_favorites_successfully)
                 } else {
                     showMessage(R.string.remove_all_favorites_failed)
@@ -64,7 +70,7 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
                 Timber.e(e)
                 showMessage(R.string.remove_all_favorites_failed)
             } finally {
-                isLoading.postValue(false)
+                _isLoading.value = false
             }
         }
     }
@@ -73,9 +79,9 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (ArticlesLocalDataSource.delArticleFromFavorite(articleEntity.id)) {
-                    val currentList = articles.value.orEmpty().toMutableList()
+                    val currentList = _articles.value.orEmpty().toMutableList()
                     currentList.remove(articleEntity)
-                    articles.postValue(currentList)
+                    _articles.value = currentList
                     showMessage(R.string.remove_all_favorites_successfully)
                 } else {
                     showMessage(R.string.remove_all_favorites_failed)
@@ -88,7 +94,7 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
     }
 
     fun syncFavorites() {
-        isLoading.value = true
+        _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val articleEntities = getAllRemoteFavorites()
@@ -96,14 +102,14 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
                     showMessage(R.string.sync_favorite_failed_empty_favorites)
                 } else {
                     if (ArticlesLocalDataSource.addAllArticleToFavorite(articleEntities)) {
-                        articles.postValue(ArticlesLocalDataSource.getAllFavoriteArticles())
+                        _articles.value = ArticlesLocalDataSource.getAllFavoriteArticles()
                     }
                 }
             } catch (e: Exception) {
                 Timber.e(e)
                 showMessage(R.string.sync_favorite_failed)
             } finally {
-                isLoading.postValue(false)
+                _isLoading.value = false
             }
         }
     }
