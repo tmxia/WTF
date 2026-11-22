@@ -15,7 +15,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -34,8 +33,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.airbnb.lottie.LottieAnimationView
 import kotlinx.coroutines.launch
 import top.easelink.lcg.R
+import top.easelink.lcg.ui.main.common.CompactAnchorMenu
 import top.easelink.lcg.ui.main.common.EmptyStateView
 import top.easelink.lcg.ui.main.common.FullScreenLoading
+import top.easelink.lcg.ui.main.common.PopoverMenuItem
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
 
@@ -102,24 +103,22 @@ fun ForumArticlesScreen(
                         IconButton(onClick = { menuExpanded = true }) {
                             Icon(Icons.Filled.MoreVert, contentDescription = "排序", tint = Color.Black)
                         }
-                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                            forumSortOptions.forEach { option ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(option.label, modifier = Modifier.weight(1f), color = Color.Black)
-                                            if (selectedSortName == option.label) {
-                                                Icon(Icons.Filled.Check, contentDescription = "已选", tint = Color(0xFFE65100))
-                                            }
+                        CompactAnchorMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                            groups = listOf(
+                                forumSortOptions.map { option ->
+                                    PopoverMenuItem(
+                                        label = option.label,
+                                        checked = selectedSortName == option.label,
+                                        onClick = {
+                                            menuExpanded = false
+                                            onSortSelected(option.orderby, option.label)
                                         }
-                                    },
-                                    onClick = {
-                                        menuExpanded = false
-                                        onSortSelected(option.orderby, option.label)
-                                    }
-                                )
-                            }
-                        }
+                                    )
+                                }
+                            )
+                        )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
                 )
@@ -129,7 +128,7 @@ fun ForumArticlesScreen(
                         selectedTabIndex = pagerState.currentPage,
                         edgePadding = 16.dp,
                         containerColor = Color.White,
-                        contentColor = Color(0xFFE65100),
+                        contentColor = Color(0xFFE53935),
                         divider = { HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray) },
                         indicator = { tabPositions ->
                             TabRowDefaults.SecondaryIndicator(
@@ -137,7 +136,7 @@ fun ForumArticlesScreen(
                                     .tabIndicatorOffset(tabPositions[pagerState.currentPage])
                                     .fillMaxWidth(),
                                 height = 3.dp,
-                                color = Color(0xFFE65100)
+                                color = Color(0xFFE53935)
                             )
                         }
                     ) {
@@ -156,7 +155,7 @@ fun ForumArticlesScreen(
                                     Text(
                                         text = tabTitle,
                                         fontSize = 15.sp,
-                                        color = if (pagerState.currentPage == index) Color(0xFFE65100) else Color(0xFF888888),
+                                        color = if (pagerState.currentPage == index) Color(0xFFE53935) else Color(0xFF888888),
                                         fontWeight = if (pagerState.currentPage == index) FontWeight.Medium else FontWeight.Normal
                                     )
                                 }
@@ -208,7 +207,7 @@ fun ForumArticlesScreen(
                             item {
                                 if (isLoading && articles.isNotEmpty()) {
                                     Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = Color(0xFFE65100))
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = Color(0xFFE53935))
                                     }
                                 }
                             }
@@ -282,12 +281,12 @@ fun ArticleCard(
 
             Text(
                 text = article.title,
-                fontSize = 16.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.Black,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                lineHeight = 22.sp
+                lineHeight = 21.sp
             )
 
             Spacer(modifier = Modifier.height(12.dp))

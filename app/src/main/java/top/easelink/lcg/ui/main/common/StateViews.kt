@@ -26,7 +26,7 @@ import top.easelink.lcg.R
 fun FullScreenLoading(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(
-            color = Color(0xFFE65100),
+            color = Color(0xFFE53935),
             strokeWidth = 2.dp
         )
     }

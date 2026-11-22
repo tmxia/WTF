@@ -46,6 +46,8 @@ import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.article.view.ScreenCaptureDialog.Companion.TAG
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
+import top.easelink.lcg.ui.main.common.CompactAnchorMenu
+import top.easelink.lcg.ui.main.common.PopoverMenuItem
 import top.easelink.lcg.ui.main.model.LikeSuccessEvent
 import top.easelink.lcg.ui.main.model.ReplyPostEvent
 import top.easelink.lcg.ui.main.model.ScreenCaptureEvent
@@ -272,46 +274,16 @@ fun ArticleScreen(
                         IconButton(onClick = { showMenu = !showMenu }) {
                             Icon(Icons.Filled.MoreVert, contentDescription = "More", modifier = Modifier.size(20.dp))
                         }
-                        DropdownMenu(
+                        CompactAnchorMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
-                            modifier = Modifier
-                                .background(Color.White)
-                                .wrapContentWidth()
-                                .padding(vertical = 4.dp)
-                        ) {
-                            @Composable
-                            @OptIn(ExperimentalFoundationApi::class)
-                            fun MiniMenuRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, isActive: Boolean = false, onLongClick: (() -> Unit)? = null, onClick: () -> Unit) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(38.dp)
-                                        .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-                                        .padding(horizontal = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = icon,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = if (isActive) Color(0xFFE53935) else Color.Gray
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = text,
-                                        fontSize = 13.sp,
-                                        color = if (isActive) Color(0xFFE53935) else Color.DarkGray,
-                                        fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal
-                                    )
-                                }
-                            }
-
-                            MiniMenuRow(Icons.Default.Person, if (showOpOnly) "显示全部" else "只看楼主", showOpOnly) {
+                            groups = listOf(
+                                listOf(
+                            PopoverMenuItem(Icons.Default.Person, if (showOpOnly) "显示全部" else "只看楼主", showOpOnly) {
                                 showMenu = false
                                 showOpOnly = !showOpOnly
-                            }
-                            MiniMenuRow(Icons.Default.Star, if (filterSpam) "关闭灌水" else "过滤灌水", filterSpam,
+                            },
+                            PopoverMenuItem(Icons.Default.Star, if (filterSpam) "关闭灌水" else "过滤灌水", filterSpam,
                                 onLongClick = {
                                     showMenu = false
                                     val density = context.resources.displayMetrics.density
@@ -396,8 +368,8 @@ fun ArticleScreen(
                                     showMenu = false
                                     filterSpam = !filterSpam
                                 }
-                            )
-                            MiniMenuRow(Icons.Default.Search, if (searchKeyword.isNotBlank()) "清除搜索" else "搜索帖子", searchKeyword.isNotBlank()) {
+                            ),
+                            PopoverMenuItem(Icons.Default.Search, if (searchKeyword.isNotBlank()) "清除搜索" else "搜索帖子", searchKeyword.isNotBlank()) {
                                 showMenu = false
                                 if (searchKeyword.isNotBlank()) {
                                     searchKeyword = ""
@@ -476,35 +448,31 @@ fun ArticleScreen(
                                         }
                                     }
                                 }
-                            }
-                            MiniMenuRow(Icons.Default.List, if (isReverse) "顺序显示" else "倒序显示", isReverse) {
+                            },
+                            PopoverMenuItem(Icons.Default.List, if (isReverse) "顺序显示" else "倒序显示", isReverse) {
                                 showMenu = false
                                 isReverse = !isReverse
                                 prefs.edit().putBoolean("is_reverse", isReverse).apply()
                             }
 
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                                thickness = 0.5.dp,
-                                color = Color.LightGray.copy(alpha = 0.5f)
-                            )
-
-                            MiniMenuRow(Icons.Default.Refresh, "刷新帖子") {
+                                ),
+                                listOf(
+                            PopoverMenuItem(Icons.Default.Refresh, "刷新帖子") {
                                 showMenu = false
                                 viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
-                            }
-                            MiniMenuRow(Icons.Default.Share, "复制链接") {
+                            },
+                            PopoverMenuItem(Icons.Default.Share, "复制链接") {
                                 showMenu = false
                                 val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                                 val clip = android.content.ClipData.newPlainText("Post Link", top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL + articleUrl)
                                 clipboard.setPrimaryClip(clip)
                                 android.widget.Toast.makeText(context, "链接已复制", android.widget.Toast.LENGTH_SHORT).show()
-                            }
-                            MiniMenuRow(Icons.Default.Search, "在浏览器打开") {
+                            },
+                            PopoverMenuItem(Icons.Default.Search, "在浏览器打开") {
                                 showMenu = false
                                 WebViewActivity.startWebViewWith(WebsiteConstant.SERVER_BASE_URL + articleUrl, context)
-                            }
-                            MiniMenuRow(Icons.Default.KeyboardArrowDown, "提取下载链接") {
+                            },
+                            PopoverMenuItem(Icons.Default.KeyboardArrowDown, "提取下载链接") {
                                 showMenu = false
                                 val urls = viewModel.extractDownloadUrl()
                                 if (!urls.isNullOrEmpty() && fragment.isAdded) {
@@ -512,12 +480,14 @@ fun ArticleScreen(
                                 } else {
                                     android.widget.Toast.makeText(context, R.string.download_link_not_found, android.widget.Toast.LENGTH_SHORT).show()
                                 }
-                            }
-                            MiniMenuRow(if (isFavorited) Icons.Filled.Favorite else Icons.Default.FavoriteBorder, if (isFavorited) "取消收藏" else "添加收藏", isFavorited) {
+                            },
+                            PopoverMenuItem(if (isFavorited) Icons.Filled.Favorite else Icons.Default.FavoriteBorder, if (isFavorited) "取消收藏" else "添加收藏", isFavorited) {
                                 showMenu = false
                                 viewModel.toggleFavorite()
                             }
-                        }
+                                )
+                            )
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

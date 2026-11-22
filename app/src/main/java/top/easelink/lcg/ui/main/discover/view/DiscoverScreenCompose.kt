@@ -106,7 +106,7 @@ fun DiscoverScreenCompose(
                             text = "今日热榜",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFFE65100)
+                            color = Color(0xFFE53935)
                         )
                         IconButton(
                             onClick = onRefresh,
@@ -116,14 +116,14 @@ fun DiscoverScreenCompose(
                             if (isLoading) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
-                                    color = Color(0xFFE65100),
+                                    color = Color(0xFFE53935),
                                     strokeWidth = 2.dp
                                 )
                             } else {
                                 Icon(
                                     imageVector = Icons.Default.Refresh,
                                     contentDescription = "刷新",
-                                    tint = Color(0xFFE65100)
+                                    tint = Color(0xFFE53935)
                                 )
                             }
                         }
@@ -567,7 +567,7 @@ fun RankItemCard(
                 text = "热度: ${rank.num}",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Normal,
-                color = Color(0xFFE65100)
+                color = Color(0xFFE53935)
             )
         }
     }

@@ -142,7 +142,7 @@ fun ComposeRecyclerViewBridge(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = Color(0xFFE65100), modifier = Modifier.size(32.dp))
+                    CircularProgressIndicator(color = Color(0xFFE53935), modifier = Modifier.size(32.dp))
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(text = "正在全量搜索，请稍候...", fontSize = 14.sp, color = Color.Gray)
                 }
