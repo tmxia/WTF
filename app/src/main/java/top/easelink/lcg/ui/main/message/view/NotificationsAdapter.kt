@@ -5,16 +5,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
-import coil.load
-import coil.transform.RoundedCornersTransformation
 import top.easelink.framework.base.BaseViewHolder
 import top.easelink.framework.customview.htmltextview.HtmlCoilImageGetter
-import top.easelink.framework.utils.dpToPx
 import top.easelink.lcg.R
 import top.easelink.lcg.databinding.ItemLoadMoreViewBinding
 import top.easelink.lcg.databinding.ItemNotificationViewBinding
 import top.easelink.lcg.ui.main.message.viewmodel.NotificationViewModel
 import top.easelink.lcg.ui.main.model.BaseNotification
+import top.easelink.lcg.utils.ImageLoaderHelper
 
 class NotificationsAdapter(
     private val notificationViewModel: NotificationViewModel,
@@ -94,10 +92,12 @@ class NotificationsAdapter(
                         linksClickable = false
                     }
                     dateTime.text = notification.dateTime
-                    notificationAvatar.load(notification.avatar) {
-                        transformations(RoundedCornersTransformation(2.dpToPx(root.context)))
-                        placeholder(R.drawable.ic_noavatar_middle_gray)
-                    }
+                    ImageLoaderHelper.loadAvatar(
+                        notificationAvatar,
+                        notification.avatar,
+                        cornerDp = 2f,
+                        errorRes = 0,
+                    )
                 }
             }
         }

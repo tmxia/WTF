@@ -41,6 +41,7 @@ import top.easelink.lcg.ui.profile.view.ProfileActivity
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 import top.easelink.lcg.utils.avatar.PlaceholderDrawable
+import top.easelink.lcg.utils.ImageLoaderHelper
 import top.easelink.lcg.utils.avatar.getDefaultAvatar
 import top.easelink.lcg.utils.copyContent
 import top.easelink.lcg.utils.saveImageToGallery
@@ -190,12 +191,12 @@ class ArticleAdapter(
                             }
                         )
                     }
-                    postAvatar.load(p.avatar) {
-                        crossfade(false)
-                        lifecycle(mFragment)
-                        transformations(RoundedCornersTransformation(4.dpToPx(root.context)))
-                        error(R.drawable.ic_noavatar_middle_gray)
-                    }
+                    ImageLoaderHelper.loadAvatar(
+                        postAvatar,
+                        p.avatar,
+                        cornerDp = 4f,
+                        lifecycleOwner = mFragment,
+                    )
                     contentTextView.run {
                         requestFocus()
                         setOnClickListener { onItemClick?.invoke(p) }

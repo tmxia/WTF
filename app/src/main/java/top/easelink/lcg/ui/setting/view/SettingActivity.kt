@@ -20,7 +20,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -398,7 +397,7 @@ class SettingActivity : TopActivity() {
         LCGCookieJar.saveCookiesFromJsoup("https://www.52pojie.cn", cookieMap)
 
         showMessage("正在验证 Cookie...")
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val userInfo = UserInfoRepo.requestUserInfo()
                 withContext(Dispatchers.Main) {

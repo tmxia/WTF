@@ -4,16 +4,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import coil.load
-import coil.transform.RoundedCornersTransformation
 import top.easelink.framework.base.BaseViewHolder
-import top.easelink.framework.utils.dpToPx
 import top.easelink.lcg.R
 import top.easelink.lcg.databinding.ItemConversationViewBinding
 import top.easelink.lcg.databinding.ItemLoadMoreViewBinding
 import top.easelink.lcg.ui.main.message.viewmodel.ConversationListViewModel
 import top.easelink.lcg.ui.main.model.Conversation
 import top.easelink.lcg.ui.webview.view.WebViewActivity
+import top.easelink.lcg.utils.ImageLoaderHelper
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 
 class ConversationListAdapter(
@@ -84,10 +82,7 @@ class ConversationListAdapter(
                 binding.apply {
                     dateTime.text = conversation.lastMessageDateTime
                     conversation.avatar?.let {
-                        conversationUserAvatar.load(it) {
-                            transformations(RoundedCornersTransformation(2.dpToPx(root.context)))
-                            error(R.drawable.ic_noavatar_middle_gray)
-                        }
+                        ImageLoaderHelper.loadAvatar(conversationUserAvatar, it, cornerDp = 2f)
                     }
                     lastMessage.text = conversation.lastMessage
                     username.text = conversation.username

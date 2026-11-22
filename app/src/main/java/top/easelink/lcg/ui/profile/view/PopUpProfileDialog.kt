@@ -14,8 +14,6 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
-import coil.load
-import coil.transform.RoundedCornersTransformation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -29,6 +27,7 @@ import top.easelink.lcg.ui.profile.model.PopUpProfileInfo
 import top.easelink.lcg.ui.profile.source.ProfileSource
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.BlacklistManager
+import top.easelink.lcg.utils.ImageLoaderHelper
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 import top.easelink.lcg.utils.showMessage
 import org.greenrobot.eventbus.EventBus
@@ -166,9 +165,13 @@ class PopUpProfileDialog : DialogFragment() {
             }
             
 
-            profileAvatar.load(popUpInfo.imageUrl) {
-                transformations(RoundedCornersTransformation(4.dpToPx(mContext)))
-            }
+            ImageLoaderHelper.loadAvatar(
+                profileAvatar,
+                popUpInfo.imageUrl,
+                cornerDp = 4f,
+                errorRes = 0,
+                placeholderRes = 0,
+            )
         }
     }
 

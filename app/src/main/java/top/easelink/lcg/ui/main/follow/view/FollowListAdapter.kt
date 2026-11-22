@@ -6,16 +6,14 @@ import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
-import coil.load
-import coil.transform.RoundedCornersTransformation
 import top.easelink.framework.base.BaseViewHolder
-import top.easelink.framework.utils.dpToPx
 import top.easelink.lcg.R
 import top.easelink.lcg.databinding.ItemEmptyViewBinding
 import top.easelink.lcg.databinding.ItemFollowViewBinding
 import top.easelink.lcg.databinding.ItemLoadMoreViewBinding
 import top.easelink.lcg.ui.main.follow.model.FollowInfo
 import top.easelink.lcg.ui.main.follow.viewmodel.FollowListViewModel
+import top.easelink.lcg.utils.ImageLoaderHelper
 
 class FollowListAdapter(
     private val followListViewModel: FollowListViewModel,
@@ -93,10 +91,7 @@ class FollowListAdapter(
             val follow = mFollowing[position]
             binding.apply {
                 follow.avatar.let {
-                    avatar.load(it) {
-                        transformations(RoundedCornersTransformation(2.dpToPx(root.context)))
-                            .error(R.drawable.ic_noavatar_middle_gray)
-                    }
+                    ImageLoaderHelper.loadAvatar(avatar, it, cornerDp = 2f)
                 }
                 lastAction.text = follow.lastAction
                 username.text = follow.username

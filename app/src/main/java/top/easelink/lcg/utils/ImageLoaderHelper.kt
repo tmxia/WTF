@@ -15,20 +15,25 @@ import top.easelink.lcg.R
  */
 object ImageLoaderHelper {
 
+    private const val DEFAULT_AVATAR = R.drawable.ic_noavatar_middle_gray
+
     fun loadAvatar(
         view: ImageView,
         url: String?,
         cornerDp: Float = 4f,
         lifecycleOwner: LifecycleOwner? = null,
+        crossfade: Boolean = false,
+        errorRes: Int = DEFAULT_AVATAR,
+        placeholderRes: Int = DEFAULT_AVATAR,
     ) {
         view.load(url) {
-            crossfade(false)
+            crossfade(crossfade)
             lifecycleOwner?.let { lifecycle(it) }
             if (cornerDp > 0f) {
                 transformations(RoundedCornersTransformation(cornerDp.dpToPx(view.context)))
             }
-            placeholder(R.drawable.ic_noavatar_middle_gray)
-            error(R.drawable.ic_noavatar_middle_gray)
+            if (placeholderRes != 0) placeholder(placeholderRes)
+            if (errorRes != 0) error(errorRes)
         }
     }
 }

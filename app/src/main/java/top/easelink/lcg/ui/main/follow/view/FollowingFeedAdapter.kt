@@ -7,12 +7,12 @@ import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import coil.Coil
-import coil.load
 import coil.request.ImageRequest
 import coil.size.Size
 import coil.transform.RoundedCornersTransformation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.base.BaseViewHolder
@@ -25,12 +25,13 @@ import top.easelink.lcg.ui.main.follow.model.FeedInfo
 import top.easelink.lcg.ui.main.follow.viewmodel.FollowingFeedViewModel
 import top.easelink.lcg.ui.main.model.OpenArticleEvent
 import top.easelink.lcg.ui.main.model.OpenLargeImageViewEvent
+import top.easelink.lcg.utils.ImageLoaderHelper
 
 class FollowingFeedAdapter(
     private val followingFeedViewModel: FollowingFeedViewModel
 ) : RecyclerView.Adapter<BaseViewHolder>() {
     private val mFeeds: MutableList<FeedInfo> = mutableListOf()
-    private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun getItemCount(): Int = if (mFeeds.isEmpty()) {
         1
@@ -112,11 +113,7 @@ class FollowingFeedAdapter(
                 feed.avatar.let {
                     if (it.isNotEmpty()) {
                         avatar.visibility = View.VISIBLE
-                        avatar.load(it) {
-                            transformations(RoundedCornersTransformation(round))
-                            error(R.drawable.ic_noavatar_middle_gray)
-                            crossfade(true)
-                        }
+                        ImageLoaderHelper.loadAvatar(avatar, it, cornerDp = 4f, crossfade = true)
                     } else {
                         avatar.visibility = View.GONE
                         avatar.setImageDrawable(null)

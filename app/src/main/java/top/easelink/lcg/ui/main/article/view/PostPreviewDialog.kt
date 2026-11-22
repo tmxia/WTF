@@ -7,13 +7,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import coil.load
 import timber.log.Timber
 import top.easelink.framework.customview.htmltextview.HtmlCoilImageGetter
 import top.easelink.framework.topbase.TopDialog
 import top.easelink.lcg.R
 import top.easelink.lcg.databinding.DialogPostPreviewBinding
 import top.easelink.lcg.ui.main.article.viewmodel.PostPreviewViewModel
+import top.easelink.lcg.utils.ImageLoaderHelper
 
 class PostPreviewDialog : TopDialog() {
     private lateinit var mViewModel: PostPreviewViewModel
@@ -94,7 +94,13 @@ class PostPreviewDialog : TopDialog() {
                         binding.authorTextView.text = it
                     })
                     mViewModel.avatar.observe(viewLifecycleOwner, Observer {
-                        binding.postAvatar.load(it)
+                        ImageLoaderHelper.loadAvatar(
+                            binding.postAvatar,
+                            it,
+                            cornerDp = 0f,
+                            errorRes = 0,
+                            placeholderRes = 0,
+                        )
                     })
                     mViewModel.date.observe(viewLifecycleOwner, Observer {
                         binding.dateTextView.text = it
