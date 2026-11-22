@@ -1,11 +1,13 @@
 package top.easelink.lcg.ui.search.viewmodel
 
 import android.content.Context
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -20,10 +22,18 @@ import top.easelink.lcg.ui.search.source.LCGSearchService.doSearchWith
 class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     var lastSearchKeyword: String = ""
     var hasSearchedOnce: Boolean = false
-    val searchResults = MutableLiveData<List<LCGSearchResultItem>>()
-    val totalResult = MutableLiveData<String?>()
-    val isLoading = MutableLiveData<Boolean>()
-    val isLoadingMore = MutableLiveData<Boolean>()
+
+    private val _searchResults = MutableStateFlow<List<LCGSearchResultItem>>(emptyList())
+    val searchResults: StateFlow<List<LCGSearchResultItem>> = _searchResults.asStateFlow()
+
+    private val _totalResult = MutableStateFlow<String?>(null)
+    val totalResult: StateFlow<String?> = _totalResult.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _isLoadingMore = MutableStateFlow(false)
+    val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()
 
     private val prefs = try {
         LCGApp.context.getSharedPreferences("wtf_search_prefs", Context.MODE_PRIVATE)
@@ -32,14 +42,22 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
         throw e
     }
 
-    val selectedFidName = MutableLiveData<String>(prefs.getString("search_fid_name", "全部板块") ?: "全部板块")
-    val selectedSortName = MutableLiveData<String>(prefs.getString("search_sort_name", "按相关度") ?: "按相关度")
-    val isMultiSelect = MutableLiveData<Boolean>(false)
+    private val _selectedFidName = MutableStateFlow(prefs.getString("search_fid_name", "全部板块") ?: "全部板块")
+    val selectedFidName: StateFlow<String> = _selectedFidName.asStateFlow()
+
+    private val _selectedSortName = MutableStateFlow(prefs.getString("search_sort_name", "按相关度") ?: "按相关度")
+    val selectedSortName: StateFlow<String> = _selectedSortName.asStateFlow()
+
+    private val _isMultiSelect = MutableStateFlow(false)
+    val isMultiSelect: StateFlow<Boolean> = _isMultiSelect.asStateFlow()
+
     private var mFids: List<String> = prefs.getString("search_fids", "")?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
     private var mSortOrder: String? = prefs.getString("search_sort_order", null)
 
     val currentFids: List<String> get() = mFids
-    val forumList = MutableLiveData<List<ForumNavigationModel>>()
+
+    private val _forumList = MutableStateFlow<List<ForumNavigationModel>>(emptyList())
+    val forumList: StateFlow<List<ForumNavigationModel>> = _forumList.asStateFlow()
 
     override fun fetch(type: LCGSearchResultAdapter.ContentFetcher.Type, callback: ((Boolean) -> Unit)?) {
     }
@@ -49,15 +67,15 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     private var hasMore = true
 
     fun loadForums() {
-        if (!forumList.value.isNullOrEmpty()) return
+        if (_forumList.value.isNotEmpty()) return
         viewModelScope.launch(IOPool) {
-            forumList.postValue(ForumNetworkSource.fetchAllForumsFromApi())
+            _forumList.value = ForumNetworkSource.fetchAllForumsFromApi()
         }
     }
 
     fun selectSort(orderby: String?, name: String) {
         mSortOrder = orderby
-        selectedSortName.value = name
+        _selectedSortName.value = name
         prefs.edit().putString("search_sort_order", orderby)
             .putString("search_sort_name", name).apply()
         val keyword = mKeyWord
@@ -68,8 +86,8 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
 
     fun selectFids(fids: List<String>, name: String) {
         mFids = fids
-        selectedFidName.value = name
-        isMultiSelect.value = fids.size > 1
+        _selectedFidName.value = name
+        _isMultiSelect.value = fids.size > 1
         prefs.edit().putString("search_fids", fids.joinToString(","))
             .putString("search_fid_name", name).apply()
         val keyword = mKeyWord
@@ -86,7 +104,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     private fun fetchInit(keyword: String?) {
         Timber.tag("[SearchProbe]").d("发起搜索请求: keyword=$keyword, fids=$mFids, sort=$mSortOrder")
         if (keyword.isNullOrBlank()) return
-        isLoading.value = true
+        _isLoading.value = true
         hasMore = true
 
         searchJob?.cancel()
@@ -95,8 +113,8 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                 val result = doSearchWith(keyword, mFids.joinToString(","), mSortOrder)
                 if (result != null) {
                     Timber.tag("[SearchProbe]").d("收到搜索结果: 数量=${result.searchResultList.size}")
-                    searchResults.postValue(result.searchResultList)
-                    totalResult.postValue(result.totalResult)
+                    _searchResults.value = result.searchResultList
+                    _totalResult.value = result.totalResult
                     hasMore = result.searchResultList.isNotEmpty()
                 } else {
                     Timber.tag("SearchDebug").d("搜索被限流，忽略此次请求")
@@ -114,27 +132,27 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                     }
                 }
             } finally {
-                isLoading.postValue(false)
+                _isLoading.value = false
             }
         }
     }
 
     fun loadNextPage() {
-        if (isLoadingMore.value == true || !hasMore) return
+        if (_isLoadingMore.value || !hasMore) return
 
-        isLoadingMore.value = true
+        _isLoadingMore.value = true
         viewModelScope.launch(IOPool) {
             try {
                 val result = doSearchNextPage()
                 if (result != null) {
-                    val currentList = searchResults.value?.toMutableList() ?: mutableListOf()
+                    val currentList = _searchResults.value.toMutableList()
                     if (result.searchResultList.isEmpty()) {
                         hasMore = false
                     } else {
                         currentList.addAll(result.searchResultList)
-                        searchResults.postValue(currentList)
+                        _searchResults.value = currentList
                     }
-                    if (!result.totalResult.isNullOrEmpty()) totalResult.postValue(result.totalResult)
+                    if (!result.totalResult.isNullOrEmpty()) _totalResult.value = result.totalResult
                 } else {
                     hasMore = false
                 }
@@ -151,7 +169,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                     }
                 }
             } finally {
-                isLoadingMore.postValue(false)
+                _isLoadingMore.value = false
             }
         }
     }

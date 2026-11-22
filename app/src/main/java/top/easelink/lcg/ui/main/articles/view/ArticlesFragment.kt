@@ -5,11 +5,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.launch
 import top.easelink.framework.base.BaseFragment
 import top.easelink.lcg.R
 import top.easelink.lcg.appinit.LCGApp
@@ -54,7 +55,6 @@ class ArticlesFragment : BaseFragment<FragmentArticlesBinding, ArticlesViewModel
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
         setUpView()
     }
@@ -62,17 +62,22 @@ class ArticlesFragment : BaseFragment<FragmentArticlesBinding, ArticlesViewModel
     private fun setUpView() {
         setupRecyclerView()
         arguments?.getString(ARG_PARAM)?.let {
-            viewModel.articles.observe(viewLifecycleOwner, Observer { articleList ->
-                if (articleList.isEmpty() && viewModel.isLoading.value == true) {
-                    binding.recyclerView.visibility = View.GONE
-                } else {
-                    binding.recyclerView.visibility = View.VISIBLE
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewModel.articles.collect { articleList ->
+                    val loading = viewModel.isLoading.value
+                    binding.recyclerView.visibility =
+                        if (articleList.isEmpty() && loading) View.GONE else View.VISIBLE
                     (binding.recyclerView.adapter as? ArticlesAdapter)?.apply {
                         clearItems()
                         addItems(articleList)
                     }
                 }
-            })
+            }
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewModel.isLoading.collect { loading ->
+                    binding.refreshLayout.isRefreshing = loading
+                }
+            }
             viewModel.initUrl(it)
         }
         binding.backToTop.setOnClickListener {

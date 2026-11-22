@@ -1,11 +1,12 @@
 package top.easelink.lcg.ui.main.article.viewmodel
 
-import android.os.Looper
 import android.text.TextUtils
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
@@ -24,36 +25,44 @@ import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource
 import top.easelink.lcg.utils.RegexUtils
 import top.easelink.lcg.utils.showMessage
 import java.io.IOException
-import java.util.*
 
 class ArticleViewModel : ViewModel(), ArticleAdapterListener {
 
-    val posts = MutableLiveData<MutableList<Post>>()
-    val blockMessage = MutableLiveData<String>()
-    val isNotFound = MutableLiveData<Boolean>()
-    val shouldDisplayPosts = MutableLiveData<Boolean>()
-    val articleTitle = MutableLiveData<String>()
-    val isLoading = MutableLiveData<Boolean>()
-    val isFavorited = MutableLiveData<Boolean>(false)
+    private val _posts = MutableStateFlow<MutableList<Post>>(mutableListOf())
+    val posts: StateFlow<MutableList<Post>> = _posts.asStateFlow()
 
-    
+    private val _blockMessage = MutableStateFlow("")
+    val blockMessage: StateFlow<String> = _blockMessage.asStateFlow()
 
+    private val _isNotFound = MutableStateFlow(false)
+    val isNotFound: StateFlow<Boolean> = _isNotFound.asStateFlow()
 
+    private val _shouldDisplayPosts = MutableStateFlow(true)
+    val shouldDisplayPosts: StateFlow<Boolean> = _shouldDisplayPosts.asStateFlow()
 
-    val hasMorePages = MutableLiveData(false)
+    private val _articleTitle = MutableStateFlow("")
+    val articleTitle: StateFlow<String> = _articleTitle.asStateFlow()
 
-    
-    val newPostsAppended = MutableLiveData<List<Post>>()
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    
-    val postInsertedAt = MutableLiveData<Pair<Int, Post>>()
+    private val _isFavorited = MutableStateFlow(false)
+    val isFavorited: StateFlow<Boolean> = _isFavorited.asStateFlow()
+
+    private val _hasMorePages = MutableStateFlow(false)
+    val hasMorePages: StateFlow<Boolean> = _hasMorePages.asStateFlow()
+
+    private val _newPostsAppended = MutableStateFlow<List<Post>>(emptyList())
+    val newPostsAppended: StateFlow<List<Post>> = _newPostsAppended.asStateFlow()
+
+    private val _postInsertedAt = MutableStateFlow<Pair<Int, Post>?>(null)
+    val postInsertedAt: StateFlow<Pair<Int, Post>?> = _postInsertedAt.asStateFlow()
 
     private var mUrl: String? = null
     private var nextPageUrl: String? = null
     private var mFormHash: String? = null
     private var articleAbstract: ArticleAbstractResponse? = null
 
-    
     private var fetching = false
     private var currentJob: Job? = null
 
@@ -68,7 +77,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
             callback?.invoke(false)
             return
         }
-        safeUpdate(isLoading, true)
+        safeUpdate(_isLoading, true)
 
         val query: String? = when (type) {
             FETCH_POST_INIT -> mUrl
@@ -79,7 +88,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         Timber.d("【业务层】开始加载详情/帖子数据, Type=$type, Query=$query")
 
         if (query.isNullOrBlank()) {
-            safeUpdate(isLoading, false)
+            safeUpdate(_isLoading, false)
             callback?.invoke(false)
             return
         }
@@ -98,38 +107,36 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                 Timber.d("【详情页】请求成功: title=${response.articleTitle}, posts数量=${response.postList.size}, hasNextPage=${!response.nextPageUrl.isNullOrEmpty()}")
                 articleAbstract = response.articleAbstractResponse
                 response.articleTitle.takeIf { it.isNotBlank() }?.let {
-                    safeUpdate(articleTitle, it)
+                    safeUpdate(_articleTitle, it)
                 }
 
                 if (response.postList.isNotEmpty()) {
                     when (type) {
                         FETCH_POST_INIT -> {
-                            
-                            safeUpdate(posts, response.postList.toMutableList())
-                                Timber.d("【业务层】初始化数据: 共 ${response.postList.size} 条")
+                            safeUpdate(_posts, response.postList.toMutableList())
+                            Timber.d("【业务层】初始化数据: 共 ${response.postList.size} 条")
                         }
                         else -> {
-                            
-                            val currentList = posts.value?.toMutableList() ?: mutableListOf()
+                            val currentList = _posts.value.toMutableList()
                             currentList.addAll(response.postList)
-                                Timber.d("【业务层】追加数据: 新增 ${response.postList.size} 条, 当前总计 ${currentList.size} 条")
-                            safeUpdate(posts, currentList)
-                            safeUpdate(newPostsAppended, response.postList)
+                            Timber.d("【业务层】追加数据: 新增 ${response.postList.size} 条, 当前总计 ${currentList.size} 条")
+                            safeUpdate(_posts, currentList)
+                            safeUpdate(_newPostsAppended, response.postList)
                         }
                     }
                 }
 
                 nextPageUrl = response.nextPageUrl
-                safeUpdate(hasMorePages, nextPageUrl?.isNotEmpty() == true)
+                safeUpdate(_hasMorePages, nextPageUrl?.isNotEmpty() == true)
                 mFormHash = response.fromHash
-                safeUpdate(shouldDisplayPosts, true)
+                safeUpdate(_shouldDisplayPosts, true)
                 callback?.invoke(true)
             } catch (e: Exception) {
                 handleFetchError(e)
                 callback?.invoke(false)
             } finally {
                 fetching = false
-                safeUpdate(isLoading, false)
+                safeUpdate(_isLoading, false)
             }
         }
     }
@@ -139,7 +146,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         Timber.e("【详情页】处理请求错误，类型: ${e.javaClass.simpleName}, 信息: ${e.message}")
         when (e) {
             is BlockException -> {
-                if (posts.value?.isNotEmpty() == true) {
+                if (_posts.value.isNotEmpty()) {
                     showMessage(e.alertMessage)
                 } else {
                     setArticleBlocked(e.alertMessage)
@@ -154,7 +161,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
 
     override fun replyAdd(url: String) {
         if (TextUtils.isEmpty(url)) {
-            safeUpdate(isLoading, false)
+            safeUpdate(_isLoading, false)
             throw IllegalStateException()
         }
         currentJob = viewModelScope.launch(IOPool) {
@@ -170,41 +177,38 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         }
     }
 
-        fun extractDownloadUrl(): ArrayList<String>? {
-        val content = posts.value?.firstOrNull()?.content ?: return null
-        
+    fun extractDownloadUrl(): ArrayList<String>? {
+        val content = _posts.value.firstOrNull()?.content ?: return null
+
         val doc = org.jsoup.Jsoup.parse(content)
         val plainText = doc.text()
-        
+
         val linkRegexStr = """https?://(?:pan\.baidu\.com/s/|pan\.quark\.cn/s/|www\.aliyundrive\.com/s/|aliyundrive\.com/s/|cloud\.189\.cn/t/|pan\.xunlei\.com/s/|(?:[a-zA-Z0-9.]{0,20})lanzou[a-z]{1}\.com/)[^\s<>"']+"""
         val linkRegex = Regex(linkRegexStr)
-        
-        
+
         val hrefLinks = doc.select("a[href]").mapNotNull { element ->
             val href = element.attr("href").trim()
             if (linkRegex.containsMatchIn(href)) href else null
         }
-        
-        
+
         val textLinks = linkRegex.findAll(plainText).map { it.value }.toList()
-        
-        
+
         val allLinks = (hrefLinks + textLinks).distinct()
-        
+
         val codeRegex = Regex("""(?:提取码|密码|访问码|口令)[\s:：]*([a-zA-Z0-9]{4})""")
         val codeMatches = codeRegex.findAll(plainText).map { it.groupValues[1].trim() }.toList()
-        
+
         if (allLinks.isEmpty() && codeMatches.isEmpty()) {
             return null
         }
-        
+
         val resultList = ArrayList<String>()
         val maxCount = maxOf(allLinks.size, codeMatches.size)
-        
+
         for (i in 0 until maxCount) {
             val link = allLinks.getOrNull(i)?.trim() ?: ""
             val code = codeMatches.getOrNull(i)?.trim() ?: ""
-            
+
             var combined = ""
             if (link.isNotEmpty() && code.isNotEmpty()) {
                 if (link.contains("pwd=$code") || link.contains("password=$code") || link.contains("code=$code") || link.contains("提取码")) {
@@ -217,25 +221,25 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
             } else if (code.isNotEmpty()) {
                 combined = "提取码: $code"
             }
-            
+
             if (combined.isNotEmpty() && !resultList.contains(combined)) {
                 resultList.add(combined)
             }
         }
-        
+
         return resultList
     }
 
-fun checkIsFavorited() {
+    fun checkIsFavorited() {
         val url = mUrl ?: return
         currentJob = viewModelScope.launch(IOPool) {
             val isFav = ArticlesLocalDataSource.isArticleInFavorites(url)
-            safeUpdate(isFavorited, isFav)
+            safeUpdate(_isFavorited, isFav)
         }
     }
 
     fun toggleFavorite() {
-        val isCurrentlyFavorited = isFavorited.value ?: false
+        val isCurrentlyFavorited = _isFavorited.value
         if (isCurrentlyFavorited) {
             removeFromFavorite()
         } else {
@@ -244,17 +248,17 @@ fun checkIsFavorited() {
     }
 
     fun addToFavorite() {
-        val currentPosts = posts.value ?: run {
+        val currentPosts = _posts.value.ifEmpty {
             showMessage(R.string.add_to_favorite_failed)
             return
         }
         currentJob = viewModelScope.launch(IOPool) {
             try {
-                val title = articleTitle.value ?: articleAbstract?.title ?: "未知标题"
+                val title = _articleTitle.value.ifEmpty { articleAbstract?.title ?: "未知标题" }
                 val author = currentPosts.firstOrNull()?.author ?: ""
                 val content = articleAbstract?.description ?: ""
                 val url = mUrl ?: throw IllegalStateException("URL is null")
-                
+
                 val articleEntity = ArticleEntity(
                     title = title,
                     author = author,
@@ -262,12 +266,10 @@ fun checkIsFavorited() {
                     content = content,
                     timestamp = System.currentTimeMillis()
                 )
-                
-                
+
                 val localRes = ArticlesLocalDataSource.addArticleToFavorite(articleEntity)
-                safeUpdate(isFavorited, true)
-                
-                
+                safeUpdate(_isFavorited, true)
+
                 if (AppConfig.syncFavorites && UserDataRepo.isLoggedIn) {
                     val threadId = extractThreadId(mUrl)
                     val formHash = mFormHash
@@ -295,7 +297,6 @@ fun checkIsFavorited() {
         val url = mUrl ?: return
         currentJob = viewModelScope.launch(IOPool) {
             try {
-                
                 if (AppConfig.syncFavorites && UserDataRepo.isLoggedIn) {
                     val threadId = extractThreadId(mUrl)
                     val formHash = mFormHash
@@ -309,7 +310,7 @@ fun checkIsFavorited() {
 
                 val res = ArticlesLocalDataSource.delArticleFromFavorite(url)
                 showMessage(if (res) R.string.remove_all_favorites_successfully else R.string.add_to_favorite_failed)
-                safeUpdate(isFavorited, false)
+                safeUpdate(_isFavorited, false)
             } catch (e: Exception) {
                 Timber.e(e)
                 showMessage(R.string.add_to_favorite_failed)
@@ -318,41 +319,36 @@ fun checkIsFavorited() {
     }
 
     fun addPostToTop(post: Post) {
-        posts.value?.let { currentList ->
-
+        _posts.value.let { currentList ->
             val insertPos = if (currentList.isEmpty()) 0 else 1
             currentList.add(insertPos, post)
-            safeUpdate(postInsertedAt, insertPos to post)
+            safeUpdate(_postInsertedAt, insertPos to post)
         }
     }
 
     /** 回复/跟帖成功后，把本地构造的新楼层追加到列表末尾并刷新。 */
     fun appendNewReply(post: Post) {
-        val currentList = posts.value?.toMutableList() ?: mutableListOf()
+        val currentList = _posts.value.toMutableList()
         currentList.add(post)
-        safeUpdate(posts, currentList)
-        safeUpdate(shouldDisplayPosts, true)
+        safeUpdate(_posts, currentList)
+        safeUpdate(_shouldDisplayPosts, true)
     }
 
     private fun setArticleNotFound() {
-        safeUpdate(isNotFound, true)
-        safeUpdate(shouldDisplayPosts, false)
+        safeUpdate(_isNotFound, true)
+        safeUpdate(_shouldDisplayPosts, false)
     }
 
     private fun setArticleBlocked(message: String) {
-        safeUpdate(blockMessage, message)
-        safeUpdate(shouldDisplayPosts, false)
+        safeUpdate(_blockMessage, message)
+        safeUpdate(_shouldDisplayPosts, false)
     }
 
     private fun extractThreadId(url: String?): String? {
         return url?.split("-")?.getOrNull(1)
     }
 
-    private fun <T> safeUpdate(liveData: MutableLiveData<T>, value: T) {
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            liveData.value = value
-        } else {
-            liveData.postValue(value)
-        }
+    private fun <T> safeUpdate(flow: MutableStateFlow<T>, value: T) {
+        flow.value = value
     }
 }

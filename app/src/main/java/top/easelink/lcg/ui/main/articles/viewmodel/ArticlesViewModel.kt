@@ -1,8 +1,10 @@
 package top.easelink.lcg.ui.main.articles.viewmodel
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.ui.main.source.model.Article
@@ -11,8 +13,12 @@ import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource
 class ArticlesViewModel : ViewModel(), ArticleFetcher {
     private var mCurrentPage = 0
     private lateinit var mUrl: String
-    val isLoading = MutableLiveData<Boolean>()
-    val articles = MutableLiveData<List<Article>>()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _articles = MutableStateFlow<List<Article>>(emptyList())
+    val articles: StateFlow<List<Article>> = _articles.asStateFlow()
 
     fun initUrl(url: String) {
         mUrl = url
@@ -24,22 +30,22 @@ class ArticlesViewModel : ViewModel(), ArticleFetcher {
             ArticleFetcher.FetchType.FETCH_MORE -> mCurrentPage + 1
             ArticleFetcher.FetchType.FETCH_INIT -> 1
         }
-        isLoading.value = true
+        _isLoading.value = true
         viewModelScope.launch(IOPool) {
             ArticlesRemoteDataSource.getHomePageArticles(mUrl, pageNum).let {
                 if (it.isNotEmpty().also(callback)) {
-                    val list = articles.value?.toMutableList()
-                    if (fetchType == ArticleFetcher.FetchType.FETCH_MORE && list != null && list.isNotEmpty()) {
+                    val list = _articles.value.toMutableList()
+                    if (fetchType == ArticleFetcher.FetchType.FETCH_MORE && list.isNotEmpty()) {
                         list.addAll(it)
-                        articles.postValue(list)
+                        _articles.value = list
                     } else {
-                        articles.postValue(it)
+                        _articles.value = it
                     }
 
                     mCurrentPage = pageNum
                 }
             }
-            isLoading.postValue(false)
+            _isLoading.value = false
         }
     }
 }

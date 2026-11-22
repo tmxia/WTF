@@ -28,7 +28,6 @@ import top.easelink.framework.threadpool.CalcPool
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.framework.threadpool.Main
 import top.easelink.lcg.R
-import top.easelink.lcg.account.AccountManager.isLoggedIn
 import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.account.UserDataRepo.updateUserInfo
 import top.easelink.lcg.appinit.LCGApp
@@ -181,7 +180,6 @@ class WebViewActivity : AppCompatActivity() {
 
                 LCGCookieJar.syncFromWebView(currentUrl)
                 UserDataRepo.isLoggedIn = true
-                isLoggedIn.postValue(true)
                 doc.getElementById("messagetext")?.text()?.let {
                     showMessage(it)
                 } ?: showMessage(R.string.login_successfully)

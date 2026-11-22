@@ -17,7 +17,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,11 +64,11 @@ class MessageFragment : TopFragment(), ControllableFragment {
             ViewGroup.LayoutParams.MATCH_PARENT
         )
         setContent {
-            val isLoggedIn by AccountManager.isLoggedIn.observeAsState(initial = false)
-            val notifications by notificationViewModel.notifications.observeAsState()
-            val conversations by conversationViewModel.conversations.observeAsState()
-            val isNotifLoading by notificationViewModel.isLoading.observeAsState(initial = false)
-            val isConvLoading by conversationViewModel.isLoading.observeAsState(initial = false)
+            val isLoggedIn by AccountManager.isLoggedIn.collectAsState()
+            val notifications by notificationViewModel.notifications.collectAsState()
+            val conversations by conversationViewModel.conversations.collectAsState()
+            val isNotifLoading by notificationViewModel.isLoading.collectAsState()
+            val isConvLoading by conversationViewModel.isLoading.collectAsState()
 
             var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -133,12 +133,12 @@ class MessageFragment : TopFragment(), ControllableFragment {
                                 NotificationList(notifications?.notifications ?: emptyList())
                             }
                         } else {
-                            if (isConvLoading && conversations == null) {
+                            if (isConvLoading && conversations.isEmpty()) {
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator(modifier = Modifier.size(32.dp), color = Color(0xFFE53935), strokeWidth = 3.dp)
                                 }
                             } else {
-                                ConversationList(conversations ?: emptyList(), requireContext())
+                                ConversationList(conversations, requireContext())
                             }
                         }
                     }

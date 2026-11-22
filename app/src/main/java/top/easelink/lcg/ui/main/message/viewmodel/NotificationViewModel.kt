@@ -1,9 +1,11 @@
 package top.easelink.lcg.ui.main.message.viewmodel
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jsoup.nodes.Document
 import timber.log.Timber
@@ -14,8 +16,12 @@ import top.easelink.lcg.ui.main.model.SystemNotification
 import top.easelink.lcg.utils.WebsiteConstant.NOTIFICATION_HOME_QUERY
 
 class NotificationViewModel : ViewModel() {
-    val notifications = MutableLiveData<NotificationModel>()
-    val isLoading = MutableLiveData<Boolean>()
+    private val _notifications = MutableStateFlow<NotificationModel?>(null)
+    val notifications: StateFlow<NotificationModel?> = _notifications.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     var nextPageUrl = ""
 
     fun fetchMoreNotifications(callback: (Boolean) -> Unit) {
@@ -27,7 +33,7 @@ class NotificationViewModel : ViewModel() {
             try {
                 JsoupClient.sendGetRequestWithQuery(nextPageUrl).let {
                     val model = parseResponse(it)
-                    notifications.postValue(model)
+                    _notifications.value = model
                     callback.invoke(true)
                 }
             } catch (e: Exception) {
@@ -39,15 +45,15 @@ class NotificationViewModel : ViewModel() {
 
     fun fetchNotifications() {
         viewModelScope.launch(Dispatchers.IO) {
-            isLoading.postValue(true)
+            _isLoading.value = true
             try {
                 JsoupClient.sendGetRequestWithQuery(NOTIFICATION_HOME_QUERY).let {
-                    notifications.postValue(parseResponse(it))
+                    _notifications.value = parseResponse(it)
                 }
             } catch (e: Exception) {
                 Timber.e(e)
             }
-            isLoading.postValue(false)
+            _isLoading.value = false
         }
     }
 

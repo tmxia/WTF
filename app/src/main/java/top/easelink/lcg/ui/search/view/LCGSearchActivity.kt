@@ -8,9 +8,11 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -109,22 +111,23 @@ class LCGSearchActivity : TopActivity() {
     }
 
     private fun setupObserver() {
-        mSearchViewModel.totalResult.observe(this) {
-            binding.toolbar.title = it
-        }
-        mSearchViewModel.searchResults.observe(this@LCGSearchActivity) {
-            (binding.recyclerView.adapter as? LCGSearchResultAdapter)?.apply {
-                clearItems()
-                addItems(it)
+        lifecycleScope.launch {
+            mSearchViewModel.totalResult.collect {
+                binding.toolbar.title = it
             }
         }
-        mSearchViewModel.isLoading.observe(this@LCGSearchActivity) {
-            if (it) {
-                binding.searchingFile.visibility = View.VISIBLE
-                binding.recyclerView.visibility = View.GONE
-            } else {
-                binding.searchingFile.visibility = View.GONE
-                binding.recyclerView.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            mSearchViewModel.searchResults.collect {
+                (binding.recyclerView.adapter as? LCGSearchResultAdapter)?.apply {
+                    clearItems()
+                    addItems(it)
+                }
+            }
+        }
+        lifecycleScope.launch {
+            mSearchViewModel.isLoading.collect {
+                binding.searchingFile.visibility = if (it) View.VISIBLE else View.GONE
+                binding.recyclerView.visibility = if (it) View.GONE else View.VISIBLE
             }
         }
     }

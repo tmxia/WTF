@@ -160,7 +160,9 @@ class SettingActivity : TopActivity() {
     }
 
     private fun setupObserver() {
-        top.easelink.lcg.account.AccountManager.isLoggedIn.observe(this) { updateAccountButton(it) }
+        lifecycleScope.launch {
+            top.easelink.lcg.account.AccountManager.isLoggedIn.collect { updateAccountButton(it) }
+        }
         lifecycleScope.launch {
             mViewModel.syncFavoriteEnable.collect { binding.syncFavoritesSwitch.isChecked = (UserDataRepo.isLoggedIn && it) }
         }

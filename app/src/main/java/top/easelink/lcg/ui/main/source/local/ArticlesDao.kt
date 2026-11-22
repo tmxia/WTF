@@ -1,7 +1,7 @@
 package top.easelink.lcg.ui.main.source.local
 
-import androidx.lifecycle.LiveData
 import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 import top.easelink.lcg.ui.main.source.model.ArticleEntity
 import top.easelink.lcg.ui.main.source.model.HistoryEntity
 
@@ -26,7 +26,7 @@ interface ArticlesDao {
     fun isArticleInFavorites(id: String): Int
 
     @Query("SELECT * FROM history ORDER BY timestamp DESC")
-    fun getHistories(): LiveData<List<HistoryEntity>>
+    fun getHistories(): Flow<List<HistoryEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHistory(vararg historyEntity: HistoryEntity)

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import coil.Coil
 import coil.request.ImageRequest
@@ -22,16 +21,16 @@ import top.easelink.lcg.databinding.ItemEmptyViewBinding
 import top.easelink.lcg.databinding.ItemFollowContentViewBinding
 import top.easelink.lcg.databinding.ItemLoadMoreViewBinding
 import top.easelink.lcg.ui.main.follow.model.FeedInfo
-import top.easelink.lcg.ui.main.follow.viewmodel.FollowingFeedViewModel
 import top.easelink.lcg.ui.main.model.OpenArticleEvent
 import top.easelink.lcg.ui.main.model.OpenLargeImageViewEvent
 import top.easelink.lcg.utils.ImageLoaderHelper
 
 class FollowingFeedAdapter(
-    private val followingFeedViewModel: FollowingFeedViewModel
+    private val onLoadMore: (() -> Unit)? = null
 ) : RecyclerView.Adapter<BaseViewHolder>() {
     private val mFeeds: MutableList<FeedInfo> = mutableListOf()
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    var loadMoreLoading: Boolean = false
 
     override fun getItemCount(): Int = if (mFeeds.isEmpty()) {
         1
@@ -63,7 +62,7 @@ class FollowingFeedAdapter(
 
             VIEW_TYPE_LOAD_MORE -> {
                 val binding = ItemLoadMoreViewBinding.inflate(inflater, parent, false)
-                LoadMoreViewHolder(binding, followingFeedViewModel)
+                LoadMoreViewHolder(binding)
             }
 
             else -> {
@@ -91,11 +90,8 @@ class FollowingFeedAdapter(
         notifyItemRangeRemoved(0, size)
     }
 
-    override fun onViewRecycled(holder: BaseViewHolder) {
-        if (holder is LoadMoreViewHolder) {
-            holder.removeObserver()
-        }
-        super.onViewRecycled(holder)
+    fun stopLoadMoreAnimation() {
+        loadMoreLoading = false
     }
 
     inner class ArticleViewHolder internal constructor(
@@ -172,12 +168,11 @@ class FollowingFeedAdapter(
     }
 
     inner class LoadMoreViewHolder internal constructor(
-        private val binding: ItemLoadMoreViewBinding,
-        private val followingFeedViewModel: FollowingFeedViewModel
+        private val binding: ItemLoadMoreViewBinding
     ) : BaseViewHolder(binding.root) {
-        private val observer: Observer<Boolean> = Observer {
+        override fun onBind(position: Int) {
             binding.loading.apply {
-                if (it) {
+                if (loadMoreLoading) {
                     visibility = View.VISIBLE
                     playAnimation()
                 } else {
@@ -185,23 +180,7 @@ class FollowingFeedAdapter(
                     visibility = View.GONE
                 }
             }
-        }
-
-        override fun onBind(position: Int) {
-            followingFeedViewModel.isLoadingForLoadMore.observeForever(observer)
-            followingFeedViewModel.fetchMore {
-                if (!it) {
-                    binding.loading.apply {
-                        cancelAnimation()
-                        visibility = View.GONE
-                    }
-                    removeObserver()
-                }
-            }
-        }
-
-        fun removeObserver() {
-            followingFeedViewModel.isLoadingForLoadMore.removeObserver(observer)
+            onLoadMore?.invoke()
         }
     }
 

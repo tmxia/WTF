@@ -1,8 +1,10 @@
 package top.easelink.lcg.ui.main.follow.viewmodel
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jsoup.Jsoup
 import timber.log.Timber
@@ -13,27 +15,33 @@ import top.easelink.lcg.utils.WebsiteConstant.FOLLOW_FEED_QUERY
 import java.util.Locale
 
 class FollowingFeedViewModel : ViewModel() {
-    val follows = MutableLiveData<List<FeedInfo>>()
-    val isLoading = MutableLiveData<Boolean>()
-    val isLoadingForLoadMore = MutableLiveData<Boolean>()
+    private val _follows = MutableStateFlow<List<FeedInfo>>(emptyList())
+    val follows: StateFlow<List<FeedInfo>> = _follows.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _isLoadingForLoadMore = MutableStateFlow(false)
+    val isLoadingForLoadMore: StateFlow<Boolean> = _isLoadingForLoadMore.asStateFlow()
+
     var pageNum = 1
 
     fun fetchData() {
         val url = String.format(Locale.US, FOLLOW_FEED_QUERY, 1, 1)
-        isLoading.value = true
+        _isLoading.value = true
         viewModelScope.launch(IOPool) {
             try {
                 parseFeeds(JsoupClient.sendAjaxRequest(url))
             } catch (e: Exception) {
                 Timber.e(e)
             } finally {
-                isLoading.postValue(false)
+                _isLoading.value = false
             }
         }
     }
 
     fun fetchMore(callBack: (Boolean) -> Unit) {
-        isLoadingForLoadMore.value = true
+        _isLoadingForLoadMore.value = true
         val url = String.format(Locale.US, FOLLOW_FEED_QUERY, pageNum, 1)
         viewModelScope.launch(IOPool) {
             try {
@@ -46,7 +54,7 @@ class FollowingFeedViewModel : ViewModel() {
                 Timber.e(e)
                 callBack(false)
             } finally {
-                isLoadingForLoadMore.postValue(false)
+                _isLoadingForLoadMore.value = false
             }
         }
     }
@@ -98,7 +106,7 @@ class FollowingFeedViewModel : ViewModel() {
                 images = followImages
             )
         }
-        follows.postValue(feedInfos)
+        _follows.value = feedInfos
         return true
     }
 }

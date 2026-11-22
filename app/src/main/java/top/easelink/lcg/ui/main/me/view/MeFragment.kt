@@ -16,7 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.greenrobot.eventbus.EventBus
@@ -91,10 +93,12 @@ class MeFragment : TopFragment(), ControllableFragment {
             }
         }
 
-        AccountManager.isLoggedIn.observe(viewLifecycleOwner) {
-            if (!UserDataRepo.isLoggedIn && isAdded && isVisible && SystemClock.elapsedRealtime() - MINIMUM_HINT_SHOW_INTERVAL > lastShowLoginHintTime) {
-                lastShowLoginHintTime = SystemClock.elapsedRealtime()
-                Toast.makeText(requireContext(), R.string.login_hint_message, Toast.LENGTH_SHORT).show()
+        viewLifecycleOwner.lifecycleScope.launch {
+            AccountManager.isLoggedIn.collect {
+                if (!UserDataRepo.isLoggedIn && isAdded && isVisible && SystemClock.elapsedRealtime() - MINIMUM_HINT_SHOW_INTERVAL > lastShowLoginHintTime) {
+                    lastShowLoginHintTime = SystemClock.elapsedRealtime()
+                    Toast.makeText(requireContext(), R.string.login_hint_message, Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -112,7 +116,7 @@ class MeFragment : TopFragment(), ControllableFragment {
 
 @Composable
 fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNavigate: (Fragment) -> Unit) {
-    val userInfo by AccountManager.userInfo.observeAsState(initial = null)
+    val userInfo by AccountManager.userInfo.collectAsState()
     val isLoggedIn = userInfo != null && !userInfo?.userName.isNullOrBlank()
     val context = LocalContext.current
 

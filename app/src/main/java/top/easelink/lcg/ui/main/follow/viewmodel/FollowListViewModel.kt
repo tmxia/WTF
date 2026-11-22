@@ -1,8 +1,10 @@
 package top.easelink.lcg.ui.main.follow.viewmodel
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jsoup.nodes.Document
 import timber.log.Timber
@@ -12,15 +14,20 @@ import top.easelink.lcg.ui.main.follow.model.FollowInfo
 import top.easelink.lcg.ui.main.follow.model.FollowResult
 
 class FollowListViewModel : ViewModel() {
-    val follows = MutableLiveData<FollowResult>()
-    val isLoading = MutableLiveData<Boolean>()
-    val isLoadingForLoadMore = MutableLiveData<Boolean>()
+    private val _follows = MutableStateFlow<FollowResult?>(null)
+    val follows: StateFlow<FollowResult?> = _follows.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _isLoadingForLoadMore = MutableStateFlow(false)
+    val isLoadingForLoadMore: StateFlow<Boolean> = _isLoadingForLoadMore.asStateFlow()
 
     fun fetchData(url: String, isLoadMore: Boolean = false) {
         if (isLoadMore) {
-            isLoadingForLoadMore.value = true
+            _isLoadingForLoadMore.value = true
         } else {
-            isLoading.value = true
+            _isLoading.value = true
         }
 
         viewModelScope.launch(IOPool) {
@@ -31,9 +38,9 @@ class FollowListViewModel : ViewModel() {
                 Timber.e(e)
             } finally {
                 if (isLoadMore) {
-                    isLoadingForLoadMore.postValue(false)
+                    _isLoadingForLoadMore.value = false
                 } else {
-                    isLoading.postValue(false)
+                    _isLoading.value = false
                 }
             }
         }
@@ -65,7 +72,7 @@ class FollowListViewModel : ViewModel() {
             }
 
             val nextPageUrl = selectFirst("a.nxt")?.attr("href")
-            follows.postValue(FollowResult(followInfos, nextPageUrl))
+            _follows.value = FollowResult(followInfos, nextPageUrl)
         }
     }
 }

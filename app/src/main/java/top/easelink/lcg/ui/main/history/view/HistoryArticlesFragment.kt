@@ -18,7 +18,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,10 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.viewModels
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.framework.topbase.TopFragment
-import top.easelink.lcg.ui.main.history.model.HistoryModel
 import top.easelink.lcg.ui.main.history.viewmodel.HistoryViewModel
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
@@ -50,19 +48,12 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
         super.onViewCreated(view, savedInstanceState)
 
         (view as ComposeView).setContent {
-            var historyList by remember { mutableStateOf<List<HistoryModel>>(emptyList()) }
             var isLoading by remember { mutableStateOf(true) }
+            val histories by viewModel.histories.collectAsState()
 
-            val scope = rememberCoroutineScope()
             LaunchedEffect(Unit) {
-                viewModel.histories.observe(viewLifecycleOwner) { list ->
-                    historyList = list
-
-                    scope.launch {
-                        delay(400)
-                        isLoading = false
-                    }
-                }
+                delay(400)
+                isLoading = false
             }
 
             Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
@@ -90,13 +81,13 @@ class HistoryArticlesFragment : TopFragment(), ControllableFragment {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(modifier = Modifier.size(32.dp), color = Color(0xFFE53935), strokeWidth = 3.dp)
                     }
-                } else if (historyList.isEmpty()) {
+                } else if (histories.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("目前没有内容可供展示", color = Color.Gray)
                     }
                 } else {
                     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(historyList) { item ->
+                        items(histories) { item ->
                             Card(
                                 shape = RoundedCornerShape(12.dp),
                                 colors = CardDefaults.cardColors(containerColor = Color.White),

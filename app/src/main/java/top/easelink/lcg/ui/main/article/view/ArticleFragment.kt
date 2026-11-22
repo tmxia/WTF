@@ -20,7 +20,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -115,9 +115,10 @@ class ArticleFragment : Fragment(), ControllableFragment {
         }
 
         composeView.setContent {
-            val isLoading by viewModel.isLoading.observeAsState(initial = false)
+            val isLoading by viewModel.isLoading.collectAsState()
+            val articleTitle by viewModel.articleTitle.collectAsState()
             ArticleScreen(
-                title = viewModel.articleTitle.observeAsState(title.ifEmpty { "帖子详情" }).value ?: "帖子详情",
+                title = articleTitle.ifEmpty { title.ifEmpty { "帖子详情" } },
                 articleUrl = url,
                 viewModel = viewModel,
                 fragment = this@ArticleFragment,
@@ -168,12 +169,12 @@ fun ArticleScreen(
 ) {
     val context = LocalContext.current
 
-    val isLoading by viewModel.isLoading.observeAsState(initial = false)
-    val posts by viewModel.posts.observeAsState(initial = emptyList())
-    val isFavorited by viewModel.isFavorited.observeAsState(initial = false)
-    val blockMessage by viewModel.blockMessage.observeAsState(initial = "")
-    val isNotFound by viewModel.isNotFound.observeAsState(initial = false)
-    val shouldDisplayPosts by viewModel.shouldDisplayPosts.observeAsState(initial = true)
+    val isLoading by viewModel.isLoading.collectAsState()
+    val posts by viewModel.posts.collectAsState()
+    val isFavorited by viewModel.isFavorited.collectAsState()
+    val blockMessage by viewModel.blockMessage.collectAsState()
+    val isNotFound by viewModel.isNotFound.collectAsState()
+    val shouldDisplayPosts by viewModel.shouldDisplayPosts.collectAsState()
 
     var showMenu by remember { mutableStateOf(false) }
     var pendingScrollPost by remember { mutableStateOf<Post?>(null) }

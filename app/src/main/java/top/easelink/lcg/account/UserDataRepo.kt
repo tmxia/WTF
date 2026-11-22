@@ -38,14 +38,14 @@ object UserDataRepo {
         get() = get(SP_KEY_SIGN_IN_STATE, "")
         set(value) {
             put(SP_KEY_SIGN_IN_STATE, value)
-            AccountManager.isSignedToday.postValue(true)
+            AccountManager.setSignedToday(true)
         }
 
     var isLoggedIn: Boolean
         get() = get(SP_KEY_LOGGED_IN, false)
         set(value) {
             put(SP_KEY_LOGGED_IN, value)
-            AccountManager.isLoggedIn.postValue(value)
+            AccountManager.setLoggedIn(value)
             Timber.d("【状态层】登录状态变更: isLoggedIn=$value")
         }
 
@@ -60,7 +60,7 @@ object UserDataRepo {
             answerRate = userInfo.answerRate.orEmpty()
             signInState = userInfo.signInStateUrl.orEmpty()
         }
-        AccountManager.userInfo.postValue(userInfo)
+        AccountManager.setUserInfo(userInfo)
     }
 
     fun clearAll() {

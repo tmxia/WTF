@@ -5,11 +5,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.Observer
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.launch
 import top.easelink.framework.topbase.TopFragment
 import top.easelink.lcg.databinding.FragmentFollowingBinding
 import top.easelink.lcg.ui.main.follow.viewmodel.FollowingFeedViewModel
@@ -18,6 +21,7 @@ class FollowingContentFragment : TopFragment() {
     private lateinit var mFollowVM: FollowingFeedViewModel
     private var _binding: FragmentFollowingBinding? = null
     private val binding get() = _binding!!
+    private lateinit var adapter: FollowingFeedAdapter
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -36,36 +40,49 @@ class FollowingContentFragment : TopFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setUpRV()
+        collectState()
         mFollowVM.fetchData()
     }
 
     private fun setUpRV() {
+        adapter = FollowingFeedAdapter(onLoadMore = {
+            mFollowVM.fetchMore { success ->
+                if (!success) adapter.stopLoadMoreAnimation()
+            }
+        })
         binding.followList.apply {
             layoutManager = LinearLayoutManager(context).also {
                 it.orientation = RecyclerView.VERTICAL
             }
             itemAnimator = DefaultItemAnimator()
-            adapter = FollowingFeedAdapter(mFollowVM)
-            mFollowVM.apply {
-                isLoading.observe(viewLifecycleOwner, Observer {
-                    if (it) {
-                        binding.loading.visibility = View.VISIBLE
-                        binding.followList.visibility = View.GONE
+            this.adapter = this@FollowingContentFragment.adapter
+        }
+    }
+
+    private fun collectState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mFollowVM.isLoading.collect { loading ->
+                    binding.loading.visibility = if (loading) View.VISIBLE else View.GONE
+                    binding.followList.visibility = if (loading) View.GONE else View.VISIBLE
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mFollowVM.follows.collect { feeds ->
+                    if (adapter.itemCount > 1) {
+                        adapter.appendItems(feeds)
                     } else {
-                        binding.loading.visibility = View.GONE
-                        binding.followList.visibility = View.VISIBLE
+                        adapter.clearItems()
+                        adapter.addItems(feeds)
                     }
-                })
-                follows.observe(viewLifecycleOwner, Observer {
-                    (adapter as FollowingFeedAdapter).run {
-                        if (itemCount > 1) {
-                            appendItems(it)
-                        } else {
-                            clearItems()
-                            addItems(it)
-                        }
-                    }
-                })
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mFollowVM.isLoadingForLoadMore.collect { adapter.loadMoreLoading = it }
             }
         }
     }

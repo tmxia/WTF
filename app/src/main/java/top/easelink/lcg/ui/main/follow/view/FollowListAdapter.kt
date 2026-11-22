@@ -3,8 +3,6 @@ package top.easelink.lcg.ui.main.follow.view
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import top.easelink.framework.base.BaseViewHolder
 import top.easelink.lcg.R
@@ -12,15 +10,14 @@ import top.easelink.lcg.databinding.ItemEmptyViewBinding
 import top.easelink.lcg.databinding.ItemFollowViewBinding
 import top.easelink.lcg.databinding.ItemLoadMoreViewBinding
 import top.easelink.lcg.ui.main.follow.model.FollowInfo
-import top.easelink.lcg.ui.main.follow.viewmodel.FollowListViewModel
 import top.easelink.lcg.utils.ImageLoaderHelper
 
 class FollowListAdapter(
-    private val followListViewModel: FollowListViewModel,
-    private val lifecycleOwner: LifecycleOwner
+    private val onLoadMore: (() -> Unit)? = null
 ) : RecyclerView.Adapter<BaseViewHolder>() {
     private val mFollowing: MutableList<FollowInfo> = mutableListOf()
     var nextPageUrl: String? = null
+    var loadMoreLoading: Boolean = false
 
     override fun getItemCount(): Int = if (mFollowing.isEmpty()) {
         1
@@ -52,7 +49,7 @@ class FollowListAdapter(
 
             VIEW_TYPE_LOAD_MORE -> {
                 val binding = ItemLoadMoreViewBinding.inflate(inflater, parent, false)
-                LoadMoreViewHolder(binding, lifecycleOwner, followListViewModel)
+                LoadMoreViewHolder(binding)
             }
 
             else -> {
@@ -75,13 +72,6 @@ class FollowListAdapter(
 
     fun clearItems() {
         mFollowing.clear()
-    }
-
-    override fun onViewRecycled(holder: BaseViewHolder) {
-        if (holder is LoadMoreViewHolder) {
-            holder.removeObserver()
-        }
-        super.onViewRecycled(holder)
     }
 
     inner class ArticleViewHolder internal constructor(
@@ -110,36 +100,27 @@ class FollowListAdapter(
     }
 
     inner class LoadMoreViewHolder internal constructor(
-        private val binding: ItemLoadMoreViewBinding,
-        private val lifecycleOwner: LifecycleOwner,
-        private val followListViewModel: FollowListViewModel
+        private val binding: ItemLoadMoreViewBinding
     ) : BaseViewHolder(binding.root) {
-        private val observer: Observer<Boolean> = Observer {
-            binding.loading.apply {
-                if (it) {
-                    visibility = View.VISIBLE
-                    playAnimation()
-                } else {
-                    cancelAnimation()
-                    visibility = View.GONE
-                }
-            }
-        }
-
         override fun onBind(position: Int) {
-            nextPageUrl?.let {
-                followListViewModel.isLoadingForLoadMore.observe(lifecycleOwner, observer)
-                followListViewModel.fetchData(it, true)
-            } ?: run {
+            val url = nextPageUrl
+            if (!url.isNullOrEmpty()) {
+                binding.loading.apply {
+                    if (loadMoreLoading) {
+                        visibility = View.VISIBLE
+                        playAnimation()
+                    } else {
+                        cancelAnimation()
+                        visibility = View.GONE
+                    }
+                }
+                onLoadMore?.invoke()
+            } else {
                 binding.loading.apply {
                     cancelAnimation()
                     visibility = View.GONE
                 }
             }
-        }
-
-        fun removeObserver() {
-            followListViewModel.isLoadingForLoadMore.removeObserver(observer)
         }
     }
 
