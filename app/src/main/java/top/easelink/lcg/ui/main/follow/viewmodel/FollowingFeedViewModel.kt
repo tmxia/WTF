@@ -6,12 +6,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.jsoup.Jsoup
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.base.PageUiState
 import top.easelink.lcg.network.JsoupClient
 import top.easelink.lcg.ui.main.follow.model.FeedInfo
+import top.easelink.lcg.ui.main.source.parseFeedPage
 import top.easelink.lcg.utils.ErrorHandler
 import top.easelink.lcg.utils.WebsiteConstant.FOLLOW_FEED_QUERY
 import java.util.Locale
@@ -37,7 +37,8 @@ class FollowingFeedViewModel : ViewModel() {
         _uiState.value = PageUiState.Loading
         viewModelScope.launch(IOPool) {
             try {
-                parseFeeds(JsoupClient.sendAjaxRequest(url))
+                val page = parseFeedPage(JsoupClient.sendAjaxRequest(url))
+                _follows.value = page.feeds
                 if (_follows.value.isNotEmpty()) {
                     _uiState.value = PageUiState.Success(_follows.value)
                 } else {
@@ -57,9 +58,10 @@ class FollowingFeedViewModel : ViewModel() {
         val url = String.format(Locale.US, FOLLOW_FEED_QUERY, pageNum, 1)
         viewModelScope.launch(IOPool) {
             try {
-                val success = parseFeeds(JsoupClient.sendAjaxRequest(url))
-                callBack(success)
-                if (success) {
+                val page = parseFeedPage(JsoupClient.sendAjaxRequest(url))
+                _follows.value = page.feeds
+                callBack(page.valid)
+                if (page.valid) {
                     pageNum += 1
                 }
             } catch (e: Exception) {
@@ -69,56 +71,5 @@ class FollowingFeedViewModel : ViewModel() {
                 _isLoadingForLoadMore.value = false
             }
         }
-    }
-
-    private fun parseFeeds(xml: String): Boolean {
-        if (xml == "false") return false
-
-        val result = xml
-            .substring(xml.indexOf("[CDATA[", 0, true) + 7)
-            .removeSuffix("]]></root>")
-
-        val doc = Jsoup.parse(result)
-        val feedInfos = doc.select("li.cl").map {
-            val avatarUrl = it.selectFirst("a.z > img")?.attr("src").orEmpty()
-            var username = ""
-            var dateTime = ""
-            it.selectFirst("div.flw_author")?.let { author ->
-                username = author.selectFirst("a")?.text().orEmpty()
-                dateTime = author.selectFirst("span")?.text().orEmpty()
-            }
-            val title = it.selectFirst("h2")?.text().orEmpty()
-            val articleUrl = it.selectFirst("h2 > a")?.attr("href").orEmpty()
-
-            val followImages = it.getElementsByClass("flw_image")
-                .select("ul > li")
-                .mapNotNull { li ->
-                    li.selectFirst("img")?.attr("src")
-                }
-
-            val content = it.selectFirst(".pbm")?.let { pbm ->
-                pbm.select("div.flw_image").remove()
-                pbm.select("img").remove()
-                pbm.select("a.flw_readfull").remove()
-                pbm.html()
-            }.orEmpty()
-
-            val forum = it.selectFirst("div.xg1 > a")?.text().orEmpty()
-            val quote = it.selectFirst("div.flw_quotenote")?.text().orEmpty()
-
-            FeedInfo(
-                avatar = avatarUrl,
-                username = username,
-                dateTime = dateTime,
-                title = title,
-                articleUrl = articleUrl,
-                content = content,
-                forum = forum,
-                quote = quote,
-                images = followImages
-            )
-        }
-        _follows.value = feedInfos
-        return true
     }
 }
