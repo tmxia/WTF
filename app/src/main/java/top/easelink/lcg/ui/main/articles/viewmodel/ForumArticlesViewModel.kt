@@ -1,6 +1,5 @@
 package top.easelink.lcg.ui.main.articles.viewmodel
 
-import android.content.Context
 import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,7 +12,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.R
-import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.ui.main.model.LoginRequiredException
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
@@ -39,27 +37,18 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
     /** 最近一次初始化刷新任务；切换排序/时间时取消未完成的旧任务，只保留最后一次请求。 */
     private var refreshJob: Job? = null
 
-    private val prefs = try {
-        LCGApp.context.getSharedPreferences("wtf_forum_prefs", Context.MODE_PRIVATE)
-    } catch (e: Exception) {
-        Timber.tag("[ForumSort]").e(e, "获取 SharedPreferences 崩溃")
-        throw e
-    }
-
-    private var orderType = restoreOrderType()
-    private var datelineDays: Int? = restoreDatelineDays()
+    // 排序与时间筛选仅为当前会话的临时状态，不写入本地持久化；
+    // ViewModel 销毁（退出板块 / 重进）后复位为默认顺序、全部时间，避免带进阶筛选参数反复访问被风控画像。
+    private var orderType = DEFAULT_ORDER
+    private var datelineDays: Int? = null
 
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
 
-    private val _selectedSortName = MutableStateFlow(
-        prefs.getString("forum_sort_name", "默认顺序") ?: "默认顺序"
-    )
+    private val _selectedSortName = MutableStateFlow("默认顺序")
     val selectedSortName: StateFlow<String> = _selectedSortName.asStateFlow()
 
-    private val _selectedTimeName = MutableStateFlow(
-        prefs.getString("forum_time_name", "全部时间") ?: "全部时间"
-    )
+    private val _selectedTimeName = MutableStateFlow("全部时间")
     val selectedTimeName: StateFlow<String> = _selectedTimeName.asStateFlow()
 
     private val _articles = MutableStateFlow<List<Article>>(emptyList())
@@ -73,8 +62,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
 
     fun initUrlAndFetch(
         url: String,
-        fetchType: ArticleFetcher.FetchType,
-        order: String = DEFAULT_ORDER
+        fetchType: ArticleFetcher.FetchType
     ) {
         val baseUrl = if (url.contains("?")) url.substringBefore("?") else url
         val params = if (url.contains("?")) url.substringAfter("?") else ""
@@ -107,19 +95,8 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         }
 
         mFetchType = fetchType
-        if (order != DEFAULT_ORDER) orderType = order
         rewindPageNum()
         fetchArticles(mFetchType) {}
-    }
-
-    private fun restoreOrderType(): String {
-        val orderby = prefs.getString("forum_sort_order", null)
-        return if (orderby in allowedOrderby) "&orderby=$orderby" else DEFAULT_ORDER
-    }
-
-    private fun restoreDatelineDays(): Int? {
-        val saved = prefs.getString("forum_time_days", null)?.toIntOrNull()
-        return saved?.takeIf { it in allowedDateline }
     }
 
     /** 时间范围片段；null（全部时间）时不附加任何过滤参数。 */
@@ -127,8 +104,8 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         datelineDays?.let { "&filter=dateline&dateline=$it" } ?: DEFAULT_ORDER
 
     /**
-     * 切换板块列表排序。白名单校验后持久化选择，重置页码并从第 1 页重新加载。
-     * orderby 为 null 表示恢复系统默认顺序。
+     * 切换板块列表排序。白名单校验后仅更新当前会话内存状态（不持久化），重置页码并从第 1 页重新加载。
+     * orderby 为 null 表示恢复系统默认顺序；离开板块后自动复位默认。
      */
     fun selectSort(orderby: String?, name: String) {
         val safe = orderby?.takeIf { it in allowedOrderby }
@@ -137,15 +114,11 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         if (newOrder == orderType && name == _selectedSortName.value) return
         orderType = newOrder
         _selectedSortName.value = name
-        prefs.edit()
-            .putString("forum_sort_order", safe)
-            .putString("forum_sort_name", name)
-            .apply()
         restartRefresh()
     }
 
     /**
-     * 切换板块列表时间范围。白名单校验后持久化选择，重置页码并从第 1 页重新加载。
+     * 切换板块列表时间范围。白名单校验后仅更新当前会话内存状态（不持久化），重置页码并从第 1 页重新加载。
      * days 为 null 表示全部时间（不附加时间过滤）；最大允许 365 天（一年）。
      */
     fun selectTime(days: Int?, name: String) {
@@ -154,10 +127,6 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         if (safe == datelineDays && name == _selectedTimeName.value) return
         datelineDays = safe
         _selectedTimeName.value = name
-        prefs.edit()
-            .putString("forum_time_days", safe?.toString())
-            .putString("forum_time_name", name)
-            .apply()
         restartRefresh()
     }
 
