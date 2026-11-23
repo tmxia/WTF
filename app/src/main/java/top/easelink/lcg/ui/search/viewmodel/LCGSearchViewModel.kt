@@ -13,11 +13,13 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.appinit.LCGApp
+import top.easelink.lcg.base.PageUiState
 import top.easelink.lcg.ui.main.discover.model.ForumNavigationModel
 import top.easelink.lcg.ui.main.discover.source.ForumNetworkSource
 import top.easelink.lcg.ui.search.model.LCGSearchResultItem
 import top.easelink.lcg.ui.search.source.LCGSearchService.doSearchNextPage
 import top.easelink.lcg.ui.search.source.LCGSearchService.doSearchWith
+import top.easelink.lcg.utils.ErrorHandler
 
 class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
     var lastSearchKeyword: String = ""
@@ -31,6 +33,9 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _uiState = MutableStateFlow<PageUiState<List<LCGSearchResultItem>>>(PageUiState.Empty)
+    val uiState: StateFlow<PageUiState<List<LCGSearchResultItem>>> = _uiState.asStateFlow()
 
     private val _isLoadingMore = MutableStateFlow(false)
     val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()
@@ -105,6 +110,7 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
         Timber.tag("[SearchProbe]").d("发起搜索请求: keyword=$keyword, fids=$mFids, sort=$mSortOrder")
         if (keyword.isNullOrBlank()) return
         _isLoading.value = true
+        _uiState.value = PageUiState.Loading
         hasMore = true
 
         searchJob?.cancel()
@@ -116,8 +122,14 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                     _searchResults.value = result.searchResultList
                     _totalResult.value = result.totalResult
                     hasMore = result.searchResultList.isNotEmpty()
+                    _uiState.value = if (result.searchResultList.isNotEmpty()) {
+                        PageUiState.Success(result.searchResultList)
+                    } else {
+                        PageUiState.Empty
+                    }
                 } else {
                     Timber.tag("SearchDebug").d("搜索被限流，忽略此次请求")
+                    _uiState.value = PageUiState.Empty
                 }
             } catch (e: Exception) {
                 Timber.tag("SearchDebug").e(e, "搜索异常：${e.message}")
@@ -131,9 +143,17 @@ class LCGSearchViewModel : ViewModel(), LCGSearchResultAdapter.ContentFetcher {
                         top.easelink.lcg.utils.showMessage(top.easelink.lcg.R.string.network_error)
                     }
                 }
+                _uiState.value = PageUiState.Error(e, ErrorHandler.getFriendlyMessage(e))
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    fun retry() {
+        val keyword = mKeyWord
+        if (!keyword.isNullOrBlank()) {
+            fetchInit(keyword)
         }
     }
 

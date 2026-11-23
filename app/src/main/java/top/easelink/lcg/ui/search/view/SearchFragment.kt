@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -54,6 +55,7 @@ import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.framework.topbase.TopFragment
 import top.easelink.lcg.R
 import top.easelink.lcg.config.AppConfig
+import top.easelink.lcg.ui.main.common.ErrorStateView
 import top.easelink.lcg.ui.main.article.view.ArticleFragment
 import top.easelink.lcg.ui.search.model.LCGSearchResultItem
 import top.easelink.lcg.ui.search.viewmodel.LCGSearchViewModel
@@ -96,6 +98,7 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
     val keyboardController = LocalSoftwareKeyboardController.current
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isLoadingMore by viewModel.isLoadingMore.collectAsStateWithLifecycle()
     val totalResult by viewModel.totalResult.collectAsStateWithLifecycle()
     val forumList by viewModel.forumList.collectAsStateWithLifecycle()
@@ -307,6 +310,12 @@ fun SearchScreen(viewModel: LCGSearchViewModel, onNavigate: (Fragment) -> Unit) 
             } else {
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = primaryColor)
+                } else if (uiState is top.easelink.lcg.base.PageUiState.Error && searchResults.isEmpty()) {
+                    ErrorStateView(
+                        message = (uiState as? top.easelink.lcg.base.PageUiState.Error)?.message
+                            ?: stringResource(R.string.general_error),
+                        onRetry = { viewModel.retry() }
+                    )
                 } else if (searchResults.isEmpty()) {
                     if (!totalResult.isNullOrEmpty()) Text("未找到相关内容", modifier = Modifier.align(Alignment.Center), color = Color.Gray)
                 } else {
