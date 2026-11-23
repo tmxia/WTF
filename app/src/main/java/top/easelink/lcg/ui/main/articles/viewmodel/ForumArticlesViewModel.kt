@@ -344,14 +344,30 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
                 callback(true)
             }
 
-            newList.lastOrNull()?.title == currentList.lastOrNull()?.title -> {
+            // [ARCH-PHASE-13] 如果新列表为空，直接视为无更多内容
+            newList.isEmpty() -> {
+                showMessage(R.string.no_more_content)
+                callback(false)
+            }
+
+            // [ARCH-PHASE-13] 使用 URL 唯一标识进行去重判定，避免标题重复导致的误判
+            newList.lastOrNull()?.url == currentList.lastOrNull()?.url -> {
                 showMessage(R.string.no_more_content)
                 callback(false)
             }
 
             else -> {
-                _articles.value = currentList + newList
-                callback(true)
+                // 过滤掉可能已经存在的重复帖子（基于 URL）
+                val existingUrls = currentList.map { it.url }.toSet()
+                val distinctNewList = newList.filter { it.url !in existingUrls }
+                
+                if (distinctNewList.isEmpty()) {
+                    showMessage(R.string.no_more_content)
+                    callback(false)
+                } else {
+                    _articles.value = currentList + distinctNewList
+                    callback(true)
+                }
             }
         }
     }
