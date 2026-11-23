@@ -203,7 +203,7 @@ class SettingActivity : TopActivity() {
     }
 
     private fun tryLogout() {
-        LogoutHintDialog(positive = { UserDataRepo.clearAll(); showMessage(R.string.clear_cookie); finish() })
+        LogoutHintDialog(positive = { UserDataRepo.clearAll(); LCGCookieJar.clearAll(); showMessage(R.string.clear_cookie); finish() }) // [PATCH] 补充清除持久化 Cookie
             .show(supportFragmentManager, LogoutHintDialog::class.java.simpleName)
     }
 
