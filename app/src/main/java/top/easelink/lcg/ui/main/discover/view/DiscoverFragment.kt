@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.topbase.ControllableFragment
-import top.easelink.lcg.ui.main.article.view.PostPreviewDialog
+import top.easelink.lcg.ui.main.article.viewmodel.PostPreviewLauncher
 import top.easelink.lcg.ui.main.discover.viewmodel.DiscoverViewModel
 import top.easelink.lcg.ui.main.forumnav.view.ForumNavigationFragment
 import top.easelink.lcg.ui.main.model.OpenArticleEvent
@@ -44,7 +44,7 @@ class DiscoverFragment : Fragment(), ControllableFragment {
                 onForumClick = { title, url -> EventBus.getDefault().post(OpenForumEvent(title, url, true)) },
                 onMoreForumsClick = { EventBus.getDefault().post(ForumNavigationFragment::class.java) },
                 onRankClick = { url -> EventBus.getDefault().post(OpenArticleEvent(url)) },
-                onRankLongClick = { url -> PostPreviewDialog.newInstance(url).show(parentFragmentManager, PostPreviewDialog.TAG) },
+                onRankLongClick = { url -> PostPreviewLauncher.preview(parentFragmentManager, url) },
                 onRefresh = { viewModel.refreshOptions(context) },
                 isLoading = isLoading
             )

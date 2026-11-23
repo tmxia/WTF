@@ -15,7 +15,7 @@ import top.easelink.framework.base.BaseViewHolder
 import top.easelink.lcg.R
 import top.easelink.lcg.databinding.ItemArticleEmptyViewBinding
 import top.easelink.lcg.databinding.ItemHistoryArticleViewBinding
-import top.easelink.lcg.ui.main.article.view.PostPreviewDialog
+import top.easelink.lcg.ui.main.article.viewmodel.PostPreviewLauncher
 import top.easelink.lcg.ui.main.articles.viewmodel.ArticleEmptyItemViewModel
 import top.easelink.lcg.ui.main.articles.viewmodel.ArticleEmptyItemViewModel.ArticleEmptyItemViewModelListener
 import top.easelink.lcg.ui.main.history.model.HistoryModel
@@ -99,7 +99,7 @@ class HistoryArticlesAdapter : RecyclerView.Adapter<BaseViewHolder>() {
                 layout.setOnLongClickListener {
                     showMessage("长按预览文章")
                     mFragmentManager?.get()?.let { fm ->
-                        PostPreviewDialog.newInstance(item.url).show(fm, PostPreviewDialog.TAG)
+                        PostPreviewLauncher.preview(fm, item.url)
                     }
                     true
                 }

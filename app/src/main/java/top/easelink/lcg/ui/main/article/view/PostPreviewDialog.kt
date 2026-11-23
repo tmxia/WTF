@@ -13,6 +13,7 @@ import top.easelink.framework.customview.htmltextview.HtmlCoilImageGetter
 import top.easelink.framework.topbase.TopDialog
 import top.easelink.lcg.R
 import top.easelink.lcg.databinding.DialogPostPreviewBinding
+import top.easelink.lcg.ui.main.article.viewmodel.PostPreviewLauncher
 import top.easelink.lcg.ui.main.article.viewmodel.PostPreviewViewModel
 import top.easelink.lcg.utils.ImageLoaderHelper
 
@@ -135,6 +136,7 @@ class PostPreviewDialog : TopDialog() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        PostPreviewLauncher.notifyDismissed(arguments?.getString(ARTICLE_QUERY))
         _binding = null
     }
 }

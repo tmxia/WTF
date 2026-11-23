@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.topbase.ControllableFragment
-import top.easelink.lcg.ui.main.article.view.PostPreviewDialog
+import top.easelink.lcg.ui.main.article.viewmodel.PostPreviewLauncher
 import top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher
 import top.easelink.lcg.ui.main.articles.viewmodel.ForumArticlesViewModel
 import top.easelink.lcg.ui.main.model.OpenArticleEvent
@@ -61,7 +61,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
                 onLoadMore = { viewModel.fetchArticles(ArticleFetcher.FetchType.FETCH_MORE) { _ -> } },
                 onSortSelected = { orderby, name -> viewModel.selectSort(orderby, name) },
                 onTimeSelected = { days, name -> viewModel.selectTime(days, name) },
-                onArticleLongClick = { url -> PostPreviewDialog.newInstance(url).show(parentFragmentManager, PostPreviewDialog.TAG) },
+                onArticleLongClick = { url -> PostPreviewLauncher.preview(parentFragmentManager, url) },
                 onScrollPositionChanged = { isAtTop -> isListAtTop = isAtTop }
             )
         }
