@@ -1,4 +1,8 @@
 package top.easelink.lcg.ui.main
+import top.easelink.lcg.utils.WebViewConfigurator
+import top.easelink.lcg.network.JsoupClient
+import top.easelink.lcg.account.UserDataRepo
+import timber.log.Timber
 
 import top.easelink.lcg.ui.main.model.WafVerificationEvent
 
@@ -451,7 +455,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     fun onSessionExpired(event: SessionExpiredEvent) {
         showMessage(R.string.session_expired_tips)
         // [ARCH-PHASE-15] 自动清理本地过期状态，避免假登录
-        top.easelink.lcg.account.UserDataRepo.clearAll()
+        UserDataRepo.clearAll()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -484,7 +488,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             setBackgroundColor(android.graphics.Color.TRANSPARENT)
             setOnClickListener { 
                 dialog.dismiss()
-                top.easelink.lcg.network.JsoupClient.forceReleasePendingVerification()
+                JsoupClient.forceReleasePendingVerification()
             }
         }
         
@@ -493,7 +497,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         rootLayout.addView(header)
         
         val webView = android.webkit.WebView(this).apply {
-            top.easelink.lcg.utils.WebViewConfigurator.setupStandardWebView(this)
+            WebViewConfigurator.setupStandardWebView(this)
             layoutParams = android.widget.LinearLayout.LayoutParams(
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
             )
@@ -503,7 +507,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         dialog.setContentView(rootLayout)
         dialog.setOnDismissListener {
             // 如果用户按返回键直接退出，也要释放挂起的请求
-            top.easelink.lcg.network.JsoupClient.forceReleasePendingVerification()
+            JsoupClient.forceReleasePendingVerification()
         }
         
         webView.webViewClient = object : android.webkit.WebViewClient() {
@@ -515,7 +519,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                         val cookie = android.webkit.CookieManager.getInstance().getCookie("https://www.52pojie.cn/")
                         if (!cookie.isNullOrBlank()) {
                             Timber.d("WAF 验证完成，回传 Cookie")
-                            top.easelink.lcg.network.JsoupClient.completeVerification(cookie)
+                            JsoupClient.completeVerification(cookie)
                             dialog.dismiss()
                         }
                     }
