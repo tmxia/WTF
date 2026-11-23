@@ -8,6 +8,11 @@ import kotlinx.coroutines.launch
 import top.easelink.framework.utils.isOnMainThread
 import top.easelink.lcg.appinit.LCGApp
 
+// [ARCH-PHASE-9] 全局防抖变量
+private var lastToastMsg: String? = null
+private var lastToastTime: Long = 0L
+
+
 private val mainScope = MainScope()
 
 fun showMessage(msg: String) {
@@ -31,6 +36,13 @@ fun showMessage(@StringRes resource: Int) {
 }
 
 fun showMessage(context: Context, msg: String) {
+    // [ARCH-PHASE-9] 2 秒内相同消息直接拦截
+    if (msg.isBlank()) return
+    val now = System.currentTimeMillis()
+    if (msg == lastToastMsg && now - lastToastTime < 2000L) return
+    lastToastMsg = msg
+    lastToastTime = now
+
     if (isOnMainThread()) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
     } else {

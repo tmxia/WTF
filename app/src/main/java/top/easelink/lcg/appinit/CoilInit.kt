@@ -26,8 +26,7 @@ object LCGImageLoaderFactory : ImageLoaderFactory {
             val original = chain.request()
             val host = original.url.host.lowercase()
             val isLcgHost = host == "52pojie.cn" || host.endsWith(".52pojie.cn")
-            
-            
+
             if (isLcgHost) {
                 val cookieHeader = getCookiesFor(original.url.toString()).toHeaderString()
                 val newRequest = original.newBuilder()
@@ -38,24 +37,27 @@ object LCGImageLoaderFactory : ImageLoaderFactory {
                     .header("X-Requested-With", "top.easelink.lcg")
                     .also { if (cookieHeader.isNotEmpty()) it.header("Cookie", cookieHeader) }
                     .header("Connection", "keep-alive")
-                    .header(
-                        "Accept",
-                        "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
-                    )
+                    .header("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8")
                     .header("Accept-Encoding", "gzip, deflate")
-                    .header(
-                        "User-Agent",
-                        APP_USER_AGENT
-                    )
+                    .header("User-Agent", APP_USER_AGENT)
                     .build()
-                chain.proceed(newRequest)
+
+                // [ARCH-PHASE-9] 图片容灾：如果带防盗链头失败（如第三方图床），自动降级重试
+                val response = chain.proceed(newRequest)
+                if (!response.isSuccessful) {
+                    val fallbackRequest = original.newBuilder()
+                        .header("User-Agent", APP_USER_AGENT)
+                        .build()
+                    response.close() // 必须释放原连接
+                    chain.proceed(fallbackRequest)
+                } else {
+                    response
+                }
             } else {
                 chain.proceed(original)
             }
         }
 
-        
-        
         val dispatcher = Dispatcher().apply {
             maxRequests = 8
             maxRequestsPerHost = 3
