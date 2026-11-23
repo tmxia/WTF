@@ -1,5 +1,17 @@
 package top.easelink.lcg.ui.main
 
+import top.easelink.lcg.ui.main.model.WafVerificationEvent
+
+import android.widget.Button
+
+import android.widget.TextView
+
+import android.widget.LinearLayout
+
+import android.webkit.CookieManager
+
+import android.webkit.WebViewClient
+
 import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
@@ -438,7 +450,83 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onSessionExpired(event: SessionExpiredEvent) {
         showMessage(R.string.session_expired_tips)
+        // [ARCH-PHASE-15] 自动清理本地过期状态，避免假登录
+        top.easelink.lcg.account.UserDataRepo.clearAll()
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onWafVerification(event: WafVerificationEvent) {
+        // [ARCH-PHASE-15] 监听底层抛出的 WAF 验证事件，弹出 WebView 供用户滑动
+        Timber.d("全局触发 WAF 验证，URL: ${event.url}")
+        
+        val dialog = android.app.Dialog(this, android.R.style.Theme_DeviceDefault_Light_NoActionBar_Fullscreen)
+        val rootLayout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setBackgroundColor(android.graphics.Color.WHITE)
+        }
+        
+        val header = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            setPadding(32, 80, 32, 32)
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+        
+        val title = android.widget.TextView(this).apply {
+            text = "需要安全验证，请滑动或点击完成"
+            textSize = 16f
+            setTextColor(android.graphics.Color.BLACK)
+            layoutParams = android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        
+        val btnCancel = android.widget.Button(this).apply {
+            text = "取消"
+            setTextColor(android.graphics.Color.parseColor("#E53935"))
+            setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            setOnClickListener { 
+                dialog.dismiss()
+                top.easelink.lcg.network.JsoupClient.forceReleasePendingVerification()
+            }
+        }
+        
+        header.addView(title)
+        header.addView(btnCancel)
+        rootLayout.addView(header)
+        
+        val webView = android.webkit.WebView(this).apply {
+            top.easelink.lcg.utils.WebViewConfigurator.setupStandardWebView(this)
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
+            )
+        }
+        
+        rootLayout.addView(webView)
+        dialog.setContentView(rootLayout)
+        dialog.setOnDismissListener {
+            // 如果用户按返回键直接退出，也要释放挂起的请求
+            top.easelink.lcg.network.JsoupClient.forceReleasePendingVerification()
+        }
+        
+        webView.webViewClient = object : android.webkit.WebViewClient() {
+            override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                // 如果页面不再包含 WAF 特征，说明验证通过
+                view?.evaluateJavascript("document.body.innerText") { result ->
+                    if (result != null && !result.contains("waf_zw_verify") && !result.contains("安全验证")) {
+                        val cookie = android.webkit.CookieManager.getInstance().getCookie("https://www.52pojie.cn/")
+                        if (!cookie.isNullOrBlank()) {
+                            Timber.d("WAF 验证完成，回传 Cookie")
+                            top.easelink.lcg.network.JsoupClient.completeVerification(cookie)
+                            dialog.dismiss()
+                        }
+                    }
+                }
+            }
+        }
+        
+        webView.loadUrl(event.url)
+        dialog.show()
+    }
+
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         if (binding.bottomNavigation.selectedItemId == item.itemId) {

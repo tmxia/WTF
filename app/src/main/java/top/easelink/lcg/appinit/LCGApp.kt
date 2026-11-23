@@ -30,9 +30,12 @@ class LCGApp : Application() {
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         AppLogManager.isCollecting = prefs.getBoolean("debug_mode_enabled", false)
 
-        initCoil()
-        AppGuardStarter.init(this)
-        ShiplyInitialization.init(this@LCGApp)
+        // [ARCH-PHASE-15] 将非首屏必须的耗时初始化移入 IO 协程，防止冷启动白屏
+        applicationScope.launch {
+            initCoil()
+            AppGuardStarter.init(this@LCGApp)
+            ShiplyInitialization.init(this@LCGApp)
+        }
 
         applicationScope.launch {
             LCGCookieJar.syncToWebView()
