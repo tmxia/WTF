@@ -460,84 +460,9 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onWafVerification(event: WafVerificationEvent) {
-        // [CRASH-FIX] 极端保护：Activity 不可见或销毁时，直接忽略，防止 BadTokenException
-        if (isFinishing || isDestroyed) {
-            top.easelink.lcg.network.JsoupClient.forceReleasePendingVerification()
-            return
-        }
-
-        // [ARCH-PHASE-15] 监听底层抛出的 WAF 验证事件，弹出 WebView 供用户滑动
-        Timber.d("全局触发 WAF 验证，URL: ${event.url}")
-        
-        val dialog = android.app.Dialog(this, android.R.style.Theme_DeviceDefault_Light_NoActionBar_Fullscreen)
-        val rootLayout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setBackgroundColor(android.graphics.Color.WHITE)
-        }
-        
-        val header = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.HORIZONTAL
-            setPadding(32, 80, 32, 32)
-            gravity = android.view.Gravity.CENTER_VERTICAL
-        }
-        
-        val title = android.widget.TextView(this).apply {
-            text = "需要安全验证，请滑动或点击完成"
-            textSize = 16f
-            setTextColor(android.graphics.Color.BLACK)
-            layoutParams = android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        }
-        
-        val btnCancel = android.widget.Button(this).apply {
-            text = "取消"
-            setTextColor(android.graphics.Color.parseColor("#E53935"))
-            setBackgroundColor(android.graphics.Color.TRANSPARENT)
-            setOnClickListener { 
-                dialog.dismiss()
-                JsoupClient.forceReleasePendingVerification()
-            }
-        }
-        
-        header.addView(title)
-        header.addView(btnCancel)
-        rootLayout.addView(header)
-        
-        val webView = android.webkit.WebView(this).apply {
-            WebViewConfigurator.setupStandardWebView(this)
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
-            )
-        }
-        
-        rootLayout.addView(webView)
-        dialog.setContentView(rootLayout)
-        dialog.setOnDismissListener {
-            // 如果用户按返回键直接退出，也要释放挂起的请求
-            JsoupClient.forceReleasePendingVerification()
-        }
-        
-        webView.webViewClient = object : android.webkit.WebViewClient() {
-            override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                // 如果页面不再包含 WAF 特征，说明验证通过
-                view?.evaluateJavascript("document.body.innerText") { result ->
-                    if (result != null && !result.contains("waf_zw_verify") && !result.contains("安全验证")) {
-                        val cookie = android.webkit.CookieManager.getInstance().getCookie("https://www.52pojie.cn/")
-                        if (!cookie.isNullOrBlank()) {
-                            Timber.d("WAF 验证完成，回传 Cookie")
-                            JsoupClient.completeVerification(cookie)
-                            dialog.dismiss()
-                        }
-                    }
-                }
-            }
-        }
-        
-        webView.loadUrl(event.url)
-        runCatching { dialog.show() }.onFailure { 
-            Timber.e(it, "WAF 弹窗失败，可能 Activity 已不可见")
-            top.easelink.lcg.network.JsoupClient.forceReleasePendingVerification()
-        }
+        // [SAFE-MODE] 暂停弹窗，直接释放锁，防止启动瞬间崩溃
+        Timber.d("触发WAF，安全模式下直接释放请求")
+        top.easelink.lcg.network.JsoupClient.forceReleasePendingVerification()
     }
 
 
