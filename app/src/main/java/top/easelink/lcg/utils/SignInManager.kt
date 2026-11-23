@@ -91,6 +91,8 @@ object SignInManager {
 
         val webView = WebView(activity).apply {
             settings.javaScriptEnabled = true
+            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+            isScrollbarFadingEnabled = true
             settings.domStorageEnabled = true
             settings.databaseEnabled = true
             settings.allowContentAccess = true
@@ -217,6 +219,8 @@ object SignInManager {
                     layoutParams = ViewGroup.LayoutParams(100, 100)
                     alpha = 0.01f
                     settings.javaScriptEnabled = true
+            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+            isScrollbarFadingEnabled = true
                     settings.domStorageEnabled = true
                     settings.userAgentString = MOBILE_UA
                 }
