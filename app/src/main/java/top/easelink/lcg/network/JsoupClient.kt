@@ -132,8 +132,8 @@ object JsoupClient : ApiRequest {
     }
 
     private fun isWafPage(html: String?): Boolean {
-        if (html.isNullOrBlank()) return false
-        return html.contains("wzwsquestion") || html.contains("wzws-waf-cgi") || html.contains("waf_zw_verify")
+        // [ARCH-PHASE-1] 直接调用 WafSolver，不再维护两套逻辑
+        return top.easelink.lcg.utils.WafSolver.isWafPage(html)
     }
 
     private suspend fun getConnection(url: String): Connection {

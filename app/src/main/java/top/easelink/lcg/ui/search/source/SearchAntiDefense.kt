@@ -94,11 +94,8 @@ internal object SearchAntiDefense {
         code == 403 || code == 418 || code == 429 || code == 514
 
     fun isWafPage(html: String?): Boolean {
-        if (html.isNullOrBlank()) return false
-        return html.contains("wzwsquestion") ||
-            html.contains("wzws-waf-cgi") ||
-            html.contains("waf_zw_verify") ||
-            html.contains("captcha")
+        // [ARCH-PHASE-1] 统一收口到 WafSolver
+        return top.easelink.lcg.utils.WafSolver.isWafPage(html)
     }
 
     fun detectWaf(doc: Document?): Boolean = isWafPage(doc?.html())

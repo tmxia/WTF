@@ -8,7 +8,12 @@ object WafSolver {
 
     fun isWafPage(text: String?): Boolean {
         if (text.isNullOrBlank()) return false
-        return (text.contains("wzwsquestion") || text.contains("LZ=")) && text.contains("waf_zw_verify")
+        // [ARCH-PHASE-1] 统一所有可能触发拦截的风控特征
+        return text.contains("wzwsquestion") || 
+               text.contains("wzws-waf-cgi") || 
+               text.contains("waf_zw_verify") || 
+               text.contains("captcha") ||
+               (text.contains("LZ=") && text.contains("waf_zw_verify"))
     }
 
     fun calcAnswer(question: String, factor: Int): String {
