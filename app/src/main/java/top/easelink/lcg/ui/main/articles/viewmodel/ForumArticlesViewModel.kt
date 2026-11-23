@@ -16,6 +16,7 @@ import top.easelink.lcg.base.PageUiState
 import top.easelink.lcg.ui.main.model.LoginRequiredException
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
+import top.easelink.lcg.ui.main.articles.source.ForumQueryRules
 import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource.getForumArticles
 import top.easelink.lcg.utils.WebsiteConstant.FORUM_URL_QUERY
 import top.easelink.lcg.utils.showMessage
@@ -23,15 +24,6 @@ import top.easelink.lcg.utils.ErrorHandler
 
 const val DEFAULT_ORDER = ""
 
-
-private val allowedOrderby = setOf("dateline", "lastpost")
-
-
-
-private val allowedDateline = setOf(1, 2, 7, 30, 90, 365)
-
-
-private const val SECONDS_PER_DAY = 86400
 
 class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
     private var mUrl: String? = null
@@ -157,11 +149,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
 
 
     private fun timeType(): String =
-        if (orderType != DEFAULT_ORDER) {
-            datelineDays?.let { days -> "&filter=dateline&dateline=${days * SECONDS_PER_DAY}" } ?: DEFAULT_ORDER
-        } else {
-            DEFAULT_ORDER
-        }
+        if (orderType != DEFAULT_ORDER) ForumQueryRules.datelineFilter(datelineDays) else DEFAULT_ORDER
 
     
 
@@ -189,8 +177,8 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
 
 
     fun selectSort(orderby: String?, name: String) {
-        val safe = orderby?.takeIf { it in allowedOrderby }
-        val newOrder = if (safe != null) "&orderby=$safe" else DEFAULT_ORDER
+        val safe = ForumQueryRules.safeOrderby(orderby)
+        val newOrder = ForumQueryRules.orderbyParam(safe)
         
         if (newOrder == orderType && name == _selectedSortName.value) return
 
@@ -222,7 +210,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
             Timber.tag("[ForumSort]").w("默认顺序下时间筛选不可用，忽略: $days")
             return
         }
-        val safe = days?.takeIf { it in allowedDateline }
+        val safe = ForumQueryRules.safeDateline(days)
         
         if (safe == datelineDays && name == _selectedTimeName.value) return
         datelineDays = safe
