@@ -1,5 +1,7 @@
 package top.easelink.lcg.utils
 
+import android.view.View
+
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Dialog
