@@ -41,7 +41,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
             val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
             val selectedSortName by viewModel.selectedSortName.collectAsStateWithLifecycle()
             val selectedTimeName by viewModel.selectedTimeName.collectAsStateWithLifecycle()
-            val sortLocked by viewModel.sortLocked.collectAsStateWithLifecycle()
+            val timeLocked by viewModel.timeLocked.collectAsStateWithLifecycle()
 
             val title = arguments?.getString("title") ?: "帖子列表"
             ForumArticlesScreen(
@@ -51,7 +51,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
                 isLoading = isLoading,
                 selectedSortName = selectedSortName,
                 selectedTimeName = selectedTimeName,
-                sortLocked = sortLocked,
+                timeLocked = timeLocked,
                 onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() },
                 onTabSelected = { url ->
                     val finalUrl = if (url.isEmpty()) arguments?.getString("url") ?: "" else url

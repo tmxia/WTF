@@ -71,7 +71,7 @@ fun ForumArticlesScreen(
     isLoading: Boolean,
     selectedSortName: String,
     selectedTimeName: String,
-    sortLocked: Boolean,
+    timeLocked: Boolean,
     onBackClick: () -> Unit,
     onTabSelected: (String) -> Unit,
     onArticleClick: (String) -> Unit,
@@ -130,8 +130,7 @@ fun ForumArticlesScreen(
                                     PopoverMenuItem(
                                         label = option.label,
                                         checked = selectedSortName == option.label,
-                                        // 排序以时间筛选为前提：无筛选时仅默认顺序可用，其余两项置灰禁用
-                                        enabled = option.orderby == null || !sortLocked,
+                                        enabled = true,
                                         onClick = {
                                             menuExpanded = false
                                             onSortSelected(option.orderby, option.label)
@@ -142,6 +141,8 @@ fun ForumArticlesScreen(
                                     PopoverMenuItem(
                                         label = option.label,
                                         checked = selectedTimeName == option.label,
+                                        // 仅非默认排序支持时间范围；默认顺序下时间档位置灰禁用
+                                        enabled = !timeLocked,
                                         onClick = {
                                             menuExpanded = false
                                             onTimeSelected(option.days, option.label)
