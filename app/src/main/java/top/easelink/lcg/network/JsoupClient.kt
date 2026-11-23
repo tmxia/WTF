@@ -33,7 +33,8 @@ object JsoupClient : ApiRequest {
 
     private val lastTime = java.util.concurrent.atomic.AtomicLong(0L)
     private val CHECK_INTERVAL = if (BuildConfig.DEBUG) 60 * 1000 else 30 * 1000
-    private const val TIME_OUT_LIMIT = 30 * 1000
+    private const val TIME_OUT_LIMIT = 20 * 1000 // 读超时 20s
+    private const val CONNECT_TIMEOUT = 10 * 1000 // 连接超时 10s
     private const val BASE_URL = SERVER_BASE_URL
     
     private val sessionUserAgent: String = APP_USER_AGENT
@@ -61,10 +62,28 @@ object JsoupClient : ApiRequest {
 
     @Throws(SocketTimeoutException::class, IOException::class)
     suspend fun sendGetRequestWithUrl(url: String, enableWafPopup: Boolean): Document {
-        var response = getConnection(url)
-            .method(Connection.Method.GET)
-            .followRedirects(FOLLOW_REDIRECTS_ENABLE)
-            .execute()
+        // [ARCH-PHASE-6] 增加网络重试机制，避免弱网导致页面崩溃
+        var retryCount = 0
+        var response: Connection.Response
+        while (true) {
+            try {
+                response = getConnection(url)
+                    .method(Connection.Method.GET)
+                    .followRedirects(FOLLOW_REDIRECTS_ENABLE)
+                    .execute()
+                break // 成功则跳出循环
+            } catch (e: java.net.SocketTimeoutException) {
+                if (retryCount >= 2) throw e // 重试 2 次后仍失败，抛出异常
+                retryCount++
+                Timber.w("网络超时，正在进行第 $retryCount 次静默重试: $url")
+                kotlinx.coroutines.delay(1000L * retryCount)
+            } catch (e: java.io.IOException) {
+                if (retryCount >= 1) throw e // IO 异常重试 1 次
+                retryCount++
+                Timber.w("网络IO异常，正在进行第 $retryCount 次静默重试: $url")
+                kotlinx.coroutines.delay(1000L)
+            }
+        }
 
         updateCookies(response.cookies())
 
@@ -126,7 +145,7 @@ object JsoupClient : ApiRequest {
             updateCookies(newResponse.cookies())
             return newResponse
         } else {
-            Timber.e("网络层：真人验证超时或取消")
+            Timber.e("网络层：真人验证超时或取消，可能是弱网环境导致无法加载滑块")
             throw NetworkException.WafBlocked("验证超时或被取消，无法绕过 WAF")
         }
     }
