@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.easelink.lcg.R
+import top.easelink.lcg.ui.main.source.model.PreviewPost
 import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource
 
 class PostPreviewViewModel : ViewModel() {
@@ -34,8 +35,16 @@ class PostPreviewViewModel : ViewModel() {
     fun initUrl(query: String) {
         currentQuery = query
         loadJob?.cancel()
-        _loadingResult.value = R.string.preview_loading
 
+        // 优先取用 Launcher 预加载并暂存的简介：命中则直接渲染，不再二次解析 / 请求，
+        // 避免弹窗打开后经历网络加载空窗。
+        val prepared = PostPreviewLauncher.consumePrepared(query)
+        if (prepared != null) {
+            bindPost(prepared)
+            return
+        }
+
+        _loadingResult.value = R.string.preview_loading
         loadJob = viewModelScope.launch {
             try {
                 val post = withContext(Dispatchers.IO) {
@@ -43,11 +52,7 @@ class PostPreviewViewModel : ViewModel() {
                 }
 
                 post?.let {
-                    _author.value = it.author
-                    _avatar.value = it.avatar
-                    _date.value = it.date
-                    _content.value = it.content
-                    _loadingResult.value = -1
+                    bindPost(it)
                 } ?: run {
                     _loadingResult.value = R.string.preview_fail_info
                 }
@@ -55,6 +60,14 @@ class PostPreviewViewModel : ViewModel() {
                 _loadingResult.value = R.string.preview_fail_info
             }
         }
+    }
+
+    private fun bindPost(post: PreviewPost) {
+        _author.value = post.author
+        _avatar.value = post.avatar
+        _date.value = post.date
+        _content.value = post.content
+        _loadingResult.value = -1
     }
 
     override fun onCleared() {
