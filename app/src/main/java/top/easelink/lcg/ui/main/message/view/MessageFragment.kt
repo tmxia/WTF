@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,7 +34,9 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import top.easelink.framework.topbase.ControllableFragment
 import top.easelink.framework.topbase.TopFragment
+import top.easelink.lcg.R
 import top.easelink.lcg.account.AccountManager
+import top.easelink.lcg.ui.main.common.ErrorStateView
 import top.easelink.lcg.ui.main.message.viewmodel.ConversationListViewModel
 import top.easelink.lcg.ui.main.message.viewmodel.NotificationViewModel
 import top.easelink.lcg.ui.main.model.BaseNotification
@@ -69,6 +72,7 @@ class MessageFragment : TopFragment(), ControllableFragment {
             val conversations by conversationViewModel.conversations.collectAsStateWithLifecycle()
             val isNotifLoading by notificationViewModel.isLoading.collectAsStateWithLifecycle()
             val isConvLoading by conversationViewModel.isLoading.collectAsStateWithLifecycle()
+            val convUiState by conversationViewModel.uiState.collectAsStateWithLifecycle()
 
             var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -137,6 +141,12 @@ class MessageFragment : TopFragment(), ControllableFragment {
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator(modifier = Modifier.size(32.dp), color = Color(0xFFE53935), strokeWidth = 3.dp)
                                 }
+                            } else if (convUiState is top.easelink.lcg.base.PageUiState.Error && conversations.isEmpty()) {
+                                ErrorStateView(
+                                    message = (convUiState as? top.easelink.lcg.base.PageUiState.Error)?.message
+                                        ?: stringResource(R.string.general_error),
+                                    onRetry = { conversationViewModel.fetchConversations() }
+                                )
                             } else {
                                 ConversationList(conversations, requireContext())
                             }

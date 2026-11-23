@@ -10,7 +10,9 @@ import kotlinx.coroutines.launch
 import org.jsoup.nodes.Document
 import timber.log.Timber
 import top.easelink.lcg.network.JsoupClient
+import top.easelink.lcg.base.PageUiState
 import top.easelink.lcg.ui.main.model.Conversation
+import top.easelink.lcg.utils.ErrorHandler
 import top.easelink.lcg.utils.WebsiteConstant
 
 class ConversationListViewModel : ViewModel() {
@@ -19,6 +21,9 @@ class ConversationListViewModel : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _uiState = MutableStateFlow<PageUiState<List<Conversation>>>(PageUiState.Loading)
+    val uiState: StateFlow<PageUiState<List<Conversation>>> = _uiState.asStateFlow()
 
     
     private val _hasMore = MutableStateFlow(false)
@@ -30,10 +35,17 @@ class ConversationListViewModel : ViewModel() {
     fun fetchConversations() {
         viewModelScope.launch(Dispatchers.IO) {
             _isLoading.value = true
+            _uiState.value = PageUiState.Loading
             try {
                 parseConversations(JsoupClient.sendGetRequestWithQuery(WebsiteConstant.PRIVATE_MESSAGE_QUERY))
+                if (_conversations.value.isNotEmpty()) {
+                    _uiState.value = PageUiState.Success(_conversations.value)
+                } else {
+                    _uiState.value = PageUiState.Empty
+                }
             } catch (e: Exception) {
                 Timber.e(e)
+                _uiState.value = PageUiState.Error(e, ErrorHandler.getFriendlyMessage(e))
             }
             _isLoading.value = false
         }
