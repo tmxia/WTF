@@ -17,11 +17,10 @@ import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener.Compani
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener.Companion.FETCH_POST_MORE
 import top.easelink.lcg.ui.main.model.BlockException
 import top.easelink.lcg.ui.main.model.NetworkException
-import top.easelink.lcg.ui.main.source.local.ArticlesLocalDataSource
 import top.easelink.lcg.ui.main.source.model.ArticleAbstractResponse
 import top.easelink.lcg.ui.main.source.model.ArticleEntity
 import top.easelink.lcg.ui.main.source.model.Post
-import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource
+import top.easelink.lcg.ui.main.source.repository.ArticlesRepository
 import top.easelink.lcg.utils.RegexUtils
 import top.easelink.lcg.utils.showMessage
 import top.easelink.lcg.utils.ErrorHandler
@@ -117,7 +116,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         fetching = true
         currentJob = viewModelScope.launch(IOPool) {
             try {
-                val response = ArticlesRemoteDataSource.getArticleDetail(
+                val response = ArticlesRepository.getArticleDetail(
                     query, type == FETCH_POST_INIT
                 )
                 if (response == null) {
@@ -215,7 +214,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         currentJob = viewModelScope.launch(IOPool) {
             Timber.d("【点赞】发起请求: $url")
             try {
-                val response = ArticlesRemoteDataSource.replyAdd(url)
+                val response = ArticlesRepository.replyAdd(url)
                 Timber.d("【点赞】收到响应: $response")
                 showMessage(response)
             } catch (e: Exception) {
@@ -281,7 +280,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
     fun checkIsFavorited() {
         val url = mUrl ?: return
         currentJob = viewModelScope.launch(IOPool) {
-            val isFav = ArticlesLocalDataSource.isArticleInFavorites(url)
+            val isFav = ArticlesRepository.isLocalFavorite(url)
             safeUpdate(_isFavorited, isFav)
         }
     }
@@ -315,14 +314,14 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                     timestamp = System.currentTimeMillis()
                 )
 
-                val localRes = ArticlesLocalDataSource.addArticleToFavorite(articleEntity)
+                val localRes = ArticlesRepository.addLocalFavorite(articleEntity)
                 safeUpdate(_isFavorited, true)
 
                 if (AppConfig.syncFavorites && LCGCookieJar.hasLoginCredential()) {
                     val threadId = extractThreadId(mUrl)
                     val formHash = mFormHash
                     if (threadId != null && formHash != null) {
-                        val success = ArticlesRemoteDataSource.addFavorites(threadId, formHash)
+                        val success = ArticlesRepository.addFavoriteRemote(threadId, formHash)
                         if (!success) {
                             showMessage(R.string.sync_favorite_failed)
                         } else {
@@ -349,14 +348,14 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                     val threadId = extractThreadId(mUrl)
                     val formHash = mFormHash
                     if (threadId != null && !formHash.isNullOrEmpty()) {
-                        val success = ArticlesRemoteDataSource.removeFavorites(threadId, formHash)
+                        val success = ArticlesRepository.removeFavoriteRemote(threadId, formHash)
                         if (!success) {
                             Timber.w("remote unfavorite failed, falling back to local-only removal")
                         }
                     }
                 }
 
-                val res = ArticlesLocalDataSource.delArticleFromFavorite(url)
+                val res = ArticlesRepository.delLocalFavorite(url)
                 showMessage(if (res) R.string.remove_all_favorites_successfully else R.string.add_to_favorite_failed)
                 safeUpdate(_isFavorited, false)
             } catch (e: Exception) {

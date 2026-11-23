@@ -17,7 +17,7 @@ import top.easelink.lcg.ui.main.model.LoginRequiredException
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
 import top.easelink.lcg.ui.main.articles.source.ForumQueryRules
-import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource.getForumArticles
+import top.easelink.lcg.ui.main.source.repository.ArticlesRepository
 import top.easelink.lcg.utils.WebsiteConstant.FORUM_URL_QUERY
 import top.easelink.lcg.utils.showMessage
 import top.easelink.lcg.utils.ErrorHandler
@@ -271,7 +271,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
                 val query = composeUrlByRequestType(fetchType)
                 Timber.tag("[ForumSort]").d("请求列表: $query, orderType=$orderType, timeType=${timeType()}")
 
-                var forumPage = getForumArticles(query, fetchType == ArticleFetcher.FetchType.FETCH_INIT)
+                var forumPage = ArticlesRepository.getForumArticles(query, fetchType == ArticleFetcher.FetchType.FETCH_INIT)
                 var fellBackToDefault = false
 
                 
@@ -286,7 +286,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
                     Timber.tag("[ForumSort]").w("排序结果为空，降级默认顺序重试: $fallbackQuery")
                     
                     delay(fallbackBackoffMs())
-                    forumPage = getForumArticles(fallbackQuery, true)
+                    forumPage = ArticlesRepository.getForumArticles(fallbackQuery, true)
                     fellBackToDefault = forumPage != null && forumPage.articleList.isNotEmpty()
                     if (!fellBackToDefault) {
                         orderType = savedOrder

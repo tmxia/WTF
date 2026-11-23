@@ -9,8 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.lcg.R
-import top.easelink.lcg.ui.main.articles.source.FavoriteDataSource.getAllRemoteFavorites
-import top.easelink.lcg.ui.main.source.local.ArticlesLocalDataSource
+import top.easelink.lcg.ui.main.source.repository.ArticlesRepository
 import top.easelink.lcg.ui.main.source.model.ArticleEntity
 import top.easelink.lcg.utils.showMessage
 
@@ -43,7 +42,7 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
         _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                ArticlesLocalDataSource.getAllFavoriteArticles().let {
+                ArticlesRepository.getAllLocalFavorites().let {
                     if (it.isNotEmpty().also(callback)) {
                         _articles.value = it
                     }
@@ -60,7 +59,7 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
         _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (ArticlesLocalDataSource.delAllArticlesFromFavorite()) {
+                if (ArticlesRepository.delAllLocalFavorites()) {
                     _articles.value = emptyList()
                     showMessage(R.string.remove_all_favorites_successfully)
                 } else {
@@ -78,7 +77,7 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
     fun removeFavorite(articleEntity: ArticleEntity) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (ArticlesLocalDataSource.delArticleFromFavorite(articleEntity.id)) {
+                if (ArticlesRepository.delLocalFavorite(articleEntity.id)) {
                     val currentList = _articles.value.orEmpty().toMutableList()
                     currentList.remove(articleEntity)
                     _articles.value = currentList
@@ -97,12 +96,12 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
         _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val articleEntities = getAllRemoteFavorites()
+                val articleEntities = ArticlesRepository.getRemoteFavorites()
                 if (articleEntities.isEmpty()) {
                     showMessage(R.string.sync_favorite_failed_empty_favorites)
                 } else {
-                    if (ArticlesLocalDataSource.addAllArticleToFavorite(articleEntities)) {
-                        _articles.value = ArticlesLocalDataSource.getAllFavoriteArticles()
+                    if (ArticlesRepository.addAllLocalFavorites(articleEntities)) {
+                        _articles.value = ArticlesRepository.getAllLocalFavorites()
                     }
                 }
             } catch (e: Exception) {

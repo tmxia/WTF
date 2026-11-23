@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import top.easelink.lcg.ui.main.article.view.PostPreviewDialog
 import top.easelink.lcg.ui.main.source.model.PreviewPost
-import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource
+import top.easelink.lcg.ui.main.source.repository.ArticlesRepository
 
 
 
@@ -54,7 +54,7 @@ internal object PostPreviewLauncher {
         loadingUrl = url
         scope.launch {
             val post = try {
-                ArticlesRemoteDataSource.getPostPreview(url)
+                ArticlesRepository.getPostPreview(url)
             } catch (e: Exception) {
                 Timber.tag("PostPreview").w(e, "简介预加载失败: $url")
                 null

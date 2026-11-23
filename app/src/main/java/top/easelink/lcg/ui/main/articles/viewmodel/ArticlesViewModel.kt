@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.source.model.Article
-import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource
+import top.easelink.lcg.ui.main.source.repository.ArticlesRepository
 import top.easelink.lcg.utils.showMessage
 import timber.log.Timber
 
@@ -36,7 +36,7 @@ class ArticlesViewModel : ViewModel(), ArticleFetcher {
         _isLoading.value = true
         viewModelScope.launch(IOPool) {
             try {
-                ArticlesRemoteDataSource.getHomePageArticles(mUrl, pageNum).let {
+                ArticlesRepository.getHomePageArticles(mUrl, pageNum).let {
                     if (it.isNotEmpty().also(callback)) {
                         val list = _articles.value.toMutableList()
                         if (fetchType == ArticleFetcher.FetchType.FETCH_MORE && list.isNotEmpty()) {

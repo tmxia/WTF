@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.source.model.PreviewPost
-import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource
+import top.easelink.lcg.ui.main.source.repository.ArticlesRepository
 
 class PostPreviewViewModel : ViewModel() {
     private val _author = MutableStateFlow("")
@@ -48,7 +48,7 @@ class PostPreviewViewModel : ViewModel() {
         loadJob = viewModelScope.launch {
             try {
                 val post = withContext(Dispatchers.IO) {
-                    ArticlesRemoteDataSource.getPostPreview(query)
+                    ArticlesRepository.getPostPreview(query)
                 }
 
                 post?.let {
