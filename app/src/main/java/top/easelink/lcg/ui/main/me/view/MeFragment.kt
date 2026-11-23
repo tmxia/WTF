@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +45,7 @@ import top.easelink.lcg.R
 import top.easelink.lcg.account.AccountManager
 import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.ui.main.articles.view.FavoriteArticlesFragment
+import top.easelink.lcg.ui.main.common.ErrorStateView
 import top.easelink.lcg.ui.main.follow.view.FollowFragment
 import top.easelink.lcg.ui.main.history.view.HistoryArticlesFragment
 import top.easelink.lcg.ui.main.me.viewmodel.MeViewModel
@@ -118,6 +120,7 @@ class MeFragment : TopFragment(), ControllableFragment {
 fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNavigate: (Fragment) -> Unit) {
     val userInfo by AccountManager.userInfo.collectAsStateWithLifecycle()
     val isLoggedIn = userInfo != null && !userInfo?.userName.isNullOrBlank()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     var signInText by remember { mutableStateOf("去签到") }
@@ -201,6 +204,14 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
                         Icon(painter = painterResource(id = R.drawable.ic_setting_light), contentDescription = "Settings", tint = Color.Gray, modifier = Modifier.size(24.dp))
                         Text(text = "设置", fontSize = 10.sp, color = Color.Gray)
                     }
+                }
+                if (uiState is top.easelink.lcg.base.PageUiState.Error && !isLoggedIn) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ErrorStateView(
+                        message = (uiState as? top.easelink.lcg.base.PageUiState.Error)?.message
+                            ?: stringResource(R.string.general_error),
+                        onRetry = { viewModel.fetchUserInfoDirect() }
+                    )
                 }
                 if (isLoggedIn) {
                     Spacer(modifier = Modifier.height(20.dp))
