@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -145,7 +146,7 @@ private fun SheetContent(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val maxSheetHeight = with(LocalConfiguration.current) { screenHeightDp.dp * 0.65f }
+    val maxSheetHeight = with(LocalConfiguration.current) { screenHeightDp.dp * 0.55f }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -175,13 +176,13 @@ private fun SheetContent(
                         modifier = Modifier.padding(start = 4.dp, bottom = 8.dp, top = if (groupIndex > 0) 8.dp else 0.dp)
                     )
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    group.forEach { item ->
-                        PopoverMenuItemRow(
-                            item = item,
-                            itemHeight = 48.dp,
-                            verticalPadding = 14.dp
-                        )
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    group.chunked(2).forEach { rowItems ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            rowItems.forEach { item ->
+                                SheetItemCell(item = item, modifier = Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
             }
@@ -272,6 +273,55 @@ private fun PopoverMenuItemRow(
                 contentDescription = "已选",
                 tint = MenuAccent,
                 modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+}
+
+/** 底部面板两列网格条目：半宽排布，图标与文字更紧凑。 */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SheetItemCell(item: PopoverMenuItem, modifier: Modifier = Modifier) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val highlighted = item.active || item.checked
+    Row(
+        modifier = modifier
+            .heightIn(min = 44.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (highlighted) MenuAccent.copy(alpha = 0.1f) else MenuBg)
+            .combinedClickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                onClick = item.onClick,
+                onLongClick = item.onLongClick
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (item.icon != null) {
+            Icon(
+                imageVector = item.icon,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = if (highlighted) MenuAccent else MenuIconTint
+            )
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(
+            text = item.label,
+            fontSize = 13.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = if (highlighted) MenuAccent else MenuTextColor,
+            fontWeight = if (highlighted) FontWeight.Medium else FontWeight.Normal,
+            modifier = Modifier.weight(1f)
+        )
+        if (item.checked) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = "已选",
+                tint = MenuAccent,
+                modifier = Modifier.size(16.dp)
             )
         }
     }
