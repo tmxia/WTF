@@ -28,6 +28,9 @@ private val allowedOrderby = setOf("dateline", "lastpost")
 // 非白名单取值一律拦截，不拼进请求，避免非法参数放大风控特征。
 private val allowedDateline = setOf(1, 2, 7, 30, 90, 365)
 
+// Discuz forumdisplay 的 dateline 时间窗参数单位为秒；本地内部按天维护（节流/降级判断沿用天语义），仅在出参拼 URL 时换算成秒。
+private const val SECONDS_PER_DAY = 86400
+
 class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
     private var mUrl: String? = null
     private var mFetchType = ArticleFetcher.FetchType.FETCH_INIT
@@ -121,10 +124,12 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
      * 时间范围片段。Discuz forumdisplay 仅在 orderby=dateline/lastpost 排序下识别 dateline 过滤；
      * 默认顺序（orderType 为空）携带 filter=dateline&dateline=xx 会被服务端判为无效条件、直接返回空列表。
      * 因此默认顺序或未选时间档时一律不附加任何时间参数。
+     * 注意：服务端 dateline 取值单位为秒，本地 datelineDays 为天数，出参必须乘以 SECONDS_PER_DAY 换算；
+     * 若直接传天数，时间窗会被解析成几秒内，结果恒为空并触发降级回默认顺序，表现为筛选完全不生效。
      */
     private fun timeType(): String =
         if (orderType != DEFAULT_ORDER) {
-            datelineDays?.let { "&filter=dateline&dateline=$it" } ?: DEFAULT_ORDER
+            datelineDays?.let { days -> "&filter=dateline&dateline=${days * SECONDS_PER_DAY}" } ?: DEFAULT_ORDER
         } else {
             DEFAULT_ORDER
         }
