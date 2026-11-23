@@ -24,6 +24,9 @@ const val DEFAULT_ORDER = ""
 // 板块列表排序白名单（forumdisplay 支持的 orderby 取值）
 private val allowedOrderby = setOf("dateline", "lastpost")
 
+// 时间范围白名单（单位：天），硬上限一年（365 天），避免拉取过久历史帖放大翻页请求量
+private val allowedDateline = setOf(1, 2, 7, 30, 90, 365)
+
 class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
     private var mUrl: String? = null
     private var mFetchType = ArticleFetcher.FetchType.FETCH_INIT
@@ -39,6 +42,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
     }
 
     private var orderType = restoreOrderType()
+    private var datelineDays: Int? = restoreDatelineDays()
 
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
@@ -47,6 +51,11 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         prefs.getString("forum_sort_name", "默认顺序") ?: "默认顺序"
     )
     val selectedSortName: StateFlow<String> = _selectedSortName.asStateFlow()
+
+    private val _selectedTimeName = MutableStateFlow(
+        prefs.getString("forum_time_name", "全部时间") ?: "全部时间"
+    )
+    val selectedTimeName: StateFlow<String> = _selectedTimeName.asStateFlow()
 
     private val _articles = MutableStateFlow<List<Article>>(emptyList())
     val articles: StateFlow<List<Article>> = _articles.asStateFlow()
@@ -69,7 +78,9 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
             it.isNotBlank() &&
                 !it.startsWith("page=") &&
                 !it.startsWith("orderby=") &&
-                !it.startsWith("ascdesc=")
+                !it.startsWith("ascdesc=") &&
+                !it.startsWith("filter=") &&
+                !it.startsWith("dateline=")
         }
         val paramString = if (cleanParams.isNotEmpty()) cleanParams.joinToString("&") else ""
 
@@ -101,6 +112,15 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         return if (orderby in allowedOrderby) "&orderby=$orderby" else DEFAULT_ORDER
     }
 
+    private fun restoreDatelineDays(): Int? {
+        val saved = prefs.getString("forum_time_days", null)?.toIntOrNull()
+        return saved?.takeIf { it in allowedDateline }
+    }
+
+    /** 时间范围片段；null（全部时间）时不附加任何过滤参数。 */
+    private fun timeType(): String =
+        datelineDays?.let { "&filter=dateline&dateline=$it" } ?: DEFAULT_ORDER
+
     /**
      * 切换板块列表排序。白名单校验后持久化选择，重置页码并从第 1 页重新加载。
      * orderby 为 null 表示恢复系统默认顺序。
@@ -112,6 +132,23 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         prefs.edit()
             .putString("forum_sort_order", safe)
             .putString("forum_sort_name", name)
+            .apply()
+        mFetchType = ArticleFetcher.FetchType.FETCH_INIT
+        rewindPageNum()
+        fetchArticles(ArticleFetcher.FetchType.FETCH_INIT) {}
+    }
+
+    /**
+     * 切换板块列表时间范围。白名单校验后持久化选择，重置页码并从第 1 页重新加载。
+     * days 为 null 表示全部时间（不附加时间过滤）；最大允许 365 天（一年）。
+     */
+    fun selectTime(days: Int?, name: String) {
+        val safe = days?.takeIf { it in allowedDateline }
+        datelineDays = safe
+        _selectedTimeName.value = name
+        prefs.edit()
+            .putString("forum_time_days", safe?.toString())
+            .putString("forum_time_name", name)
             .apply()
         mFetchType = ArticleFetcher.FetchType.FETCH_INIT
         rewindPageNum()
@@ -131,10 +168,10 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
 
         val finalUrl = mUrl
             ?.replace(Regex("&?page=\\d+"), "")
-            ?.replace(Regex("&?(orderby|ascdesc)=[^&]*"), "")
+            ?.replace(Regex("&?(orderby|ascdesc|filter|dateline)=[^&]*"), "")
             ?.trim('&')
             ?: ""
-        return "$finalUrl&page=$mCurrentPage$orderType"
+        return "$finalUrl&page=$mCurrentPage$orderType${timeType()}"
     }
 
     override fun fetchArticles(fetchType: ArticleFetcher.FetchType, callback: (Boolean) -> Unit) {
@@ -148,7 +185,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         viewModelScope.launch(IOPool) {
             try {
                 val query = composeUrlByRequestType(fetchType)
-                Timber.tag("[ForumSort]").d("请求列表: $query, orderType=$orderType")
+                Timber.tag("[ForumSort]").d("请求列表: $query, orderType=$orderType, timeType=${timeType()}")
 
                 var forumPage = getForumArticles(query, fetchType == ArticleFetcher.FetchType.FETCH_INIT)
                 var fellBackToDefault = false

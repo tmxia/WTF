@@ -40,6 +40,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
             val tabs by viewModel.threadList.collectAsStateWithLifecycle()
             val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
             val selectedSortName by viewModel.selectedSortName.collectAsStateWithLifecycle()
+            val selectedTimeName by viewModel.selectedTimeName.collectAsStateWithLifecycle()
 
             val title = arguments?.getString("title") ?: "帖子列表"
             ForumArticlesScreen(
@@ -48,6 +49,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
                 articles = articles,
                 isLoading = isLoading,
                 selectedSortName = selectedSortName,
+                selectedTimeName = selectedTimeName,
                 onBackClick = { requireActivity().onBackPressedDispatcher.onBackPressed() },
                 onTabSelected = { url ->
                     val finalUrl = if (url.isEmpty()) arguments?.getString("url") ?: "" else url
@@ -56,6 +58,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
                 onArticleClick = { url -> EventBus.getDefault().post(OpenArticleEvent(url)) },
                 onLoadMore = { viewModel.fetchArticles(ArticleFetcher.FetchType.FETCH_MORE) { _ -> } },
                 onSortSelected = { orderby, name -> viewModel.selectSort(orderby, name) },
+                onTimeSelected = { days, name -> viewModel.selectTime(days, name) },
                 onArticleLongClick = { url -> PostPreviewDialog.newInstance(url).show(parentFragmentManager, PostPreviewDialog.TAG) },
                 onScrollPositionChanged = { isAtTop -> isListAtTop = isAtTop }
             )

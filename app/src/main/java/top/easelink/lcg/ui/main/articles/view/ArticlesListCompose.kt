@@ -36,6 +36,7 @@ import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.common.CompactAnchorMenu
 import top.easelink.lcg.ui.main.common.EmptyStateView
 import top.easelink.lcg.ui.main.common.FullScreenLoading
+import top.easelink.lcg.ui.main.common.MenuDisplayMode
 import top.easelink.lcg.ui.main.common.PopoverMenuItem
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
@@ -49,6 +50,19 @@ val forumSortOptions = listOf(
     ForumSortOption("lastpost", "按最后回帖")
 )
 
+/** 板块列表时间范围选项：days 为 null 表示全部时间；最大 365 天（一年） */
+data class ForumTimeOption(val days: Int?, val label: String)
+
+val forumTimeOptions = listOf(
+    ForumTimeOption(null, "全部时间"),
+    ForumTimeOption(1, "一天"),
+    ForumTimeOption(2, "两天"),
+    ForumTimeOption(7, "一周"),
+    ForumTimeOption(30, "一个月"),
+    ForumTimeOption(90, "三个月"),
+    ForumTimeOption(365, "一年")
+)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ForumArticlesScreen(
@@ -57,11 +71,13 @@ fun ForumArticlesScreen(
     articles: List<Article>,
     isLoading: Boolean,
     selectedSortName: String,
+    selectedTimeName: String,
     onBackClick: () -> Unit,
     onTabSelected: (String) -> Unit,
     onArticleClick: (String) -> Unit,
     onLoadMore: () -> Unit,
     onSortSelected: (String?, String) -> Unit,
+    onTimeSelected: (Int?, String) -> Unit,
     onArticleLongClick: (String) -> Unit, onScrollPositionChanged: (Boolean) -> Unit = {}) {
     val displayTabs = remember(tabs) {
         val list = mutableListOf("全部")
@@ -106,7 +122,9 @@ fun ForumArticlesScreen(
                         CompactAnchorMenu(
                             expanded = menuExpanded,
                             onDismissRequest = { menuExpanded = false },
-                            title = "选择排序方式",
+                            title = "排序与时间",
+                            mode = MenuDisplayMode.BottomSheet,
+                            groupTitles = listOf("排序方式", "时间范围"),
                             groups = listOf(
                                 forumSortOptions.map { option ->
                                     PopoverMenuItem(
@@ -115,6 +133,16 @@ fun ForumArticlesScreen(
                                         onClick = {
                                             menuExpanded = false
                                             onSortSelected(option.orderby, option.label)
+                                        }
+                                    )
+                                },
+                                forumTimeOptions.map { option ->
+                                    PopoverMenuItem(
+                                        label = option.label,
+                                        checked = selectedTimeName == option.label,
+                                        onClick = {
+                                            menuExpanded = false
+                                            onTimeSelected(option.days, option.label)
                                         }
                                     )
                                 }
