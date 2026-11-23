@@ -24,6 +24,7 @@ import top.easelink.lcg.ui.main.source.model.Post
 import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource
 import top.easelink.lcg.utils.RegexUtils
 import top.easelink.lcg.utils.showMessage
+import top.easelink.lcg.utils.ErrorHandler
 import java.io.IOException
 
 class ArticleViewModel : ViewModel(), ArticleAdapterListener {
@@ -164,8 +165,10 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
     }
 
     private fun handleFetchError(e: Exception) {
-        Timber.e(e, "【业务层】详情请求异常: \${e.message}")
+        // [ARCH-PHASE-12] 修复日志转义符，并接入统一 ErrorHandler
+        Timber.e(e, "【业务层】详情请求异常: ${e.message}")
         Timber.e("【详情页】处理请求错误，类型: ${e.javaClass.simpleName}, 信息: ${e.message}")
+        
         when (e) {
             is BlockException -> {
                 if (_posts.value.isNotEmpty()) {
@@ -175,10 +178,11 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                 }
             }
             is NetworkException -> setArticleNotFound()
-            is IOException -> showMessage(R.string.io_error_mark_invalid)
-            else -> showMessage(R.string.error)
+            else -> {
+                // 使用 ErrorHandler 统一翻译断网、超时、WAF 等异常
+                showMessage(ErrorHandler.getFriendlyMessage(e))
+            }
         }
-        Timber.e(e)
     }
 
     override fun replyAdd(url: String) {
