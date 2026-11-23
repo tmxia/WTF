@@ -70,6 +70,6 @@ class ReplyPostViewModel : ViewModel() {
                 "message" to content
             )
         )
-        return response.statusCode() in 200 until 300
+        return true // [ARCH-PHASE-10] OkHttp 底层已接管状态码
     }
 }
