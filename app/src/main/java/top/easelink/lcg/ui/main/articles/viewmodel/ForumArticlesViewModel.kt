@@ -53,15 +53,39 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
 
-    private val _selectedSortName = MutableStateFlow("默认顺序")
+    private val prefs = top.easelink.lcg.utils.SharedPreferencesHelper.getUserSp()
+    private val KEY_SORT_NAME = "forum_sort_name"
+    private val KEY_TIME_DAYS = "forum_time_days"
+
+    private val _selectedSortName = MutableStateFlow(prefs.getString(KEY_SORT_NAME, "默认顺序") ?: "默认顺序")
     val selectedSortName: StateFlow<String> = _selectedSortName.asStateFlow()
 
-    private val _selectedTimeName = MutableStateFlow("不限时间")
+    private val _selectedTimeName = MutableStateFlow(
+        if (_selectedSortName.value == "默认顺序") "不限时间" else getTimeName(prefs.getInt(KEY_TIME_DAYS, 7))
+    )
     val selectedTimeName: StateFlow<String> = _selectedTimeName.asStateFlow()
 
-    
-    private val _timeLocked = MutableStateFlow(true)
+    private val _timeLocked = MutableStateFlow(_selectedSortName.value == "默认顺序")
     val timeLocked: StateFlow<Boolean> = _timeLocked.asStateFlow()
+
+    init {
+        if (_selectedSortName.value != "默认顺序") {
+            orderType = if (_selectedSortName.value == "按发帖时间") "&orderby=dateline" else "&orderby=lastpost"
+            datelineDays = prefs.getInt(KEY_TIME_DAYS, 7)
+        }
+    }
+
+    private fun getTimeName(days: Int): String {
+        return when (days) {
+            1 -> "一天"
+            2 -> "两天"
+            7 -> "一周"
+            30 -> "一个月"
+            90 -> "三个月"
+            365 -> "一年"
+            else -> "一周"
+        }
+    }
 
     private val _articles = MutableStateFlow<List<Article>>(emptyList())
     val articles: StateFlow<List<Article>> = _articles.asStateFlow()
@@ -168,16 +192,17 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         orderType = newOrder
         _selectedSortName.value = name
 
+        prefs.edit().putString(KEY_SORT_NAME, name).apply()
+
         if (safe == null) {
-            
             datelineDays = null
             _selectedTimeName.value = "不限时间"
             _timeLocked.value = true
         } else {
             _timeLocked.value = false
             if (datelineDays == null) {
-                datelineDays = 1
-                _selectedTimeName.value = "一天"
+                datelineDays = prefs.getInt(KEY_TIME_DAYS, 7)
+                _selectedTimeName.value = getTimeName(datelineDays!!)
             }
         }
         restartRefresh()
@@ -197,6 +222,9 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         if (safe == datelineDays && name == _selectedTimeName.value) return
         datelineDays = safe
         _selectedTimeName.value = name
+        if (safe != null) {
+            prefs.edit().putInt(KEY_TIME_DAYS, safe).apply()
+        }
         restartRefresh()
     }
 
