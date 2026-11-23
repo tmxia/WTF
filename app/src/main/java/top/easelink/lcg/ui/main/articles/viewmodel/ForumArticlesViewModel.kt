@@ -49,6 +49,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
 
     private val prefs = top.easelink.lcg.utils.SharedPreferencesHelper.getUserSp()
     private val KEY_SORT_NAME = "forum_sort_name"
+    private val KEY_SORT_ORDERBY = "forum_sort_orderby"
     private val KEY_TIME_DAYS = "forum_time_days"
 
     private val _selectedSortName = MutableStateFlow(prefs.getString(KEY_SORT_NAME, "默认顺序") ?: "默认顺序")
@@ -63,8 +64,9 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
     val timeLocked: StateFlow<Boolean> = _timeLocked.asStateFlow()
 
     init {
-        if (_selectedSortName.value != "默认顺序") {
-            orderType = if (_selectedSortName.value == "按发帖时间") "&orderby=dateline" else "&orderby=lastpost"
+        val safe = ForumQueryRules.safeOrderby(prefs.getString(KEY_SORT_ORDERBY, null))
+        orderType = ForumQueryRules.orderbyParam(safe)
+        if (safe != null) {
             datelineDays = prefs.getInt(KEY_TIME_DAYS, 7)
         }
     }
@@ -186,6 +188,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         _selectedSortName.value = name
 
         prefs.edit().putString(KEY_SORT_NAME, name).apply()
+        prefs.edit().putString(KEY_SORT_ORDERBY, safe).apply()
 
         if (safe == null) {
             datelineDays = null

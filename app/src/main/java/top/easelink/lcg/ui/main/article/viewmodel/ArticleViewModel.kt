@@ -15,6 +15,7 @@ import top.easelink.lcg.network.LCGCookieJar
 import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener.Companion.FETCH_POST_INIT
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener.Companion.FETCH_POST_MORE
+import top.easelink.lcg.ui.main.article.source.DownloadLinkRules
 import top.easelink.lcg.ui.main.model.BlockException
 import top.easelink.lcg.ui.main.model.NetworkException
 import top.easelink.lcg.ui.main.source.model.ArticleAbstractResponse
@@ -226,55 +227,8 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
 
     fun extractDownloadUrl(): ArrayList<String>? {
         val content = _posts.value.firstOrNull()?.content ?: return null
-
-        val doc = org.jsoup.Jsoup.parse(content)
-        val plainText = doc.text()
-
-        val linkRegexStr = """https?://(?:pan\.baidu\.com/s/|pan\.quark\.cn/s/|www\.aliyundrive\.com/s/|aliyundrive\.com/s/|cloud\.189\.cn/t/|pan\.xunlei\.com/s/|(?:[a-zA-Z0-9.]{0,20})lanzou[a-z]{1}\.com/)[^\s<>"']+"""
-        val linkRegex = Regex(linkRegexStr)
-
-        val hrefLinks = doc.select("a[href]").mapNotNull { element ->
-            val href = element.attr("href").trim()
-            if (linkRegex.containsMatchIn(href)) href else null
-        }
-
-        val textLinks = linkRegex.findAll(plainText).map { it.value }.toList()
-
-        val allLinks = (hrefLinks + textLinks).distinct()
-
-        val codeRegex = Regex("""(?:提取码|密码|访问码|口令)[\s:：]*([a-zA-Z0-9]{4})""")
-        val codeMatches = codeRegex.findAll(plainText).map { it.groupValues[1].trim() }.toList()
-
-        if (allLinks.isEmpty() && codeMatches.isEmpty()) {
-            return null
-        }
-
-        val resultList = ArrayList<String>()
-        val maxCount = maxOf(allLinks.size, codeMatches.size)
-
-        for (i in 0 until maxCount) {
-            val link = allLinks.getOrNull(i)?.trim() ?: ""
-            val code = codeMatches.getOrNull(i)?.trim() ?: ""
-
-            var combined = ""
-            if (link.isNotEmpty() && code.isNotEmpty()) {
-                if (link.contains("pwd=$code") || link.contains("password=$code") || link.contains("code=$code") || link.contains("提取码")) {
-                    combined = link
-                } else {
-                    combined = "$link 提取码: $code"
-                }
-            } else if (link.isNotEmpty()) {
-                combined = link
-            } else if (code.isNotEmpty()) {
-                combined = "提取码: $code"
-            }
-
-            if (combined.isNotEmpty() && !resultList.contains(combined)) {
-                resultList.add(combined)
-            }
-        }
-
-        return resultList
+        val links = DownloadLinkRules.extract(content)
+        return if (links.isEmpty()) null else ArrayList(links)
     }
 
     fun checkIsFavorited() {
