@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -47,6 +48,7 @@ import top.easelink.lcg.ui.main.article.view.ScreenCaptureDialog.Companion.TAG
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleViewModel
 import top.easelink.lcg.ui.main.common.CompactAnchorMenu
+import top.easelink.lcg.ui.main.common.ErrorStateView
 import top.easelink.lcg.ui.main.common.MenuDisplayMode
 import top.easelink.lcg.ui.main.common.PopoverMenuItem
 import top.easelink.lcg.ui.main.model.LikeSuccessEvent
@@ -178,6 +180,7 @@ fun ArticleScreen(
     val blockMessage by viewModel.blockMessage.collectAsStateWithLifecycle()
     val isNotFound by viewModel.isNotFound.collectAsStateWithLifecycle()
     val shouldDisplayPosts by viewModel.shouldDisplayPosts.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var showMenu by remember { mutableStateOf(false) }
     var pendingScrollPost by remember { mutableStateOf<Post?>(null) }
@@ -549,6 +552,12 @@ fun ArticleScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(modifier = Modifier.size(32.dp), strokeWidth = 3.dp)
                 }
+            } else if (uiState is top.easelink.lcg.base.PageUiState.Error && posts.isEmpty()) {
+                ErrorStateView(
+                    message = (uiState as? top.easelink.lcg.base.PageUiState.Error)?.message
+                        ?: stringResource(R.string.error),
+                    onRetry = { viewModel.forceRefresh() }
+                )
             } else if (isNotFound) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = "帖子不存在或已被删除", color = Color.Gray)

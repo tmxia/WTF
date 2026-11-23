@@ -47,6 +47,9 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _uiState = MutableStateFlow<top.easelink.lcg.base.PageUiState<List<Post>>>(top.easelink.lcg.base.PageUiState.Loading)
+    val uiState: StateFlow<top.easelink.lcg.base.PageUiState<List<Post>>> = _uiState.asStateFlow()
+
     private val _isFavorited = MutableStateFlow(false)
     val isFavorited: StateFlow<Boolean> = _isFavorited.asStateFlow()
 
@@ -108,6 +111,9 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
             return
         }
 
+        if (type == FETCH_POST_INIT) {
+            safeUpdate(_uiState, top.easelink.lcg.base.PageUiState.Loading)
+        }
         fetching = true
         currentJob = viewModelScope.launch(IOPool) {
             try {
@@ -115,6 +121,9 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                     query, type == FETCH_POST_INIT
                 )
                 if (response == null) {
+                    if (type == FETCH_POST_INIT) {
+                        safeUpdate(_uiState, top.easelink.lcg.base.PageUiState.Empty)
+                    }
                     callback?.invoke(false)
                     return@launch
                 }
@@ -142,6 +151,14 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                     }
                 }
 
+                if (type == FETCH_POST_INIT) {
+                    if (_posts.value.isNotEmpty()) {
+                        safeUpdate(_uiState, top.easelink.lcg.base.PageUiState.Success(_posts.value))
+                    } else {
+                        safeUpdate(_uiState, top.easelink.lcg.base.PageUiState.Empty)
+                    }
+                }
+
                 nextPageUrl = response.nextPageUrl
                 safeUpdate(_hasMorePages, nextPageUrl?.isNotEmpty() == true)
                 mFormHash = response.fromHash
@@ -149,6 +166,11 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                 callback?.invoke(true)
             } catch (e: Exception) {
                 handleFetchError(e)
+                if (type == FETCH_POST_INIT && _posts.value.isEmpty() &&
+                    e !is BlockException && e !is NetworkException) {
+                    val msg = ErrorHandler.getFriendlyMessage(e)
+                    safeUpdate(_uiState, top.easelink.lcg.base.PageUiState.Error(e, msg))
+                }
                 callback?.invoke(false)
             } finally {
                 fetching = false
