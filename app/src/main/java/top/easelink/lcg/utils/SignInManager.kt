@@ -218,8 +218,8 @@ object SignInManager {
                     (activity?.window?.decorView as? ViewGroup) ?: FrameLayout(LCGApp.context)
 
                 val webView = WebView(context).apply {
-                    layoutParams = ViewGroup.LayoutParams(100, 100)
-                    alpha = 0.01f
+                    layoutParams = ViewGroup.LayoutParams(400, 800) // [PATCH] 增大尺寸
+alpha = 0.1f // [PATCH] 提高可见度
                     settings.javaScriptEnabled = true
             setLayerType(View.LAYER_TYPE_SOFTWARE, null)
             isScrollbarFadingEnabled = true
