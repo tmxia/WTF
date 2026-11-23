@@ -18,6 +18,7 @@ import top.easelink.lcg.ui.main.source.model.ForumThread
 import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource.getForumArticles
 import top.easelink.lcg.utils.WebsiteConstant.FORUM_URL_QUERY
 import top.easelink.lcg.utils.showMessage
+import top.easelink.lcg.utils.ErrorHandler
 
 const val DEFAULT_ORDER = ""
 
@@ -317,8 +318,9 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
             } catch (_: LoginRequiredException) {
                 showMessage(R.string.login_required_error)
                 callback(false)
-            } catch (_: Exception) {
-                showMessage(R.string.error)
+            } catch (e: Exception) {
+                Timber.e(e, "Fetch forum articles failed")
+                showMessage(ErrorHandler.getFriendlyMessage(e))
                 callback(false)
             } finally {
                 fetching = false
