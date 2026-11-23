@@ -71,6 +71,7 @@ class MessageFragment : TopFragment(), ControllableFragment {
             val notifications by notificationViewModel.notifications.collectAsStateWithLifecycle()
             val conversations by conversationViewModel.conversations.collectAsStateWithLifecycle()
             val isNotifLoading by notificationViewModel.isLoading.collectAsStateWithLifecycle()
+            val notifUiState by notificationViewModel.uiState.collectAsStateWithLifecycle()
             val isConvLoading by conversationViewModel.isLoading.collectAsStateWithLifecycle()
             val convUiState by conversationViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -133,6 +134,12 @@ class MessageFragment : TopFragment(), ControllableFragment {
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator(modifier = Modifier.size(32.dp), color = Color(0xFFE53935), strokeWidth = 3.dp)
                                 }
+                            } else if (notifUiState is top.easelink.lcg.base.PageUiState.Error && notifications == null) {
+                                ErrorStateView(
+                                    message = (notifUiState as? top.easelink.lcg.base.PageUiState.Error)?.message
+                                        ?: stringResource(R.string.general_error),
+                                    onRetry = { notificationViewModel.fetchNotifications() }
+                                )
                             } else {
                                 NotificationList(notifications?.notifications ?: emptyList())
                             }
