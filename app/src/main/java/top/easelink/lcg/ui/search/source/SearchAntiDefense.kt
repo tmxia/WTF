@@ -76,6 +76,15 @@ internal object SearchAntiDefense {
         return true
     }
 
+    // [ARCH-PHASE-4] 增加明确的冻结异常，方便 UI 层捕获并友好提示
+    class SearchFrozenException(message: String) : Exception(message)
+    fun checkFrozen() {
+        if (isFrozen()) {
+            val seconds = (frozenUntil - System.currentTimeMillis()) / 1000
+            throw SearchFrozenException("搜索过于频繁，请 ${seconds} 秒后再试")
+        }
+    }
+
     
     
     suspend fun backoffSleep(retry: Int) {

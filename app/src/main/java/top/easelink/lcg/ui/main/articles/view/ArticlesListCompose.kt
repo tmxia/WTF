@@ -232,7 +232,7 @@ fun ForumArticlesScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                         ) {
-                            items(articles) { article ->
+                            items(articles, key = { it.url ?: it.hashCode().toString() }) { article ->
                                 ArticleCard(article, onArticleClick, onArticleLongClick)
                             }
 

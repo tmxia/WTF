@@ -179,7 +179,11 @@ private fun isWafPage(html: String?): Boolean {
         if (!UserDataRepo.isLoggedIn) return
         val hasMessageLogin = doc.getElementById("messagelogin") != null
         val messageText = doc.getElementById("messagetext")?.text().orEmpty()
-        val explicitExpired = messageText.contains(SESSION_EXPIRED_MARKER)
+        // [ARCH-PHASE-4] 增强容错匹配，不再依赖单一的死板字符串
+        val explicitExpired = messageText.contains("您需要先登录") || 
+                              messageText.contains("请先登录") || 
+                              messageText.contains("登录已失效") || 
+                              messageText.contains("尚未登录")
 
         if (!hasMessageLogin && !explicitExpired) {
             sessionExpiredFiredOnce.compareAndSet(true, false)
@@ -191,5 +195,5 @@ private fun isWafPage(html: String?): Boolean {
         }
     }
 
-    private const val SESSION_EXPIRED_MARKER = " 您需要先登录才能继续"
+    // private const val SESSION_EXPIRED_MARKER = " 您需要先登录才能继续" // 已在匹配逻辑中内联，弃用
 }
