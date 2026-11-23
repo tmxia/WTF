@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -54,6 +55,8 @@ data class PopoverMenuItem(
     val active: Boolean = false,
     /** 单选类：右侧显示对勾。 */
     val checked: Boolean = false,
+    /** 禁用态：置灰且不响应点击。 */
+    val enabled: Boolean = true,
     val onLongClick: (() -> Unit)? = null,
     val onClick: () -> Unit
 )
@@ -241,13 +244,14 @@ private fun PopoverMenuItemRow(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = itemHeight)
+            .alpha(if (item.enabled) 1f else 0.38f)
             .clip(RoundedCornerShape(12.dp))
             .background(if (highlighted) MenuAccent.copy(alpha = 0.1f) else MenuBg)
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,
-                onClick = item.onClick,
-                onLongClick = item.onLongClick
+                onClick = { if (item.enabled) item.onClick() },
+                onLongClick = if (item.enabled) item.onLongClick else null
             )
             .padding(horizontal = 16.dp, vertical = verticalPadding),
         verticalAlignment = Alignment.CenterVertically
@@ -288,13 +292,14 @@ private fun SheetItemCell(item: PopoverMenuItem, modifier: Modifier = Modifier) 
     Row(
         modifier = modifier
             .heightIn(min = 40.dp)
+            .alpha(if (item.enabled) 1f else 0.38f)
             .clip(RoundedCornerShape(10.dp))
             .background(if (highlighted) MenuAccent.copy(alpha = 0.1f) else MenuBg)
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,
-                onClick = item.onClick,
-                onLongClick = item.onLongClick
+                onClick = { if (item.enabled) item.onClick() },
+                onLongClick = if (item.enabled) item.onLongClick else null
             )
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
