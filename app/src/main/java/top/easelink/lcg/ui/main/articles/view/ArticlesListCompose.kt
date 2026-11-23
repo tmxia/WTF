@@ -21,6 +21,7 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.airbnb.lottie.LottieAnimationView
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.common.CompactAnchorMenu
 import top.easelink.lcg.ui.main.common.EmptyStateView
@@ -203,17 +205,24 @@ fun ForumArticlesScreen(
                 beyondBoundsPageCount = 1
             ) { page ->
 
-                val pageListState = rememberLazyListState()
+                // [ARCH-PHASE-14] 使用 rememberSaveable 确保列表滚动位置在横竖屏切换或后台恢复时不丢失
+                val pageListState = androidx.compose.runtime.saveable.rememberSaveable(saver = androidx.compose.foundation.lazy.LazyListState.Saver) { androidx.compose.foundation.lazy.LazyListState() }
                 LaunchedEffect(pageListState) {
                     snapshotFlow { pageListState.firstVisibleItemIndex == 0 && pageListState.firstVisibleItemScrollOffset == 0 }
                         .collect { isAtTop -> onScrollPositionChanged(isAtTop) }
                 }
 
-                LaunchedEffect(pageListState, articles.size, isLoading) {
+                // [ARCH-PHASE-14] 利用 rememberUpdatedState 避免因数据变化导致协程重启
+                val currentIsLoading by rememberUpdatedState(isLoading)
+                val currentArticlesSize by rememberUpdatedState(articles.size)
+                val currentOnLoadMore by rememberUpdatedState(onLoadMore)
+
+                LaunchedEffect(pageListState) {
                     snapshotFlow { pageListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+                        .distinctUntilChanged() // 避免滑动时同一位置多次触发
                         .collect { lastIndex ->
-                            if (!isLoading && lastIndex != null && lastIndex >= articles.size - 3 && articles.isNotEmpty()) {
-                                onLoadMore()
+                            if (!currentIsLoading && lastIndex != null && lastIndex >= currentArticlesSize - 3 && currentArticlesSize > 0) {
+                                currentOnLoadMore()
                             }
                         }
                 }
