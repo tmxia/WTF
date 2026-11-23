@@ -88,7 +88,9 @@ class SettingActivity : TopActivity() {
 
     private fun setupComponents() {
         binding.apply {
-            updateAccountButton(UserDataRepo.isLoggedIn)
+            // 登录态以网络层成对凭证为准；先校正陈旧 SP 标记，再刷新按钮与开关态
+            UserDataRepo.reconcileWithJar()
+            updateAccountButton(LCGCookieJar.hasLoginCredential())
 
             checkUpdateBtn.setOnClickListener { showMessage(R.string.app_is_latest) }
 
@@ -161,13 +163,15 @@ class SettingActivity : TopActivity() {
 
     private fun setupObserver() {
         lifecycleScope.launch {
-            top.easelink.lcg.account.AccountManager.isLoggedIn.collect { updateAccountButton(it) }
+            top.easelink.lcg.account.AccountManager.isLoggedIn.collect {
+                updateAccountButton(LCGCookieJar.hasLoginCredential())
+            }
         }
         lifecycleScope.launch {
-            mViewModel.syncFavoriteEnable.collect { binding.syncFavoritesSwitch.isChecked = (UserDataRepo.isLoggedIn && it) }
+            mViewModel.syncFavoriteEnable.collect { binding.syncFavoritesSwitch.isChecked = (LCGCookieJar.hasLoginCredential() && it) }
         }
         lifecycleScope.launch {
-            mViewModel.autoSignInEnable.collect { binding.autoSignSwitch.isChecked = (UserDataRepo.isLoggedIn && it) }
+            mViewModel.autoSignInEnable.collect { binding.autoSignSwitch.isChecked = (LCGCookieJar.hasLoginCredential() && it) }
         }
         lifecycleScope.launch {
             mViewModel.searchEngineSelected.collect { binding.searchEngineSpinner.setSelection(it, true) }

@@ -16,7 +16,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import top.easelink.lcg.BuildConfig
-import top.easelink.lcg.account.UserDataRepo
+import top.easelink.lcg.network.LCGCookieJar
 import top.easelink.lcg.utils.SharedPreferencesHelper
 import top.easelink.lcg.utils.SignInManager
 import java.util.concurrent.TimeUnit
@@ -26,8 +26,8 @@ class SignInWorker(context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
     override suspend fun doWork(): Result {
         Timber.d("【任务层】WorkManager 唤醒自动签到任务")
-        if (!UserDataRepo.isLoggedIn) {
-            Timber.w("【任务层】签到跳过: 用户未登录")
+        if (!LCGCookieJar.hasLoginCredential()) {
+            Timber.w("【任务层】签到跳过: 无有效登录凭证")
             return Result.success()
         }
 

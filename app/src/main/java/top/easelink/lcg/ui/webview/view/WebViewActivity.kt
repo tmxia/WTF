@@ -192,7 +192,7 @@ class WebViewActivity : AppCompatActivity() {
 
                 
                 if (!LCGCookieJar.hasLoginCredential()) {
-                    Timber.w("登录页面已渲染头像，但未回读到 auth 凭证，放弃置登录态: $currentUrl")
+                    Timber.w("登录页面已渲染头像，但未回读到成对 auth+saltkey 凭证，放弃置登录态: $currentUrl")
                     showMessage(R.string.general_error)
                     return@launch
                 }

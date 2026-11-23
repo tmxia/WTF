@@ -29,17 +29,42 @@ object LCGCookieJar {
 
 
 
-    fun hasLoginCredential(): Boolean = cookiesForUrl(SERVER_BASE_URL)
-        .any { (name, value) -> value.isNotBlank() && isAuthCookieName(name) }
+    /**
+     * 是否持有有效 Discuz 登录凭证。
+     * 有效会话必须 `auth` 与 `saltkey` 成对存在且非空；吾安 cookiepre 为 `htVC_2132_`，
+     * 凭证形如 `htVC_2132_auth`、`htVC_2132_saltkey`。`wzws_sid`、百度统计、lastvisit/lastact
+     * 等访客 / 风控 / 埋点 cookie 一律不参与登录判定。
+     */
+    fun hasLoginCredential(): Boolean {
+        var hasAuth = false
+        var hasSaltkey = false
+        for ((name, value) in cookiesForUrl(SERVER_BASE_URL)) {
+            if (value.isBlank()) continue
+            when (credentialBaseName(name)) {
+                "auth" -> hasAuth = true
+                "saltkey" -> hasSaltkey = true
+            }
+        }
+        return hasAuth && hasSaltkey
+    }
 
-    
+    /** 兼容旧调用点：是否存在登录凭证 cookie。 */
     fun hasLoginCookie(): Boolean = hasLoginCredential()
 
-    private fun isAuthCookieName(name: String): Boolean {
+    /** 归一化 cookie 基名：去掉 Discuz cookiepre 前缀（如 `htVC_2132_auth` → `auth`）。 */
+    private fun credentialBaseName(name: String): String {
         val lower = name.lowercase()
-        if (lower == "auth") return true
-        
-        return lower.endsWith("_auth") || lower.substringAfterLast('_') == "auth"
+        val idx = lower.lastIndexOf('_')
+        return if (idx >= 0) lower.substring(idx + 1) else lower
+    }
+
+    /** 访客 / 风控 / 埋点类 cookie，不作为业务凭证回灌入库。 */
+    private fun isNonCredentialCookie(name: String): Boolean {
+        val lower = name.lowercase()
+        if (lower == "wzws_sid" || lower == "hmaccount") return true
+        return lower.startsWith("hm_lvt_") || lower.startsWith("hm_lpvt_") ||
+            lower.endsWith("_lastvisit") || lower.endsWith("_lastact") ||
+            lower.endsWith("_viewid") || lower.endsWith("_lastip")
     }
 
     fun cookiesForUrl(url: String): Map<String, String> {
@@ -51,6 +76,7 @@ object LCGCookieJar {
         if (cookies.isEmpty()) return
         val httpUrl = url.toHttpUrlOrNull() ?: return
         val list = cookies.mapNotNull { (name, value) ->
+            if (isNonCredentialCookie(name)) return@mapNotNull null
             buildCookie(httpUrl, name, value)
         }
         if (list.isNotEmpty()) jar.saveFromResponse(httpUrl, list)
@@ -65,8 +91,8 @@ object LCGCookieJar {
                 if (pair.size != 2 || pair[0].isBlank()) return@mapNotNull null
                 val name = pair[0].trim()
                 val value = pair[1].trim()
-                
-                if (value.isBlank() || name.startsWith("$")) return@mapNotNull null
+
+                if (value.isBlank() || name.startsWith("$") || isNonCredentialCookie(name)) return@mapNotNull null
                 buildCookie(httpUrl, name, value)
             }
         if (list.isNotEmpty()) jar.saveFromResponse(httpUrl, list)

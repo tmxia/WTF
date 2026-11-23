@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.R
-import top.easelink.lcg.account.UserDataRepo
+import top.easelink.lcg.network.LCGCookieJar
 import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener.Companion.FETCH_POST_INIT
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener.Companion.FETCH_POST_MORE
@@ -296,7 +296,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                 val localRes = ArticlesLocalDataSource.addArticleToFavorite(articleEntity)
                 safeUpdate(_isFavorited, true)
 
-                if (AppConfig.syncFavorites && UserDataRepo.isLoggedIn) {
+                if (AppConfig.syncFavorites && LCGCookieJar.hasLoginCredential()) {
                     val threadId = extractThreadId(mUrl)
                     val formHash = mFormHash
                     if (threadId != null && formHash != null) {
@@ -323,7 +323,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         val url = mUrl ?: return
         currentJob = viewModelScope.launch(IOPool) {
             try {
-                if (AppConfig.syncFavorites && UserDataRepo.isLoggedIn) {
+                if (AppConfig.syncFavorites && LCGCookieJar.hasLoginCredential()) {
                     val threadId = extractThreadId(mUrl)
                     val formHash = mFormHash
                     if (threadId != null && !formHash.isNullOrEmpty()) {

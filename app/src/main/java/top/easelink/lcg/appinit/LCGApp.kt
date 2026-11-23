@@ -44,13 +44,15 @@ class LCGApp : Application() {
             LCGCookieJar.syncToWebView()
         }
 
+        // 启动先以网络层成对凭证校正陈旧 SP 登录态，再决定是否走静默签到
+        UserDataRepo.reconcileWithJar()
         trySignIn()
         CacheCleanerTask.clearCachesIfNeeded()
     }
 
     private fun trySignIn() {
         applicationScope.launch {
-            if (!AppConfig.autoSignEnable || !UserDataRepo.isLoggedIn) return@launch
+            if (!AppConfig.autoSignEnable || !LCGCookieJar.hasLoginCredential()) return@launch
             if (SignInManager.isSignedToday()) {
                 Timber.d("今日已签到，无需重复执行")
                 return@launch

@@ -15,9 +15,9 @@ import top.easelink.framework.threadpool.BackGroundPool
 import top.easelink.lcg.cache.PreviewCacheManager
 import top.easelink.lcg.config.AppConfig
 import top.easelink.lcg.network.JsoupClient
+import top.easelink.lcg.network.NetworkException as NetException
 import top.easelink.lcg.ui.main.model.BlockException
 import top.easelink.lcg.ui.main.model.LoginRequiredException
-import top.easelink.lcg.ui.main.model.NetworkException
 import top.easelink.lcg.ui.main.source.ArticlesDataSource
 import top.easelink.lcg.ui.main.source.FavoritesRemoteDataSource
 import top.easelink.lcg.ui.main.source.local.ArticlesDatabase
@@ -72,7 +72,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         }
     }
 
-    @Throws(BlockException::class, NetworkException::class)
+    @Throws(BlockException::class, NetException::class)
     override suspend fun getArticleDetail(query: String, isFirstFetch: Boolean): ArticleDetail? {
         try {
             val doc = JsoupClient.sendGetRequestWithQuery(query)
@@ -137,7 +137,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             return ArticleDetail(title, postList, nextPageUrl, fromHash, articleAbstract)
         } catch (e: Exception) {
             when (e) {
-                is SocketTimeoutException -> throw NetworkException()
+                is SocketTimeoutException -> throw NetException.TimeoutError("请求超时", e)
                 is BlockException -> throw e
                 else -> throw e
             }

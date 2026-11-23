@@ -2,6 +2,7 @@ package top.easelink.lcg.account
 
 import androidx.core.content.edit
 import timber.log.Timber
+import top.easelink.lcg.network.LCGCookieJar
 import top.easelink.lcg.utils.SharedPreferencesHelper
 import top.easelink.lcg.utils.clearCookies
 
@@ -61,6 +62,18 @@ object UserDataRepo {
             signInState = userInfo.signInStateUrl.orEmpty()
         }
         AccountManager.setUserInfo(userInfo)
+    }
+
+    /**
+     * 以网络层成对凭证（auth+saltkey）为准校正本地登录标记。
+     * jar 无有效会话时清除陈旧 SP 登录态并同步 AccountManager；持有凭证但本地未标记时不主动置 true，
+     * 凭证有效性仍以个人中心页面解析结果为准，避免误登。
+     */
+    fun reconcileWithJar() {
+        if (!LCGCookieJar.hasLoginCredential() && isLoggedIn) {
+            isLoggedIn = false
+            Timber.w("【状态层】本地登录标记与凭证不一致，已按无有效会话校正为未登录")
+        }
     }
 
     fun clearAll() {
