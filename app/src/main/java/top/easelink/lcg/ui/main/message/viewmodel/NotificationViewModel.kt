@@ -7,13 +7,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.jsoup.nodes.Document
 import timber.log.Timber
 import top.easelink.lcg.network.JsoupClient
 import top.easelink.lcg.base.PageUiState
-import top.easelink.lcg.ui.main.model.BaseNotification
 import top.easelink.lcg.ui.main.model.NotificationModel
-import top.easelink.lcg.ui.main.model.SystemNotification
+import top.easelink.lcg.ui.main.source.parseNotificationModel
 import top.easelink.lcg.utils.ErrorHandler
 import top.easelink.lcg.utils.WebsiteConstant.NOTIFICATION_HOME_QUERY
 
@@ -37,7 +35,8 @@ class NotificationViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 JsoupClient.sendGetRequestWithQuery(nextPageUrl).let {
-                    val model = parseResponse(it)
+                    val model = parseNotificationModel(it)
+                    nextPageUrl = model.nextPageUrl
                     _notifications.value = model
                     callback.invoke(true)
                 }
@@ -54,8 +53,9 @@ class NotificationViewModel : ViewModel() {
             _uiState.value = PageUiState.Loading
             try {
                 val model = JsoupClient.sendGetRequestWithQuery(NOTIFICATION_HOME_QUERY).let {
-                    parseResponse(it)
+                    parseNotificationModel(it)
                 }
+                nextPageUrl = model.nextPageUrl
                 _notifications.value = model
                 if (model.notifications.isNotEmpty()) {
                     _uiState.value = PageUiState.Success(model)
@@ -68,48 +68,5 @@ class NotificationViewModel : ViewModel() {
             }
             _isLoading.value = false
         }
-    }
-
-    @Suppress("unused")
-    private fun parseSystemResponse(doc: Document): List<SystemNotification> {
-        doc.apply {
-            val dateTimeList = select("span.xg1").map { it.text() }
-            return select("dl.cl").mapIndexed { index, element ->
-                val title = element.selectFirst("dd.ntc_body")?.html().orEmpty()
-                val dateTime = dateTimeList.getOrNull(index).orEmpty()
-                SystemNotification(title = title, dateTime = dateTime)
-            }
-        }
-    }
-
-    private fun parseResponse(doc: Document): NotificationModel {
-        val notifications = doc.select("dl.cl").mapNotNull { element ->
-            try {
-                val ntc = element.selectFirst("dd.ntc_body")
-                val avatarElement = element.selectFirst("img")
-                val dateTimeElement = element.selectFirst("span.xg1")
-
-                if (ntc == null || avatarElement == null || dateTimeElement == null) {
-                    return@mapNotNull null
-                }
-
-                ntc.getElementsByTag("a").forEach {
-                    val href = it.attr("href")
-                    if (href.isNotEmpty()) {
-                        it.attr("href", "lcg:$href")
-                    }
-                }
-                BaseNotification(
-                    avatar = avatarElement.attr("src"),
-                    content = ntc.html(),
-                    dateTime = dateTimeElement.text()
-                )
-            } catch (e: Exception) {
-                Timber.e(e)
-                null
-            }
-        }
-        nextPageUrl = doc.select("a.nxt").attr("href")
-        return NotificationModel(notifications, nextPageUrl)
     }
 }
