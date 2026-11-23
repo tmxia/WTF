@@ -41,7 +41,7 @@ import top.easelink.lcg.ui.main.common.PopoverMenuItem
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
 
-/** 板块列表排序选项：orderby 为 null 表示系统默认顺序 */
+
 data class ForumSortOption(val orderby: String?, val label: String)
 
 val forumSortOptions = listOf(
@@ -50,7 +50,7 @@ val forumSortOptions = listOf(
     ForumSortOption("lastpost", "按最后回帖")
 )
 
-/** 板块列表时间范围选项：days 为 null 表示全部时间（仅作为默认态展示，不进入可选菜单）；最大 365 天（一年） */
+
 data class ForumTimeOption(val days: Int?, val label: String)
 
 val forumTimeOptions = listOf(
@@ -141,7 +141,7 @@ fun ForumArticlesScreen(
                                     PopoverMenuItem(
                                         label = option.label,
                                         checked = selectedTimeName == option.label,
-                                        // 仅非默认排序支持时间范围；默认顺序下时间档位置灰禁用
+                                        
                                         enabled = !timeLocked,
                                         onClick = {
                                             menuExpanded = false

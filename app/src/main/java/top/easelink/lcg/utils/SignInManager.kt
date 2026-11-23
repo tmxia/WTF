@@ -30,11 +30,11 @@ object SignInManager {
 
     private const val APPLY_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=apply&id=2"
 
-    // 手动签到整体超时：超过仍未拿到明确结果则回调失败并释放界面，避免永久卡在「签到中…」
+    
     private const val SIGN_TIMEOUT_MS = 90_000L
-    // 状态检查（隐藏 WebView）整体超时
+    
     private const val CHECK_TIMEOUT_MS = 15_000L
-    // 离开风控页后，主动续签一次并多轮轮询结果，覆盖瑞数放行后页面异步渲染 / AJAX 提交
+    
     private val POLL_DELAYS = longArrayOf(1200L, 2600L, 4000L)
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -44,7 +44,7 @@ object SignInManager {
     private var parentRef: ViewGroup? = null
     private var timeoutRunnable: Runnable? = null
 
-    // ============================== 本地签到状态 ==============================
+    
 
     fun updateLocalSignInTime() {
         SharedPreferencesHelper.getUserSp().edit {
@@ -62,7 +62,7 @@ object SignInManager {
                 lastCal.get(java.util.Calendar.DAY_OF_YEAR) == todayCal.get(java.util.Calendar.DAY_OF_YEAR)
     }
 
-    // ============================== 对外入口 ==============================
+    
 
     fun performSignIn(onResult: (String, String) -> Unit) {
         performSignIn(LCGApp.context, onResult)
@@ -74,13 +74,13 @@ object SignInManager {
             if (activity != null && !activity.isFinishing) {
                 startWebViewSignIn(activity, onResult)
             } else {
-                // 后台（无 Activity）无法承载过盾 WebView，直接回调失败，交由调用方重试
+                
                 withResult(onResult, "FAILED", "当前无法启动验证界面，请进入「我的」手动签到")
             }
         }
     }
 
-    // ============================== 签到主流程 ==============================
+    
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun startWebViewSignIn(activity: Activity, onResult: (String, String) -> Unit) {
@@ -108,10 +108,10 @@ object SignInManager {
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
 
-        // [PATCH] 停止清理 wzws_sid，保留 WAF 会话上下文
+        
                             Timber.d("SignInManager: 跳过清理 wzws_sid")
 
-        // 把持久化登录 / 凭证 Cookie 注入 WebView
+        
         LCGCookieJar.cookiesForUrl("https://www.52pojie.cn/").let { savedCookies ->
             if (savedCookies.isNotEmpty()) {
                 val cookieStr = savedCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
@@ -140,12 +140,12 @@ object SignInManager {
                         if (finished.get()) return@evaluatePageText
                         when {
                             isLoginExpired(text) -> finish("FAILED", "登录已失效，请重新登录", currentUrl)
-                            isVerifyPage(currentUrl, text) -> Unit // 仍在验证页，等待下一轮 / 用户操作
+                            isVerifyPage(currentUrl, text) -> Unit 
                             isSignInSuccess(text) -> finish("SUCCESS", "签到成功！", currentUrl)
-                            text.isBlank() -> Unit // 页面尚未渲染完成，继续下一轮
+                            text.isBlank() -> Unit 
                             index == POLL_DELAYS.lastIndex ->
                                 finish("FAILED", "未能确认签到状态，请稍后在网页端核实", currentUrl)
-                            else -> Unit // 中间轮次未拿到明确结论，继续轮询
+                            else -> Unit 
                         }
                     }
                 }
@@ -177,7 +177,7 @@ object SignInManager {
                         return@evaluatePageText
                     }
 
-                    // 刚离开风控页：放行凭证已写入 Cookie，主动重新申请一次任务，确保签到请求真正发出
+                    
                     if (verifySeen && !reloadedAfterVerify && url?.contains("mod=task") == true) {
                         reloadedAfterVerify = true
                         mainHandler.postDelayed({
@@ -191,7 +191,7 @@ object SignInManager {
             }
         }
 
-        // 整体超时兜底：即便页面无跳转 / AJAX 不回包，也一定会回调并释放界面
+        
         val timeout = Runnable {
             if (!finished.get()) {
                 Timber.w("签到流程超时，回调失败并释放界面")
@@ -207,7 +207,7 @@ object SignInManager {
         }
     }
 
-    // ============================== 签到状态检查（隐藏 WebView） ==============================
+    
 
     @SuppressLint("SetJavaScriptEnabled")
     fun checkSignInStatus(context: Context, onResult: (Boolean) -> Unit) {
@@ -218,8 +218,8 @@ object SignInManager {
                     (activity?.window?.decorView as? ViewGroup) ?: FrameLayout(LCGApp.context)
 
                 val webView = WebView(context).apply {
-                    layoutParams = ViewGroup.LayoutParams(400, 800) // [PATCH] 增大尺寸
-alpha = 0.1f // [PATCH] 提高可见度
+                    layoutParams = ViewGroup.LayoutParams(400, 800) 
+alpha = 0.1f 
                     settings.javaScriptEnabled = true
             setLayerType(View.LAYER_TYPE_SOFTWARE, null)
             isScrollbarFadingEnabled = true
@@ -241,7 +241,7 @@ alpha = 0.1f // [PATCH] 提高可见度
                 val done = AtomicBoolean(false)
                 var timeout: Runnable? = null
                 fun release(result: Boolean) {
-                // [PATCH] 如果确认已签到，且本地记录过期，立即更新本地时间戳
+                
                 if (result && !isSignedToday()) updateLocalSignInTime()
                     if (!done.compareAndSet(false, true)) return
                     timeout?.let { mainHandler.removeCallbacks(it) }
@@ -250,7 +250,7 @@ alpha = 0.1f // [PATCH] 提高可见度
                     onResult(result)
                 }
 
-                // 超时兜底：未在限定时间内拿到结论，按本地缓存状态返回
+                
                 timeout = Runnable { release(isSignedToday()) }
                 mainHandler.postDelayed(timeout, CHECK_TIMEOUT_MS)
 
@@ -285,7 +285,7 @@ alpha = 0.1f // [PATCH] 提高可见度
         }
     }
 
-    // ============================== 风控 / 结果识别 ==============================
+    
 
     private fun isVerifyUrl(url: String?): Boolean {
         if (url.isNullOrBlank()) return false
@@ -347,7 +347,7 @@ alpha = 0.1f // [PATCH] 提高可见度
         return text
     }
 
-    // ============================== Cookie 与资源释放 ==============================
+    
 
     private fun syncCookies(url: String?) {
         runCatching {
@@ -401,7 +401,7 @@ alpha = 0.1f // [PATCH] 提高可见度
             root.addView(header)
             root.addView(webView, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
             setContentView(root)
-            // Dialog 被系统关闭 / 返回键 dismiss 时，同样走取消回调，避免界面与回调悬挂
+            
             setOnDismissListener { onCancel() }
         }
         verifyDialog?.show()

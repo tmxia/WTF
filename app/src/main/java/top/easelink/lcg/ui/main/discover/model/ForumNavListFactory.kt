@@ -6,7 +6,7 @@ import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.utils.WebsiteConstant
 import java.util.*
 
-/** 板块 URL 模板中的 %d 为分页占位符，默认取第 1 页；未格式化会得到非法地址并导致导航匹配失败。 */
+
 private fun forumUrl(template: String): String =
     if (template.contains("%d")) template.format(1) else template
 

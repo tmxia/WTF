@@ -86,7 +86,7 @@ class ArticleFragment : Fragment(), ControllableFragment {
         viewModel.setUrl(url)
         viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
 
-        // 监听跟帖/评论弹窗提交结果：成功后把新楼层插入列表刷新，失败给出提示。
+        
         parentFragmentManager.setFragmentResultListener(
             CommentArticleDialog.REPLY_POST_REQUEST_KEY, this
         ) { _, bundle ->

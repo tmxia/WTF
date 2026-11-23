@@ -63,10 +63,10 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
     private var mFormHash: String? = null
     private var articleAbstract: ArticleAbstractResponse? = null
 
-    /** 已成功加载过的帖子 URL，用于拦截同一帖子的重复 INIT 请求，避免短时间内重复拉取放大风控。 */
+    
     private var loadedUrl: String? = null
 
-    /** 手动刷新置位：强制绕过同帖去重重拉一次。 */
+    
     private var forceReload = false
 
     private var fetching = false
@@ -99,7 +99,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
             return
         }
 
-        // 同一帖子已加载且已有内容时，跳过重复 INIT 请求；手动刷新走 forceRefresh 绕过。
+        
         if (type == FETCH_POST_INIT && !forceReload && mUrl != null && mUrl == loadedUrl && _posts.value.isNotEmpty()) {
             Timber.d("【详情页】同一帖子已加载，跳过重复请求: $mUrl")
             safeUpdate(_isLoading, false)
@@ -157,7 +157,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         }
     }
 
-    /** 手动刷新：绕过同帖去重，强制重新拉取当前帖子。 */
+    
     fun forceRefresh() {
         forceReload = true
         fetchArticlePost(FETCH_POST_INIT, null)
@@ -348,7 +348,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         }
     }
 
-    /** 回复/跟帖成功后，把本地构造的新楼层追加到列表末尾并刷新。 */
+    
     fun appendNewReply(post: Post) {
         val currentList = _posts.value.toMutableList()
         currentList.add(post)

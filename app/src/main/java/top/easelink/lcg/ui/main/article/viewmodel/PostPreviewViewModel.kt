@@ -36,8 +36,8 @@ class PostPreviewViewModel : ViewModel() {
         currentQuery = query
         loadJob?.cancel()
 
-        // 优先取用 Launcher 预加载并暂存的简介：命中则直接渲染，不再二次解析 / 请求，
-        // 避免弹窗打开后经历网络加载空窗。
+        
+        
         val prepared = PostPreviewLauncher.consumePrepared(query)
         if (prepared != null) {
             bindPost(prepared)

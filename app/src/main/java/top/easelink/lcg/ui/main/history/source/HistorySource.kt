@@ -8,7 +8,7 @@ import top.easelink.lcg.ui.main.source.local.ArticlesDatabase
 object HistorySource {
     private val dao get() = ArticlesDatabase.getInstance().articlesDao()
 
-    /** 观察历史记录列表，DAO 实体在上层模型处映射为 [HistoryModel]。 */
+    
     fun observeHistories(): Flow<List<HistoryModel>> =
         dao.getHistories().map { list ->
             list.map {

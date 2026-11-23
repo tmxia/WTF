@@ -55,7 +55,7 @@ object WebsiteConstant {
 
     const val RANK_QUERY = "misc.php?mod=ranklist&type=thread&view=%s&orderby=%s"
 
-    // 现行人气热门帖入口（Discuz guide 视图）；旧 misc.php?mod=ranklist 已不返回榜单
+    
     const val RANK_HOT_QUERY = "forum.php?mod=guide&view=hot"
 
     const val QQ_LOGIN_URL = SERVER_BASE_URL + "connect.php?mod=login&op=init&referer=index.php&statfrom=login_simple"

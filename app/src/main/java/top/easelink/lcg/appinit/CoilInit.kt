@@ -26,8 +26,8 @@ object LCGImageLoaderFactory : ImageLoaderFactory {
             val original = chain.request()
             val host = original.url.host.lowercase()
             val isLcgHost = host == "52pojie.cn" || host.endsWith(".52pojie.cn")
-            // 自有域（www/static/avatar/attach/down 等）携带登录 Cookie 与论坛 Referer；
-            // 第三方图床不注入 Cookie / Referer，避免外站防盗链拦截。
+            
+            
             if (isLcgHost) {
                 val cookieHeader = getCookiesFor(original.url.toString()).toHeaderString()
                 val newRequest = original.newBuilder()
@@ -54,8 +54,8 @@ object LCGImageLoaderFactory : ImageLoaderFactory {
             }
         }
 
-        // 限制图片并发：全局最多 8 路、同一宿主最多 3 路，避免长帖正文/楼层一次性
-        // 拉出几十张同域图片并发请求，短时间 QPS 过高触发站点风控。
+        
+        
         val dispatcher = Dispatcher().apply {
             maxRequests = 8
             maxRequestsPerHost = 3

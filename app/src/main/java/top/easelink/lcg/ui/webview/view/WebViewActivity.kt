@@ -146,9 +146,9 @@ class WebViewActivity : AppCompatActivity() {
                     CookieManager.getInstance().apply {
                         setAcceptCookie(true)
                         setAcceptThirdPartyCookies(mWebView, true)
-                        // [PATCH] 停止清理 wzws_sid，保留 WAF 会话上下文
+                        
                         Timber.d("跳过清理 wzws_sid，保留 WAF 会话上下文")
-                        // 全量持久化凭证按 domain/path 逐条同步进 WebView，避免只拼主域串导致会话残缺
+                        
                         LCGCookieJar.syncToWebView()
                     }
                     Timber.d("已同步持久化 Cookie 到 WebView")
@@ -180,15 +180,15 @@ class WebViewActivity : AppCompatActivity() {
                 val currentUrl = withContext(Main) { mWebView.url } ?: return@launch
                 if (!isLoginSuccess(doc, currentUrl)) return@launch
 
-                // [PATCH] 先尝试从当前 URL 同步
+                
                     LCGCookieJar.syncFromWebView(currentUrl)
-                    // [PATCH] 强制同步主域 Cookie
+                    
                     LCGCookieJar.syncFromWebView(SERVER_BASE_URL)
                     Timber.d("当前抓取到的 Cookie: ${LCGCookieJar.cookiesForUrl(SERVER_BASE_URL)}")
-                    // [PATCH] 打印抓取到的 Cookie 以排查
+                    
                     Timber.d("当前抓取到的 Cookie: ${LCGCookieJar.cookiesForUrl(SERVER_BASE_URL)}")
 
-                // 页面虽显示头像，但网络层未拿到 auth 凭证时，不能冒充登录态，避免 App 内按游客访问
+                
                 if (!LCGCookieJar.hasLoginCredential()) {
                     Timber.w("登录页面已渲染头像，但未回读到 auth 凭证，放弃置登录态: $currentUrl")
                     showMessage(R.string.general_error)
@@ -197,7 +197,7 @@ class WebViewActivity : AppCompatActivity() {
 
                 UserDataRepo.isLoggedIn = true
                     
-                    // [PATCH] 登录成功后，强制触发一次签到状态刷新，确保 UI 正确显示
+                    
                     top.easelink.lcg.utils.SignInManager.checkSignInStatus(this@WebViewActivity) { isSigned ->
                         Timber.d("登录后刷新签到状态: $isSigned")
                     }
@@ -334,7 +334,7 @@ class WebViewActivity : AppCompatActivity() {
     private fun updateWebViewSettingsRemote() {
         mWebView.settings.apply {
             WebViewSecurityHelper.applyHardening(this)
-            // 与原生 Jsoup / 图片链路共用同一套桌面 Chrome UA，避免 WebView 默认 wv 标识造成指纹割裂被风控关联
+            
             userAgentString = APP_USER_AGENT
             javaScriptEnabled = mForceEnableJs
             domStorageEnabled = true

@@ -19,7 +19,7 @@ object PreviewCacheManager : ICacheManager {
     private val PREVIEW_CACHE_FOLDER = "${LCGApp.context.cacheDir}/preview_articles"
     private const val CONFIG_FILE_NAME = "PreviewCacheConfig"
 
-    /** 单条预览缓存有效期；过期条目在读取时清理，避免长期展示旧预览内容。 */
+    
     private const val PREVIEW_TTL_MS = 30 * 60 * 1000L
 
     fun saveToDisk(url: String, content: String) {

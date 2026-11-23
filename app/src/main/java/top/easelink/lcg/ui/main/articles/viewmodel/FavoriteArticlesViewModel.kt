@@ -21,7 +21,7 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    /** 分页骨架：收藏当前为本地全量加载，暂无远端翻页，hasMore 恒为 false。 */
+    
     private val _hasMore = MutableStateFlow(false)
     val hasMore: StateFlow<Boolean> = _hasMore.asStateFlow()
     private var mCurrentPage = 0

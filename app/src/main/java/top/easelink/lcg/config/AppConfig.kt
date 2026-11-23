@@ -50,7 +50,7 @@ object AppConfig {
         set(value) = put(CONFIG_DEFAULT_SEARCH_ENGINE, value)
 
     var autoSignEnable: Boolean
-        get() = get(CONFIG_AUTO_SIGN_IN, false) // [PATCH] 默认关闭自动签到
+        get() = get(CONFIG_AUTO_SIGN_IN, false) 
         set(value) = put(CONFIG_AUTO_SIGN_IN, value)
 
     var syncFavorites: Boolean

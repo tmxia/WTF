@@ -31,7 +31,7 @@ object LCGSearchService {
             return null
         }
 
-        // 同关键词 + 板块 + 排序命中缓存，直接复用，不再发起请求
+        
         val key = SearchAntiDefense.cacheKey(keyword, fid, orderby)
         SearchAntiDefense.getCached(key)?.let {
             Timber.tag("[SearchProbe]").d("命中搜索缓存: $keyword, 条数=${it.searchResultList.size}")
@@ -53,7 +53,7 @@ object LCGSearchService {
                 val code = response.statusCode()
                 Timber.tag("[SearchProbe]").d("HTTP 响应码: $code (attempt=$attempt)")
 
-                // 风控状态码：退避重试，超限后冻结一段时间
+                
                 if (SearchAntiDefense.isBlockedHttpCode(code)) {
                     if (attempt < MAX_RETRY) {
                         SearchAntiDefense.backoffSleep(attempt)
@@ -76,7 +76,7 @@ object LCGSearchService {
                     throw Exception("触发安全风控，请完成验证后再搜索")
                 }
 
-                // 服务器返回的业务错误提示（非风控），不重试，直接抛给上层
+                
                 val errorText = doc.selectFirst(".alert_error, .alert_info, .alert_msg")?.text()?.trim().orEmpty()
                 if (errorText.isNotBlank()) {
                     throw Exception(errorText)
@@ -116,7 +116,7 @@ object LCGSearchService {
             showMessage("搜索暂时受限，请稍后再试")
             return emptyResult()
         }
-        // 翻页随机人型间隔，避免连续翻页触发频控
+        
         SearchAntiDefense.nextPageSleep()
         try {
             return parseSearchResults(JsoupClient.sendGetRequestWithQuery(nextUrl))

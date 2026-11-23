@@ -38,8 +38,8 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
 
     private val gson: Gson = GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
 
-    // 数据源自有后台作用域：替代 GlobalScope，历史写入不绑定任意调用方生命周期，
-    // 又可在数据源层统一管理；不引入 DI。
+    
+    
     private val dataSourceScope = CoroutineScope(SupervisorJob() + BackGroundPool)
 
     @Throws(LoginRequiredException::class, SocketTimeoutException::class)
@@ -546,8 +546,8 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             ) {
                 imgElement.remove()
             }
-            // Discuz 懒加载：真实地址可能在 file / zoomfile / data-src / data-original，
-            // 依次回退；占位 none.gif 不作为真实地址。
+            
+            
             val realAttr = listOf("file", "zoomfile", "data-src", "data-original")
                 .firstOrNull { key ->
                     val value = imgElement.attr(key)

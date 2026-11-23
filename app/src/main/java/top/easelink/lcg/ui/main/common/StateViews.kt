@@ -18,10 +18,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import top.easelink.lcg.R
 
-/**
- * 列表页通用三态状态组件：加载中 / 空态 / 错误重试。
- * 供各 Compose 列表 Screen 复用，避免每页重复实现状态占位。
- */
+
+
+
+
 
 @Composable
 fun FullScreenLoading(modifier: Modifier = Modifier) {

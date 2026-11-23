@@ -12,14 +12,14 @@ import top.easelink.lcg.ui.main.discover.model.RankListModel
 import top.easelink.lcg.ui.main.discover.model.RankModel
 import top.easelink.lcg.utils.WebsiteConstant.RANK_HOT_QUERY
 
-/** 热榜磁盘缓存写入的受控后台作用域：fire-and-forget，异常不向上传播。 */
+
 private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 suspend fun fetchRank(rankType: RankType, dateType: DateType): RankListModel {
     var doc = HotTopicCacheManager.findTodayHotTopic(rankType = rankType.value, dateType = dateType.value)
     var model = doc?.let { parseRankModelInfo(it, rankType) }
 
-    // 缓存命中但解析为空（旧坏缓存 / 风控页 / 结构变更）：丢弃缓存并回源重新拉取
+    
     if (model == null || model.listModel.isEmpty()) {
         doc = JsoupClient.sendGetRequestWithQuery(RANK_HOT_QUERY)
         model = parseRankModelInfo(doc, rankType)
@@ -42,7 +42,7 @@ suspend fun fetchRank(rankType: RankType, dateType: DateType): RankListModel {
 fun parseRankModelInfo(document: Document, rankType: RankType): RankListModel = with(document) {
     val time = selectFirst("div.notice")?.text().orEmpty()
 
-    // 与帖子列表同一套 Discuz 模板：优先 normal/normalthread 行，兜底 table tbody tr
+    
     val rows = buildList {
         addAll(select("tbody[id^=normal]"))
         if (isEmpty()) addAll(select("tbody[id^=normalthread]"))
@@ -89,8 +89,8 @@ fun parseRankModelInfo(document: Document, rankType: RankType): RankListModel = 
         }
     }.filterNotNull()
 
-    // 站点返回顺序不等于热度降序；按热度数值降序重排并重算名次序号，
-    // 使界面序号与红/橙/绿圆点颜色跟随新排名；解析失败兜底为 0 的条目自然排到末尾。
+    
+    
     val sorted = list.sortedByDescending { it.num }.mapIndexed { index, model ->
         model.copy(index = index + 1)
     }

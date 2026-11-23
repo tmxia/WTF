@@ -7,7 +7,7 @@ import top.easelink.lcg.ui.main.discover.model.ForumNavigationModel
 import top.easelink.lcg.utils.MemoryTtlCache
 
 object ForumNetworkSource {
-    /** 板块导航为低频变动的静态数据，内存缓存 30 分钟，避免重复拉取与解析。 */
+    
     private const val FORUMS_CACHE_KEY = "all_forums"
     private const val FORUMS_CACHE_TTL_MS = 30 * 60_000L
     private val forumsCache = MemoryTtlCache<String, List<ForumNavigationModel>>(maxEntries = 1, ttlMs = FORUMS_CACHE_TTL_MS)

@@ -35,7 +35,7 @@ object JsoupClient : ApiRequest {
     private val CHECK_INTERVAL = if (BuildConfig.DEBUG) 60 * 1000 else 30 * 1000
     private const val TIME_OUT_LIMIT = 30 * 1000
     private const val BASE_URL = SERVER_BASE_URL
-    // 进程内固定一套 UA，会话期间不随请求切换，避免指纹抖动被风控识别
+    
     private val sessionUserAgent: String = APP_USER_AGENT
 
     private val sessionExpiredFiredOnce = AtomicBoolean(false)

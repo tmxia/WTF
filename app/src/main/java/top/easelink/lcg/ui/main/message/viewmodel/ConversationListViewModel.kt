@@ -20,7 +20,7 @@ class ConversationListViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    /** 分页骨架：当前为单页解析，暂未提取下一页链接，hasMore 恒为 false。 */
+    
     private val _hasMore = MutableStateFlow(false)
     val hasMore: StateFlow<Boolean> = _hasMore.asStateFlow()
 

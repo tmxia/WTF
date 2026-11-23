@@ -20,7 +20,7 @@ class MeViewModel : ViewModel() {
         val hasCredential = LCGCookieJar.hasLoginCredential()
 
         if (!hasCredential) {
-            // 网络层无 auth 凭证：清除陈旧的本地登录态，避免沿用过期缓存按已登录展示
+            
             if (UserDataRepo.isLoggedIn) UserDataRepo.isLoggedIn = false
         } else if (UserDataRepo.isLoggedIn) {
             UserDataRepo.updateUserInfo(
@@ -42,7 +42,7 @@ class MeViewModel : ViewModel() {
                 val userInfo = UserInfoRepo.requestUserInfo()
 
                 if (userInfo == null || userInfo == UserInfo.getDefaultUserInfo()) {
-                    // 页面返回游客态：仅在网络层也无凭证时才判定未登录，避免解析抖动误清有效会话
+                    
                     if (!LCGCookieJar.hasLoginCredential()) {
                         UserDataRepo.isLoggedIn = false
                     } else {

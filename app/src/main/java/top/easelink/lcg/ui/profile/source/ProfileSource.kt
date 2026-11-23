@@ -16,9 +16,9 @@ object ProfileSource {
     suspend fun parseUserInfo(doc: Document) {
     }
 
-    /**
-     * 关注 / 拉黑（好友添加或解除）操作，返回响应 HTML；失败抛异常由调用方处理。
-     */
+    
+
+
     suspend fun toggleFriend(uid: String, op: String, handlekey: String): String = withContext(IOPool) {
         val postData = mutableMapOf(
             "formhash" to (JsoupClient.formHash ?: ""),
@@ -28,9 +28,9 @@ object ProfileSource {
         JsoupClient.sendPostRequestWithUrl("$FRIEND_OP_BASE_URL&op=$op", postData).body()
     }
 
-    /**
-     * 订阅/关注用户，返回页面提示文案；无提示返回 null。
-     */
+    
+
+
     suspend fun subscribe(url: String): String? = withContext(IOPool) {
         JsoupClient.sendGetRequestWithQuery(url).getElementById("messagetext")?.text()
     }

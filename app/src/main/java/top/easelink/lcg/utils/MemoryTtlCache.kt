@@ -2,15 +2,15 @@ package top.easelink.lcg.utils
 
 import java.util.concurrent.ConcurrentHashMap
 
-/**
- * 轻量内存 LRU + TTL 缓存。
- *
- * - 按 key 存取，超容量淘汰最早插入条目；
- * - 过期条目在读写时惰性清理；
- * - 线程安全，可在 IO / 主线程并发访问。
- *
- * 仅作为可复用组件接入业务，不替代既有磁盘文件缓存（热榜 / 预览）。
- */
+
+
+
+
+
+
+
+
+
 class MemoryTtlCache<K, V>(
     private val maxEntries: Int = 32,
     private val ttlMs: Long = DEFAULT_TTL_MS,

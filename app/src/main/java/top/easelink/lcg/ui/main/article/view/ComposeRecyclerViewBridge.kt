@@ -91,9 +91,9 @@ fun ComposeRecyclerViewBridge(
         }
     }
 
-    // 显式持有适配器引用：倒序/正序切换只改变派生顺序、不改变 posts 集合，
-    // AndroidView 的 update 回调不一定随 isReverse 重组重跑；这里用 LaunchedEffect
-    // 监听 isReverse 变化，强制按当前展示顺序刷新适配器，避免开关无效。
+    
+    
+    
     var articleAdapter: ArticleAdapter? = null
 
     Box(modifier = modifier) {

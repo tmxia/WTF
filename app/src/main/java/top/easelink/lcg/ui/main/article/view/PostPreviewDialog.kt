@@ -119,8 +119,8 @@ class PostPreviewDialog : TopDialog() {
 
                     viewLifecycleOwner.lifecycleScope.launch {
                         mViewModel.loadingResult.collect { status ->
-                            // 可见性统一由 content 收集器在正文就绪后控制；
-                            // 仅在失败（非 loading、非成功 -1）时关闭弹窗，避免空卡片露出。
+                            
+                            
                             if (status != -1 && status != R.string.preview_loading) {
                                 dismissDialog()
                             }
