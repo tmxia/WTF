@@ -68,27 +68,12 @@ object JsoupClient : ApiRequest {
 
         updateCookies(response.cookies())
 
-        if (isWafPage(response.body())) {
-            if (!enableWafPopup || url.contains("home.php?mod=task")) {
-                throw NetworkException.WafBlocked("WAF_VERIFICATION_REQUIRED")
-            }
-
-            Timber.w("网络层：命中高级 JS WAF 盾，触发 URL: $url")
-            EventBus.getDefault().post(WafVerificationEvent(url))
-
-            val verifiedCookie = WafGate.awaitVerification()
-
-            if (verifiedCookie != null) {
-                Timber.d("真人验证通过，重新发起业务请求...")
-                response = getConnection(url)
-                    .method(Connection.Method.GET)
-                    .followRedirects(FOLLOW_REDIRECTS_ENABLE)
-                    .execute()
-                updateCookies(response.cookies())
-            } else {
-                Timber.e("网络层：真人验证超时或取消")
-                throw NetworkException.WafBlocked("验证超时或被取消，无法绕过 WAF")
-            }
+        // [ARCH-PHASE-2] 统一处理 WAF 拦截与重发
+        response = handleWafChallenge(url, response, enableWafPopup) {
+            getConnection(url)
+                .method(Connection.Method.GET)
+                .followRedirects(FOLLOW_REDIRECTS_ENABLE)
+                .execute()
         }
 
         RateLimiter.noteBlocked(response.statusCode())
@@ -106,32 +91,47 @@ object JsoupClient : ApiRequest {
 
         updateCookies(response.cookies())
 
-        if (isWafPage(response.body())) {
-            if (!enableWafPopup || url.contains("home.php?mod=task")) {
-                throw NetworkException.WafBlocked("WAF_VERIFICATION_REQUIRED")
-            }
-            Timber.w("网络层：POST 命中 WAF 盾，触发 URL: $url")
-            EventBus.getDefault().post(WafVerificationEvent(url))
-
-            val verifiedCookie = WafGate.awaitVerification()
-
-            if (verifiedCookie != null) {
-                response = getConnection(url)
-                    .apply { if (form != null) data(form) }
-                    .postDataCharset("gbk")
-                    .method(Connection.Method.POST)
-                    .execute()
-                updateCookies(response.cookies())
-            } else {
-                throw NetworkException.WafBlocked("验证超时或被取消，无法绕过 WAF")
-            }
+        // [ARCH-PHASE-2] 统一处理 WAF 拦截与重发
+        response = handleWafChallenge(url, response, enableWafPopup) {
+            getConnection(url)
+                .apply { if (form != null) data(form) }
+                .postDataCharset("gbk")
+                .method(Connection.Method.POST)
+                .execute()
         }
 
         RateLimiter.noteBlocked(response.statusCode())
         return response
     }
 
-    private fun isWafPage(html: String?): Boolean {
+    private suspend fun handleWafChallenge(
+        url: String,
+        response: Connection.Response,
+        enableWafPopup: Boolean,
+        retryRequest: suspend () -> Connection.Response
+    ): Connection.Response {
+        if (!isWafPage(response.body())) return response
+
+        if (!enableWafPopup || url.contains("home.php?mod=task")) {
+            throw NetworkException.WafBlocked("WAF_VERIFICATION_REQUIRED")
+        }
+
+        Timber.w("网络层：命中高级 JS WAF 盾，触发 URL: $url")
+        EventBus.getDefault().post(WafVerificationEvent(url))
+
+        val verifiedCookie = WafGate.awaitVerification()
+        if (verifiedCookie != null) {
+            Timber.d("真人验证通过，重新发起业务请求...")
+            val newResponse = retryRequest()
+            updateCookies(newResponse.cookies())
+            return newResponse
+        } else {
+            Timber.e("网络层：真人验证超时或取消")
+            throw NetworkException.WafBlocked("验证超时或被取消，无法绕过 WAF")
+        }
+    }
+
+private fun isWafPage(html: String?): Boolean {
         // [ARCH-PHASE-1] 直接调用 WafSolver，不再维护两套逻辑
         return top.easelink.lcg.utils.WafSolver.isWafPage(html)
     }
