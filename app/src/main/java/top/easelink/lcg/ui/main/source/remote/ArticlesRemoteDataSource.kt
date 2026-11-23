@@ -37,9 +37,6 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     private const val FOLLOW_TITLE = "follow_title"
 
     private val gson: Gson = GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
-
-    
-    
     private val dataSourceScope = CoroutineScope(SupervisorJob() + BackGroundPool)
 
     @Throws(LoginRequiredException::class, SocketTimeoutException::class)
@@ -59,8 +56,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         return try {
             val doc = PreviewCacheManager.findDocOrNull(query) ?: run {
                 val freshDoc = JsoupClient.sendGetRequestWithQuery(query)
-                if (freshDoc.selectFirst("div.pcb") == null &&
-                    freshDoc.select(".alert_error").isNotEmpty()) {
+                if (freshDoc.selectFirst("div.pcb") == null && freshDoc.select(".alert_error").isNotEmpty()) {
                     return null
                 }
                 PreviewCacheManager.saveToDisk(query, freshDoc.html())
@@ -68,17 +64,9 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             }
             getFirstPost(doc)
         } catch (e: HttpStatusException) {
-            if (e.statusCode == 404) {
-                null
-            } else {
-                throw e
-            }
+            if (e.statusCode == 404) null else throw e
         } catch (e: BlockException) {
-            if (e.message?.contains("删除") == true) {
-                null
-            } else {
-                throw e
-            }
+            if (e.message?.contains("删除") == true) null else throw e
         } catch (_: Exception) {
             null
         }
@@ -88,23 +76,20 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     override suspend fun getArticleDetail(query: String, isFirstFetch: Boolean): ArticleDetail? {
         try {
             val doc = JsoupClient.sendGetRequestWithQuery(query)
-            val articleAbstract: ArticleAbstractResponse? =
-                doc.selectFirst("script")?.let {
-                    try {
-                        val json = it.html().trim().replace("\u00a0".toRegex(), "")
-                        return@let gson.fromJson(json, ArticleAbstractResponse::class.java)
-                    } catch (_: Exception) {
-                    }
-                    null
-                }
+            val articleAbstract: ArticleAbstractResponse? = doc.selectFirst("script")?.let {
+                try {
+                    val json = it.html().trim().replace("\u00a0".toRegex(), "")
+                    return@let gson.fromJson(json, ArticleAbstractResponse::class.java)
+                } catch (_: Exception) { }
+                null
+            }
+
             val title = doc.selectFirst("span#thread_subject")?.text().orEmpty()
             if (title.isEmpty()) {
-                val message = doc
-                    .getElementById("messagetext")
-                    ?.text()
-                    .orEmpty()
+                val message = doc.getElementById("messagetext")?.text().orEmpty()
                 throw BlockException(message)
             }
+
             val nextPageUrl = doc.selectFirst("a.nxt")?.attr("href").orEmpty()
             val replyAddUrls = getReplyAddUrl(doc)
             val userInfos = getUserInfo(doc)
@@ -115,29 +100,20 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                     addToHistory(
                         url = query,
                         title = title,
-                        author = userInfos
-                            .getOrNull(0)
-                            ?.getOrElse(USER_NAME) {
-                                ""
-                            } ?: "",
+                        author = userInfos.getOrNull(0)?.getOrElse(USER_NAME) { "" } ?: "",
                     )
                 }
             }
+
             val dateTimes = getDateTime(doc)
             val replyUrls = getReplyUrls(doc)
             val postList: MutableList<Post> = ArrayList(userInfos.size)
+
             for (i in userInfos.indices) {
                 try {
-                    val replyAddUrl: String? = if (i >= replyAddUrls.size) {
-                        null
-                    } else {
-                        replyAddUrls[i]
-                    }
-                    val replyUrl: String? = if (i >= replyUrls.size) {
-                        null
-                    } else {
-                        replyUrls[i]
-                    }
+                    val replyAddUrl: String? = if (i >= replyAddUrls.size) null else replyAddUrls[i]
+                    val replyUrl: String? = if (i >= replyUrls.size) null else replyUrls[i]
+
                     val post = Post(
                         author = userInfos[i][USER_NAME].orEmpty(),
                         avatar = userInfos[i][USER_AVATAR].orEmpty(),
@@ -154,6 +130,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                     Timber.v(npe)
                 }
             }
+
             val fromHash = doc.selectFirst("input[name=formhash]")?.attr("value")
             return ArticleDetail(title, postList, nextPageUrl, fromHash, articleAbstract)
         } catch (e: Exception) {
@@ -165,24 +142,16 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         }
     }
 
-    private suspend fun addToHistory(
-        url: String,
-        title: String,
-        author: String,
-        content: String? = null
-    ) {
-        ArticlesDatabase
-            .getInstance()
-            .articlesDao()
-            .insertHistory(
-                HistoryEntity(
-                    url = url,
-                    title = title,
-                    author = author,
-                    content = content.orEmpty(),
-                    timestamp = System.currentTimeMillis()
-                )
+    private suspend fun addToHistory(url: String, title: String, author: String, content: String? = null) {
+        ArticlesDatabase.getInstance().articlesDao().insertHistory(
+            HistoryEntity(
+                url = url,
+                title = title,
+                author = author,
+                content = content.orEmpty(),
+                timestamp = System.currentTimeMillis()
             )
+        )
     }
 
     private const val HOT_PATTERN = "热度"
@@ -191,119 +160,26 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     private const val RECOMMENDED_LIMIT = 10
 
     private suspend fun getArticles(query: String): List<Article> {
-        var list: List<Article> = emptyList()
-        try {
+        return try {
             val doc = JsoupClient.sendGetRequestWithQuery(query)
             val rows = buildList {
                 addAll(doc.select("tbody[id^=normal]"))
                 if (isEmpty()) addAll(doc.select("tbody[id^=normalthread]"))
                 if (isEmpty()) addAll(doc.select("table tbody tr"))
             }
-            list = rows.map { e ->
-                try {
-                    val reply = extractFrom(e, "td.num", "a.xi2")
-                        .filter { it.isDigit() }
-                        .toIntOrNull() ?: 0
-                    val view = extractFrom(e, "td.num", "em")
-                        .filter { it.isDigit() }
-                        .toIntOrNull() ?: 0
-                    val title = e.selectFirst("th.common > .xst")?.text()
-                        ?: e.selectFirst("th.new > .xst")?.text()
-                        ?: e.selectFirst("a.xst")?.text()
-                        ?: e.selectFirst("th a[href*=viewthread]")?.text()
-                        ?: ""
-                    val author = extractFrom(e, "td.by", "a[href*=uid]").ifBlank { "匿名" }
-                    val date = extractFrom(e, "td.by", "span")
-                    val url = extractAttrFrom(e, "href", "th.common", "a.xst")
-                        .ifBlank { extractAttrFrom(e, "href", "th.new", "a.xst") }
-                        .ifBlank { e.selectFirst("a.xst")?.attr("href").orEmpty() }
-                        .ifBlank { e.selectFirst("th a[href*=viewthread]")?.attr("href").orEmpty() }
-                    val origin = e.selectFirst("td.by > a[target]")?.text().orEmpty()
-                        val helpInfo = e.select("th.common > span.xi1 > span.xw1").firstOrNull()?.text().orEmpty()
-                        var helpCoin = 0
-                        if (helpInfo.isEmpty()) {
-                            if (e.selectFirst("th.common")
-                                    ?.text()
-                                    ?.contains("- [已解决]") == true
-                            ) {
-                                helpCoin = -1
-                            }
-                        } else {
-                            helpCoin = try {
-                                helpInfo.toInt()
-                            } catch (_: Exception) {
-                                0
-                            }
-                        }
-                        val isRecommended = if (AppConfig.articleShowRecommendFlag) {
-                            e.selectFirst("th.common")
-                                ?.getElementsByTag("img")
-                                ?.map { it.attr("title") }
-                                ?.any { s ->
-                                    when {
-                                        s.contains(HOT_PATTERN) -> {
-                                            s.replace(HOT_PATTERN, "")
-                                                .trim()
-                                                .toIntOrNull()
-                                                ?.let { it >= HOT_LIMIT }
-                                                ?: false
-                                        }
-
-                                        s.contains(RECOMMENDED_PATTERN) -> {
-                                            s.replace(RECOMMENDED_PATTERN, "")
-                                                .trim()
-                                                .toIntOrNull()
-                                                ?.let { it >= RECOMMENDED_LIMIT }
-                                                ?: false
-                                        }
-
-                                        else -> {
-                                            false
-                                        }
-                                    }
-                                } ?: false
-                        } else {
-                            false
-                        }
-                        if (title.isNotBlank() && url.isNotBlank()) {
-                            return@map Article(
-                                title,
-                                author,
-                                date,
-                                url,
-                                view,
-                                reply,
-                                origin,
-                                helpCoin,
-                                isRecommended
-                            )
-                        }
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                    }
-                    null
-                }
-                .filterNotNull()
+            rows.mapNotNull { e -> extractArticleFromElement(e) }
         } catch (e: Exception) {
             Timber.e(e)
-        } finally {
-            return list
+            emptyList()
         }
     }
 
     @Throws(LoginRequiredException::class)
-    private fun processForumArticlesDocument(
-        doc: Document,
-        processThreadList: Boolean
-    ): ForumPage? {
+    private fun processForumArticlesDocument(doc: Document, processThreadList: Boolean): ForumPage? {
         try {
             var elements = doc.select("tbody[id^=normal]")
-            if (elements.isEmpty()) {
-                elements = doc.select("tbody[id^=normalthread]")
-            }
-            if (elements.isEmpty()) {
-                elements = doc.select("table tbody tr")
-            }
+            if (elements.isEmpty()) elements = doc.select("tbody[id^=normalthread]")
+            if (elements.isEmpty()) elements = doc.select("table tbody tr")
 
             if (elements.isEmpty()) {
                 val messageText = doc.getElementById("messagetext")?.text().orEmpty()
@@ -312,45 +188,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             }
             Timber.tag("[ForumParse]").d("匹配帖子节点 ${elements.size} 个")
 
-            val articleList: List<Article> = elements.mapNotNull { e ->
-                try {
-                    val reply = extractFrom(e, "td.num", "a.xi2")
-                        .ifBlank { "0" }
-                        .filter { it.isDigit() }
-                        .toIntOrNull() ?: 0
-
-                    val view = extractFrom(e, "td.num", "em")
-                        .ifBlank { "0" }
-                        .filter { it.isDigit() }
-                        .toIntOrNull() ?: 0
-
-                    val title = e.selectFirst("th.common > .xst")?.text().orEmpty()
-                        .ifBlank { e.selectFirst("th.new > .xst")?.text().orEmpty() }
-                        .ifBlank { e.selectFirst("a.xst")?.text().orEmpty() }
-                        .ifBlank { e.selectFirst("th a[href*=viewthread]")?.text().orEmpty() }
-
-                    val author = extractFrom(e, "td.by", "a[href*=uid]")
-                        .ifBlank { "匿名" }
-
-                    val date = extractFrom(e, "td.by", "span")
-
-                    val url = extractAttrFrom(e, "href", "th.common", "a.xst")
-                        .ifBlank { extractAttrFrom(e, "href", "th.new", "a.xst") }
-                        .ifBlank { e.selectFirst("a.xst")?.attr("href").orEmpty() }
-                        .ifBlank { e.selectFirst("th a[href*=viewthread]")?.attr("href").orEmpty() }
-
-                    val origin = e.selectFirst("td.by > a[target]")?.text().orEmpty()
-
-                    if (title.isNotBlank() && url.isNotBlank()) {
-                        Article(title, author, date, url, view, reply, origin)
-                    } else {
-                        null
-                    }
-                } catch (ex: Exception) {
-                    Timber.e(ex)
-                    null
-                }
-            }
+            val articleList: List<Article> = elements.mapNotNull { e -> extractArticleFromElement(e) }
 
             if (articleList.isEmpty()) {
                 Timber.tag("[ForumParse]").w("节点命中 ${elements.size} 个但解析出 0 条帖子")
@@ -360,27 +198,20 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             var threadList: List<ForumThread>? = null
             if (processThreadList) {
                 doc.getElementById("thread_types")?.let { threadTypes ->
-                    threadList = threadTypes
-                        .getElementsByTag("li")
-                        .mapNotNull { elementByTag ->
-                            try {
-                                val element = elementByTag.getElementsByTag("a").firstOrNull()
-                                val tempElements = element?.getElementsByTag("span") ?: Elements()
-                                if (tempElements.isNotEmpty()) {
-                                    tempElements.remove()
-                                }
-                                val threadUrl = element?.attr("href").orEmpty()
-                                val name = element?.text()?.trim { it <= ' ' }.orEmpty()
-                                if (name.isNotEmpty() && threadUrl.isNotEmpty()) {
-                                    return@mapNotNull ForumThread(name, threadUrl)
-                                }
-                            } catch (_: Exception) {
-                            }
+                    threadList = threadTypes.getElementsByTag("li").mapNotNull { elementByTag ->
+                        try {
+                            val element = elementByTag.getElementsByTag("a").firstOrNull()
+                            val tempElements = element?.getElementsByTag("span") ?: Elements()
+                            if (tempElements.isNotEmpty()) tempElements.remove()
+                            val threadUrl = element?.attr("href").orEmpty()
+                            val name = element?.text()?.trim { it <= ' ' }.orEmpty()
+                            if (name.isNotEmpty() && threadUrl.isNotEmpty()) ForumThread(name, threadUrl) else null
+                        } catch (_: Exception) {
                             null
                         }
+                    }
                 }
             }
-
             return ForumPage(articleList, threadList ?: emptyList())
         } catch (e: LoginRequiredException) {
             throw e
@@ -390,30 +221,70 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         }
     }
 
+    /**
+     * [ARCH-PHASE-11] 统一的防腐解析器：从单个 DOM 元素中提取 Article 对象。
+     * 即使部分字段解析失败，也不会影响整条帖子展示。
+     */
+    private fun extractArticleFromElement(e: Element): Article? {
+        return runCatching {
+            val title = e.selectFirst("th.common > .xst")?.text().orEmpty()
+                .ifBlank { e.selectFirst("th.new > .xst")?.text().orEmpty() }
+                .ifBlank { e.selectFirst("a.xst")?.text().orEmpty() }
+                .ifBlank { e.selectFirst("th a[href*=viewthread]")?.text().orEmpty() }
+                
+            val url = extractAttrFrom(e, "href", "th.common", "a.xst")
+                .ifBlank { extractAttrFrom(e, "href", "th.new", "a.xst") }
+                .ifBlank { e.selectFirst("a.xst")?.attr("href").orEmpty() }
+                .ifBlank { e.selectFirst("th a[href*=viewthread]")?.attr("href").orEmpty() }
+
+            if (title.isBlank() || url.isBlank()) return null
+
+            val reply = extractFrom(e, "td.num", "a.xi2").filter { it.isDigit() }.toIntOrNull() ?: 0
+            val view = extractFrom(e, "td.num", "em").filter { it.isDigit() }.toIntOrNull() ?: 0
+            val author = extractFrom(e, "td.by", "a[href*=uid]").ifBlank { "匿名" }
+            val date = extractFrom(e, "td.by", "span")
+            val origin = e.selectFirst("td.by > a[target]")?.text().orEmpty()
+
+            val helpInfo = e.select("th.common > span.xi1 > span.xw1").firstOrNull()?.text().orEmpty()
+            var helpCoin = 0
+            if (helpInfo.isEmpty()) {
+                if (e.selectFirst("th.common")?.text()?.contains("- [已解决]") == true) helpCoin = -1
+            } else {
+                helpCoin = helpInfo.toIntOrNull() ?: 0
+            }
+
+            val isRecommended = if (AppConfig.articleShowRecommendFlag) {
+                e.selectFirst("th.common")?.getElementsByTag("img")?.map { it.attr("title") }?.any { s ->
+                    when {
+                        s.contains(HOT_PATTERN) -> s.replace(HOT_PATTERN, "").trim().toIntOrNull()?.let { it >= HOT_LIMIT } ?: false
+                        s.contains(RECOMMENDED_PATTERN) -> s.replace(RECOMMENDED_PATTERN, "").trim().toIntOrNull()?.let { it >= RECOMMENDED_LIMIT } ?: false
+                        else -> false
+                    }
+                } ?: false
+            } else false
+
+            Article(title, author, date, url, view, reply, origin, helpCoin, isRecommended)
+        }.onFailure {
+            Timber.tag("[ForumParse]").e(it, "解析单条帖子异常，已跳过")
+        }.getOrNull()
+    }
+
     private fun extractFrom(element: Element, vararg tags: String): String {
-        if (tags.isNullOrEmpty()) {
-            return element.text()
-        }
+        if (tags.isNullOrEmpty()) return element.text()
         var e: Elements? = Elements(element)
         for (tag in tags) {
             e = e?.select(tag)
-            if (e.isNullOrEmpty()) {
-                break
-            }
+            if (e.isNullOrEmpty()) break
         }
         return e?.text().orEmpty()
     }
 
     private fun extractAttrFrom(element: Element, attr: String, vararg tags: String): String {
-        if (tags.isNullOrEmpty()) {
-            return element.text()
-        }
+        if (tags.isNullOrEmpty()) return element.text()
         var e: Elements? = Elements(element)
         for (tag in tags) {
             e = e?.select(tag)
-            if (e.isNullOrEmpty()) {
-                break
-            }
+            if (e.isNullOrEmpty()) break
         }
         return e?.attr(attr).orEmpty()
     }
@@ -421,14 +292,9 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     private fun getReplyAddUrl(document: Document): List<String> {
         val list: MutableList<String> = ArrayList(12)
         try {
-            val e = document.getElementById("recommend_add")
-            e?.attr("href")?.let { list.add(it) }
-            val elements = document.select("a.replyadd")
-            for (element in elements) {
-                list.add(element.attr("href"))
-            }
-        } catch (npe: NullPointerException) {
-        }
+            document.getElementById("recommend_add")?.attr("href")?.let { list.add(it) }
+            document.select("a.replyadd").forEach { list.add(it.attr("href")) }
+        } catch (_: NullPointerException) { }
         return list
     }
 
@@ -452,23 +318,14 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         return list
     }
 
-    private fun getDateTime(document: Document): List<String> = document.select("div.authi").select("em").map {
-        it.text()
-    }
+    private fun getDateTime(document: Document): List<String> = document.select("div.authi").select("em").map { it.text() }
 
     @Throws(BlockException::class)
     private fun getFirstPost(document: Document): PreviewPost {
-        val dateTime = document
-            .selectFirst("div.authi")
-            ?.select("em")
-            ?.text()
-            ?: run {
-                val message = document
-                    .getElementById("messagetext")
-                    ?.text()
-                    .orEmpty()
-                throw BlockException(message)
-            }
+        val dateTime = document.selectFirst("div.authi")?.select("em")?.text() ?: run {
+            val message = document.getElementById("messagetext")?.text().orEmpty()
+            throw BlockException(message)
+        }
         val content = getFirstContent(document)
         var avatar: String? = null
         var name: String? = null
@@ -484,98 +341,55 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         )
     }
 
-    private fun getFirstContent(doc: Document): String = doc.selectFirst("div.pcb")
-        .let { element ->
-            element?.selectFirst("td.t_f")?.let { tmp ->
-                processContentElement(tmp).html()
+    private fun getFirstContent(doc: Document): String = doc.selectFirst("div.pcb").let { element ->
+        element?.selectFirst("td.t_f")?.let { tmp -> processContentElement(tmp).html() }
+            ?: element?.selectFirst("div.locked")?.html().orEmpty()
+    }.orEmpty()
+
+    private fun getContents(doc: Document): List<String> = doc.select("div.pcb").filterNotNull().mapTo(ArrayList<String>()) {
+        it.selectFirst("td.t_f")?.let { tmp -> processContentElement(tmp) }?.let { res ->
+            it.select("div.savephotop > img")?.forEach { imgElement ->
+                res.appendChild(imgElement.attr("src", imgElement.attr("file")))
             }
-                ?: element?.selectFirst("div.locked")?.html().orEmpty()
-        }.orEmpty()
-
-    private fun getContents(doc: Document): List<String> = doc.select("div.pcb")
-        .filterNotNull()
-        .mapTo(ArrayList<String>()) {
-            it.selectFirst("td.t_f")?.let { tmp ->
-                processContentElement(tmp)
-            }?.let { res ->
-                it.select("div.savephotop > img")?.forEach { imgElement ->
-                    res.appendChild(
-                        imgElement.attr("src", imgElement.attr("file"))
-                    )
-                }
-                res.html()
-            } ?: it.selectFirst("div.locked")?.html().orEmpty()
-        }
-
-    private fun getReplyUrls(doc: Document): List<String> = doc.getElementsByClass("fastre").map {
-        it.attr("href")
+            res.html()
+        } ?: it.selectFirst("div.locked")?.html().orEmpty()
     }
+
+    private fun getReplyUrls(doc: Document): List<String> = doc.getElementsByClass("fastre").map { it.attr("href") }
 
     private fun processContentElement(element: Element): Element {
         element.select("div.tip").remove()
-
         element.select("script").remove()
-
         for (quote in element.select("div.quote")) {
             val inner = quote.selectFirst("blockquote")?.html().orEmpty()
             if (inner.isNotEmpty()) {
-                quote.html(
-                    "<blockquote style=\"border-left:3px solid #ccc;" +
-                        "padding-left:8px;color:#888\">$inner</blockquote>"
-                )
+                quote.html("<blockquote style=\"border-left:3px solid #ccc;padding-left:8px;color:#888\">$inner</blockquote>")
             }
         }
-
         for (e in element.getElementsByTag("pre")) {
-            val s = e.html()
-                .replace("\r\n", "<br/>")
-                .replace("\r", "<br/>")
-                .replace("\n", "<br/>")
-                .replace(" ", "&nbsp;")
+            val s = e.html().replace("\r\n", "<br/>").replace("\r", "<br/>").replace("\n", "<br/>").replace(" ", "&nbsp;")
             e.html(s)
         }
-
         val imgElements = element.getElementsByTag("img")
         for (i in imgElements.indices) {
             val imgElement = imgElements[i]
             val src = imgElement.attr("src")
-
-            if (src.contains("static.52pojie.cn/static/image/") &&
-                !src.contains("smiley") &&
-                !src.contains("none")
-            ) {
+            if (src.contains("static.52pojie.cn/static/image/") && !src.contains("smiley") && !src.contains("none")) {
                 imgElement.remove()
             }
-            
-            
-            val realAttr = listOf("file", "zoomfile", "data-src", "data-original")
-                .firstOrNull { key ->
-                    val value = imgElement.attr(key)
-                    value.isNotEmpty() && !value.contains("none.gif")
-                }
-            if (realAttr != null) {
-                imgElement.attr("src", imgElement.attr(realAttr))
+            val realAttr = listOf("file", "zoomfile", "data-src", "data-original").firstOrNull { key ->
+                val value = imgElement.attr(key)
+                value.isNotEmpty() && !value.contains("none.gif")
             }
-
-            for (bold in element.select("b, strong")) {
-                bold.unwrap()
-            }
-
-            for (heading in element.select("h1, h2, h3, h4, h5, h6")) {
-                heading.tagName("p")
-            }
+            if (realAttr != null) imgElement.attr("src", imgElement.attr(realAttr))
         }
+        for (bold in element.select("b, strong")) bold.unwrap()
+        for (heading in element.select("h1, h2, h3, h4, h5, h6")) heading.tagName("p")
         return element
     }
 
     override suspend fun addFavorites(threadId: String, formHash: String): Boolean = try {
-        JsoupClient.sendGetRequestWithQuery(
-            String.format(
-                ADD_TO_FAVORITE_QUERY,
-                threadId,
-                formHash
-            )
-        )
+        JsoupClient.sendGetRequestWithQuery(String.format(ADD_TO_FAVORITE_QUERY, threadId, formHash))
         true
     } catch (e: Exception) {
         Timber.e(e)
@@ -583,10 +397,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     }
 
     override suspend fun removeFavorites(threadId: String, formHash: String): Boolean = try {
-        val doc = JsoupClient.sendGetRequestWithQuery(
-            String.format(REMOVE_FAVORITE_QUERY, threadId, formHash)
-        )
-
+        val doc = JsoupClient.sendGetRequestWithQuery(String.format(REMOVE_FAVORITE_QUERY, threadId, formHash))
         val msg = doc.getElementById("messagetext")?.text().orEmpty()
         val hasError = doc.select(".alert_error").isNotEmpty()
         !hasError && (msg.isEmpty() || msg.contains("成功") || msg.contains("删除"))
@@ -597,8 +408,7 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
 
     suspend fun replyAdd(query: String): String = try {
         val doc = JsoupClient.sendGetRequestWithQuery(query)
-        val message = doc.getElementsByClass("nfl").firstOrNull()?.text().orEmpty()
-        message
+        doc.getElementsByClass("nfl").firstOrNull()?.text().orEmpty()
     } catch (e: Exception) {
         Timber.e(e)
         "Error"
