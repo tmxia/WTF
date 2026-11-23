@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -37,6 +38,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import top.easelink.lcg.R
 import top.easelink.lcg.ui.main.common.CompactAnchorMenu
 import top.easelink.lcg.ui.main.common.EmptyStateView
+import top.easelink.lcg.ui.main.common.ErrorStateView
 import top.easelink.lcg.ui.main.common.FullScreenLoading
 import top.easelink.lcg.ui.main.common.MenuDisplayMode
 import top.easelink.lcg.ui.main.common.PopoverMenuItem
@@ -71,6 +73,7 @@ fun ForumArticlesScreen(
     tabs: List<ForumThread>,
     articles: List<Article>,
     isLoading: Boolean,
+    uiState: top.easelink.lcg.base.PageUiState<List<Article>>,
     selectedSortName: String,
     selectedTimeName: String,
     timeLocked: Boolean,
@@ -78,6 +81,7 @@ fun ForumArticlesScreen(
     onTabSelected: (String) -> Unit,
     onArticleClick: (String) -> Unit,
     onLoadMore: () -> Unit,
+    onRetry: () -> Unit,
     onSortSelected: (String?, String) -> Unit,
     onTimeSelected: (Int?, String) -> Unit,
     onArticleLongClick: (String) -> Unit, onScrollPositionChanged: (Boolean) -> Unit = {}) {
@@ -233,6 +237,11 @@ fun ForumArticlesScreen(
 
                 Box(modifier = Modifier.fillMaxSize()) {
                     when {
+                        uiState is top.easelink.lcg.base.PageUiState.Error && articles.isEmpty() -> ErrorStateView(
+                            message = (uiState as? top.easelink.lcg.base.PageUiState.Error)?.message
+                                ?: stringResource(top.easelink.lcg.R.string.error),
+                            onRetry = onRetry
+                        )
                         isLoading && articles.isEmpty() -> FullScreenLoading()
                         articles.isEmpty() -> EmptyStateView()
                         else -> LazyColumn(

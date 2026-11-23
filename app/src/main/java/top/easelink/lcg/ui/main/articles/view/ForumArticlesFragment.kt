@@ -39,6 +39,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
             val articles by viewModel.articles.collectAsStateWithLifecycle()
             val tabs by viewModel.threadList.collectAsStateWithLifecycle()
             val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val selectedSortName by viewModel.selectedSortName.collectAsStateWithLifecycle()
             val selectedTimeName by viewModel.selectedTimeName.collectAsStateWithLifecycle()
             val timeLocked by viewModel.timeLocked.collectAsStateWithLifecycle()
@@ -49,6 +50,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
                 tabs = tabs,
                 articles = articles,
                 isLoading = isLoading,
+                uiState = uiState,
                 selectedSortName = selectedSortName,
                 selectedTimeName = selectedTimeName,
                 timeLocked = timeLocked,
@@ -59,6 +61,7 @@ class ForumArticlesFragment : Fragment(), ControllableFragment {
                 },
                 onArticleClick = { url -> EventBus.getDefault().post(OpenArticleEvent(url)) },
                 onLoadMore = { viewModel.fetchArticles(ArticleFetcher.FetchType.FETCH_MORE) { _ -> } },
+                onRetry = { viewModel.fetchArticles(ArticleFetcher.FetchType.FETCH_INIT) { _ -> } },
                 onSortSelected = { orderby, name -> viewModel.selectSort(orderby, name) },
                 onTimeSelected = { days, name -> viewModel.selectTime(days, name) },
                 onArticleLongClick = { url -> PostPreviewLauncher.preview(parentFragmentManager, url) },

@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.R
+import top.easelink.lcg.base.PageUiState
 import top.easelink.lcg.ui.main.model.LoginRequiredException
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ForumThread
@@ -96,6 +97,9 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _uiState = MutableStateFlow<PageUiState<List<Article>>>(PageUiState.Loading)
+    val uiState: StateFlow<PageUiState<List<Article>>> = _uiState.asStateFlow()
 
     fun initUrlAndFetch(
         url: String,
@@ -268,6 +272,9 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         }
         fetching = true
         _isLoading.value = true
+        if (fetchType == ArticleFetcher.FetchType.FETCH_INIT) {
+            _uiState.value = PageUiState.Loading
+        }
 
         val job = viewModelScope.launch(IOPool) {
             try {
@@ -302,6 +309,8 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
                     Timber.tag("[ForumSort]").w("列表为空, query=$query")
                     if (fetchType == ArticleFetcher.FetchType.FETCH_MORE) {
                         showMessage(R.string.no_more_content)
+                    } else if (_articles.value.isEmpty()) {
+                        _uiState.value = PageUiState.Empty
                     }
                     callback(false)
                 } else {
@@ -310,17 +319,28 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
                     }
                     handleArticleList(fetchType, forumPage.articleList, callback)
 
+                    if (_articles.value.isNotEmpty()) {
+                        _uiState.value = PageUiState.Success(_articles.value)
+                    }
+
                     if (!isTabSet) {
                         _threadList.value = forumPage.threadList.ifEmpty { emptyList() }
                         isTabSet = true
                     }
                 }
-            } catch (_: LoginRequiredException) {
+            } catch (e: LoginRequiredException) {
                 showMessage(R.string.login_required_error)
+                if (fetchType == ArticleFetcher.FetchType.FETCH_INIT) {
+                    _uiState.value = PageUiState.Error(e, ErrorHandler.getFriendlyMessage(e))
+                }
                 callback(false)
             } catch (e: Exception) {
                 Timber.e(e, "Fetch forum articles failed")
-                showMessage(ErrorHandler.getFriendlyMessage(e))
+                val msg = ErrorHandler.getFriendlyMessage(e)
+                showMessage(msg)
+                if (fetchType == ArticleFetcher.FetchType.FETCH_INIT) {
+                    _uiState.value = PageUiState.Error(e, msg)
+                }
                 callback(false)
             } finally {
                 fetching = false
