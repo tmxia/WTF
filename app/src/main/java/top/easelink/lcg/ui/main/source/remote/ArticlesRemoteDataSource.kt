@@ -110,24 +110,26 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
             val postList: MutableList<Post> = ArrayList(userInfos.size)
 
             for (i in userInfos.indices) {
-                try {
-                    val replyAddUrl: String? = if (i >= replyAddUrls.size) null else replyAddUrls[i]
-                    val replyUrl: String? = if (i >= replyUrls.size) null else replyUrls[i]
-
+                // [ARCH-PHASE-16] 使用 runCatching 兜底，并将数组访问改为安全的 getOrNull
+                runCatching {
+                    val userInfo = userInfos.getOrNull(i) ?: emptyMap()
+                    
                     val post = Post(
-                        author = userInfos[i][USER_NAME].orEmpty(),
-                        avatar = userInfos[i][USER_AVATAR].orEmpty(),
-                        date = dateTimes[i],
-                        content = contents[i],
-                        replyUrl = replyUrl,
-                        replyAddUrl = replyAddUrl,
-                        profileUrl = userInfos[i][USER_PROFILE_URL].orEmpty(),
-                        extraInfo = userInfos[i][USER_EXTRA_INFO],
-                        followInfo = userInfos[i][FOLLOW_TITLE]?.to(userInfos[i][FOLLOW_URL] ?: "")
+                        author = userInfo[USER_NAME].orEmpty().ifBlank { "匿名" },
+                        avatar = userInfo[USER_AVATAR].orEmpty(),
+                        // 安全索引访问，若缺失则提供默认值
+                        date = dateTimes.getOrNull(i).orEmpty(),
+                        content = contents.getOrNull(i).orEmpty(),
+                        replyUrl = replyUrls.getOrNull(i),
+                        replyAddUrl = replyAddUrls.getOrNull(i),
+                        profileUrl = userInfo[USER_PROFILE_URL].orEmpty(),
+                        extraInfo = userInfo[USER_EXTRA_INFO],
+                        followInfo = userInfo[FOLLOW_TITLE]?.to(userInfo[FOLLOW_URL] ?: "")
                     )
                     postList.add(post)
-                } catch (npe: NullPointerException) {
-                    Timber.v(npe)
+                }.onFailure { 
+                    // 即使某楼层 DOM 结构被完全破坏，也只打日志跳过，绝不崩溃
+                    Timber.tag("[ArticleParse]").w(it, "解析第 $i 楼数据失败，已跳过该楼层")
                 }
             }
 
