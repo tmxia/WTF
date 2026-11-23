@@ -235,6 +235,8 @@ object SignInManager {
                 val done = AtomicBoolean(false)
                 var timeout: Runnable? = null
                 fun release(result: Boolean) {
+                // [PATCH] 如果确认已签到，且本地记录过期，立即更新本地时间戳
+                if (result && !isSignedToday()) updateLocalSignInTime()
                     if (!done.compareAndSet(false, true)) return
                     timeout?.let { mainHandler.removeCallbacks(it) }
                     syncCookies(webView.url)

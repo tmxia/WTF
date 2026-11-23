@@ -196,6 +196,11 @@ class WebViewActivity : AppCompatActivity() {
                 }
 
                 UserDataRepo.isLoggedIn = true
+                    
+                    // [PATCH] 登录成功后，强制触发一次签到状态刷新，确保 UI 正确显示
+                    top.easelink.lcg.utils.SignInManager.checkSignInStatus(this@WebViewActivity) { isSigned ->
+                        Timber.d("登录后刷新签到状态: $isSigned")
+                    }
                 doc.getElementById("messagetext")?.text()?.let {
                     showMessage(it)
                 } ?: showMessage(R.string.login_successfully)
