@@ -358,12 +358,17 @@ alpha = 0.1f
     private fun releaseWebView(webView: WebView, parent: ViewGroup?) {
         runCatching {
             webView.stopLoading()
+            webView.webChromeClient = null
+            webView.webViewClient = WebViewClient()
             parent?.removeView(webView)
             webView.loadUrl("about:blank")
             webView.destroy()
         }.onFailure { Timber.w(it, "释放 WebView 失败") }
+        
+        // [ARCH-PHASE-3] 确保全局引用被彻底置空，切断 GC Root 链
         if (webViewRef === webView) webViewRef = null
         if (parentRef === parent) parentRef = null
+        Timber.d("WebView 已安全释放并切断引用")
     }
 
     private fun cancelTimeout() {
@@ -414,6 +419,10 @@ alpha = 0.1f
             Timber.w(e, "关闭验证弹窗失败")
         }
         verifyDialog = null
+        // [ARCH-PHASE-3] 兜底清理可能残留的 WebView
+        webViewRef?.let { wv ->
+            parentRef?.let { pv -> releaseWebView(wv, pv) }
+        }
     }
 
     private fun withResult(onResult: (String, String) -> Unit, status: String, msg: String) {

@@ -65,10 +65,14 @@ object UserDataRepo {
 
     fun clearAll() {
         Timber.w("【状态层】执行清空用户数据与Cookie (clearAll)")
+        // [ARCH-PHASE-3] 先清理底层凭证与数据
         clearCookies()
         SharedPreferencesHelper.getUserSp().edit { clear() }
-        isLoggedIn = false
+        
+        // 最后再更新状态，触发 UI 刷新，确保 UI 刷新时底层数据已干净
         updateUserInfo(UserInfo.getDefaultUserInfo())
+        isLoggedIn = false
+        AccountManager.setSignedToday(false) // 显式重置签到状态
     }
 
     @Suppress("UNCHECKED_CAST", "IMPLICIT_CAST_TO_ANY")

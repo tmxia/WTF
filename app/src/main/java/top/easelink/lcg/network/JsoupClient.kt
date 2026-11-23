@@ -31,7 +31,7 @@ object JsoupClient : ApiRequest {
     var formHash: String? = null
         set(value) { Timber.d("formHash = $value"); field = value }
 
-    private var lastTime = 0L
+    private val lastTime = java.util.concurrent.atomic.AtomicLong(0L)
     private val CHECK_INTERVAL = if (BuildConfig.DEBUG) 60 * 1000 else 30 * 1000
     private const val TIME_OUT_LIMIT = 30 * 1000
     private const val BASE_URL = SERVER_BASE_URL
@@ -163,8 +163,9 @@ private fun isWafPage(html: String?): Boolean {
     private fun checkResponse(doc: Document) {
         clientScope.launch {
             if (formHash.isNullOrEmpty()) formHash = extractFormHash(doc)
-            if (System.currentTimeMillis() - lastTime > CHECK_INTERVAL) {
-                lastTime = System.currentTimeMillis()
+            val now = System.currentTimeMillis()
+                if (now - lastTime.get() > CHECK_INTERVAL) {
+                    lastTime.set(now)
                 try {
                     checkLoginState(doc); checkMessages(doc)
                 } catch (e: Exception) {
