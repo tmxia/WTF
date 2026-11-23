@@ -25,7 +25,7 @@ object ProfileSource {
             "uid" to uid,
             "handlekey" to handlekey
         )
-        JsoupClient.sendPostRequestWithUrl("$FRIEND_OP_BASE_URL&op=$op", postData).body()
+        JsoupClient.sendPostRequestWithUrl("$FRIEND_OP_BASE_URL&op=$op", postData).text()
     }
 
     

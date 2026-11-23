@@ -16,7 +16,6 @@ object LCGSearchService {
 
     private var mNextPageUrl: String? = null
     private var mTotalResults: String? = null
-
     private val allowedOrderby = setOf("dateline", "lastpost", "replies", "views")
 
     suspend fun doSearchWith(keywordRaw: String, fid: String? = null, orderby: String? = null): LCGSearchResults? {
@@ -31,7 +30,6 @@ object LCGSearchService {
             return null
         }
 
-        
         val key = SearchAntiDefense.cacheKey(keyword, fid, orderby)
         SearchAntiDefense.getCached(key)?.let {
             Timber.tag("[SearchProbe]").d("命中搜索缓存: $keyword, 条数=${it.searchResultList.size}")
@@ -45,28 +43,13 @@ object LCGSearchService {
 
         val url = "${WebsiteConstant.SERVER_BASE_URL}search.php?searchsubmit=yes"
         val form = buildForm(keyword, fid, orderby)
-
         var lastError: Exception? = null
+
         for (attempt in 0..MAX_RETRY) {
             try {
-                val response = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = true)
-                val code = response.statusCode()
-                Timber.tag("[SearchProbe]").d("HTTP 响应码: $code (attempt=$attempt)")
-
+                // 底层已经直接返回 Document
+                val doc = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = true)
                 
-                if (SearchAntiDefense.isBlockedHttpCode(code)) {
-                    if (attempt < MAX_RETRY) {
-                        SearchAntiDefense.backoffSleep(attempt)
-                        continue
-                    }
-                    SearchAntiDefense.freeze()
-                    throw Exception("请求被站点风控拦截，请稍后再试")
-                }
-                if (code !in 200..299) {
-                    throw Exception("服务器拒绝请求 (HTTP $code)，请尝试切换板块或稍后再试")
-                }
-
-                val doc = response.parse()
                 if (SearchAntiDefense.detectWaf(doc)) {
                     if (attempt < MAX_RETRY) {
                         SearchAntiDefense.backoffSleep(attempt)
@@ -76,7 +59,6 @@ object LCGSearchService {
                     throw Exception("触发安全风控，请完成验证后再搜索")
                 }
 
-                
                 val errorText = doc.selectFirst(".alert_error, .alert_info, .alert_msg")?.text()?.trim().orEmpty()
                 if (errorText.isNotBlank()) {
                     throw Exception(errorText)
@@ -92,12 +74,14 @@ object LCGSearchService {
 
                 SearchAntiDefense.putCached(key, result)
                 return result
+
             } catch (e: Exception) {
                 lastError = e
                 val retryable = e is SocketTimeoutException ||
-                    e.message?.contains("风控") == true ||
-                    e.message?.contains("拦截") == true ||
-                    e.message?.contains("超时") == true
+                        e.message?.contains("风控") == true ||
+                        e.message?.contains("拦截") == true ||
+                        e.message?.contains("超时") == true
+                
                 if (retryable && attempt < MAX_RETRY) {
                     Timber.tag("SearchDebug").w(e, "搜索可重试异常，退避后重试 (attempt=$attempt)")
                     SearchAntiDefense.backoffSleep(attempt)
@@ -110,23 +94,23 @@ object LCGSearchService {
     }
 
     suspend fun doSearchNextPage(): LCGSearchResults {
-        val nextUrl = mNextPageUrl
-        if (nextUrl.isNullOrEmpty()) return emptyResult()
+        val nextUrl = mNextPageUrl ?: return emptyResult()
         if (SearchAntiDefense.isFrozen()) {
             showMessage("搜索暂时受限，请稍后再试")
             return emptyResult()
         }
-        
+
         SearchAntiDefense.nextPageSleep()
-        try {
-            return parseSearchResults(JsoupClient.sendGetRequestWithQuery(nextUrl))
+        return try {
+            parseSearchResults(JsoupClient.sendGetRequestWithQuery(nextUrl))
         } catch (e: SocketTimeoutException) {
             showMessage(R.string.network_error)
+            emptyResult()
         } catch (e: Exception) {
             Timber.e(e)
             showMessage(R.string.error)
+            emptyResult()
         }
-        return emptyResult()
     }
 
     private fun buildForm(keyword: String, fid: String?, orderby: String?): ArrayMap<String, String> {

@@ -4,57 +4,66 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.greenrobot.eventbus.EventBus
-import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import timber.log.Timber
+import top.easelink.framework.utils.APP_USER_AGENT
 import top.easelink.lcg.BuildConfig
 import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.ui.main.model.SessionExpiredEvent
 import top.easelink.lcg.ui.main.model.WafVerificationEvent
 import top.easelink.lcg.ui.main.source.checkMessages
 import top.easelink.lcg.ui.main.source.extractFormHash
-import top.easelink.framework.utils.APP_USER_AGENT
 import top.easelink.lcg.utils.WebsiteConstant
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
-import top.easelink.lcg.utils.getCookiesFor
-import top.easelink.lcg.utils.updateCookies
 import java.io.IOException
 import java.net.SocketTimeoutException
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 object JsoupClient : ApiRequest {
     private val clientScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private const val FOLLOW_REDIRECTS_ENABLE = true
-
     var formHash: String? = null
         set(value) { Timber.d("formHash = $value"); field = value }
 
-    private val lastTime = java.util.concurrent.atomic.AtomicLong(0L)
+    private val lastTime = AtomicLong(0L)
     private val CHECK_INTERVAL = if (BuildConfig.DEBUG) 60 * 1000 else 30 * 1000
-    private const val TIME_OUT_LIMIT = 20 * 1000 // 读超时 20s
-    private const val CONNECT_TIMEOUT = 10 * 1000 // 连接超时 10s
-    private const val BASE_URL = SERVER_BASE_URL
-    
     private val sessionUserAgent: String = APP_USER_AGENT
-
     private val sessionExpiredFiredOnce = AtomicBoolean(false)
 
-    fun completeVerification(cookieHeader: String?) {
-        WafGate.complete(cookieHeader)
-    }
+    private val okHttpClient = OkHttpClient.Builder()
+        .cookieJar(LCGCookieJar.jar)
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(20, TimeUnit.SECONDS)
+        .writeTimeout(20, TimeUnit.SECONDS)
+        .followRedirects(true)
+        .followSslRedirects(true)
+        .addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .header("User-Agent", sessionUserAgent)
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+                .header("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
+                .header("Host", WebsiteConstant.SERVER_HOST)
+                .header("Referer", SERVER_BASE_URL)
+                .header("Upgrade-Insecure-Requests", "1")
+                .build()
+            chain.proceed(request)
+        }
+        .build()
+
+    fun completeVerification(cookieHeader: String?) { WafGate.complete(cookieHeader) }
 
     @Throws(SocketTimeoutException::class, IOException::class)
-    override suspend fun sendGetRequestWithQuery(query: String): Document = sendGetRequestWithUrl("$BASE_URL$query", enableWafPopup = true)
+    override suspend fun sendGetRequestWithQuery(query: String): Document = sendGetRequestWithUrl("$SERVER_BASE_URL$query", enableWafPopup = true)
 
     suspend fun sendAjaxRequest(query: String): String {
-        val url = "$BASE_URL$query"
-        return getConnection(url)
-            .method(Connection.Method.GET)
-            .followRedirects(false)
-            .execute()
-            .let { updateCookies(it.cookies()); it.body() }
+        val request = Request.Builder().url("$SERVER_BASE_URL$query").get().build()
+        return okHttpClient.newCall(request).execute().use { it.body?.string() ?: "" }
     }
 
     @Throws(SocketTimeoutException::class, IOException::class)
@@ -62,134 +71,95 @@ object JsoupClient : ApiRequest {
 
     @Throws(SocketTimeoutException::class, IOException::class)
     suspend fun sendGetRequestWithUrl(url: String, enableWafPopup: Boolean): Document {
-        // [ARCH-PHASE-6] 增加网络重试机制，避免弱网导致页面崩溃
         var retryCount = 0
-        var response: Connection.Response
+        var html: String
         while (true) {
             try {
-                response = getConnection(url)
-                    .method(Connection.Method.GET)
-                    .followRedirects(FOLLOW_REDIRECTS_ENABLE)
-                    .execute()
-                break // 成功则跳出循环
-            } catch (e: java.net.SocketTimeoutException) {
-                if (retryCount >= 2) throw e // 重试 2 次后仍失败，抛出异常
+                val request = Request.Builder().url(url).get().build()
+                html = okHttpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful && response.code != 200) {
+                        if (response.code == 412 || response.code == 403) return@use response.body?.string() ?: ""
+                        throw IOException("HTTP ${response.code}")
+                    }
+                    response.body?.string() ?: ""
+                }
+                break
+            } catch (e: SocketTimeoutException) {
+                if (retryCount >= 2) throw e
                 retryCount++
-                Timber.w("网络超时，正在进行第 $retryCount 次静默重试: $url")
                 kotlinx.coroutines.delay(1000L * retryCount)
-            } catch (e: java.io.IOException) {
-                if (retryCount >= 1) throw e // IO 异常重试 1 次
+            } catch (e: IOException) {
+                if (retryCount >= 1) throw e
                 retryCount++
-                Timber.w("网络IO异常，正在进行第 $retryCount 次静默重试: $url")
                 kotlinx.coroutines.delay(1000L)
             }
         }
 
-        updateCookies(response.cookies())
-
-        // [ARCH-PHASE-2] 统一处理 WAF 拦截与重发
-        response = handleWafChallenge(url, response, enableWafPopup) {
-            getConnection(url)
-                .method(Connection.Method.GET)
-                .followRedirects(FOLLOW_REDIRECTS_ENABLE)
-                .execute()
+        if (top.easelink.lcg.utils.WafSolver.isWafPage(html)) {
+            if (!enableWafPopup || url.contains("home.php?mod=task")) throw NetworkException.WafBlocked("WAF_VERIFICATION_REQUIRED")
+            EventBus.getDefault().post(WafVerificationEvent(url))
+            if (WafGate.awaitVerification() != null) return sendGetRequestWithUrl(url, false)
+            else throw NetworkException.WafBlocked("验证超时或被取消，无法绕过 WAF")
         }
 
-        RateLimiter.noteBlocked(response.statusCode())
-        return response.parse().also { checkResponse(it) }
+        val doc = Jsoup.parse(html, url)
+        checkResponse(doc)
+        return doc
     }
 
-    override suspend fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?): Connection.Response = sendPostRequestWithUrl(url, form, enableWafPopup = true)
+    @Throws(SocketTimeoutException::class, IOException::class)
+    override suspend fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?): Document = sendPostRequestWithUrl(url, form, enableWafPopup = true)
 
-    suspend fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?, enableWafPopup: Boolean): Connection.Response {
-        var response = getConnection(url)
-            .apply { if (form != null) data(form) }
-            .postDataCharset("gbk")
-            .method(Connection.Method.POST)
-            .execute()
-
-        updateCookies(response.cookies())
-
-        // [ARCH-PHASE-2] 统一处理 WAF 拦截与重发
-        response = handleWafChallenge(url, response, enableWafPopup) {
-            getConnection(url)
-                .apply { if (form != null) data(form) }
-                .postDataCharset("gbk")
-                .method(Connection.Method.POST)
-                .execute()
+    suspend fun sendPostRequestWithUrl(url: String, form: MutableMap<String, String>?, enableWafPopup: Boolean): Document {
+        val builder = FormBody.Builder(charset("GBK"))
+        form?.forEach { (k, v) -> builder.add(k, v) }
+        
+        var retryCount = 0
+        var html: String
+        while (true) {
+            try {
+                val request = Request.Builder().url(url).post(builder.build()).build()
+                html = okHttpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful && response.code != 200) {
+                        if (response.code == 412 || response.code == 403) return@use response.body?.string() ?: ""
+                        throw IOException("HTTP ${response.code}")
+                    }
+                    response.body?.string() ?: ""
+                }
+                break
+            } catch (e: SocketTimeoutException) {
+                if (retryCount >= 2) throw e
+                retryCount++
+                kotlinx.coroutines.delay(1000L * retryCount)
+            } catch (e: IOException) {
+                if (retryCount >= 1) throw e
+                retryCount++
+                kotlinx.coroutines.delay(1000L)
+            }
         }
 
-        RateLimiter.noteBlocked(response.statusCode())
-        return response
-    }
-
-    private suspend fun handleWafChallenge(
-        url: String,
-        response: Connection.Response,
-        enableWafPopup: Boolean,
-        retryRequest: suspend () -> Connection.Response
-    ): Connection.Response {
-        if (!isWafPage(response.body())) return response
-
-        if (!enableWafPopup || url.contains("home.php?mod=task")) {
-            throw NetworkException.WafBlocked("WAF_VERIFICATION_REQUIRED")
+        if (top.easelink.lcg.utils.WafSolver.isWafPage(html)) {
+            if (!enableWafPopup || url.contains("home.php?mod=task")) throw NetworkException.WafBlocked("WAF_VERIFICATION_REQUIRED")
+            EventBus.getDefault().post(WafVerificationEvent(url))
+            if (WafGate.awaitVerification() != null) return sendPostRequestWithUrl(url, form, false)
+            else throw NetworkException.WafBlocked("验证超时或被取消，无法绕过 WAF")
         }
 
-        Timber.w("网络层：命中高级 JS WAF 盾，触发 URL: $url")
-        EventBus.getDefault().post(WafVerificationEvent(url))
-
-        val verifiedCookie = WafGate.awaitVerification()
-        if (verifiedCookie != null) {
-            Timber.d("真人验证通过，重新发起业务请求...")
-            val newResponse = retryRequest()
-            updateCookies(newResponse.cookies())
-            return newResponse
-        } else {
-            Timber.e("网络层：真人验证超时或取消，可能是弱网环境导致无法加载滑块")
-            throw NetworkException.WafBlocked("验证超时或被取消，无法绕过 WAF")
-        }
+        val doc = Jsoup.parse(html, url)
+        checkResponse(doc)
+        return doc
     }
 
-private fun isWafPage(html: String?): Boolean {
-        // [ARCH-PHASE-1] 直接调用 WafSolver，不再维护两套逻辑
-        return top.easelink.lcg.utils.WafSolver.isWafPage(html)
-    }
-
-    private suspend fun getConnection(url: String): Connection {
-        RateLimiter.await()
-
-        val isLcgHost = url.contains(WebsiteConstant.SERVER_HOST)
-        return Jsoup.connect(url)
-            .timeout(TIME_OUT_LIMIT)
-            .ignoreHttpErrors(true)
-            .cookies(getCookiesFor(url))
-            .userAgent(sessionUserAgent)
-            .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
-            .header("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
-            .header("Host", WebsiteConstant.SERVER_HOST)
-            .apply { if (isLcgHost) header("Referer", WebsiteConstant.SERVER_BASE_URL) }
-            .header("Upgrade-Insecure-Requests", "1")
-            .header("sec-ch-ua-mobile", "?0")
-            .header("sec-ch-ua-platform", "Windows")
-    }
-
-    fun forceReleasePendingVerification() {
-        WafGate.forceRelease()
-    }
-
+    fun forceReleasePendingVerification() { WafGate.forceRelease() }
     fun resetSessionExpiredFlag() { sessionExpiredFiredOnce.set(false) }
 
     private fun checkResponse(doc: Document) {
         clientScope.launch {
             if (formHash.isNullOrEmpty()) formHash = extractFormHash(doc)
             val now = System.currentTimeMillis()
-                if (now - lastTime.get() > CHECK_INTERVAL) {
-                    lastTime.set(now)
-                try {
-                    checkLoginState(doc); checkMessages(doc)
-                } catch (e: Exception) {
-                    Timber.e(e)
-                }
+            if (now - lastTime.get() > CHECK_INTERVAL) {
+                lastTime.set(now)
+                try { checkLoginState(doc); checkMessages(doc) } catch (e: Exception) { Timber.e(e) }
             }
         }
     }
@@ -198,21 +168,8 @@ private fun isWafPage(html: String?): Boolean {
         if (!UserDataRepo.isLoggedIn) return
         val hasMessageLogin = doc.getElementById("messagelogin") != null
         val messageText = doc.getElementById("messagetext")?.text().orEmpty()
-        // [ARCH-PHASE-4] 增强容错匹配，不再依赖单一的死板字符串
-        val explicitExpired = messageText.contains("您需要先登录") || 
-                              messageText.contains("请先登录") || 
-                              messageText.contains("登录已失效") || 
-                              messageText.contains("尚未登录")
-
-        if (!hasMessageLogin && !explicitExpired) {
-            sessionExpiredFiredOnce.compareAndSet(true, false)
-            return
-        }
-
-        if (sessionExpiredFiredOnce.compareAndSet(false, true)) {
-            EventBus.getDefault().post(SessionExpiredEvent())
-        }
+        val explicitExpired = messageText.contains("您需要先登录") || messageText.contains("请先登录") || messageText.contains("登录已失效") || messageText.contains("尚未登录")
+        if (!hasMessageLogin && !explicitExpired) { sessionExpiredFiredOnce.compareAndSet(true, false); return }
+        if (sessionExpiredFiredOnce.compareAndSet(false, true)) EventBus.getDefault().post(SessionExpiredEvent())
     }
-
-    // private const val SESSION_EXPIRED_MARKER = " 您需要先登录才能继续" // 已在匹配逻辑中内联，弃用
 }
