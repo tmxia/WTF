@@ -30,10 +30,13 @@ class LCGApp : Application() {
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         AppLogManager.isCollecting = prefs.getBoolean("debug_mode_enabled", false)
 
+        // 崩溃兜底处理器必须在主线程尽早注册：AppGuardStarter 带 @MainThread 校验，
+        // 放入 IO 协程会在非主线程抛 IllegalStateException 导致冷启动崩溃。
+        AppGuardStarter.init(this@LCGApp)
+
         // [ARCH-PHASE-15] 将非首屏必须的耗时初始化移入 IO 协程，防止冷启动白屏
         applicationScope.launch {
             initCoil()
-            AppGuardStarter.init(this@LCGApp)
             ShiplyInitialization.init(this@LCGApp)
         }
 
