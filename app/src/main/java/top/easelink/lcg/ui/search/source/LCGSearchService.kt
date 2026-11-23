@@ -5,7 +5,6 @@ import org.jsoup.nodes.Document
 import timber.log.Timber
 import top.easelink.lcg.R
 import top.easelink.lcg.network.JsoupClient
-import top.easelink.lcg.ui.search.model.LCGSearchResultItem
 import top.easelink.lcg.ui.search.model.LCGSearchResults
 import top.easelink.lcg.utils.WebsiteConstant
 import top.easelink.lcg.utils.showMessage
@@ -49,7 +48,7 @@ object LCGSearchService {
             try {
                 // 底层已经直接返回 Document
                 val doc = JsoupClient.sendPostRequestWithUrl(url, form, enableWafPopup = true)
-                
+
                 if (SearchAntiDefense.detectWaf(doc)) {
                     if (attempt < MAX_RETRY) {
                         SearchAntiDefense.backoffSleep(attempt)
@@ -64,7 +63,9 @@ object LCGSearchService {
                     throw Exception(errorText)
                 }
 
-                val result = parseSearchResults(doc)
+                val parsed = parseLcgSearch(doc)
+                val result = LCGSearchResults(parsed.items)
+                mNextPageUrl = parsed.nextPageUrl
                 try {
                     mTotalResults = doc.selectFirst("h2")?.text()
                     result.totalResult = mTotalResults
@@ -81,7 +82,7 @@ object LCGSearchService {
                         e.message?.contains("风控") == true ||
                         e.message?.contains("拦截") == true ||
                         e.message?.contains("超时") == true
-                
+
                 if (retryable && attempt < MAX_RETRY) {
                     Timber.tag("SearchDebug").w(e, "搜索可重试异常，退避后重试 (attempt=$attempt)")
                     SearchAntiDefense.backoffSleep(attempt)
@@ -102,7 +103,9 @@ object LCGSearchService {
 
         SearchAntiDefense.nextPageSleep()
         return try {
-            parseSearchResults(JsoupClient.sendGetRequestWithQuery(nextUrl))
+            val parsed = parseLcgSearch(JsoupClient.sendGetRequestWithQuery(nextUrl))
+            mNextPageUrl = parsed.nextPageUrl
+            LCGSearchResults(parsed.items)
         } catch (e: SocketTimeoutException) {
             showMessage(R.string.network_error)
             emptyResult()
@@ -129,46 +132,6 @@ object LCGSearchService {
             put("srhlocality", "forum::index")
             put("srchtxt", keyword)
             put("searchsubmit", "true")
-        }
-    }
-
-    private fun parseSearchResults(doc: Document): LCGSearchResults {
-        val results: List<LCGSearchResultItem> = try {
-            doc.getElementsByClass("pbw").mapNotNull {
-                try {
-                    val spans = it.getElementsByTag("span")
-                    val aNode = it.selectFirst("a")
-                    val pNode = it.selectFirst("p.xg1")
-
-                    if (aNode != null && pNode != null && spans.size >= 3) {
-                        LCGSearchResultItem(
-                            title = aNode.html(),
-                            url = aNode.attr("href"),
-                            replyView = pNode.text(),
-                            content = pNode.nextElementSibling()?.html().orEmpty(),
-                            author = spans[1].text(),
-                            date = spans[0].text(),
-                            forum = spans[2].text()
-                        )
-                    } else {
-                        null
-                    }
-                } catch (e: Exception) {
-                    Timber.e(e)
-                    null
-                }
-            }
-        } catch (e: Exception) {
-            Timber.tag("SearchDebug").e(e, "搜索结果解析异常，返回已提取部分")
-            emptyList()
-        }
-        return LCGSearchResults(results).also {
-            mNextPageUrl = try {
-                doc.selectFirst("a.nxt")?.attr("href")
-            } catch (e: Exception) {
-                Timber.w(e)
-                null
-            }
         }
     }
 

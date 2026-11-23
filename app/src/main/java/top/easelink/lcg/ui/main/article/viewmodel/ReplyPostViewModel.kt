@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import top.easelink.lcg.network.JsoupClient
+import top.easelink.lcg.ui.main.source.parseReplyForm
 import top.easelink.lcg.utils.WebsiteConstant.CHECK_RULE_URL
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 
@@ -40,14 +41,7 @@ class ReplyPostViewModel : ViewModel() {
             .toMap()
 
         val formDoc = JsoupClient.sendGetRequestWithQuery(query)
-        val noticeauthormsg = formDoc.selectFirst("input[name=noticeauthormsg]")?.attr("value").orEmpty()
-        val noticetrimstr = formDoc.selectFirst("input[name=noticetrimstr]")?.attr("value").orEmpty()
-        val noticeauthor = formDoc.selectFirst("input[name=noticeauthor]")?.attr("value").orEmpty()
-        val handlekey = formDoc.selectFirst("input[name=handlekey]")?.attr("value") ?: "reply"
-        val usesig = formDoc.selectFirst("input[name=usesig]")?.attr("value") ?: "1"
-        val reppid = formDoc.selectFirst("input[name=reppid]")?.attr("value").orEmpty()
-        val reppost = formDoc.selectFirst("input[name=reppost]")?.attr("value").orEmpty()
-        val formHash = formDoc.selectFirst("input[name=formhash]")?.attr("value").orEmpty()
+        val fields = parseReplyForm(formDoc)
 
         JsoupClient.sendGetRequestWithUrl(CHECK_RULE_URL)
 
@@ -55,17 +49,17 @@ class ReplyPostViewModel : ViewModel() {
             "&fid=${queryMap["fid"]}&extra=${queryMap["extra"]}&tid=${queryMap["tid"]}" +
             "&replysubmit=yes&inajax=1"
 
-        val response = JsoupClient.sendPostRequestWithUrl(
+        JsoupClient.sendPostRequestWithUrl(
             replyUrl,
             mutableMapOf(
-                "formhash" to formHash,
-                "handlekey" to handlekey,
-                "noticeauthor" to noticeauthor,
-                "noticetrimstr" to noticetrimstr,
-                "noticeauthormsg" to noticeauthormsg,
-                "usesig" to usesig,
-                "reppid" to reppid,
-                "reppost" to reppost,
+                "formhash" to fields.formHash,
+                "handlekey" to fields.handlekey,
+                "noticeauthor" to fields.noticeauthor,
+                "noticetrimstr" to fields.noticetrimstr,
+                "noticeauthormsg" to fields.noticeauthormsg,
+                "usesig" to fields.usesig,
+                "reppid" to fields.reppid,
+                "reppost" to fields.reppost,
                 "subject" to "",
                 "message" to content
             )
