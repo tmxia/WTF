@@ -463,7 +463,7 @@ fun ArticleScreen(
                                 listOf(
                             PopoverMenuItem(Icons.Default.Refresh, "刷新帖子") {
                                 showMenu = false
-                                viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
+                                viewModel.forceRefresh()
                             },
                             PopoverMenuItem(Icons.Default.Share, "复制链接") {
                                 showMenu = false

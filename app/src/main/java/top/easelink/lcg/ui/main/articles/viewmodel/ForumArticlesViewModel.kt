@@ -43,6 +43,9 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
     private var orderType = DEFAULT_ORDER
     private var datelineDays: Int? = 1
 
+    /** 已成功加载过的板块 URL，拦截同一板块的重复首拉，避免 effect 重入/重复事件连发放大风控。 */
+    private var loadedForumUrl: String? = null
+
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
 
@@ -100,6 +103,15 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         }
 
         mFetchType = fetchType
+
+        // 同一板块已加载且已有内容时，跳过重复首拉；排序/时间切换走 restartRefresh，不受此去重影响。
+        if (fetchType == ArticleFetcher.FetchType.FETCH_INIT &&
+            mUrl == loadedForumUrl && _articles.value.isNotEmpty()
+        ) {
+            Timber.tag("[ForumSort]").d("同一板块已加载，跳过重复首拉: $mUrl")
+            return
+        }
+
         rewindPageNum()
         fetchArticles(mFetchType) {}
     }
@@ -275,6 +287,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         when {
             fetchType != ArticleFetcher.FetchType.FETCH_MORE || currentList.isNullOrEmpty() -> {
                 _articles.value = newList
+                loadedForumUrl = mUrl
                 callback(true)
             }
 

@@ -63,6 +63,12 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
     private var mFormHash: String? = null
     private var articleAbstract: ArticleAbstractResponse? = null
 
+    /** 已成功加载过的帖子 URL，用于拦截同一帖子的重复 INIT 请求，避免短时间内重复拉取放大风控。 */
+    private var loadedUrl: String? = null
+
+    /** 手动刷新置位：强制绕过同帖去重重拉一次。 */
+    private var forceReload = false
+
     private var fetching = false
     private var currentJob: Job? = null
 
@@ -93,6 +99,14 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
             return
         }
 
+        // 同一帖子已加载且已有内容时，跳过重复 INIT 请求；手动刷新走 forceRefresh 绕过。
+        if (type == FETCH_POST_INIT && !forceReload && mUrl != null && mUrl == loadedUrl && _posts.value.isNotEmpty()) {
+            Timber.d("【详情页】同一帖子已加载，跳过重复请求: $mUrl")
+            safeUpdate(_isLoading, false)
+            callback?.invoke(true)
+            return
+        }
+
         fetching = true
         currentJob = viewModelScope.launch(IOPool) {
             try {
@@ -114,6 +128,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                     when (type) {
                         FETCH_POST_INIT -> {
                             safeUpdate(_posts, response.postList.toMutableList())
+                            loadedUrl = mUrl
                             Timber.d("【业务层】初始化数据: 共 ${response.postList.size} 条")
                         }
                         else -> {
@@ -136,9 +151,16 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                 callback?.invoke(false)
             } finally {
                 fetching = false
+                forceReload = false
                 safeUpdate(_isLoading, false)
             }
         }
+    }
+
+    /** 手动刷新：绕过同帖去重，强制重新拉取当前帖子。 */
+    fun forceRefresh() {
+        forceReload = true
+        fetchArticlePost(FETCH_POST_INIT, null)
     }
 
     private fun handleFetchError(e: Exception) {
