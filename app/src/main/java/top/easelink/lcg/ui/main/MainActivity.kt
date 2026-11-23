@@ -460,6 +460,12 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onWafVerification(event: WafVerificationEvent) {
+        // [CRASH-FIX] 极端保护：Activity 不可见或销毁时，直接忽略，防止 BadTokenException
+        if (isFinishing || isDestroyed) {
+            top.easelink.lcg.network.JsoupClient.forceReleasePendingVerification()
+            return
+        }
+
         // [ARCH-PHASE-15] 监听底层抛出的 WAF 验证事件，弹出 WebView 供用户滑动
         Timber.d("全局触发 WAF 验证，URL: ${event.url}")
         
@@ -528,7 +534,10 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         }
         
         webView.loadUrl(event.url)
-        dialog.show()
+        runCatching { dialog.show() }.onFailure { 
+            Timber.e(it, "WAF 弹窗失败，可能 Activity 已不可见")
+            top.easelink.lcg.network.JsoupClient.forceReleasePendingVerification()
+        }
     }
 
 
