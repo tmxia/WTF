@@ -27,6 +27,7 @@ import top.easelink.framework.customview.webview.HorizontalScrollDisableWebView
 import top.easelink.framework.threadpool.CalcPool
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.framework.threadpool.Main
+import top.easelink.framework.utils.APP_USER_AGENT
 import top.easelink.lcg.R
 import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.account.UserDataRepo.updateUserInfo
@@ -142,16 +143,19 @@ class WebViewActivity : AppCompatActivity() {
                 }
 
                 try {
-                    val savedCookies = LCGCookieJar.cookiesForUrl(SERVER_BASE_URL)
-                    if (savedCookies.isNotEmpty()) {
-                        val cookieStr = savedCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
-
-                        CookieManager.getInstance().setCookie(SERVER_BASE_URL, cookieStr)
-                        CookieManager.getInstance().flush()
-                        Timber.d("已成功注入持久化 Cookie 到 WebView")
+                    CookieManager.getInstance().apply {
+                        setAcceptCookie(true)
+                        setAcceptThirdPartyCookies(mWebView, true)
+                        // 清理上一轮残留的失效盾会话标识，避免带旧 wzws_sid 被服务端二次拦截
+                        getCookie(SERVER_BASE_URL)?.takeIf { it.contains("wzws_sid=") }?.let {
+                            setCookie(SERVER_BASE_URL, "wzws_sid=; Max-Age=0")
+                        }
+                        // 全量持久化凭证按 domain/path 逐条同步进 WebView，避免只拼主域串导致会话残缺
+                        LCGCookieJar.syncToWebView()
                     }
+                    Timber.d("已同步持久化 Cookie 到 WebView")
                 } catch (e: Exception) {
-                    Timber.e(e, "注入 Cookie 失败")
+                    Timber.e(e, "同步 Cookie 到 WebView 失败")
                 }
 
                 mWebView.loadUrl(url)
@@ -313,6 +317,8 @@ class WebViewActivity : AppCompatActivity() {
     private fun updateWebViewSettingsRemote() {
         mWebView.settings.apply {
             WebViewSecurityHelper.applyHardening(this)
+            // 与原生 Jsoup / 图片链路共用同一套桌面 Chrome UA，避免 WebView 默认 wv 标识造成指纹割裂被风控关联
+            userAgentString = APP_USER_AGENT
             javaScriptEnabled = mForceEnableJs
             domStorageEnabled = true
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
