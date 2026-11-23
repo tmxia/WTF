@@ -92,7 +92,8 @@ object SignInManager {
             (activity.window?.decorView as? ViewGroup) ?: FrameLayout(activity)
 
         val webView = WebView(activity).apply {
-            settings.javaScriptEnabled = true
+            WebViewConfigurator.setupStandardWebView(this)
+            /* [已由 WebViewConfigurator 接管] settings.javaScriptEnabled = true
             setLayerType(View.LAYER_TYPE_SOFTWARE, null)
             isScrollbarFadingEnabled = true
             settings.domStorageEnabled = true
@@ -100,7 +101,7 @@ object SignInManager {
             settings.allowContentAccess = true
             settings.allowFileAccess = true
             settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-            settings.userAgentString = MOBILE_UA
+            settings.userAgentString = MOBILE_UA */
         }
         webViewRef = webView
         parentRef = parentView
@@ -218,13 +219,14 @@ object SignInManager {
                     (activity?.window?.decorView as? ViewGroup) ?: FrameLayout(LCGApp.context)
 
                 val webView = WebView(context).apply {
+            WebViewConfigurator.setupStandardWebView(this)
                     layoutParams = ViewGroup.LayoutParams(400, 800) 
 alpha = 0.1f 
-                    settings.javaScriptEnabled = true
+                    /* [已由 WebViewConfigurator 接管] settings.javaScriptEnabled = true
             setLayerType(View.LAYER_TYPE_SOFTWARE, null)
             isScrollbarFadingEnabled = true
                     settings.domStorageEnabled = true
-                    settings.userAgentString = MOBILE_UA
+                    settings.userAgentString = MOBILE_UA */
                 }
                 parentView.addView(webView)
 

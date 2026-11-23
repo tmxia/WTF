@@ -1,5 +1,7 @@
 package top.easelink.lcg.ui.webview.view
 
+import top.easelink.lcg.utils.WebViewConfigurator
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -313,6 +315,8 @@ class WebViewActivity : AppCompatActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun updateWebViewSettingsLocal() {
+        // [ARCH-PHASE-5] 统一配置
+        WebViewConfigurator.setupStandardWebView(mWebView)
         mWebView.settings.apply {
             WebViewSecurityHelper.applyHardening(this)
             if (mWebView is HorizontalScrollDisableWebView) {
