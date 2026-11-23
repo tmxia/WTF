@@ -153,32 +153,33 @@ private fun SheetContent(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
         containerColor = Color.White,
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        dragHandle = {}
     ) {
         Column(
             modifier = modifier
                 .fillMaxWidth()
                 .heightIn(max = maxSheetHeight)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
             if (!title.isNullOrBlank()) {
                 MenuHeader(title = title, onDismiss = onDismissRequest)
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
             groups.forEachIndexed { groupIndex, group ->
                 val groupTitle = groupTitles?.getOrNull(groupIndex)
                 if (!groupTitle.isNullOrBlank()) {
                     Text(
                         text = groupTitle,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         color = MenuGroupTitleColor,
-                        modifier = Modifier.padding(start = 4.dp, bottom = 8.dp, top = if (groupIndex > 0) 8.dp else 0.dp)
+                        modifier = Modifier.padding(start = 4.dp, bottom = 6.dp, top = if (groupIndex > 0) 4.dp else 0.dp)
                     )
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    group.chunked(2).forEach { rowItems ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    group.chunked(3).forEach { rowItems ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             rowItems.forEach { item ->
                                 SheetItemCell(item = item, modifier = Modifier.weight(1f))
                             }
@@ -186,7 +187,7 @@ private fun SheetContent(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
         }
     }
 }
@@ -278,7 +279,7 @@ private fun PopoverMenuItemRow(
     }
 }
 
-/** 底部面板两列网格条目：半宽排布，图标与文字更紧凑。 */
+/** 底部面板三列网格条目：窄格紧凑排布，图标与文字收窄间距与留白。 */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SheetItemCell(item: PopoverMenuItem, modifier: Modifier = Modifier) {
@@ -286,8 +287,8 @@ private fun SheetItemCell(item: PopoverMenuItem, modifier: Modifier = Modifier) 
     val highlighted = item.active || item.checked
     Row(
         modifier = modifier
-            .heightIn(min = 44.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .heightIn(min = 40.dp)
+            .clip(RoundedCornerShape(10.dp))
             .background(if (highlighted) MenuAccent.copy(alpha = 0.1f) else MenuBg)
             .combinedClickable(
                 interactionSource = interactionSource,
@@ -295,21 +296,21 @@ private fun SheetItemCell(item: PopoverMenuItem, modifier: Modifier = Modifier) 
                 onClick = item.onClick,
                 onLongClick = item.onLongClick
             )
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (item.icon != null) {
             Icon(
                 imageVector = item.icon,
                 contentDescription = null,
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(15.dp),
                 tint = if (highlighted) MenuAccent else MenuIconTint
             )
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(6.dp))
         }
         Text(
             text = item.label,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             color = if (highlighted) MenuAccent else MenuTextColor,
@@ -321,7 +322,7 @@ private fun SheetItemCell(item: PopoverMenuItem, modifier: Modifier = Modifier) 
                 imageVector = Icons.Filled.Check,
                 contentDescription = "已选",
                 tint = MenuAccent,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(15.dp)
             )
         }
     }

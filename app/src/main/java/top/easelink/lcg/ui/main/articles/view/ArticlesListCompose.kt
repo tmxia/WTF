@@ -50,11 +50,10 @@ val forumSortOptions = listOf(
     ForumSortOption("lastpost", "按最后回帖")
 )
 
-/** 板块列表时间范围选项：days 为 null 表示全部时间；最大 365 天（一年） */
+/** 板块列表时间范围选项：days 为 null 表示全部时间（仅作为默认态展示，不进入可选菜单）；最大 365 天（一年） */
 data class ForumTimeOption(val days: Int?, val label: String)
 
 val forumTimeOptions = listOf(
-    ForumTimeOption(null, "全部时间"),
     ForumTimeOption(1, "一天"),
     ForumTimeOption(2, "两天"),
     ForumTimeOption(7, "一周"),
