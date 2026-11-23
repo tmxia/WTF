@@ -9,10 +9,6 @@ import coil.Coil
 import coil.request.ImageRequest
 import coil.size.Size
 import coil.transform.RoundedCornersTransformation
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import top.easelink.framework.base.BaseViewHolder
 import top.easelink.framework.utils.dpToPx
@@ -29,7 +25,6 @@ class FollowingFeedAdapter(
     private val onLoadMore: (() -> Unit)? = null
 ) : RecyclerView.Adapter<BaseViewHolder>() {
     private val mFeeds: MutableList<FeedInfo> = mutableListOf()
-    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     var loadMoreLoading: Boolean = false
 
     override fun getItemCount(): Int = if (mFeeds.isEmpty()) {
@@ -135,23 +130,21 @@ class FollowingFeedAdapter(
                             EventBus.getDefault().post(OpenLargeImageViewEvent(images[0]))
                         }
                         preview.visibility = View.VISIBLE
-                        ioScope.launch {
-                            ImageRequest.Builder(root.context)
-                                .data(images[0])
-                                .size(Size.ORIGINAL)
-                                .transformations(RoundedCornersTransformation(round))
-                                .target {
-                                    val newH =
-                                        it.intrinsicHeight.toFloat() / it.intrinsicWidth.toFloat() * preview.width.toFloat()
-                                    preview.apply {
-                                        layoutParams.height = newH.toInt()
-                                        setImageDrawable(it)
-                                    }
-                                }.build()
-                                .let {
-                                    Coil.imageLoader(root.context).enqueue(it)
+                        ImageRequest.Builder(root.context)
+                            .data(images[0])
+                            .size(Size.ORIGINAL)
+                            .transformations(RoundedCornersTransformation(round))
+                            .target {
+                                val newH =
+                                    it.intrinsicHeight.toFloat() / it.intrinsicWidth.toFloat() * preview.width.toFloat()
+                                preview.apply {
+                                    layoutParams.height = newH.toInt()
+                                    setImageDrawable(it)
                                 }
-                        }
+                            }.build()
+                            .let {
+                                Coil.imageLoader(root.context).enqueue(it)
+                            }
                     } ?: run {
                         preview.visibility = View.INVISIBLE
                         preview.setImageDrawable(null)

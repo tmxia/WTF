@@ -21,6 +21,7 @@ import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import com.airbnb.lottie.LottieAnimationView
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
@@ -59,10 +60,6 @@ class WebViewActivity : AppCompatActivity() {
     private var mHtml: String? = null
     private var mForceEnableJs = true
     private var isOpenLoginEvent = false
-    private val coroutineScope = CoroutineScope(SupervisorJob() + CoroutineExceptionHandler { _, e ->
-        Timber.e(e)
-    })
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initData()
@@ -105,7 +102,6 @@ class WebViewActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        coroutineScope.cancel()
         (mWebView.parent as? ViewGroup)?.removeView(mWebView)
         mWebView.destroy()
     }
@@ -177,7 +173,9 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         override fun processHtml(html: String?) {
             if (html.isNullOrBlank()) return
-            coroutineScope.launch(CalcPool) {
+            lifecycleScope.launch(CalcPool + CoroutineExceptionHandler { _, e ->
+                Timber.e(e)
+            }) {
                 val doc = Jsoup.parse(html)
                 val currentUrl = withContext(Main) { mWebView.url } ?: return@launch
                 if (!isLoginSuccess(doc, currentUrl)) return@launch
