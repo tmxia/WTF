@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +35,9 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
     private var mCurrentPage = 1
     private var isTabSet = false
     private var fetching = false
+
+    /** 最近一次初始化刷新任务；切换排序/时间时取消未完成的旧任务，只保留最后一次请求。 */
+    private var refreshJob: Job? = null
 
     private val prefs = try {
         LCGApp.context.getSharedPreferences("wtf_forum_prefs", Context.MODE_PRIVATE)
@@ -127,15 +132,16 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
      */
     fun selectSort(orderby: String?, name: String) {
         val safe = orderby?.takeIf { it in allowedOrderby }
-        orderType = if (safe != null) "&orderby=$safe" else DEFAULT_ORDER
+        val newOrder = if (safe != null) "&orderby=$safe" else DEFAULT_ORDER
+        // 排序未发生变化时短路：不重置页码、不重复发起首拉，避免连点/重复选择放大请求量触发风控
+        if (newOrder == orderType && name == _selectedSortName.value) return
+        orderType = newOrder
         _selectedSortName.value = name
         prefs.edit()
             .putString("forum_sort_order", safe)
             .putString("forum_sort_name", name)
             .apply()
-        mFetchType = ArticleFetcher.FetchType.FETCH_INIT
-        rewindPageNum()
-        fetchArticles(ArticleFetcher.FetchType.FETCH_INIT) {}
+        restartRefresh()
     }
 
     /**
@@ -144,12 +150,25 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
      */
     fun selectTime(days: Int?, name: String) {
         val safe = days?.takeIf { it in allowedDateline }
+        // 时间范围未发生变化时短路，避免重复首拉
+        if (safe == datelineDays && name == _selectedTimeName.value) return
         datelineDays = safe
         _selectedTimeName.value = name
         prefs.edit()
             .putString("forum_time_days", safe?.toString())
             .putString("forum_time_name", name)
             .apply()
+        restartRefresh()
+    }
+
+    /**
+     * 取消未完成的旧首拉任务并复位互斥标志，再从第 1 页重新加载；
+     * 避免旧任务尚未走到 finally 时 fetching 仍为 true，导致新请求被互斥判断直接丢弃。
+     */
+    private fun restartRefresh() {
+        refreshJob?.cancel()
+        fetching = false
+        _isLoading.value = false
         mFetchType = ArticleFetcher.FetchType.FETCH_INIT
         rewindPageNum()
         fetchArticles(ArticleFetcher.FetchType.FETCH_INIT) {}
@@ -182,7 +201,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
         fetching = true
         _isLoading.value = true
 
-        viewModelScope.launch(IOPool) {
+        val job = viewModelScope.launch(IOPool) {
             try {
                 val query = composeUrlByRequestType(fetchType)
                 Timber.tag("[ForumSort]").d("请求列表: $query, orderType=$orderType, timeType=${timeType()}")
@@ -199,6 +218,8 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
                     orderType = DEFAULT_ORDER
                     val fallbackQuery = composeUrlByRequestType(ArticleFetcher.FetchType.FETCH_INIT)
                     Timber.tag("[ForumSort]").w("排序结果为空，降级默认顺序重试: $fallbackQuery")
+                    // 降级重试前先退避一小段并叠加抖动，避免两次请求紧贴连发加重风控
+                    delay(800L + (0L..400L).random())
                     forumPage = getForumArticles(fallbackQuery, true)
                     fellBackToDefault = forumPage != null && forumPage.articleList.isNotEmpty()
                     if (!fellBackToDefault) {
@@ -234,6 +255,7 @@ class ForumArticlesViewModel : ViewModel(), ArticleFetcher {
                 _isLoading.value = false
             }
         }
+        if (fetchType == ArticleFetcher.FetchType.FETCH_INIT) refreshJob = job
     }
 
     private fun handleArticleList(

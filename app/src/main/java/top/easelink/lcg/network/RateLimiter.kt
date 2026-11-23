@@ -9,9 +9,9 @@ import java.util.concurrent.atomic.AtomicLong
  * 等待以协程 [delay] 挂起实现，不占用阻塞线程；调用方需在协程上下文中发起请求。
  */
 internal object RateLimiter {
-    private const val MIN_INTERVAL_MS = 300L
-    private const val BACKOFF_BLOCK_MS = 3000L
-    private val BACKOFF_CODES = setOf(403, 429, 514)
+    private const val MIN_INTERVAL_MS = 600L
+    private const val BACKOFF_BLOCK_MS = 8000L
+    private val BACKOFF_CODES = setOf(403, 418, 429, 514)
 
     private val lastRequestAt = AtomicLong(0L)
 

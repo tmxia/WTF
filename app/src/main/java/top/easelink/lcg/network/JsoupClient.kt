@@ -15,6 +15,7 @@ import top.easelink.lcg.ui.main.model.SessionExpiredEvent
 import top.easelink.lcg.ui.main.model.WafVerificationEvent
 import top.easelink.lcg.ui.main.source.checkMessages
 import top.easelink.lcg.ui.main.source.extractFormHash
+import top.easelink.framework.utils.APP_USER_AGENT
 import top.easelink.lcg.utils.WebsiteConstant
 import top.easelink.lcg.utils.WebsiteConstant.SERVER_BASE_URL
 import top.easelink.lcg.utils.getCookiesFor
@@ -35,13 +36,7 @@ object JsoupClient : ApiRequest {
     private const val TIME_OUT_LIMIT = 30 * 1000
     private const val BASE_URL = SERVER_BASE_URL
     // 进程内固定一套 UA，会话期间不随请求切换，避免指纹抖动被风控识别
-    private val UA_POOL = listOf(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edg/120.0.0.0 Safari/537.36"
-    )
-    private val sessionUserAgent: String by lazy { UA_POOL.random() }
+    private val sessionUserAgent: String = APP_USER_AGENT
 
     private val sessionExpiredFiredOnce = AtomicBoolean(false)
 

@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Headers
 import timber.log.Timber
+import top.easelink.framework.utils.APP_USER_AGENT
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -89,11 +90,7 @@ class HtmlCoilImageGetter(
         val isLcg = isLcgHost(finalUrl)
 
         val headers = Headers.Builder().apply {
-            add(
-                "User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-                    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            )
+            add("User-Agent", APP_USER_AGENT)
             add("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8")
             add("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,ja;q=0.7")
             if (isLcg) {

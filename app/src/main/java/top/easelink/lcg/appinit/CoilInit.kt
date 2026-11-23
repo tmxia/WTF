@@ -3,8 +3,10 @@ package top.easelink.lcg.appinit
 import coil.Coil
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import okhttp3.Dispatcher
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import top.easelink.framework.utils.APP_USER_AGENT
 import top.easelink.lcg.utils.getCookiesFor
 import top.easelink.lcg.utils.toHeaderString
 import java.util.concurrent.TimeUnit
@@ -43,8 +45,7 @@ object LCGImageLoaderFactory : ImageLoaderFactory {
                     .header("Accept-Encoding", "gzip, deflate")
                     .header(
                         "User-Agent",
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-                            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                        APP_USER_AGENT
                     )
                     .build()
                 chain.proceed(newRequest)
@@ -53,7 +54,15 @@ object LCGImageLoaderFactory : ImageLoaderFactory {
             }
         }
 
+        // 限制图片并发：全局最多 8 路、同一宿主最多 3 路，避免长帖正文/楼层一次性
+        // 拉出几十张同域图片并发请求，短时间 QPS 过高触发站点风控。
+        val dispatcher = Dispatcher().apply {
+            maxRequests = 8
+            maxRequestsPerHost = 3
+        }
+
         return OkHttpClient.Builder()
+            .dispatcher(dispatcher)
             .addInterceptor(headerInterceptor)
             .followRedirects(true)
             .followSslRedirects(true)
