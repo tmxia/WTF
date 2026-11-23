@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
 import top.easelink.framework.topbase.TopFragment
+import top.easelink.lcg.base.PageUiState
 import top.easelink.lcg.databinding.FragmentFollowingBinding
 import top.easelink.lcg.ui.main.follow.viewmodel.FollowingFeedViewModel
 
@@ -84,6 +85,23 @@ class FollowingContentFragment : TopFragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mFollowVM.isLoadingForLoadMore.collect { adapter.loadMoreLoading = it }
             }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mFollowVM.uiState.collect { state ->
+                    val showError = state is PageUiState.Error && mFollowVM.follows.value.isEmpty()
+                    binding.errorContainer.visibility = if (showError) View.VISIBLE else View.GONE
+                    if (showError) {
+                        binding.tvErrorMessage.text =
+                            (state as? PageUiState.Error)?.message ?: getString(top.easelink.lcg.R.string.general_error)
+                        binding.followList.visibility = View.GONE
+                    }
+                }
+            }
+        }
+        binding.btnRetry.setOnClickListener {
+            binding.errorContainer.visibility = View.GONE
+            mFollowVM.fetchData()
         }
     }
 

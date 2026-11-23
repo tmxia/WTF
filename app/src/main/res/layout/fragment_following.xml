@@ -22,4 +22,33 @@
         android:layout_gravity="center"
         android:indeterminateTint="#E53935"
         android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/error_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tv_error_message"
+            style="@style/TextStyle.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/general_error"
+            android:textColor="@color/gray" />
+
+        <Button
+            android:id="@+id/btn_retry"
+            android:background="@drawable/button_bg"
+            android:backgroundTint="@color/light_gray"
+            android:layout_width="@dimen/dp_120"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/dp_25"
+            android:text="@string/retry"
+            android:textSize="@dimen/sp_20" />
+    </LinearLayout>
 </FrameLayout>
