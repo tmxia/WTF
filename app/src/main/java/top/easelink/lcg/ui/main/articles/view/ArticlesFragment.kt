@@ -79,10 +79,39 @@ class ArticlesFragment : BaseFragment<FragmentArticlesBinding, ArticlesViewModel
             }
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.uiState.collect { state ->
+                        val hasData = viewModel.articles.value.isNotEmpty()
+                        when {
+                            state is top.easelink.lcg.base.PageUiState.Error && !hasData -> {
+                                binding.errorContainer.visibility = View.VISIBLE
+                                binding.recyclerView.visibility = View.GONE
+                                binding.tvErrorMessage.text =
+                                    (state as? top.easelink.lcg.base.PageUiState.Error)?.message
+                                        ?: getString(R.string.general_error)
+                            }
+
+                            state is top.easelink.lcg.base.PageUiState.Loading && !hasData -> {
+                                binding.errorContainer.visibility = View.GONE
+                                binding.recyclerView.visibility = View.GONE
+                            }
+
+                            else -> {
+                                binding.errorContainer.visibility = View.GONE
+                                binding.recyclerView.visibility = View.VISIBLE
+                            }
+                        }
+                    }
+                }
+            }
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.isLoading.collect { loading ->
                         binding.refreshLayout.isRefreshing = loading
                     }
                 }
+            }
+            binding.btnRetry.setOnClickListener {
+                viewModel.fetchArticles(ArticleFetcher.FetchType.FETCH_INIT) {}
             }
             viewModel.initUrl(it)
         }

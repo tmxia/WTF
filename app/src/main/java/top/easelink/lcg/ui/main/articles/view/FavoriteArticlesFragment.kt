@@ -58,6 +58,7 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
         (view as ComposeView).setContent {
             val articles by viewModel.articles.collectAsStateWithLifecycle()
             val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             var showMenu by remember { mutableStateOf(false) }
             val context = LocalContext.current
 
@@ -110,10 +111,16 @@ class FavoriteArticlesFragment : BaseFragment<FragmentFavoriteArticlesBinding, F
                     )
                 }
 
-                if (isLoading) {
+                if (uiState is top.easelink.lcg.base.PageUiState.Loading || (isLoading && articles.isEmpty())) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(modifier = Modifier.size(32.dp), color = Color(0xFFE53935), strokeWidth = 3.dp)
                     }
+                } else if (uiState is top.easelink.lcg.base.PageUiState.Error && articles.isEmpty()) {
+                    top.easelink.lcg.ui.main.common.ErrorStateView(
+                        message = (uiState as? top.easelink.lcg.base.PageUiState.Error)?.message
+                            ?: androidx.compose.ui.res.stringResource(top.easelink.lcg.R.string.error),
+                        onRetry = { viewModel.fetchArticles(top.easelink.lcg.ui.main.articles.viewmodel.ArticleFetcher.FetchType.FETCH_INIT) {} }
+                    )
                 } else if (articles.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("目前没有内容可供展示", color = Color.Gray)

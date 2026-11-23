@@ -56,14 +56,44 @@ class FollowDetailFragment(private val url: String) : TopFragment() {
             itemAnimator = DefaultItemAnimator()
             this.adapter = this@FollowDetailFragment.adapter
         }
+        binding.btnRetry.setOnClickListener { mFollowVM.fetchData(url) }
     }
 
     private fun collectState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mFollowVM.uiState.collect { state ->
+                    val hasData = mFollowVM.follows.value != null
+                    when {
+                        state is top.easelink.lcg.base.PageUiState.Error && !hasData -> {
+                            binding.errorContainer.visibility = View.VISIBLE
+                            binding.followList.visibility = View.GONE
+                            binding.loading.visibility = View.GONE
+                            binding.tvErrorMessage.text =
+                                (state as? top.easelink.lcg.base.PageUiState.Error)?.message
+                                    ?: getString(top.easelink.lcg.R.string.general_error)
+                        }
+
+                        state is top.easelink.lcg.base.PageUiState.Loading && !hasData -> {
+                            binding.errorContainer.visibility = View.GONE
+                            binding.followList.visibility = View.GONE
+                            binding.loading.visibility = View.VISIBLE
+                        }
+
+                        else -> {
+                            binding.errorContainer.visibility = View.GONE
+                            binding.followList.visibility = View.VISIBLE
+                        }
+                    }
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mFollowVM.isLoading.collect { loading ->
-                    binding.loading.visibility = if (loading) View.VISIBLE else View.GONE
-                    binding.followList.visibility = if (loading) View.GONE else View.VISIBLE
+                    if (!loading && mFollowVM.uiState.value !is top.easelink.lcg.base.PageUiState.Error) {
+                        binding.loading.visibility = if (loading) View.VISIBLE else View.GONE
+                    }
                 }
             }
         }

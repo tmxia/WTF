@@ -38,9 +38,11 @@ class DiscoverFragment : Fragment(), ControllableFragment {
         composeView.setContent {
             val models by viewModel.aggregationModels.collectAsStateWithLifecycle()
             val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
             DiscoverScreenCompose(
                 models = models,
+                uiState = uiState,
                 onForumClick = { title, url -> EventBus.getDefault().post(OpenForumEvent(title, url, true)) },
                 onMoreForumsClick = { EventBus.getDefault().post(ForumNavigationFragment::class.java) },
                 onRankClick = { url -> EventBus.getDefault().post(OpenArticleEvent(url)) },

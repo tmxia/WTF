@@ -9,8 +9,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.lcg.R
+import top.easelink.lcg.base.PageUiState
 import top.easelink.lcg.ui.main.source.repository.ArticlesRepository
 import top.easelink.lcg.ui.main.source.model.ArticleEntity
+import top.easelink.lcg.utils.ErrorHandler
 import top.easelink.lcg.utils.showMessage
 
 class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
@@ -19,6 +21,9 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _uiState = MutableStateFlow<PageUiState<List<ArticleEntity>>>(PageUiState.Loading)
+    val uiState: StateFlow<PageUiState<List<ArticleEntity>>> = _uiState.asStateFlow()
 
     
     private val _hasMore = MutableStateFlow(false)
@@ -40,15 +45,16 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
         }
 
         _isLoading.value = true
+        _uiState.value = PageUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                ArticlesRepository.getAllLocalFavorites().let {
-                    if (it.isNotEmpty().also(callback)) {
-                        _articles.value = it
-                    }
-                }
+                val list = ArticlesRepository.getAllLocalFavorites()
+                _articles.value = list
+                callback.invoke(list.isNotEmpty())
+                _uiState.value = if (list.isEmpty()) PageUiState.Empty else PageUiState.Success(list)
             } catch (e: Exception) {
                 Timber.e(e)
+                _uiState.value = PageUiState.Error(e, ErrorHandler.getFriendlyMessage(e))
             } finally {
                 _isLoading.value = false
             }

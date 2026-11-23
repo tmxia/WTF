@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -32,6 +33,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import timber.log.Timber
 import top.easelink.lcg.R
+import top.easelink.lcg.base.PageUiState
+import top.easelink.lcg.ui.main.common.ErrorStateView
+import top.easelink.lcg.ui.main.common.FullScreenLoading
 import top.easelink.lcg.ui.main.discover.model.DiscoverModel
 import top.easelink.lcg.ui.main.discover.model.ForumListModel
 import top.easelink.lcg.ui.main.discover.model.ForumNavigationModel
@@ -43,6 +47,7 @@ import top.easelink.lcg.ui.main.discover.model.generateAllForums
 @Composable
 fun DiscoverScreenCompose(
     models: List<DiscoverModel>,
+    uiState: PageUiState<List<DiscoverModel>> = PageUiState.Loading,
     onForumClick: (String, String) -> Unit,
     onMoreForumsClick: () -> Unit,
     onRankClick: (String) -> Unit,
@@ -71,6 +76,20 @@ fun DiscoverScreenCompose(
             .background(Color(0xFFF5F5F5))
             .padding(top = 12.dp)
     ) {
+        when {
+            uiState is PageUiState.Loading && models.isEmpty() -> {
+                FullScreenLoading(Modifier.weight(1f))
+            }
+
+            uiState is PageUiState.Error && models.isEmpty() -> {
+                ErrorStateView(
+                    message = (uiState as? PageUiState.Error)?.message ?: stringResource(R.string.error),
+                    onRetry = onRefresh,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
         if (forumModel != null && displayedForums.isNotEmpty()) {
             Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                 ForumNavigationSection(

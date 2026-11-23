@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.R
+import top.easelink.lcg.base.PageUiState
 import top.easelink.lcg.ui.main.discover.model.DiscoverModel
 import top.easelink.lcg.ui.main.discover.model.ForumListModel
 import top.easelink.lcg.ui.main.discover.model.generateAllForums
@@ -18,6 +19,7 @@ import top.easelink.lcg.ui.main.discover.source.DateType
 import top.easelink.lcg.ui.main.discover.source.ForumNetworkSource
 import top.easelink.lcg.ui.main.discover.source.RankType
 import top.easelink.lcg.ui.main.discover.source.fetchRank
+import top.easelink.lcg.utils.ErrorHandler
 import top.easelink.lcg.utils.showMessage
 import java.net.SocketTimeoutException
 
@@ -28,6 +30,9 @@ class DiscoverViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _uiState = MutableStateFlow<PageUiState<List<DiscoverModel>>>(PageUiState.Loading)
+    val uiState: StateFlow<PageUiState<List<DiscoverModel>>> = _uiState.asStateFlow()
+
     @MainThread
     fun initOptions(context: Context) {
         refreshOptions(context)
@@ -36,6 +41,7 @@ class DiscoverViewModel : ViewModel() {
     @MainThread
     fun refreshOptions(context: Context) {
         _isLoading.value = true
+        _uiState.value = PageUiState.Loading
         Timber.d("【发现页】开始刷新热榜与板块数据...")
         viewModelScope.launch(IOPool) {
             runCatching {
@@ -56,12 +62,19 @@ class DiscoverViewModel : ViewModel() {
                 newList.add(ranks)
 
                 _aggregationModels.value = newList.toMutableList()
+                if (newList.isEmpty()) {
+                    _uiState.value = PageUiState.Empty
+                } else {
+                    _uiState.value = PageUiState.Success(newList)
+                }
             }.getOrElse {
                 Timber.e(it, "【发现页】数据拉取异常")
+                val msg = ErrorHandler.getFriendlyMessage(it)
                 when (it) {
                     is SocketTimeoutException -> showMessage(R.string.network_error)
-                    else -> showMessage(R.string.error)
+                    else -> showMessage(msg)
                 }
+                _uiState.value = PageUiState.Error(it, msg)
             }.also {
                 kotlinx.coroutines.delay(800)
                 _isLoading.value = false
