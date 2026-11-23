@@ -182,8 +182,9 @@ class WebViewActivity : AppCompatActivity() {
 
                 // [PATCH] 先尝试从当前 URL 同步
                     LCGCookieJar.syncFromWebView(currentUrl)
-                    // [PATCH] 强制从主域同步一次，确保抓取到 htVC_2132_auth
+                    // [PATCH] 强制同步主域 Cookie
                     LCGCookieJar.syncFromWebView(SERVER_BASE_URL)
+                    Timber.d("当前抓取到的 Cookie: ${LCGCookieJar.cookiesForUrl(SERVER_BASE_URL)}")
                     // [PATCH] 打印抓取到的 Cookie 以排查
                     Timber.d("当前抓取到的 Cookie: ${LCGCookieJar.cookiesForUrl(SERVER_BASE_URL)}")
 
