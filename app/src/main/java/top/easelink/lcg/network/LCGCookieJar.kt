@@ -24,7 +24,23 @@ object LCGCookieJar {
         }
     }
 
-    fun hasLoginCookie(): Boolean = cookiesForUrl(SERVER_BASE_URL).keys.any { it.contains("auth") }
+    /**
+     * 是否持有 Discuz 登录凭证。
+     * 吾安 cookiepre 为 `htVC_2132_`，凭证 cookie 名为 `htVC_2132_auth`（辅以 `htVC_2132_saltkey`）；
+     * 不能只按裸 `auth` 匹配，需兼容带前缀的凭证名。判定以非空 auth 为准。
+     */
+    fun hasLoginCredential(): Boolean = cookiesForUrl(SERVER_BASE_URL)
+        .any { (name, value) -> value.isNotBlank() && isAuthCookieName(name) }
+
+    /** 兼容旧调用点：是否存在登录凭证 cookie。 */
+    fun hasLoginCookie(): Boolean = hasLoginCredential()
+
+    private fun isAuthCookieName(name: String): Boolean {
+        val lower = name.lowercase()
+        if (lower == "auth") return true
+        // 形如 htVC_2132_auth / xxx_auth
+        return lower.endsWith("_auth") || lower.substringAfterLast('_') == "auth"
+    }
 
     fun cookiesForUrl(url: String): Map<String, String> {
         val httpUrl = url.toHttpUrlOrNull() ?: return emptyMap()
@@ -46,11 +62,12 @@ object LCGCookieJar {
         val list = raw.split(";")
             .mapNotNull { entry ->
                 val pair = entry.trim().split("=", limit = 2)
-                if (pair.size == 2 && pair[0].isNotBlank()) {
-                    buildCookie(httpUrl, pair[0], pair[1])
-                } else {
-                    null
-                }
+                if (pair.size != 2 || pair[0].isBlank()) return@mapNotNull null
+                val name = pair[0].trim()
+                val value = pair[1].trim()
+                // 跳过空值与属性项（path/domain/expires 等不应作为业务 cookie 入库）
+                if (value.isBlank() || name.startsWith("$")) return@mapNotNull null
+                buildCookie(httpUrl, name, value)
             }
         if (list.isNotEmpty()) jar.saveFromResponse(httpUrl, list)
     }

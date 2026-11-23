@@ -182,7 +182,19 @@ class WebViewActivity : AppCompatActivity() {
                 val currentUrl = withContext(Main) { mWebView.url } ?: return@launch
                 if (!isLoginSuccess(doc, currentUrl)) return@launch
 
+                // 先把 WebView 侧凭证回灌网络层；当前 URL 取不到时再按主域兜底回灌一次
                 LCGCookieJar.syncFromWebView(currentUrl)
+                if (!LCGCookieJar.hasLoginCredential()) {
+                    LCGCookieJar.syncFromWebView(SERVER_BASE_URL)
+                }
+
+                // 页面虽显示头像，但网络层未拿到 auth 凭证时，不能冒充登录态，避免 App 内按游客访问
+                if (!LCGCookieJar.hasLoginCredential()) {
+                    Timber.w("登录页面已渲染头像，但未回读到 auth 凭证，放弃置登录态: $currentUrl")
+                    showMessage(R.string.general_error)
+                    return@launch
+                }
+
                 UserDataRepo.isLoggedIn = true
                 doc.getElementById("messagetext")?.text()?.let {
                     showMessage(it)

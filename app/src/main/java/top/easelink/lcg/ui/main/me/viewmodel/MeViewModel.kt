@@ -8,6 +8,7 @@ import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.R
 import top.easelink.lcg.account.UserDataRepo
 import top.easelink.lcg.account.UserInfo
+import top.easelink.lcg.network.LCGCookieJar
 import top.easelink.lcg.ui.main.me.source.UserInfoRepo
 import top.easelink.lcg.ui.main.model.AntiScrapingException
 import top.easelink.lcg.utils.showMessage
@@ -16,7 +17,12 @@ import java.net.SocketTimeoutException
 class MeViewModel : ViewModel() {
     @Suppress("BlockingMethodInNonBlockingContext")
     fun fetchUserInfoDirect() {
-        if (UserDataRepo.isLoggedIn) {
+        val hasCredential = LCGCookieJar.hasLoginCredential()
+
+        if (!hasCredential) {
+            // 网络层无 auth 凭证：清除陈旧的本地登录态，避免沿用过期缓存按已登录展示
+            if (UserDataRepo.isLoggedIn) UserDataRepo.isLoggedIn = false
+        } else if (UserDataRepo.isLoggedIn) {
             UserDataRepo.updateUserInfo(
                 UserInfo(
                     userName = UserDataRepo.username,
@@ -30,12 +36,18 @@ class MeViewModel : ViewModel() {
                 )
             )
         }
+
         viewModelScope.launch(IOPool) {
             try {
                 val userInfo = UserInfoRepo.requestUserInfo()
 
                 if (userInfo == null || userInfo == UserInfo.getDefaultUserInfo()) {
-                    Timber.w("【安全防御】拦截了非法的 clearAll 调用，保留 CK！")
+                    // 页面返回游客态：仅在网络层也无凭证时才判定未登录，避免解析抖动误清有效会话
+                    if (!LCGCookieJar.hasLoginCredential()) {
+                        UserDataRepo.isLoggedIn = false
+                    } else {
+                        Timber.w("【安全防御】持有凭证但未解析到用户信息，保留 CK！")
+                    }
                 } else {
                     UserDataRepo.isLoggedIn = true
                     UserDataRepo.updateUserInfo(userInfo)
