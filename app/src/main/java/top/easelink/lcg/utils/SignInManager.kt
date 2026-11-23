@@ -104,14 +104,8 @@ object SignInManager {
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
 
-        // 清理失效的瑞数会话标识，避免带上旧盾 Cookie 被二次拦截
-        CookieManager.getInstance().getCookie("https://www.52pojie.cn/")?.split(";")?.forEach { cookie ->
-            if (cookie.trim().startsWith("wzws_sid=")) {
-                CookieManager.getInstance().setCookie(
-                    "https://www.52pojie.cn/", "wzws_sid=; Max-Age=0"
-                )
-            }
-        }
+        // [PATCH] 停止清理 wzws_sid，保留 WAF 会话上下文
+                            Timber.d("SignInManager: 跳过清理 wzws_sid")
 
         // 把持久化登录 / 凭证 Cookie 注入 WebView
         LCGCookieJar.cookiesForUrl("https://www.52pojie.cn/").let { savedCookies ->
