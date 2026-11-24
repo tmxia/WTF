@@ -13,6 +13,7 @@ import android.view.WindowInsets
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,7 +25,7 @@ import top.easelink.lcg.databinding.DialogProfileBinding
 import top.easelink.lcg.ui.main.model.SessionExpiredEvent
 import top.easelink.lcg.ui.main.source.parseExtraUserInfoProfilePage
 import top.easelink.lcg.ui.profile.model.PopUpProfileInfo
-import top.easelink.lcg.ui.profile.source.ProfileSource
+import top.easelink.lcg.ui.profile.viewmodel.PopUpProfileViewModel
 import top.easelink.lcg.ui.webview.view.WebViewActivity
 import top.easelink.lcg.utils.BlacklistManager
 import top.easelink.lcg.utils.ImageLoaderHelper
@@ -36,6 +37,8 @@ class PopUpProfileDialog : DialogFragment() {
 
     private var _binding: DialogProfileBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var viewModel: PopUpProfileViewModel
 
     companion object {
         private const val POPUP_INFO = "popup_info"
@@ -68,6 +71,7 @@ class PopUpProfileDialog : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel = ViewModelProvider(this)[PopUpProfileViewModel::class.java]
 
         val popUpInfo = arguments?.getParcelableCompat<PopUpProfileInfo>(POPUP_INFO) ?: return
 
@@ -128,7 +132,7 @@ class PopUpProfileDialog : DialogFragment() {
                         val op = if (isCurrentlyBlack) "del" else "add"
                         val handlekey = if (isCurrentlyBlack) "delhk_$targetUid" else "addfriendhk_$targetUid"
 
-                        val responseHtml = ProfileSource.toggleFriend(targetUid, op, handlekey)
+                        val responseHtml = viewModel.toggleFriend(targetUid, op, handlekey)
 
                         withContext(Dispatchers.Main) {
                             blacklistBtn.isEnabled = true
@@ -208,7 +212,7 @@ class PopUpProfileDialog : DialogFragment() {
     private fun onSubscribeClicked(url: String) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                ProfileSource.subscribe(url)?.let { msg ->
+                viewModel.subscribe(url)?.let { msg ->
                     withContext(Dispatchers.Main) {
                         showMessage(msg)
                     }
