@@ -8,10 +8,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import top.easelink.lcg.network.JsoupClient
 import top.easelink.lcg.base.PageUiState
 import top.easelink.lcg.ui.main.model.NotificationModel
-import top.easelink.lcg.ui.main.source.parseNotificationModel
+import top.easelink.lcg.ui.main.source.remote.NotificationRemoteSource
 import top.easelink.lcg.utils.ErrorHandler
 import top.easelink.lcg.utils.WebsiteConstant.NOTIFICATION_HOME_QUERY
 
@@ -34,12 +33,10 @@ class NotificationViewModel : ViewModel() {
         }
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                JsoupClient.sendGetRequestWithQuery(nextPageUrl).let {
-                    val model = parseNotificationModel(it)
-                    nextPageUrl = model.nextPageUrl
-                    _notifications.value = model
-                    callback.invoke(true)
-                }
+                val model = NotificationRemoteSource.fetchNotifications(nextPageUrl)
+                nextPageUrl = model.nextPageUrl
+                _notifications.value = model
+                callback.invoke(true)
             } catch (e: Exception) {
                 Timber.e(e)
                 callback.invoke(false)
@@ -52,9 +49,7 @@ class NotificationViewModel : ViewModel() {
             _isLoading.value = true
             _uiState.value = PageUiState.Loading
             try {
-                val model = JsoupClient.sendGetRequestWithQuery(NOTIFICATION_HOME_QUERY).let {
-                    parseNotificationModel(it)
-                }
+                val model = NotificationRemoteSource.fetchNotifications(NOTIFICATION_HOME_QUERY)
                 nextPageUrl = model.nextPageUrl
                 _notifications.value = model
                 if (model.notifications.isNotEmpty()) {

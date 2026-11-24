@@ -9,12 +9,9 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.base.PageUiState
-import top.easelink.lcg.network.JsoupClient
 import top.easelink.lcg.ui.main.follow.model.FeedInfo
-import top.easelink.lcg.ui.main.source.parseFeedPage
+import top.easelink.lcg.ui.main.source.remote.FollowingFeedRemoteSource
 import top.easelink.lcg.utils.ErrorHandler
-import top.easelink.lcg.utils.WebsiteConstant.FOLLOW_FEED_QUERY
-import java.util.Locale
 
 class FollowingFeedViewModel : ViewModel() {
     private val _follows = MutableStateFlow<List<FeedInfo>>(emptyList())
@@ -32,12 +29,11 @@ class FollowingFeedViewModel : ViewModel() {
     var pageNum = 1
 
     fun fetchData() {
-        val url = String.format(Locale.US, FOLLOW_FEED_QUERY, 1, 1)
         _isLoading.value = true
         _uiState.value = PageUiState.Loading
         viewModelScope.launch(IOPool) {
             try {
-                val page = parseFeedPage(JsoupClient.sendAjaxRequest(url))
+                val page = FollowingFeedRemoteSource.fetchFeed(1)
                 _follows.value = page.feeds
                 if (_follows.value.isNotEmpty()) {
                     _uiState.value = PageUiState.Success(_follows.value)
@@ -55,10 +51,9 @@ class FollowingFeedViewModel : ViewModel() {
 
     fun fetchMore(callBack: (Boolean) -> Unit) {
         _isLoadingForLoadMore.value = true
-        val url = String.format(Locale.US, FOLLOW_FEED_QUERY, pageNum, 1)
         viewModelScope.launch(IOPool) {
             try {
-                val page = parseFeedPage(JsoupClient.sendAjaxRequest(url))
+                val page = FollowingFeedRemoteSource.fetchFeed(pageNum)
                 _follows.value = page.feeds
                 callBack(page.valid)
                 if (page.valid) {

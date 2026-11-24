@@ -8,12 +8,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import top.easelink.lcg.network.JsoupClient
 import top.easelink.lcg.base.PageUiState
 import top.easelink.lcg.ui.main.model.Conversation
-import top.easelink.lcg.ui.main.source.parseConversationPage
+import top.easelink.lcg.ui.main.source.remote.ConversationRemoteSource
 import top.easelink.lcg.utils.ErrorHandler
-import top.easelink.lcg.utils.WebsiteConstant
 
 class ConversationListViewModel : ViewModel() {
     private val _conversations = MutableStateFlow<List<Conversation>>(emptyList())
@@ -37,9 +35,7 @@ class ConversationListViewModel : ViewModel() {
             _isLoading.value = true
             _uiState.value = PageUiState.Loading
             try {
-                val page = parseConversationPage(
-                    JsoupClient.sendGetRequestWithQuery(WebsiteConstant.PRIVATE_MESSAGE_QUERY)
-                )
+                val page = ConversationRemoteSource.fetchConversations()
                 formHash = page.formHash
                 _conversations.value = page.conversations
                 if (_conversations.value.isNotEmpty()) {

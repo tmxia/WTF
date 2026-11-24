@@ -9,9 +9,8 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import top.easelink.framework.threadpool.IOPool
 import top.easelink.lcg.base.PageUiState
-import top.easelink.lcg.network.JsoupClient
 import top.easelink.lcg.ui.main.follow.model.FollowResult
-import top.easelink.lcg.ui.main.source.parseFollowResult
+import top.easelink.lcg.ui.main.source.remote.FollowListRemoteSource
 import top.easelink.lcg.utils.ErrorHandler
 
 class FollowListViewModel : ViewModel() {
@@ -37,8 +36,7 @@ class FollowListViewModel : ViewModel() {
 
         viewModelScope.launch(IOPool) {
             try {
-                val document = JsoupClient.sendGetRequestWithQuery(url)
-                val result = parseFollowResult(document)
+                val result = FollowListRemoteSource.fetchFollowList(url)
                 _follows.value = result
                 if (!isLoadMore) {
                     _uiState.value = if (result.followInfos.isEmpty()) PageUiState.Empty else PageUiState.Success(result)
