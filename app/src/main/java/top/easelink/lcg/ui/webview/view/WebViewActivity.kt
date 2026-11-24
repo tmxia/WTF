@@ -21,6 +21,7 @@ import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.airbnb.lottie.LottieAnimationView
 import kotlinx.coroutines.*
@@ -38,7 +39,7 @@ import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.network.LCGCookieJar
 import top.easelink.lcg.service.web.HookInterface
 import top.easelink.lcg.ui.main.MainActivity
-import top.easelink.lcg.ui.main.me.source.UserInfoRepo.requestUserInfo
+import top.easelink.lcg.ui.main.me.viewmodel.MeProfileViewModel
 import top.easelink.lcg.ui.webview.FORCE_ENABLE_JS_KEY
 import top.easelink.lcg.ui.webview.OPEN_LOGIN_PAGE
 import top.easelink.lcg.ui.webview.TITLE_KEY
@@ -60,8 +61,11 @@ class WebViewActivity : AppCompatActivity() {
     private var mHtml: String? = null
     private var mForceEnableJs = true
     private var isOpenLoginEvent = false
+    private lateinit var profileViewModel: MeProfileViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        profileViewModel = ViewModelProvider(this)[MeProfileViewModel::class.java]
         initData()
         initContentView()
         initActionBar()
@@ -206,7 +210,7 @@ class WebViewActivity : AppCompatActivity() {
                 } ?: showMessage(R.string.login_successfully)
                 delay(1000)
                 withContext(IOPool) {
-                    requestUserInfo()?.let(::updateUserInfo)
+                    profileViewModel.fetchRemoteUserInfo()?.let(::updateUserInfo)
                 }
                 withContext(Main) {
                     startActivity(Intent(mWebView.context, MainActivity::class.java))

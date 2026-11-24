@@ -32,7 +32,7 @@ import top.easelink.lcg.databinding.ActivitySettingsBinding
 import top.easelink.lcg.network.LCGCookieJar
 import top.easelink.lcg.ui.main.login.view.LoginHintDialog
 import top.easelink.lcg.ui.main.logout.view.LogoutHintDialog
-import top.easelink.lcg.ui.main.me.source.UserInfoRepo
+import top.easelink.lcg.ui.main.me.viewmodel.MeProfileViewModel
 import top.easelink.lcg.ui.main.model.SignInSuccessEvent
 import top.easelink.lcg.ui.setting.viewmodel.SettingViewModel
 import top.easelink.lcg.utils.AppLogManager
@@ -42,6 +42,7 @@ import top.easelink.lcg.utils.showMessage
 
 class SettingActivity : TopActivity() {
     private lateinit var mViewModel: SettingViewModel
+    private lateinit var profileViewModel: MeProfileViewModel
     private lateinit var binding: ActivitySettingsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +50,7 @@ class SettingActivity : TopActivity() {
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         mViewModel = ViewModelProvider(this)[SettingViewModel::class.java]
+        profileViewModel = ViewModelProvider(this)[MeProfileViewModel::class.java]
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { finish() }
@@ -221,7 +223,7 @@ class SettingActivity : TopActivity() {
         showMessage("正在验证本地登录凭证...")
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val userInfo = UserInfoRepo.requestUserInfo()
+                val userInfo = profileViewModel.fetchRemoteUserInfo()
                 withContext(Dispatchers.Main) {
                     if (userInfo != null && !userInfo.userName.isNullOrBlank()) {
                         UserDataRepo.updateUserInfo(userInfo)
@@ -417,7 +419,7 @@ class SettingActivity : TopActivity() {
         showMessage("正在验证 Cookie...")
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val userInfo = UserInfoRepo.requestUserInfo()
+                val userInfo = profileViewModel.fetchRemoteUserInfo()
                 withContext(Dispatchers.Main) {
                     if (userInfo != null && !userInfo.userName.isNullOrBlank()) {
                         UserDataRepo.updateUserInfo(userInfo)
