@@ -261,7 +261,11 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
                         
         supportFragmentManager.commit {
             setReorderingAllowed(true)
-            setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+            
+            // ⚡ 修复跳闪：主 Tab 之间（首页/发现/搜索/我的）切换去除动画，防止渲染时间差导致闪烁
+            if (!isMainTab) {
+                setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+            }
             
             supportFragmentManager.fragments.forEach {
                 if (it != fragment) hide(it)
