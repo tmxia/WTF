@@ -209,7 +209,16 @@ class SettingActivity : TopActivity() {
     }
 
     private fun tryLogout() {
-        LogoutHintDialog(positive = { UserDataRepo.clearAll(); LCGCookieJar.clearAll(); showMessage(R.string.clear_cookie); finish() }) 
+        LogoutHintDialog(positive = { 
+            UserDataRepo.clearAll()
+            LCGCookieJar.clearAll()
+            // ⚡ 强制清理 WebView 底层 Cookie 和缓存，防止下次点击登录自动进游客模式
+            android.webkit.CookieManager.getInstance().removeAllCookies(null)
+            android.webkit.CookieManager.getInstance().flush()
+            android.webkit.WebStorage.getInstance().deleteAllData()
+            showMessage(R.string.clear_cookie)
+            finish() 
+        }) 
             .show(supportFragmentManager, LogoutHintDialog::class.java.simpleName)
     }
 

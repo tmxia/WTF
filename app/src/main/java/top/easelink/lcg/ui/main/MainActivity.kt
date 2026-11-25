@@ -453,6 +453,9 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         showMessage(R.string.session_expired_tips)
         // [ARCH-PHASE-15] 自动清理本地过期状态，避免假登录
         UserDataRepo.clearAll()
+        LCGCookieJar.clearAll()
+        android.webkit.CookieManager.getInstance().removeAllCookies(null)
+        android.webkit.CookieManager.getInstance().flush()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
