@@ -31,7 +31,9 @@ import top.easelink.lcg.ui.main.source.getContents
 import top.easelink.lcg.ui.main.source.getDateTime
 import top.easelink.lcg.ui.main.source.getFirstPost
 import top.easelink.lcg.ui.main.source.getUserInfo
+import top.easelink.lcg.ui.main.source.getPostIds
 import top.easelink.lcg.ui.main.source.getReplyAddUrl
+import top.easelink.lcg.ui.main.source.getReplyAddUrlMap
 import top.easelink.lcg.ui.main.source.getReplyUrls
 import top.easelink.lcg.ui.main.source.local.ArticlesDatabase
 import top.easelink.lcg.utils.WebsiteConstant.ADD_TO_FAVORITE_QUERY
@@ -100,6 +102,8 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
 
             val nextPageUrl = doc.selectFirst("a.nxt")?.attr("href").orEmpty()
             val replyAddUrls = getReplyAddUrl(doc)
+            val postIds = getPostIds(doc)
+            val replyAddUrlMap = getReplyAddUrlMap(doc)
             val userInfos = getUserInfo(doc)
             val contents = getContents(doc)
 
@@ -129,7 +133,10 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
                         date = dateTimes.getOrNull(i).orEmpty(),
                         content = contents.getOrNull(i).orEmpty(),
                         replyUrl = replyUrls.getOrNull(i),
-                        replyAddUrl = replyAddUrls.getOrNull(i),
+                        // 优先按 pid 精确归属；容器缺失时回退旧的顺序列表
+                        pid = postIds.getOrNull(i),
+                        replyAddUrl = postIds.getOrNull(i)?.let { replyAddUrlMap[it] }
+                            ?: replyAddUrls.getOrNull(i),
                         profileUrl = userInfo[USER_PROFILE_URL].orEmpty(),
                         extraInfo = userInfo[USER_EXTRA_INFO],
                         followInfo = userInfo[FOLLOW_TITLE]?.to(userInfo[FOLLOW_URL] ?: "")
@@ -177,6 +184,17 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
         val msg = doc.getElementById("messagetext")?.text().orEmpty()
         val hasError = doc.select(".alert_error").isNotEmpty()
         !hasError && (msg.isEmpty() || msg.contains("成功") || msg.contains("删除"))
+    } catch (e: Exception) {
+        Timber.e(e)
+        false
+    }
+
+    /** 用收藏条目自带的删除链接取消收藏，避免再拼 tid/formhash 出错。 */
+    suspend fun removeFavoriteByUrl(delUrl: String): Boolean = try {
+        val doc = JsoupClient.sendGetRequestWithQuery(delUrl)
+        val msg = doc.getElementById("messagetext")?.text().orEmpty()
+        doc.select(".alert_error").isEmpty() &&
+            (msg.isEmpty() || msg.contains("成功") || msg.contains("删除") || msg.contains("取消"))
     } catch (e: Exception) {
         Timber.e(e)
         false

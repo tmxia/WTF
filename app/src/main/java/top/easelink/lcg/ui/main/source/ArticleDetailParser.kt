@@ -27,6 +27,34 @@ fun getReplyAddUrl(document: Document): List<String> {
     return list
 }
 
+/** 楼层容器 id（post_<pid>）顺序，与 td[rowspan] 楼层顺序一致。 */
+fun getPostIds(document: Document): List<String> =
+    document.select("div[id^=post_]").mapNotNull { element ->
+        element.id().removePrefix("post_").takeIf { it.isNotEmpty() }
+    }
+
+/**
+ * 按楼层 pid 归集"支持/点赞"链接。
+ *
+ * 已赞过的楼层站点不再输出 a.replyadd，旧实现按位置拼成一个列表会整体错位，
+ * 导致点赞落到错误楼层；按容器取 href 才能保证 pid 与链接一一对应。
+ */
+fun getReplyAddUrlMap(document: Document): Map<String, String> {
+    val map = HashMap<String, String>()
+    document.select("div[id^=post_]").forEach { post ->
+        val pid = post.id().removePrefix("post_")
+        if (pid.isEmpty()) return@forEach
+        post.selectFirst("a.replyadd")?.attr("href")
+            ?.takeIf { it.isNotBlank() }
+            ?.let { map[pid] = it }
+    }
+    // 首楼的支持按钮可能挂在页面级 #recommend_add 上，归属第一楼
+    document.getElementById("recommend_add")?.attr("href")
+        ?.takeIf { it.isNotBlank() }
+        ?.let { href -> getPostIds(document).firstOrNull()?.let { map.putIfAbsent(it, href) } }
+    return map
+}
+
 fun getUserInfo(document: Document): List<Map<String, String>> {
     val list: MutableList<Map<String, String>> = ArrayList(12)
     val elements = document.select("td[rowspan]")

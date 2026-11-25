@@ -80,6 +80,8 @@ object UserDataRepo {
         Timber.w("【状态层】执行清空用户数据与Cookie (clearAll)")
         // [ARCH-PHASE-3] 先清理底层凭证与数据
         clearCookies()
+        // 点赞状态属于账号级数据，退出时一并清空，防止下个账号看到上个账号的已赞标记
+        top.easelink.lcg.ui.main.source.local.LikeStateStore.clear()
         SharedPreferencesHelper.getUserSp().edit { clear() }
         
         // 最后再更新状态，触发 UI 刷新，确保 UI 刷新时底层数据已干净

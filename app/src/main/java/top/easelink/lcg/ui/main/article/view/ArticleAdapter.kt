@@ -255,7 +255,7 @@ class ArticleAdapter(
                             postBtnReply.visibility = View.VISIBLE
                             postBtnReply.setOnClickListener(this@PostViewHolder)
                         }
-                        if (TextUtils.isEmpty(p.replyAddUrl)) {
+                        if (TextUtils.isEmpty(p.replyAddUrl) && !p.isLiked) {
                             postBtnThumbUp.visibility = View.GONE
                         } else {
                             postBtnThumbUp.visibility = View.VISIBLE
@@ -293,7 +293,7 @@ class ArticleAdapter(
                             return
                         }
                         if (p.replyAddUrl.isNullOrBlank()) {
-                            showMessage("无法获取点赞地址")
+                            showMessage(if (p.isLiked) "已赞过该楼层" else "无法获取点赞地址")
                             return
                         }
                         p.replyAddUrl?.let { url ->
@@ -432,7 +432,7 @@ class ArticleAdapter(
                                 replyBtnReply.visibility = View.VISIBLE
                                 replyBtnReply.setOnClickListener(this@ReplyViewHolder)
                             }
-                            if (TextUtils.isEmpty(p.replyAddUrl)) {
+                            if (TextUtils.isEmpty(p.replyAddUrl) && !p.isLiked) {
                                 replyBtnThumbUp.visibility = View.GONE
                             } else {
                                 replyBtnThumbUp.visibility = View.VISIBLE
@@ -568,9 +568,18 @@ class ArticleAdapter(
     }
 
     fun markAsLiked(url: String) {
-        val index = mPostList.indexOfFirst { it.replyAddUrl == url }
+        val index = mPostList.indexOfFirst { it.replyAddUrl == url && !it.isLiked }
         if (index != -1) {
             mPostList[index].isLiked = true
+            notifyItemChanged(index, "like_status_changed")
+        }
+    }
+
+    /** 服务端失败时撤销乐观置亮，恢复灰色，避免界面与站点状态不一致。 */
+    fun rollbackLike(url: String) {
+        val index = mPostList.indexOfFirst { it.replyAddUrl == url && it.isLiked }
+        if (index != -1) {
+            mPostList[index].isLiked = false
             notifyItemChanged(index, "like_status_changed")
         }
     }

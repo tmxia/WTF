@@ -136,6 +136,9 @@
     <string name="sync_favorite_successfully">同步网络收藏成功</string>
     <string name="sync_favorite_failed">同步网络收藏失败</string>
     <string name="sync_favorite_failed_empty_favorites">同步网络收藏失败:网络收藏为空</string>
+    <string name="remove_favorite_successfully">已取消收藏</string>
+    <string name="favorite_remote_remove_failed">网站取消收藏失败，请检查网络后重试</string>
+    <string name="favorite_sync_empty_remote">网站收藏为空，已清空本地收藏</string>
     <string name="remove_all_favorites_successfully">清空收藏成功</string>
     <string name="remove_all_favorites_failed">清空收藏失败</string>
 

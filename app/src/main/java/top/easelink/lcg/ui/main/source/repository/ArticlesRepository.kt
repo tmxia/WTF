@@ -63,12 +63,23 @@ object ArticlesRepository {
     suspend fun isLocalFavorite(id: String): Boolean =
         ArticlesLocalDataSource.isArticleInFavorites(id)
 
-    /** 远程拉取收藏 → 写本地 → 回读本地，完成一次双写同步。 */
+    /**
+     * 以网站收藏为准：远端拉取成功时整体覆盖本地，网站侧删除的条目才会一并消失。
+     * 本地新增、尚未成功同步到网站（delUrl 为空）的条目保留，避免一次同步把它们清掉。
+     */
     suspend fun syncRemoteFavorites(): List<ArticleEntity> {
         val remote = getRemoteFavorites()
-        if (remote.isNotEmpty()) {
-            addAllLocalFavorites(remote)
+        val localOnly = getAllLocalFavorites()
+            .filter { it.delUrl.isBlank() && remote.none { r -> r.url == it.url } }
+        delAllLocalFavorites()
+        val merged = remote + localOnly
+        if (merged.isNotEmpty()) {
+            addAllLocalFavorites(merged)
         }
         return getAllLocalFavorites()
     }
+
+    /** 按收藏列表中站点给出的删除链接取消收藏（含 tid/formhash，无需再解析）。 */
+    suspend fun removeFavoriteByDelUrl(delUrl: String): Boolean =
+        ArticlesRemoteDataSource.removeFavoriteByUrl(delUrl)
 }

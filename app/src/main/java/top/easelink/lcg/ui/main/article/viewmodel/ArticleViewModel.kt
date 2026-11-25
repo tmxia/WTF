@@ -17,11 +17,16 @@ import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener.Compani
 import top.easelink.lcg.ui.main.article.viewmodel.ArticleAdapterListener.Companion.FETCH_POST_MORE
 import top.easelink.lcg.ui.main.article.source.DownloadLinkRules
 import top.easelink.lcg.ui.main.model.BlockException
+import top.easelink.lcg.ui.main.model.LikeFailedEvent
+import top.easelink.lcg.ui.main.model.LikeSuccessEvent
 import top.easelink.lcg.ui.main.model.NetworkException
 import top.easelink.lcg.ui.main.source.model.ArticleAbstractResponse
 import top.easelink.lcg.ui.main.source.model.ArticleEntity
 import top.easelink.lcg.ui.main.source.model.Post
+import top.easelink.lcg.ui.main.source.local.LikeStateStore
 import top.easelink.lcg.ui.main.source.repository.ArticlesRepository
+import org.greenrobot.eventbus.EventBus
+import top.easelink.lcg.utils.LikeRules
 import top.easelink.lcg.utils.RegexUtils
 import top.easelink.lcg.utils.showMessage
 import top.easelink.lcg.utils.ErrorHandler
@@ -135,6 +140,12 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                 }
 
                 if (response.postList.isNotEmpty()) {
+                    // 恢复本机已确认成功的点赞（服务端返回成功才落库，不是纯乐观态）
+                    response.postList.forEach { post ->
+                        if (!post.isLiked) {
+                            post.isLiked = post.pid?.let { LikeStateStore.isLiked(it) } == true
+                        }
+                    }
                     when (type) {
                         FETCH_POST_INIT -> {
                             safeUpdate(_posts, response.postList.toMutableList())
@@ -217,10 +228,29 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
             try {
                 val response = ArticlesRepository.replyAdd(url)
                 Timber.d("【点赞】收到响应: $response")
-                showMessage(response)
+                val pid = LikeRules.pidFromUrl(url)
+                when {
+                    // 站点已赞过：幂等成功，直接落状态，不再重复提示失败
+                    LikeRules.isAlreadyLiked(response) -> {
+                        LikeStateStore.markLiked(pid)
+                        showMessage(response)
+                        EventBus.getDefault().post(LikeSuccessEvent(url))
+                    }
+                    LikeRules.isSuccessMessage(response) -> {
+                        LikeStateStore.markLiked(pid)
+                        showMessage(response)
+                        EventBus.getDefault().post(LikeSuccessEvent(url))
+                    }
+                    else -> {
+                        // 服务端明确失败或无法判定：撤销乐观置亮，提示原因
+                        showMessage(response.ifBlank { "点赞失败，请稍后重试" })
+                        EventBus.getDefault().post(LikeFailedEvent(url))
+                    }
+                }
             } catch (e: Exception) {
                 Timber.e(e, "【点赞】发生异常")
                 showMessage("点赞异常，请稍后重试")
+                EventBus.getDefault().post(LikeFailedEvent(url))
             }
         }
     }

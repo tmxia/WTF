@@ -51,6 +51,7 @@ import top.easelink.lcg.ui.main.common.CompactAnchorMenu
 import top.easelink.lcg.ui.main.common.ErrorStateView
 import top.easelink.lcg.ui.main.common.MenuDisplayMode
 import top.easelink.lcg.ui.main.common.PopoverMenuItem
+import top.easelink.lcg.ui.main.model.LikeFailedEvent
 import top.easelink.lcg.ui.main.model.LikeSuccessEvent
 import top.easelink.lcg.ui.main.model.ReplyPostEvent
 import top.easelink.lcg.ui.main.model.ScreenCaptureEvent
@@ -238,6 +239,15 @@ fun ArticleScreen(
                 recyclerView?.adapter?.let { adapter ->
                     if (adapter is ArticleAdapter) {
                         adapter.markAsLiked(event.url)
+                    }
+                }
+            }
+
+            @Subscribe(threadMode = ThreadMode.MAIN)
+            fun onLikeFailed(event: LikeFailedEvent) {
+                recyclerView?.adapter?.let { adapter ->
+                    if (adapter is ArticleAdapter) {
+                        adapter.rollbackLike(event.url)
                     }
                 }
             }
