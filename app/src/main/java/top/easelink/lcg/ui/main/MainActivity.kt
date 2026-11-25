@@ -1,4 +1,5 @@
 package top.easelink.lcg.ui.main
+import top.easelink.lcg.utils.SignInManager
 import top.easelink.lcg.utils.WebViewConfigurator
 import top.easelink.lcg.network.JsoupClient
 import top.easelink.lcg.network.LCGCookieJar
@@ -180,8 +181,16 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // 兜底：清掉可能遗留在 decorView 上的隐藏探测 WebView，
+        // 防止论坛网页内容透到「我的」「搜索」等原生页面背后。
+        SignInManager.sweepPhantomWebViews()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        SignInManager.sweepPhantomWebViews()
         EventBus.getDefault().unregister(this)
     }
 

@@ -24,11 +24,19 @@ import androidx.core.content.edit
 import timber.log.Timber
 import top.easelink.lcg.appinit.LCGApp
 import top.easelink.lcg.network.LCGCookieJar
+import java.util.Collections
+import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 object SignInManager {
 
     private const val APPLY_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=apply&id=2"
+
+    /**
+     * 供“跳转网页签到”使用的入口地址：与内置签到流程同一个任务页，
+     * 由用户在完整 JS 环境的 WebView 里自行完成（可顺带过盾）。
+     */
+    const val SIGN_IN_PAGE_URL = "https://www.52pojie.cn/home.php?mod=task&do=apply&id=2"
 
     
     private const val SIGN_TIMEOUT_MS = 90_000L
@@ -43,6 +51,13 @@ object SignInManager {
     private var webViewRef: WebView? = null
     private var parentRef: ViewGroup? = null
     private var timeoutRunnable: Runnable? = null
+
+    /** 签到状态探测是否正在执行，避免重复触发堆叠隐藏 WebView */
+    private val statusProbeRunning = AtomicBoolean(false)
+
+    /** 已挂载但尚未释放的探测 WebView，用于兜底清扫，防止网页内容透出 */
+    private val phantomWebViews: MutableSet<WebView> =
+        Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap<WebView, Boolean>()))
 
     
 
@@ -217,23 +232,33 @@ object SignInManager {
 
     @SuppressLint("SetJavaScriptEnabled")
     fun checkSignInStatus(context: Context, onResult: (Boolean) -> Unit) {
+        // 同一时刻只允许一个探测：切 tab / onResume 重复触发时直接回读本地态，
+        // 避免多个隐藏 WebView 反复挂到 decorView 上叠加残留。
+        if (!statusProbeRunning.compareAndSet(false, true)) {
+            onResult(isSignedToday())
+            return
+        }
         mainHandler.post {
+            var finished = false
             try {
                 val activity = context as? Activity
                 val parentView: ViewGroup =
                     (activity?.window?.decorView as? ViewGroup) ?: FrameLayout(LCGApp.context)
 
                 val webView = WebView(context).apply {
-            WebViewConfigurator.setupStandardWebView(this)
-                    layoutParams = ViewGroup.LayoutParams(400, 800) 
-alpha = 0.1f 
-                    /* [已由 WebViewConfigurator 接管] settings.javaScriptEnabled = true
-            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
-            isScrollbarFadingEnabled = true
-                    settings.domStorageEnabled = true
-                    settings.userAgentString = MOBILE_UA */
+                    WebViewConfigurator.setupStandardWebView(this)
+                    // 探测用隐藏视图：1px 尺寸 + 完全透明 + 不可见 + 不参与触摸/无障碍。
+                    // 历史实现为 400x800 + alpha=0.1f 挂在 decorView 上，一旦释放慢于页面切换
+                    // 就会把论坛网页内容透到原生页面背后（"幽灵网页"残影）。
+                    layoutParams = ViewGroup.LayoutParams(1, 1)
+                    alpha = 0f
+                    visibility = View.INVISIBLE
+                    isFocusable = false
+                    isClickable = false
+                    importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                 }
                 parentView.addView(webView)
+                phantomWebViews.add(webView)
 
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
@@ -248,16 +273,17 @@ alpha = 0.1f
                 val done = AtomicBoolean(false)
                 var timeout: Runnable? = null
                 fun release(result: Boolean) {
-                
-                if (result && !isSignedToday()) updateLocalSignInTime()
                     if (!done.compareAndSet(false, true)) return
                     timeout?.let { mainHandler.removeCallbacks(it) }
                     syncCookies(webView.url)
                     releaseWebView(webView, parentView)
+                    phantomWebViews.remove(webView)
+                    statusProbeRunning.set(false)
+                    finished = true
+                    if (result && !isSignedToday()) updateLocalSignInTime()
                     onResult(result)
                 }
 
-                
                 timeout = Runnable { release(isSignedToday()) }
                 mainHandler.postDelayed(timeout, CHECK_TIMEOUT_MS)
 
@@ -286,9 +312,41 @@ alpha = 0.1f
                 }
                 webView.loadUrl(APPLY_TASK_URL)
             } catch (e: Exception) {
-                Timber.e(e)
-                onResult(isSignedToday())
+                Timber.e(e, "签到状态探测失败")
+                if (!finished) {
+                    phantomWebViews.forEach { wv ->
+                        runCatching {
+                            (wv.parent as? ViewGroup)?.removeView(wv)
+                            wv.destroy()
+                        }
+                    }
+                    phantomWebViews.clear()
+                    statusProbeRunning.set(false)
+                    finished = true
+                    onResult(isSignedToday())
+                }
             }
+        }
+    }
+
+    /**
+     * 兜底清扫：页面恢复可见时调用，移除 decorView 上任何遗留的探测 WebView，
+     * 彻底杜绝"我的/搜索页背后透出论坛网页"的残影。
+     */
+    fun sweepPhantomWebViews() {
+        if (phantomWebViews.isEmpty()) return
+        mainHandler.post {
+            val snapshot = phantomWebViews.toList()
+            snapshot.forEach { wv ->
+                runCatching {
+                    (wv.parent as? ViewGroup)?.removeView(wv)
+                    wv.stopLoading()
+                    wv.destroy()
+                }.onFailure { Timber.w(it, "清扫探测 WebView 失败") }
+                phantomWebViews.remove(wv)
+            }
+            statusProbeRunning.set(false)
+            Timber.d("已清扫遗留探测 WebView: %d", snapshot.size)
         }
     }
 

@@ -105,6 +105,18 @@ class MeFragment : TopFragment(), ControllableFragment {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // 清除 history 遗留的隐藏探测 WebView，再按真实签到状态回刷徽标，
+        // 避免"已签到"状态下页面背后还透出论坛网页残影。
+        SignInManager.sweepPhantomWebViews()
+        if (UserDataRepo.isLoggedIn) {
+            SignInManager.checkSignInStatus(requireContext()) { isSigned ->
+                if (isSigned) EventBus.getDefault().post(SignInSuccessEvent())
+            }
+        }
+    }
+
     private fun showFragment(fragment: Fragment) {
         activity?.let {
             if (it is top.easelink.lcg.ui.main.MainActivity) {
@@ -192,6 +204,12 @@ fun MeScreenContent(viewModel: MeViewModel, onSettingClick: () -> Unit, onNaviga
                                         } else {
                                             signInText = "🔥 未签到，点我"
                                             signInColor = Color(0xFFE53935)
+                                            // 内置流程被盾/环境卡住时，兜底跳转到网页签到：
+                                            // 和登录一样，交给完整 JS 环境的 WebView 完成，用户点一下即可。
+                                            if (status == "FAILED" && !msg.contains("已取消")) {
+                                                top.easelink.lcg.ui.webview.view.WebViewActivity
+                                                    .startWebViewWith(SignInManager.SIGN_IN_PAGE_URL, context)
+                                            }
                                         }
                                     }
                                 }.padding(horizontal = 8.dp, vertical = 2.dp)) {

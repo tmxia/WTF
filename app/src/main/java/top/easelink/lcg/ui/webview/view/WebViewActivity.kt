@@ -61,6 +61,9 @@ class WebViewActivity : AppCompatActivity() {
     private var mHtml: String? = null
     private var mForceEnableJs = true
     private var isOpenLoginEvent = false
+
+    /** 登录完成只处理一次，避免 onPageCommitVisible / onPageFinished / JS 钩子三路重复触发。 */
+    private val loginHandled = java.util.concurrent.atomic.AtomicBoolean(false)
     private lateinit var profileViewModel: MeProfileViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -176,56 +179,73 @@ class WebViewActivity : AppCompatActivity() {
     inner class WebViewHook : HookInterface {
         @JavascriptInterface
         override fun processHtml(html: String?) {
-            if (html.isNullOrBlank()) return
+            if (html.isNullOrBlank() || !isOpenLoginEvent) return
             lifecycleScope.launch(CalcPool + CoroutineExceptionHandler { _, e ->
                 Timber.e(e)
             }) {
-                val doc = Jsoup.parse(html)
-                val currentUrl = withContext(Main) { mWebView.url } ?: return@launch
-                if (!isLoginSuccess(doc, currentUrl)) return@launch
-
-                
-                    LCGCookieJar.syncFromWebView(currentUrl)
-                    
-                    LCGCookieJar.syncFromWebView(SERVER_BASE_URL)
-                    Timber.d("当前抓取到的 Cookie: ${LCGCookieJar.cookiesForUrl(SERVER_BASE_URL)}")
-                    
-                    Timber.d("当前抓取到的 Cookie: ${LCGCookieJar.cookiesForUrl(SERVER_BASE_URL)}")
-
-                
-                if (!LCGCookieJar.hasLoginCredential()) {
-                    Timber.w("登录页面已渲染头像，但未回读到成对 auth+saltkey 凭证，放弃置登录态: $currentUrl")
-                    showMessage(R.string.general_error)
-                    return@launch
+                // 这里只负责把站点提示（如登录失败原因）透出给用户，
+                // 登录是否完成由 Cookie 凭证判定，见 tryFinishLogin()。
+                runCatching {
+                    Jsoup.parse(html).getElementById("messagetext")?.text()
+                }.getOrNull()?.takeIf { it.isNotBlank() }?.let { text ->
+                    withContext(Main) { showMessage(text) }
                 }
-
-                UserDataRepo.isLoggedIn = true
-                    
-                    
-                    top.easelink.lcg.utils.SignInManager.checkSignInStatus(this@WebViewActivity) { isSigned ->
-                        Timber.d("登录后刷新签到状态: $isSigned")
-                    }
-                doc.getElementById("messagetext")?.text()?.let {
-                    showMessage(it)
-                } ?: showMessage(R.string.login_successfully)
-                delay(1000)
-                withContext(IOPool) {
-                    profileViewModel.fetchRemoteUserInfo()?.let(::updateUserInfo)
-                }
-                withContext(Main) {
-                    startActivity(Intent(mWebView.context, MainActivity::class.java))
-                    finish()
-                }
+                val currentUrl = withContext(Main) { mWebView.url }
+                withContext(Main) { tryFinishLogin(currentUrl) }
             }
         }
     }
 
-    private fun isLoginSuccess(doc: org.jsoup.nodes.Document, url: String): Boolean {
-        val hasAvatar = doc.selectFirst("div.avt") != null
-        val isLoginRequiredPage = doc.getElementById("messagelogin") != null ||
-            doc.getElementById("messagetext")?.text()
-                ?.contains("您需要先登录才能继续") == true
-        return hasAvatar && !isLoginRequiredPage
+    /**
+     * 登录完成判定统一入口。
+     *
+     * 旧实现依赖页面上是否存在 `div.avt`（头像）来判断登录成功，站点改版/重定向到中转页时
+     * 经常命中不了，于是“网页里已经登录成功、App 却停在原地不返回”。
+     * 现在以 Cookie 凭证（auth + saltkey 成对）为唯一判据：只要有凭证，就代表会话真的拿到了。
+     */
+    private fun tryFinishLogin(url: String?) {
+        if (!isOpenLoginEvent || loginHandled.get()) return
+
+        val currentUrl = url ?: mWebView.url ?: SERVER_BASE_URL
+        LCGCookieJar.syncFromWebView(currentUrl)
+        LCGCookieJar.syncFromWebView(SERVER_BASE_URL)
+
+        if (!LCGCookieJar.hasLoginCredential()) {
+            // 还没登录完成（登录页 / 错误页 / 中转页），继续等待后续页面事件
+            return
+        }
+        if (!loginHandled.compareAndSet(false, true)) return
+
+        Timber.d("WebView 登录完成，回读到登录凭证，返回主界面。url=$currentUrl")
+        finishLoginSuccess()
+    }
+
+    private fun finishLoginSuccess() {
+        UserDataRepo.isLoggedIn = true
+        runCatching {
+            top.easelink.lcg.utils.SignInManager.checkSignInStatus(this) { isSigned ->
+                Timber.d("登录后刷新签到状态: $isSigned")
+            }
+        }
+        showMessage(R.string.login_successfully)
+
+        lifecycleScope.launch {
+            // 拉取资料失败绝不能阻断“回到主界面”：旧实现在这里没有兜底，
+            // 一旦请求抛异常（盾拦截 / 网络异常），后面的 startActivity + finish 就不会执行，
+            // 用户明明已经登录成功，却卡在网页里出不来。
+            val info = runCatching {
+                withContext(IOPool) { profileViewModel.fetchRemoteUserInfo() }
+            }.onFailure {
+                Timber.e(it, "登录后拉取资料失败，登录态已生效，直接返回主界面")
+            }.getOrNull()
+            info?.let(::updateUserInfo)
+
+            delay(600)
+            runCatching {
+                startActivity(Intent(this@WebViewActivity, MainActivity::class.java))
+                finish()
+            }.onFailure { Timber.e(it, "登录完成后返回主界面失败") }
+        }
     }
 
     private fun initData() {
@@ -399,8 +419,25 @@ class WebViewActivity : AppCompatActivity() {
             LCGCookieJar.syncFromWebView(url)
             if (isOpenLoginEvent) {
                 view.loadUrl("javascript:$HOOK_NAME.processHtml(document.documentElement.outerHTML);")
+                tryFinishLogin(url)
             }
             view.settings.blockNetworkImage = false
+        }
+
+        override fun onPageFinished(view: WebView, url: String?) {
+            super.onPageFinished(view, url)
+            setLoading(false)
+            if (isOpenLoginEvent) {
+                // 登录页 POST 后跳转的落地页往往在 onPageCommitVisible 时 Cookie 尚未落盘，
+                // onPageFinished 再判定一次，避免“已登录但 App 不返回”。
+                syncLoginCookies(url)
+                tryFinishLogin(url)
+            }
+        }
+
+        private fun syncLoginCookies(url: String?) {
+            LCGCookieJar.syncFromWebView(url ?: SERVER_BASE_URL)
+            LCGCookieJar.syncFromWebView(SERVER_BASE_URL)
         }
 
         override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
