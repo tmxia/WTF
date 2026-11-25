@@ -101,7 +101,9 @@ fun DiscoverScreenCompose(
             }
         }
 
-        if (models.isEmpty() && !isLoading) {
+        if (uiState is PageUiState.Loading && models.isEmpty()) {
+            // 全屏加载占位：已在顶部 when 渲染了 FullScreenLoading，此处留空防止 weight 冲突撑爆布局
+        } else if (models.isEmpty() && !isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(text = "暂无数据，请点击刷新", color = Color.Gray)
             }
