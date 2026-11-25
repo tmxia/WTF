@@ -47,8 +47,8 @@ class DiscoverViewModel : ViewModel() {
             runCatching {
                 Timber.d("【发现页】开始拉取板块数据...")
                 // 并发拉取，消除串行等待时间
-                val forumsDeferred = kotlinx.coroutines.async(kotlinx.coroutines.Dispatchers.IO) { ForumNetworkSource.fetchAllForumsFromApi() }
-                val ranksDeferred = kotlinx.coroutines.async(kotlinx.coroutines.Dispatchers.IO) { fetchRank(RankType.HEAT, DateType.TODAY) }
+                val forumsDeferred = async { ForumNetworkSource.fetchAllForumsFromApi() }
+                val ranksDeferred = async { fetchRank(RankType.HEAT, DateType.TODAY) }
                 val apiForums = forumsDeferred.await()
                 val ranks = ranksDeferred.await()
                 Timber.d("【发现页】热榜请求成功，获取到 ${ranks.listModel.size} 条热榜")
