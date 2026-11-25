@@ -1,6 +1,7 @@
 package top.easelink.lcg.ui.main
 import top.easelink.lcg.utils.WebViewConfigurator
 import top.easelink.lcg.network.JsoupClient
+import top.easelink.lcg.network.LCGCookieJar
 import top.easelink.lcg.account.UserDataRepo
 import timber.log.Timber
 
