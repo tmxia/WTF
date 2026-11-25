@@ -9,6 +9,19 @@ import top.easelink.lcg.databinding.FragmentRecommendBinding
 import top.easelink.lcg.ui.main.recommand.viewmodel.RecommendViewPagerAdapter
 
 class RecommendFragment : Fragment(R.layout.fragment_recommend) {
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden) {
+            _binding?.mainTab?.visibility = android.view.View.VISIBLE
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        _binding?.mainTab?.visibility = android.view.View.VISIBLE
+    }
+
     private var _binding: FragmentRecommendBinding? = null
     private val binding get() = _binding!!
 

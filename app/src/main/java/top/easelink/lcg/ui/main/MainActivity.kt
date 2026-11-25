@@ -241,7 +241,13 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         val existingFragment = supportFragmentManager.findFragmentByTag(tag)
         val fragment = existingFragment ?: clazz.getConstructor().newInstance()
 
-        supportFragmentManager.commit {
+        // 异步事务执行前，如果即将离开推荐页，立刻隐藏其 TabLayout，杜绝残影
+        val home = supportFragmentManager.findFragmentByTag(RecommendFragment::class.java.simpleName) as? RecommendFragment
+        if (home != null && home != fragment) {
+            home.view?.findViewById<android.view.View>(R.id.main_tab)?.visibility = android.view.View.INVISIBLE
+        }
+
+supportFragmentManager.commit {
             supportFragmentManager.fragments.forEach {
                 if (it != fragment) hide(it)
             }
@@ -262,13 +268,24 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
         }
 
+        // 如果即将进入推荐页，立刻恢复 TabLayout 显示
+        if (fragment is RecommendFragment) {
+            fragment.view?.findViewById<android.view.View>(R.id.main_tab)?.visibility = android.view.View.VISIBLE
+        }
+
         updateUIForFragment(fragment)
         updateFragmentTags(tag)
     }
 
     fun showFragment(fragment: Fragment) {
         val tag = fragment.javaClass.simpleName
-        supportFragmentManager.commit {
+        // 异步事务执行前，如果即将离开推荐页，立刻隐藏其 TabLayout，杜绝残影
+        val home = supportFragmentManager.findFragmentByTag(RecommendFragment::class.java.simpleName) as? RecommendFragment
+        if (home != null && home != fragment) {
+            home.view?.findViewById<android.view.View>(R.id.main_tab)?.visibility = android.view.View.INVISIBLE
+        }
+
+supportFragmentManager.commit {
             supportFragmentManager.fragments.forEach {
                 if (it != fragment) hide(it)
             }
@@ -287,6 +304,11 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
             }
 
             setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+        }
+
+        // 如果即将进入推荐页，立刻恢复 TabLayout 显示
+        if (fragment is RecommendFragment) {
+            fragment.view?.findViewById<android.view.View>(R.id.main_tab)?.visibility = android.view.View.VISIBLE
         }
 
         updateUIForFragment(fragment)
