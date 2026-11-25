@@ -23,6 +23,7 @@ import top.easelink.lcg.ui.main.model.NetworkException
 import top.easelink.lcg.ui.main.source.model.ArticleAbstractResponse
 import top.easelink.lcg.ui.main.source.model.ArticleEntity
 import top.easelink.lcg.ui.main.source.model.Post
+import top.easelink.lcg.ui.main.source.FavoriteSnapshot
 import top.easelink.lcg.ui.main.source.local.LikeStateStore
 import top.easelink.lcg.ui.main.source.repository.ArticlesRepository
 import org.greenrobot.eventbus.EventBus
@@ -143,7 +144,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                     // 恢复本机已确认成功的点赞（服务端返回成功才落库，不是纯乐观态）
                     response.postList.forEach { post ->
                         if (!post.isLiked) {
-                            post.isLiked = post.pid?.let { LikeStateStore.isLiked(it) } == true
+                            post.isLiked = LikeStateStore.isLiked(post.pid ?: post.replyAddUrl)
                         }
                     }
                     when (type) {
@@ -226,26 +227,18 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         currentJob = viewModelScope.launch(IOPool) {
             Timber.d("【点赞】发起请求: $url")
             try {
-                val response = ArticlesRepository.replyAdd(url)
-                Timber.d("【点赞】收到响应: $response")
-                val pid = LikeRules.pidFromUrl(url)
-                when {
-                    // 站点已赞过：幂等成功，直接落状态，不再重复提示失败
-                    LikeRules.isAlreadyLiked(response) -> {
-                        LikeStateStore.markLiked(pid)
-                        showMessage(response)
-                        EventBus.getDefault().post(LikeSuccessEvent(url))
-                    }
-                    LikeRules.isSuccessMessage(response) -> {
-                        LikeStateStore.markLiked(pid)
-                        showMessage(response)
-                        EventBus.getDefault().post(LikeSuccessEvent(url))
-                    }
-                    else -> {
-                        // 服务端明确失败或无法判定：撤销乐观置亮，提示原因
-                        showMessage(response.ifBlank { "点赞失败，请稍后重试" })
-                        EventBus.getDefault().post(LikeFailedEvent(url))
-                    }
+                val result = ArticlesRepository.replyAdd(url)
+                Timber.d("【点赞】success=%s message=%s", result.success, result.message)
+                // 归属键：优先楼层 pid，取不到时退回点赞链接本身
+                val likeKey = LikeRules.pidFromUrl(url) ?: url
+                if (result.success) {
+                    LikeStateStore.markLiked(likeKey)
+                    showMessage(result.message.ifBlank { "点赞成功" })
+                    EventBus.getDefault().post(LikeSuccessEvent(url))
+                } else {
+                    // 站点明确报错（未登录/不能自赞/频率限制等）：撤销乐观置亮
+                    showMessage(result.message.ifBlank { "点赞失败，请稍后重试" })
+                    EventBus.getDefault().post(LikeFailedEvent(url))
                 }
             } catch (e: Exception) {
                 Timber.e(e, "【点赞】发生异常")
@@ -264,7 +257,13 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
     fun checkIsFavorited() {
         val url = mUrl ?: return
         currentJob = viewModelScope.launch(IOPool) {
-            val isFav = ArticlesRepository.isLocalFavorite(url)
+            val localFav = ArticlesRepository.isLocalFavorite(url)
+            var isFav = localFav
+            // 本地没有时再问网站：收藏按钮必须与网站状态一致，不能只信本地库
+            if (!isFav && LCGCookieJar.hasLoginCredential()) {
+                if (!FavoriteSnapshot.isFresh()) FavoriteSnapshot.refresh()
+                isFav = FavoriteSnapshot.contains(extractThreadId(url))
+            }
             safeUpdate(_isFavorited, isFav)
         }
     }
@@ -309,6 +308,7 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
                         if (!success) {
                             showMessage(R.string.sync_favorite_failed)
                         } else {
+                            FavoriteSnapshot.markAdded(threadId)
                             showMessage(R.string.sync_favorite_successfully)
                         }
                     } else {
@@ -328,20 +328,26 @@ class ArticleViewModel : ViewModel(), ArticleAdapterListener {
         val url = mUrl ?: return
         currentJob = viewModelScope.launch(IOPool) {
             try {
+                var remoteOk = false
+                var remoteAttempted = false
                 if (AppConfig.syncFavorites && LCGCookieJar.hasLoginCredential()) {
                     val threadId = extractThreadId(mUrl)
                     val formHash = mFormHash
                     if (threadId != null && !formHash.isNullOrEmpty()) {
-                        val success = ArticlesRepository.removeFavoriteRemote(threadId, formHash)
-                        if (!success) {
+                        remoteAttempted = true
+                        remoteOk = ArticlesRepository.removeFavoriteRemote(threadId, formHash)
+                        if (remoteOk) {
+                            FavoriteSnapshot.markRemoved(threadId)
+                        } else {
                             Timber.w("remote unfavorite failed, falling back to local-only removal")
                         }
                     }
                 }
 
                 val res = ArticlesRepository.delLocalFavorite(url)
-                showMessage(if (res) R.string.remove_all_favorites_successfully else R.string.add_to_favorite_failed)
-                safeUpdate(_isFavorited, false)
+                val ok = res || (remoteAttempted && remoteOk)
+                showMessage(if (ok) R.string.remove_favorite_successfully else R.string.add_to_favorite_failed)
+                if (ok) safeUpdate(_isFavorited, false)
             } catch (e: Exception) {
                 Timber.e(e)
                 showMessage(R.string.add_to_favorite_failed)

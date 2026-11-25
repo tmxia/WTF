@@ -88,6 +88,8 @@ class ArticleFragment : Fragment(), ControllableFragment {
         title = arguments?.getString(ARG_TITLE) ?: ""
         viewModel.setUrl(url)
         viewModel.fetchArticlePost(ArticleAdapterListener.Companion.FETCH_POST_INIT, null)
+        // 初始化收藏状态：本地 + 网站快照，避免已收藏的帖子仍显示"添加收藏"
+        viewModel.checkIsFavorited()
 
         
         parentFragmentManager.setFragmentResultListener(

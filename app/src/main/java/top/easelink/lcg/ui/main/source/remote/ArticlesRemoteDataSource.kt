@@ -19,6 +19,7 @@ import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ArticleAbstractResponse
 import top.easelink.lcg.ui.main.source.model.Post
 import top.easelink.lcg.ui.main.source.model.ArticleDetail
+import top.easelink.lcg.ui.main.source.model.LikeActionResult
 import top.easelink.lcg.ui.main.source.model.HistoryEntity
 import top.easelink.lcg.ui.main.source.model.PreviewPost
 import top.easelink.lcg.ui.main.source.USER_AVATAR
@@ -192,19 +193,44 @@ object ArticlesRemoteDataSource : ArticlesDataSource, FavoritesRemoteDataSource 
     /** 用收藏条目自带的删除链接取消收藏，避免再拼 tid/formhash 出错。 */
     suspend fun removeFavoriteByUrl(delUrl: String): Boolean = try {
         val doc = JsoupClient.sendGetRequestWithQuery(delUrl)
-        val msg = doc.getElementById("messagetext")?.text().orEmpty()
-        doc.select(".alert_error").isEmpty() &&
-            (msg.isEmpty() || msg.contains("成功") || msg.contains("删除") || msg.contains("取消"))
+        val msg = extractSiteMessage(doc)
+        val hasEnvelope = doc.getElementById("messagetext") != null || doc.selectFirst("root") != null
+        val denied = doc.body()?.text().orEmpty().contains("Access Denied", ignoreCase = true)
+        val success = hasEnvelope && doc.select(".alert_error").isEmpty() && !denied &&
+            !msg.contains("请先登录") && !msg.contains("登录已失效")
+        Timber.d("【收藏】取消收藏 success=%s message=%s", success, msg)
+        success
     } catch (e: Exception) {
-        Timber.e(e)
+        Timber.e(e, "【收藏】取消收藏请求失败")
         false
     }
 
-    suspend fun replyAdd(query: String): String = try {
+    suspend fun replyAdd(query: String): LikeActionResult = try {
         val doc = JsoupClient.sendGetRequestWithQuery(query)
-        doc.getElementsByClass("nfl").firstOrNull()?.text().orEmpty()
+        val message = extractSiteMessage(doc)
+        val bodyText = doc.body()?.text().orEmpty()
+        val hasErrorBlock = doc.select(".alert_error").isNotEmpty()
+        val loginRequired = doc.getElementById("messagelogin") != null ||
+            message.contains("请先登录") || message.contains("需要先登录") || message.contains("登录已失效")
+        // 必须拿到站点的提示信封（messagetext / inajax root）且在无错误块时才判定成功，
+        // 纯 "Access Denied" 之类被拦截的响应不能当成点赞成功。
+        val hasEnvelope = doc.getElementById("messagetext") != null || doc.selectFirst("root") != null
+        val denied = bodyText.contains("Access Denied", ignoreCase = true)
+        val success = hasEnvelope && !hasErrorBlock && !loginRequired && !denied
+        Timber.d("【点赞】响应 success=%s denied=%s message=%s", success, denied, message)
+        LikeActionResult(success = success, message = message)
     } catch (e: Exception) {
-        Timber.e(e)
-        "Error"
+        Timber.e(e, "【点赞】请求失败")
+        LikeActionResult(success = false, message = e.message.orEmpty())
+    }
+
+    /** 从 showmessage / inajax 响应里取站点提示文案。 */
+    private fun extractSiteMessage(doc: org.jsoup.nodes.Document): String {
+        doc.getElementById("messagetext")?.let { cell ->
+            cell.selectFirst("p")?.text()?.takeIf { it.isNotBlank() }?.let { return it }
+            cell.text().takeIf { it.isNotBlank() }?.let { return it }
+        }
+        doc.selectFirst("root")?.text()?.takeIf { it.isNotBlank() }?.let { return it }
+        return doc.getElementsByClass("nfl").firstOrNull()?.text().orEmpty()
     }
 }

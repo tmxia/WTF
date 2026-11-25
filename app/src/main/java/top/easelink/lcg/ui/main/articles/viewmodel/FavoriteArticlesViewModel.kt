@@ -30,9 +30,11 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
     private val _hasMore = MutableStateFlow(false)
     val hasMore: StateFlow<Boolean> = _hasMore.asStateFlow()
 
-    /** 是否启用与网站收藏的双向同步（开关打开且持有登录凭证）。 */
-    private fun shouldSyncWithWeb(): Boolean =
-        AppConfig.syncFavorites && LCGCookieJar.hasLoginCredential()
+    /** 读取网站收藏只看登录态：网站收藏是权威数据，进入页面就应该能拉到。 */
+    private fun canReadWeb(): Boolean = LCGCookieJar.hasLoginCredential()
+
+    /** 回写网站（删除/取消收藏）受"同步到网站"开关控制。 */
+    private fun canWriteWeb(): Boolean = AppConfig.syncFavorites && LCGCookieJar.hasLoginCredential()
 
     override fun fetchArticles(fetchType: ArticleFetcher.FetchType, callback: (Boolean) -> Unit) {
         when (fetchType) {
@@ -55,15 +57,19 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
                 publish(local)
 
                 // 再与网站 API 对齐：拉取远端收藏并整体覆盖本地，网站侧删除的条目同步消失
-                if (shouldSyncWithWeb()) {
+                if (canReadWeb()) {
                     runCatching { ArticlesRepository.syncRemoteFavorites() }
                         .onSuccess { synced ->
                             publish(synced)
                             callback.invoke(synced.isNotEmpty())
                         }
                         .onFailure {
-                            // 远端失败（被盾 / 未登录 / 网络）时保留本地，不误清空
+                            // 远端失败（被盾 / 未登录 / 网络）时保留本地，不误清空，并把原因告知用户
                             Timber.w(it, "同步网站收藏失败，保留本地缓存")
+                            showMessage(
+                                "网站收藏同步失败：" +
+                                    ErrorHandler.getFriendlyMessage(it)
+                            )
                         }
                 }
             } catch (e: Exception) {
@@ -85,7 +91,7 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val local = ArticlesRepository.getAllLocalFavorites()
-                if (shouldSyncWithWeb() && local.isNotEmpty()) {
+                if (canWriteWeb() && local.isNotEmpty()) {
                     // 逐条按站点删除链接取消收藏，任何一条失败都不清空本地，避免"本地没了网站还在"
                     // delUrl 为空表示"仅本地收藏、未同步网站"，只需删本地；有 delUrl 的才需要回写站点
                     val failed = local.count { entity ->
@@ -116,7 +122,7 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
     fun removeFavorite(articleEntity: ArticleEntity) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (shouldSyncWithWeb() && articleEntity.delUrl.isNotBlank()) {
+                if (canWriteWeb() && articleEntity.delUrl.isNotBlank()) {
                     if (!ArticlesRepository.removeFavoriteByDelUrl(articleEntity.delUrl)) {
                         showMessage(R.string.favorite_remote_remove_failed)
                         return@launch
@@ -138,7 +144,7 @@ class FavoriteArticlesViewModel : ViewModel(), ArticleFetcher {
     }
 
     fun syncFavorites() {
-        if (!shouldSyncWithWeb()) {
+        if (!canReadWeb()) {
             showMessage(R.string.sync_favorite_failed)
             return
         }

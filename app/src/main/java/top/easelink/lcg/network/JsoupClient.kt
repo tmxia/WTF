@@ -59,7 +59,14 @@ object JsoupClient : ApiRequest {
     fun completeVerification(cookieHeader: String?) { WafGate.complete(cookieHeader) }
 
     @Throws(SocketTimeoutException::class, IOException::class)
-    override suspend fun sendGetRequestWithQuery(query: String): Document = sendGetRequestWithUrl("$SERVER_BASE_URL$query", enableWafPopup = true)
+    override suspend fun sendGetRequestWithQuery(query: String): Document = sendGetRequestWithUrl(
+        // 站点 DOM 里的 href 可能是相对路径，也可能已经是绝对地址：
+        // 直接无脑拼 SERVER_BASE_URL 会把绝对地址拼成非法 URL，点赞/取消收藏等写操作全部失败。
+        if (query.startsWith("http://") || query.startsWith("https://")) query
+        else if (query.startsWith("/")) SERVER_BASE_URL.trimEnd('/') + query
+        else SERVER_BASE_URL + query,
+        enableWafPopup = true
+    )
 
     suspend fun sendAjaxRequest(query: String): String {
         val request = Request.Builder().url("$SERVER_BASE_URL$query").get().build()

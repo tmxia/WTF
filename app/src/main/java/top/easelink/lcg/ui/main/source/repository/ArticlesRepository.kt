@@ -5,9 +5,11 @@ import top.easelink.lcg.ui.main.source.local.ArticlesLocalDataSource
 import top.easelink.lcg.ui.main.source.model.Article
 import top.easelink.lcg.ui.main.source.model.ArticleDetail
 import top.easelink.lcg.ui.main.source.model.ArticleEntity
+import top.easelink.lcg.ui.main.source.model.LikeActionResult
 import top.easelink.lcg.ui.main.source.model.ForumPage
 import top.easelink.lcg.ui.main.source.model.PreviewPost
 import top.easelink.lcg.ui.main.source.remote.ArticlesRemoteDataSource
+import top.easelink.lcg.ui.main.source.FavoriteSnapshot
 
 /**
  * 文章 / 收藏域薄 Repository 门面：组合远程、本地与收藏远程数据源。
@@ -29,7 +31,7 @@ object ArticlesRepository {
     suspend fun getPostPreview(query: String): PreviewPost? =
         ArticlesRemoteDataSource.getPostPreview(query)
 
-    suspend fun replyAdd(url: String): String =
+    suspend fun replyAdd(url: String): LikeActionResult =
         ArticlesRemoteDataSource.replyAdd(url)
 
     // ---- 收藏远程 ----
@@ -41,7 +43,10 @@ object ArticlesRepository {
         ArticlesRemoteDataSource.removeFavorites(threadId, formHash)
 
     suspend fun getRemoteFavorites(): List<ArticleEntity> =
-        FavoriteDataSource.getAllRemoteFavorites()
+        FavoriteDataSource.getAllRemoteFavorites().also { list ->
+            // 拉取远端收藏的同时刷新快照，供详情页判断收藏状态
+            FavoriteSnapshot.update(list.map { it.url })
+        }
 
     // ---- 收藏本地 ----
 
