@@ -46,9 +46,11 @@ class DiscoverViewModel : ViewModel() {
         viewModelScope.launch(IOPool) {
             runCatching {
                 Timber.d("【发现页】开始拉取板块数据...")
-                val apiForums = ForumNetworkSource.fetchAllForumsFromApi()
-
-                val ranks = fetchRank(RankType.HEAT, DateType.TODAY)
+                // 并发拉取，消除串行等待时间
+                val forumsDeferred = kotlinx.coroutines.async(kotlinx.coroutines.Dispatchers.IO) { ForumNetworkSource.fetchAllForumsFromApi() }
+                val ranksDeferred = kotlinx.coroutines.async(kotlinx.coroutines.Dispatchers.IO) { fetchRank(RankType.HEAT, DateType.TODAY) }
+                val apiForums = forumsDeferred.await()
+                val ranks = ranksDeferred.await()
                 Timber.d("【发现页】热榜请求成功，获取到 ${ranks.listModel.size} 条热榜")
 
                 val newList = mutableListOf<DiscoverModel>()
@@ -76,7 +78,7 @@ class DiscoverViewModel : ViewModel() {
                 }
                 _uiState.value = PageUiState.Error(it, msg)
             }.also {
-                kotlinx.coroutines.delay(800)
+                // 移除人工延迟，提高加载速度
                 _isLoading.value = false
             }
         }

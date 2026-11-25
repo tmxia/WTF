@@ -236,77 +236,48 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         binding.bottomNavigation.setOnItemSelectedListener(this)
     }
 
-    private fun showFragment(clazz: Class<out Fragment>) {
+        private fun showFragment(clazz: Class<out Fragment>) {
         val tag = clazz.simpleName
         val existingFragment = supportFragmentManager.findFragmentByTag(tag)
         val fragment = existingFragment ?: clazz.getConstructor().newInstance()
-
-        // 异步事务执行前，如果即将离开推荐页，立刻隐藏其 TabLayout，杜绝残影
-        val home = supportFragmentManager.findFragmentByTag(RecommendFragment::class.java.simpleName) as? RecommendFragment
-        if (home != null && home != fragment) {
-            home.view?.findViewById<android.view.View>(R.id.main_tab)?.visibility = android.view.View.INVISIBLE
-        }
-
-supportFragmentManager.commit {
-            supportFragmentManager.fragments.forEach {
-                if (it != fragment) hide(it)
-            }
-
-            if (fragment.isAdded) {
-                show(fragment)
-            } else {
-                add(R.id.fragment_container, fragment, tag)
-
-                if (fragment !is RecommendFragment &&
-                    fragment !is SearchFragment &&
-                    fragment !is DiscoverFragment &&
-                    fragment !is MeFragment) {
-                    addToBackStack(tag)
-                }
-            }
-
-            setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
-        }
-
-        // 如果即将进入推荐页，立刻恢复 TabLayout 显示
-        if (fragment is RecommendFragment) {
-            fragment.view?.findViewById<android.view.View>(R.id.main_tab)?.visibility = android.view.View.VISIBLE
-        }
-
-        updateUIForFragment(fragment)
-        updateFragmentTags(tag)
+        showFragmentInternal(fragment, tag)
     }
 
     fun showFragment(fragment: Fragment) {
-        val tag = fragment.javaClass.simpleName
-        // 异步事务执行前，如果即将离开推荐页，立刻隐藏其 TabLayout，杜绝残影
+        showFragmentInternal(fragment, fragment.javaClass.simpleName)
+    }
+
+    // 统一入口：集中管理防残影、Fragment 切换与栈管理
+    private fun showFragmentInternal(fragment: Fragment, tag: String) {
+        // 1. 防残影：离开首页前隐藏 Tab
         val home = supportFragmentManager.findFragmentByTag(RecommendFragment::class.java.simpleName) as? RecommendFragment
         if (home != null && home != fragment) {
             home.view?.findViewById<android.view.View>(R.id.main_tab)?.visibility = android.view.View.INVISIBLE
         }
 
-supportFragmentManager.commit {
+        // 2. 执行切换（底部的四个主 Tab 不加入回退栈，详情页加入）
+        val isMainTab = fragment is RecommendFragment || fragment is SearchFragment || 
+                        fragment is DiscoverFragment || fragment is MeFragment
+                        
+        supportFragmentManager.commit {
+            setReorderingAllowed(true)
+            setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+            
             supportFragmentManager.fragments.forEach {
                 if (it != fragment) hide(it)
             }
-
+            
             if (fragment.isAdded) {
                 show(fragment)
             } else {
                 add(R.id.fragment_container, fragment, tag)
-
-                if (fragment !is RecommendFragment &&
-                    fragment !is SearchFragment &&
-                    fragment !is DiscoverFragment &&
-                    fragment !is MeFragment) {
+                if (!isMainTab) {
                     addToBackStack(tag)
                 }
             }
-
-            setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
         }
 
-        // 如果即将进入推荐页，立刻恢复 TabLayout 显示
+        // 3. 恢复首屏 Tab
         if (fragment is RecommendFragment) {
             fragment.view?.findViewById<android.view.View>(R.id.main_tab)?.visibility = android.view.View.VISIBLE
         }
