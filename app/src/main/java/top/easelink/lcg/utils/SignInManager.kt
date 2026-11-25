@@ -52,6 +52,11 @@ object SignInManager {
         }
     }
 
+    // 清理签到缓存状态（退出账号时调用）
+    fun clearSignInState() {
+        SharedPreferencesHelper.getUserSp().edit { remove("sp_key_last_sign_in_at") }
+    }
+
     fun isSignedToday(): Boolean {
         val sp = SharedPreferencesHelper.getUserSp()
         val lastTime = sp.getLong("sp_key_last_sign_in_at", 0L)

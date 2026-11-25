@@ -457,6 +457,7 @@ class MainActivity : TopActivity(), NavigationBarView.OnItemSelectedListener {
         LCGCookieJar.clearAll()
         android.webkit.CookieManager.getInstance().removeAllCookies(null)
         android.webkit.CookieManager.getInstance().flush()
+        top.easelink.lcg.utils.SignInManager.clearSignInState()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

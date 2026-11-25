@@ -216,6 +216,8 @@ class SettingActivity : TopActivity() {
             android.webkit.CookieManager.getInstance().removeAllCookies(null)
             android.webkit.CookieManager.getInstance().flush()
             android.webkit.WebStorage.getInstance().deleteAllData()
+            // ⚡ 清理本地签到状态缓存，防止 UI 显示旧账号的已签到
+            top.easelink.lcg.utils.SignInManager.clearSignInState()
             showMessage(R.string.clear_cookie)
             finish() 
         }) 
