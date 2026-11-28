@@ -32,10 +32,10 @@ object SignInManager {
 
     private const val APPLY_TASK_URL = "https://www.52pojie.cn/home.php?mod=task&do=apply&id=2"
 
-    /**
-     * 供“跳转网页签到”使用的入口地址：与内置签到流程同一个任务页，
-     * 由用户在完整 JS 环境的 WebView 里自行完成（可顺带过盾）。
-     */
+    
+
+
+
     const val SIGN_IN_PAGE_URL = "https://www.52pojie.cn/home.php?mod=task&do=apply&id=2"
 
     
@@ -52,10 +52,10 @@ object SignInManager {
     private var parentRef: ViewGroup? = null
     private var timeoutRunnable: Runnable? = null
 
-    /** 签到状态探测是否正在执行，避免重复触发堆叠隐藏 WebView */
+    
     private val statusProbeRunning = AtomicBoolean(false)
 
-    /** 已挂载但尚未释放的探测 WebView，用于兜底清扫，防止网页内容透出 */
+    
     private val phantomWebViews: MutableSet<WebView> =
         Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap<WebView, Boolean>()))
 
@@ -67,7 +67,7 @@ object SignInManager {
         }
     }
 
-    // 清理签到缓存状态（退出账号时调用）
+    
     fun clearSignInState() {
         SharedPreferencesHelper.getUserSp().edit { remove("sp_key_last_sign_in_at") }
     }
@@ -113,15 +113,19 @@ object SignInManager {
 
         val webView = WebView(activity).apply {
             WebViewConfigurator.setupStandardWebView(this)
-            /* [已由 WebViewConfigurator 接管] settings.javaScriptEnabled = true
-            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
-            isScrollbarFadingEnabled = true
-            settings.domStorageEnabled = true
-            settings.databaseEnabled = true
-            settings.allowContentAccess = true
-            settings.allowFileAccess = true
-            settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-            settings.userAgentString = MOBILE_UA */
+            
+            // ⚡ 强制覆盖底层配置：伪装纯正 Chrome UA，关闭所有拦截，防止瑞数盾白屏
+            settings.apply {
+                userAgentString = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                databaseEnabled = true
+                blockNetworkImage = false // 恢复加载网络图片
+                cacheMode = WebSettings.LOAD_DEFAULT
+            }
+            
+            // 移除任何可能阻断 Canvas 指纹的软件渲染
+            setLayerType(View.LAYER_TYPE_HARDWARE, null)
         }
         webViewRef = webView
         parentRef = parentView
@@ -199,13 +203,7 @@ object SignInManager {
                     }
 
                     
-                    if (verifySeen && !reloadedAfterVerify && url?.contains("mod=task") == true) {
-                        reloadedAfterVerify = true
-                        mainHandler.postDelayed({
-                            if (!finished.get()) view?.loadUrl(APPLY_TASK_URL)
-                        }, 800L)
-                        return@evaluatePageText
-                    }
+                    // 已移除强制重载以适配 WAF 滑块
 
                     scheduleResultPoll(url)
                 }
@@ -232,8 +230,8 @@ object SignInManager {
 
     @SuppressLint("SetJavaScriptEnabled")
     fun checkSignInStatus(context: Context, onResult: (Boolean) -> Unit) {
-        // 同一时刻只允许一个探测：切 tab / onResume 重复触发时直接回读本地态，
-        // 避免多个隐藏 WebView 反复挂到 decorView 上叠加残留。
+        
+        
         if (!statusProbeRunning.compareAndSet(false, true)) {
             onResult(isSignedToday())
             return
@@ -247,9 +245,9 @@ object SignInManager {
 
                 val webView = WebView(context).apply {
                     WebViewConfigurator.setupStandardWebView(this)
-                    // 探测用隐藏视图：1px 尺寸 + 完全透明 + 不可见 + 不参与触摸/无障碍。
-                    // 历史实现为 400x800 + alpha=0.1f 挂在 decorView 上，一旦释放慢于页面切换
-                    // 就会把论坛网页内容透到原生页面背后（"幽灵网页"残影）。
+                    
+                    
+                    
                     layoutParams = ViewGroup.LayoutParams(1, 1)
                     alpha = 0f
                     visibility = View.INVISIBLE
@@ -329,10 +327,10 @@ object SignInManager {
         }
     }
 
-    /**
-     * 兜底清扫：页面恢复可见时调用，移除 decorView 上任何遗留的探测 WebView，
-     * 彻底杜绝"我的/搜索页背后透出论坛网页"的残影。
-     */
+    
+
+
+
     fun sweepPhantomWebViews() {
         if (phantomWebViews.isEmpty()) return
         mainHandler.post {
@@ -430,7 +428,7 @@ object SignInManager {
             webView.destroy()
         }.onFailure { Timber.w(it, "释放 WebView 失败") }
         
-        // [ARCH-PHASE-3] 确保全局引用被彻底置空，切断 GC Root 链
+        
         if (webViewRef === webView) webViewRef = null
         if (parentRef === parent) parentRef = null
         Timber.d("WebView 已安全释放并切断引用")
@@ -484,7 +482,7 @@ object SignInManager {
             Timber.w(e, "关闭验证弹窗失败")
         }
         verifyDialog = null
-        // [ARCH-PHASE-3] 兜底清理可能残留的 WebView
+        
         webViewRef?.let { wv ->
             parentRef?.let { pv -> releaseWebView(wv, pv) }
         }
